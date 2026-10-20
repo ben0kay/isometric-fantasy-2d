@@ -1,8 +1,8 @@
-# Isometric Fantasy 2D
+# Isometric Fantasy — Survival Action RPG
 
 > **Project status:** Early concept / pre-production. This README is a living design overview, not a claim that the described systems are implemented.
 
-A **2D isometric open-world fantasy survival/action RPG** developed in **Godot with C#**. The goal is a world that feels worth inhabiting: welcoming towns and detailed, interactive buildings surrounded by dangerous wilderness, ancient ruins, dungeons, and recognizable fantasy creatures.
+A **fixed-camera isometric survival/action RPG in a 3D world**, developed in **Godot with C#**, using **2D pixel-art sprites alongside 3D environments**. The goal is a world that feels worth inhabiting: welcoming towns and detailed, interactive buildings surrounded by dangerous wilderness, ancient ruins, dungeons, and recognizable fantasy creatures.
 
 The project takes inspiration from the *feeling* of several games without aiming to reproduce any one of them:
 
@@ -14,7 +14,7 @@ The project takes inspiration from the *feeling* of several games without aiming
 ## 1. Current direction (decided)
 
 - **Setting:** Full fantasy. Medieval/rustic fantasy settlements, magic, undead, monsters, ruins, castles, and wilderness. **No sci-fi crossover** for this project. A sci-fi game might be developed separately later, potentially reusing mature technical systems.
-- **Presentation:** 2D isometric / 2.5D-style world, with detailed environments and characters. Target a clear, consistent style suited to an overhead isometric camera.
+- **Presentation (updated preference, not implemented):** a genuine **3D world with a fixed-angle isometric Camera3D**, 2D pixel-art sprites for the player and many enemies, and a mix of 3D models and sprite cards for environment assets. No player-controlled camera rotation. Strong atmosphere, detailed pixel-inspired materials, believable lighting and physically coherent terrain.
 - **World structure:** An explorable **finite open world**, rather than an infinite random map. The intent is to move naturally between settlements, roads, wilderness, and nearby structures.
 - **World authorship:** The designer defines the **world map, regions, and major points of interest (POIs)**. Procedural systems generate terrain and surrounding content *around* those authored anchors.
 - **World character:** Settlements should feel warm, safe, inhabited, and useful. The wilderness should feel substantially more dangerous.
@@ -143,25 +143,30 @@ The Grim Dawn-inspired ideas of **normal enemies, champions, elite variants, and
 
 Combat may include melee weapons, ranged weapons, spells, defensive abilities, and status effects; the exact player combat model has **not** been locked down.
 
-## 6. Character artwork and animation
+## 6. Visual direction, camera, and future asset replacement
 
-Investigate **Godot 2D skeletal/cutout animation** using `Skeleton2D`, `Bone2D`, `AnimationPlayer`, and appropriate sprite/mesh pieces.
+**Current preferred approach (design decision; not yet implemented):** Use Godot's **3D scene/physics framework** for the actual world, and combine it with **2D pixel-art visuals**. This replaces the earlier 2D-only and rotating-camera proposals.
 
-The content-production goal is to make multiple characters from **reusable rig families**:
+- **Camera:** fixed isometric-style angle, no player-controlled turning. Orthographic vs perspective projection, precise pitch, zoom, and pixel scaling still require visual testing.
+- **World:** Node3D terrain, real elevation/slopes, cliffs, caves, bridges, paths, buildings, physics and shadows. Separate cave/dungeon scenes are a valid option, not a mandate.
+- **Characters/enemies:** CharacterBody3D and CollisionShape3D gameplay roots, initially displaying AnimatedSprite3D or other camera-facing sprite visuals. Fixed camera simplifies the art pipeline but does not eliminate directional walk/attack frames.
+- **Environment:** use 3D meshes for terrain, cliffs, structures, large rocks and many trees; low-poly trunks with foliage cards, grass cards, sprite-based decorations and billboards can reduce workload.
+- **Art style:** richly atmospheric, relatively grounded dark/rustic fantasy with intentionally pixel-art-inspired textures and characters. Consistent apparent pixel density, silhouette readability, lighting response and sprite grounding matter more than raw polygon count.
+- **Lighting and effects:** directional sunlight, dynamic shadows, warm interior/campfire lighting, fog, weather, particles and visually readable combat effects. Sprites need explicit shadow/material/lighting tests.
+- **Obstruction handling:** fade/cut away foreground roofs, walls and trees to show the player without revealing unrelated rooms. Test this in a 3D cottage.
+- **Performance:** test transparency/overdraw, many vegetation cards, shadow casting, terrain chunking, sprite sorting and streaming early.
 
-| Rig family (candidate) | Character examples |
-| --- | --- |
-| Standard humanoid | Humans, skeletons, goblins, orcs |
-| Heavy humanoid | Trolls, ogres, giants |
-| Quadruped | Wolves, boars, bears |
-| Arachnid | Spiders and variants |
-| Other specialized rigs | Serpents, winged creatures, unusual monsters |
+### Critical architectural rule: gameplay and visuals are separate
 
-Share animations where anatomically reasonable, while allowing individual creatures to have different proportions, timing, posture, and signature moves. Rigid skeletal parts may suit cutout animation; cloth and other flexible pieces could use mesh deformation.
+**Every gameplay entity exists in 3D space; its visual implementation must be replaceable.**
 
-**Important technical limitation:** A 2D rig does **not** automatically create convincing artwork for a different viewing angle. Directional assets, layer ordering, and potentially separate view rigs/animations will still be needed.
+A possible player/enemy scene has a `CharacterBody3D` root for movement, collision, combat and state, plus an interchangeable child `Visuals` implementation. Initially that child may be an `AnimatedSprite3D`; later it may be a rigged 3D model with meshes and `AnimationPlayer`/`AnimationTree`. Gameplay triggers semantic events such as move, attack, hit and die; the chosen visual implementation responds. Avoid coupling combat timing, hit detection, health, equipment stats or AI directly to sprite frame indices. Attachment points, directional animation, collision and animation timing may still need adaptation during replacement.
 
-**Camera direction under investigation:** Four discrete 90-degree isometric camera rotations. This is **not yet committed**; test it early, because directional sprites, furniture, occlusion, and rendering order may make it expensive. A fixed camera is an acceptable fallback if the tradeoff is unfavorable.
+Replacing 2D sprites with 3D models **is not an automatic conversion**. Models, rigs, animations and material alignment will still be needed; the architecture should minimize gameplay-system rewrites. Individual characters and props can be upgraded gradually, and 2D/3D visuals can coexist indefinitely.
+
+### Asset workload
+
+Character modeling and especially animation are major production constraints. Prototype with attractive sprite assets and simple mechanical/magical enemies where suitable; floating constructs, drones, living stone and other low-animation silhouettes are *options*, not a commitment to a science-fiction setting or a robot protagonist. Retain traditional fantasy humans, undead and creatures as desired. Blender-rendered 3D-to-sprite animation sheets are another possible production workflow.
 
 ## 7. Technical principles
 
@@ -184,26 +189,47 @@ Existing projects are **references**, not code that has automatically been migra
 - [godot-tower-defense](https://github.com/ben0kay/godot-tower-defense) — organizational and documentation conventions.
 - [Ben_MonsterExpansion](https://github.com/ben0kay/Ben_MonsterExpansion) — Grim Dawn-related spawn/variant research and design ideas.
 
+## 7A. Survival, expeditions and long-term progression (design goals)
+
+**Core fantasy:** Play for a couple of hours, prepare at a home or settlement, set out on a dangerous expedition (for example, clear a cave), bring back discoveries and loot, and log off knowing the character and world have meaningfully advanced. Avoid repetitive filler and rewards that only raise numbers.
+
+**Intended loop:** prepare and repair supplies/equipment → travel and discover locations → explore/fight/gather/take risks → extract or retreat → process loot, heal, research, craft and upgrade → plan a harder expedition.
+
+- **Survival:** substantial, grounded systems are desired. Candidates include hunger, thirst, food spoilage, sleep/fatigue, temperature/weather exposure, injuries, medicine, shelter, equipment condition and carrying capacity. Tune for meaningful decisions rather than constant chores; exact scope is not yet fixed.
+- **RPG progression:** character levels/attributes, skills or mastery choices, differentiated combat builds, weapon/armor improvements, crafting specialization and challenging enemy tiers.
+- **Loot and expeditions:** branching caves, ruins, elite encounters, rare resources, recipes/blueprints, secrets, equipment drops, optional hazards and risk/reward decisions. Dungeons should have identity and not merely be repeated corridors.
+- **Persistent advancement:** character capabilities, equipment, home/workshop/storage, crafting technology, explored map, discovered routes, outposts and meaningful world changes. A cave trip should preferably advance multiple axes.
+- **Session respect:** a short outing still yields useful progress; a 1–2 hour expedition can provide a substantial objective. Allow stopping safely and clear recovery paths after setbacks.
+- **Death/consequences:** danger and meaningful loss matter, but routinely deleting dozens of hours of character/base progress may undermine the long-play goal. Dropped expedition loot, retrieval, injuries and damaged equipment are possible approaches; no death model is finalized.
+- **World approach:** retain the existing preference for a persistent, finite, designer-guided overworld and procedural details. Separate generated cave/dungeon instances are a strong candidate for repeatable high-value expeditions while preserving authored overworld landmarks.
+
+**Example session (illustrative, not fixed timings):** 15 minutes preparing; 20 traveling/discovering; 60 exploring and clearing a cave; 25 extracting, repairing and upgrading. Return rewards might unlock a forge recipe, a stronger weapon, a new map route or more capable base facilities.
+
+### Progression quality bar
+
+A successful expedition should answer: **What can I do now that I couldn't do before?** Rewards should unlock strategies, improve survival capabilities, establish safer travel, change the home base, or enable exploration of new threats—not only increment experience and currency.
+
 ## 8. Initial prototype (proposed, not implemented)
 
-**Prototype 01: A cottage and a skeleton**
+**Prototype 01: a beautiful 3D isometric forest clearing**
 
-A compact scene is deliberately more valuable initially than a huge generated map.
+Prioritize a small attractive playable visual/technical slice before full world generation or extensive survival systems.
 
-1. A small exterior area and enterable, furnished cottage with two or three rooms.
-2. Doors and reliable room-aware cutaway visibility.
-3. At least one functional container and one other useful interactable (e.g. fireplace).
-4. A controllable isometric character with working depth/layer sorting.
-5. A basic skeleton enemy, first testing idle/walk and then a simple attack.
-6. Test cutout rigs and the cost/visual quality of multiple camera directions.
-7. Confirm the desired visual scale, art pipeline, and interaction feel.
+1. A fixed-angle Camera3D with a testable projection, visual scale and no rotation input.
+2. Small **3D** uneven terrain, ten or so trees, rocks, pixel-inspired grass, a campfire, and a cave entrance.
+3. A controllable 3D-physics player using **2D sprite visuals**, moving correctly across slopes and around geometry.
+4. Directional idle/movement sprites, consistent pixel scaling, grounding/shadows and camera-facing behavior.
+5. 3D sunlight/shadows, atmosphere, fog and a few deliberate lighting/weather tests.
+6. One enemy with visually satisfying simple combat (projectile or melee), hit feedback, damage and death.
+7. A tiny enterable 3D cottage to test roof/wall cutaways and visibility.
+8. Swap one test entity between SpriteVisual and ModelVisual to prove gameplay/visual separation **before** scaling content.
 
-After this, build toward a small **authored region + major POI + procedural terrain** vertical slice: one safe settlement, connecting road, forest, and nearby hostile landmark. Test deterministic generation, chunk streaming, and persistence before scaling world size.
+Only after this feels good, add one small survival/expedition loop: supplies → cave encounter → loot → return → a tangible upgrade. Follow with authored region/POI placement, deterministic generation, persistence and streaming. **No current claim that these prototype features already exist.**
 
 ## 9. Open questions — deliberately unresolved
 
-- Exact art style, sprite resolution/scale, and camera angle.
-- Fixed isometric camera or four discrete rotations.
+- Exact pixel-art style, sprite resolution/scale, pixel density, camera pitch, projection and zoom (camera rotation is intentionally disabled).
+- How directional 2D sprite sets, lighting materials and shadows should work together.
 - How much of the geography is painted vs generated.
 - World size, movement speed, and travel/fast-travel options.
 - Whether dungeons, caves, and upper building floors are seamless or separate spaces.
@@ -225,4 +251,4 @@ These are **design questions**, not missing promised features.
 
 ---
 
-*Initial direction documented October 2026. This README is intentionally expected to evolve.*
+*Initial direction documented October 2026. Revised October 20, 2026 for the proposed fixed-camera 3D-world/2D-sprite survival RPG direction. This README is intentionally expected to evolve.*
