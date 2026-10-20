@@ -1,4 +1,4 @@
-Read the main README.md in the project root for an overall flavour of the game/coding structure
+Read the main README.md in the project root for an overall flavour of the game/coding structure. This is C#.
 I prefer comments above functions/methods. along with a commented line of ========================================================= so i can easily see when editing code in godot
 I prefer some comment at top of each script to explain what the script is doing.
 I prefer a .md file inside each major folder to explain whats inside this folder.
