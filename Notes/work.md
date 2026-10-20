@@ -113,3 +113,16 @@ Review screenshots and movement feel **before** choosing a detailed pixel-art pi
 - [ ] Play-test all arrows/diagonals, ramp ascent/descent, collisions and smooth nonrotating follow.
 
 The session had no usable shell/Godot runtime, so no runtime checks or screenshots are claimed. Source review is not compilation. The SDK version follows project.godot's existing 4.7 feature declaration; local restore needs a matching Godot .NET SDK. No animation or obstruction fading. Raised props and walls intentionally occlude the player. Ramp uses a rotated box collider with a small overlap at the terrace seam; play-test this transition.
+
+
+## Comparison follow-up — 2026-10-20
+
+User requested a second courtyard with 3D terrain and 2D props, and disposable artwork under DEBUG. This supersedes the earlier suggested test/art ownership paths.
+
+- [x] Moved original test to `DEBUG/VisualTests/Courtyard3DProps.tscn`.
+- [x] Added `DEBUG/VisualTests/Courtyard2DProps.tscn` with flat SVG props over the same 3D floor/ramp/terrace.
+- [x] Moved temporary Player scene and explorer SVG into the same disposable folder; added original crate, pillar, arch, wall, shrine and tree SVGs under Artwork/.
+- [x] Retained invisible 3D obstacle colliders and perimeter safety bounds.
+- [x] New 2D-prop comparison is the default; open either scene with F6 to compare.
+- [x] Updated references and documented deleting the test folder after replacing/clearing the main scene.
+- [ ] Godot/C# runtime validation remains pending; only static source checks were available.

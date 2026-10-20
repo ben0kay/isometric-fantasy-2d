@@ -1,8 +1,8 @@
 # Player
 
-The playable character lives here. This is a **feature-owned folder**: player-specific code, artwork, sounds, and data belong with the player. Reusable systems needed by many actors should instead live in their appropriate shared systems (for example, `ENTITIES/Shared/` when it is introduced).
+Reusable player components and settings live here. The disposable test Player.tscn and SVG explorer live in `DEBUG/VisualTests/`; future production art will belong here. This is a **feature-owned folder**: player-specific code, artwork, sounds, and data belong with the player. Reusable systems needed by many actors should instead live in their appropriate shared systems (for example, `ENTITIES/Shared/` when it is introduced).
 
-**Current status:** First 3D prototype implemented; build and play-test pending. `Player.tscn` combines a CharacterBody3D, capsule collider, Input reader and replaceable Visuals child. No animation/combat/survival systems.
+**Current status:** First 3D prototype implemented; build and play-test pending. `DEBUG/VisualTests/Player.tscn` temporarily combines a CharacterBody3D, capsule collider, Input reader and replaceable Visuals child. No animation/combat/survival systems.
 
 ## Folder map
 
@@ -36,6 +36,6 @@ Add settings only as features are actually implemented; avoid duplicating global
 
 ## First test
 
-Run `SCENES/IsometricVisualTest.tscn` (main scene) with arrow keys. Check ramp grounding, diagonal speed, shadows, occlusion and camera feel before extending gameplay. Movement owns velocity; Visuals can be replaced with a Node3D model without modifying locomotion.
+Run `DEBUG/VisualTests/Courtyard2DProps.tscn` (main scene) with arrow keys. Check ramp grounding, diagonal speed, shadows, occlusion and camera feel before extending gameplay. Movement owns velocity; Visuals can be replaced with a Node3D model without modifying locomotion.
 
 **Folder rule:** Keep small components with a clear single responsibility; do not create one node/script for every trivial helper or hard-code shared entity behavior inside the player.

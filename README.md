@@ -2,7 +2,7 @@
 
 > **Project status:** Early prototype. The first fixed-camera 3D courtyard / 2D SVG player implementation is present, but C# compilation and Godot play-testing are pending. The larger systems below remain design goals.
 
-**Run the visual test:** Open `project.godot` in Godot .NET, build C#, then F5. Arrow keys move the explorer. See [SCENES/README.md](SCENES/README.md) for setup and checks.
+**Compare the visual tests:** Open `project.godot` in Godot .NET, build C#, then F5 for **3D terrain + 2D sprite props**. Open `DEBUG/VisualTests/Courtyard3DProps.tscn` and press F6 for the original 3D-prop comparison. Arrow keys move the explorer. Both disposable scenes and all temporary SVG art live in `DEBUG/VisualTests/`; see [test instructions](DEBUG/VisualTests/README.md). Runtime validation remains pending.
 
 A **fixed-camera isometric survival/action RPG in a 3D world**, developed in **Godot with C#**, using **2D pixel-art sprites alongside 3D environments**. The goal is a world that feels worth inhabiting: welcoming towns and detailed, interactive buildings surrounded by dangerous wilderness, ancient ruins, dungeons, and recognizable fantasy creatures.
 

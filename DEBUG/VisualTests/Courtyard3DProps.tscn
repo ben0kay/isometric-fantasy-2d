@@ -1,6 +1,6 @@
 [gd_scene load_steps=71 format=3]
 
-[ext_resource type="PackedScene" path="res://ENTITIES/Player/Player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://DEBUG/VisualTests/Player.tscn" id="1"]
 [ext_resource type="Script" path="res://CAMERA/IsometricCamera.cs" id="2"]
 [ext_resource type="Resource" path="res://CAMERA/DefaultCameraConfig.tres" id="3"]
 
