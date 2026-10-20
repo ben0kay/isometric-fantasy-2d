@@ -1,0 +1,48 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/VisualTests/NaturalTerrainTest.cs" id="1"]
+[ext_resource type="Resource" path="res://DEBUG/VisualTests/DefaultNaturalTerrainConfig.tres" id="2"]
+[ext_resource type="PackedScene" path="res://DEBUG/VisualTests/Player.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/tree_01.png" id="4"]
+[ext_resource type="Script" path="res://CAMERA/IsometricCamera.cs" id="5"]
+[ext_resource type="Resource" path="res://CAMERA/DefaultCameraConfig.tres" id="6"]
+
+[sub_resource type="Environment" id="Atmosphere"]
+background_mode = 1
+background_color = Color(0.48, 0.60, 0.69, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.78, 0.84, 0.91, 1)
+ambient_light_energy = 0.48
+tonemap_mode = 2
+
+[node name="NaturalTerrainTest" type="Node3D"]
+script = ExtResource("1")
+Config = ExtResource("2")
+TreeTexture = ExtResource("4")
+
+[node name="Terrain" type="Node3D" parent="."]
+
+[node name="Forest" type="Node3D" parent="."]
+
+[node name="Lighting" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Lighting"]
+environment = SubResource("Atmosphere")
+
+[node name="Sun" type="DirectionalLight3D" parent="Lighting"]
+rotation_degrees = Vector3(-53, -50, 0)
+light_color = Color(1, 0.91, 0.79, 1)
+light_energy = 1.45
+shadow_enabled = true
+directional_shadow_max_distance = 130.0
+
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector3(0, 0.15, 5)
+
+[node name="Camera" type="Camera3D" parent="." node_paths=PackedStringArray("Target")]
+physics_interpolation_mode = 2
+script = ExtResource("5")
+Config = ExtResource("6")
+Target = NodePath("../Player")
+current = true
+far = 200.0
