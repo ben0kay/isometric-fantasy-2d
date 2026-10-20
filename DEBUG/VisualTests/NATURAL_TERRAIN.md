@@ -14,6 +14,20 @@ Open `DefaultNaturalTerrainConfig.tres` in the Godot Inspector:
 
 The test duplicates the player's config at runtime, so speed does not modify other scenes. Trees use `DEBUG/VisualTests/Artwork/tree_01.png`; player uses `ENTITIES/Player/Visuals/Sprites/player.png`. Their source assets, gameplay code and camera are unchanged.
 
+## Troubleshooting: player falls through the world
+
+This test depends on the **Godot .NET C# script** to generate the visible rolling terrain and its collision. If the script does not compile or run, both terrain and trees may be missing, even though the scene loads.
+
+A **low, flat static safety floor** now exists in the saved `.tscn` at approximately Y = -7 (below all normal generated hills). It prevents infinite falling even if generation fails, but it is **not** the intended rolling landscape. If you land on flat dark ground with no trees, **the procedural C# code did not execute**:
+
+1. Open the project using the **Godot .NET** editor.
+2. Press **Build** (hammer icon) or use **Project → Tools → C# → Build Project** before pressing F5.
+3. Open Godot's **Output** and **Debugger → Errors** tabs; resolve C# compile errors first.
+4. On success the Output prints `[NaturalTerrainTest] Terrain surface and 3D collision created`, then a setup-complete/tree-count message.
+5. If the messages print but you still pass through terrain, check collision shapes via **Debug → Visible Collision Shapes** and report the errors/logs.
+
+The fallback floor is intentionally lower than the terrain, so visible slopes and player ground contact still depend on successful generation. If terrain is absent, the fallback is an emergency stop, not a terrain substitute.
+
 ## Notes and limitations
 
 - Terrain generated once when entering scene; intentionally **not** a production chunk-streaming/world generator.

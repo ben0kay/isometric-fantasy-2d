@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/VisualTests/NaturalTerrainTest.cs" id="1"]
 [ext_resource type="Resource" path="res://DEBUG/VisualTests/DefaultNaturalTerrainConfig.tres" id="2"]
@@ -15,12 +15,32 @@ ambient_light_color = Color(0.78, 0.84, 0.91, 1)
 ambient_light_energy = 0.48
 tonemap_mode = 2
 
+[sub_resource type="StandardMaterial3D" id="SafetyGroundMaterial"]
+albedo_color = Color(0.23, 0.22, 0.18, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="SafetyGroundMesh"]
+size = Vector3(90, 1, 90)
+material = SubResource("SafetyGroundMaterial")
+
+[sub_resource type="BoxShape3D" id="SafetyGroundShape"]
+size = Vector3(90, 1, 90)
+
 [node name="NaturalTerrainTest" type="Node3D"]
 script = ExtResource("1")
 Config = ExtResource("2")
 TreeTexture = ExtResource("4")
 
 [node name="Terrain" type="Node3D" parent="."]
+
+[node name="SafetyGround" type="StaticBody3D" parent="Terrain"]
+position = Vector3(0, -7.5, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Terrain/SafetyGround"]
+mesh = SubResource("SafetyGroundMesh")
+
+[node name="Collision" type="CollisionShape3D" parent="Terrain/SafetyGround"]
+shape = SubResource("SafetyGroundShape")
 
 [node name="Forest" type="Node3D" parent="."]
 

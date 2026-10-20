@@ -26,6 +26,7 @@ public partial class NaturalTerrainTest : Node3D
         BuildGround();
         BuildForest();
         ConfigureScene();
+        GD.Print("[NaturalTerrainTest] Setup complete. Generated ground and " + _treePositions.Count + " trees. If you only see the low flat fallback floor, check the C# build and Godot Output panel.");
     }
 
     // Keep player speed changed for this test only (duplicate the shared resource).
@@ -79,6 +80,7 @@ public partial class NaturalTerrainTest : Node3D
         surface.GenerateNormals();
         ArrayMesh mesh = surface.Commit();
         StandardMaterial3D material = new() { VertexColorUseAsAlbedo = true, Roughness = 0.95f };
+        if (mesh == null || mesh.GetSurfaceCount() == 0) { GD.PushError("[NaturalTerrainTest] Terrain mesh creation returned no surfaces."); return; }
         mesh.SurfaceSetMaterial(0, material);
         StaticBody3D body = new() { Name = "GroundBody" };
         MeshInstance3D visuals = new() { Name = "TerrainMesh", Mesh = mesh };
@@ -86,6 +88,7 @@ public partial class NaturalTerrainTest : Node3D
         _terrainRoot.AddChild(body);
         body.AddChild(visuals);
         body.AddChild(collision);
+        GD.Print("[NaturalTerrainTest] Terrain surface and 3D collision created: " + cols + " x " + rows + " cells.");
     }
 
     // Emit a vertex with a consistent local color and tiled coordinates.
