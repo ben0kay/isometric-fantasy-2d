@@ -1,13 +1,7 @@
 # Player / Visuals
 
-Visual presentation of the player: sprite display, facing direction, animation selection, sorting, and any player-specific attachments.
+`PlayerVisual.cs` aligns the Visuals child once to the locked camera's yaw. The Sprite3D stays upright (no pitch), and its bottom edge sits at the body's feet. The body does not rotate. Replace this child with a model later without changing input or movement.
 
-For this project, the **candidate pipeline is Blender 3D animation rendered into 2D sprites**, not a live 3D player and not a Godot Skeleton2D cutout rig.
+`Sprites/player_placeholder.svg` is an original 48×72 explorer. Godot rasterizes SVG during import at its declared dimensions; it is not a live vector mesh. Nearest texture filtering preserves crisp pixels. Configured pixel size 0.025 gives a 1.8m-tall card; PlayerMasterConfig controls scale. Boots touch the image's bottom edge.
 
-- `Source3D/`: original Blender project/model/rig/texture sources (when available).
-- `Sprites/`: exported 2D sprite sheets or frames with consistent camera angle, scale, and feet origin.
-- `Animations/`: Godot playback resources and directional animation mapping when implemented.
-
-Keep rendering separate from movement and inputs so character art can be replaced without changing gameplay. Evaluate pixel-art filtering, sprite size, and directional coverage in a sandbox.
-
-**Status:** Documentation/folder only; no artwork or animation code yet.
+The sprite uses lighting, double-sided rendering, alpha scissor (0.5) and double-sided shadow casting. Transparent background should not cast a rectangle. These settings need visual verification in Godot; no fake blob shadow has been added. Solid scenery can occlude the player; cutaway/fading is future work. Only one static frame exists; Source3D and Animations remain reserved for the later Blender-to-sprite workflow.

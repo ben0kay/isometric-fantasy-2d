@@ -2,7 +2,7 @@
 
 The playable character lives here. This is a **feature-owned folder**: player-specific code, artwork, sounds, and data belong with the player. Reusable systems needed by many actors should instead live in their appropriate shared systems (for example, `ENTITIES/Shared/` when it is introduced).
 
-**Current status:** Folders and README planning notes only. No player controller, sprites, animation setup, movement, or gameplay scenes have been implemented here.
+**Current status:** First 3D prototype implemented; build and play-test pending. `Player.tscn` combines a CharacterBody3D, capsule collider, Input reader and replaceable Visuals child. No animation/combat/survival systems.
 
 ## Folder map
 
@@ -29,13 +29,13 @@ The playable character lives here. This is a **feature-owned folder**: player-sp
 
 ## Existing configuration
 
-- `PlayerMasterConfig.cs` — blank Inspector-editable resource type, created in the initial scaffold.
-- `DefaultPlayerConfig.tres` — blank default configuration instance.
+- `PlayerMasterConfig.cs` — walking speed (4m/s), gravity (24m/s²), floor snap (0.35m), maximum slope (45°), and sprite pixel size (0.025m).
+- `DefaultPlayerConfig.tres` — shared default settings instance; edit this Resource in the Inspector.
 
 Add settings only as features are actually implemented; avoid duplicating global and per-feature values.
 
-## Planned first test
+## First test
 
-Start with a small debug scene, controllable placeholder player, and independent camera. Prove movement, facing, draw order, and camera feel before extending to survival, combat, and world generation.
+Run `SCENES/IsometricVisualTest.tscn` (main scene) with arrow keys. Check ramp grounding, diagonal speed, shadows, occlusion and camera feel before extending gameplay. Movement owns velocity; Visuals can be replaced with a Node3D model without modifying locomotion.
 
 **Folder rule:** Keep small components with a clear single responsibility; do not create one node/script for every trivial helper or hard-code shared entity behavior inside the player.

@@ -10,6 +10,7 @@ config_version=5
 
 [application]
 
+run/main_scene="res://SCENES/IsometricVisualTest.tscn"
 config/name="isometric-fantasy-2d"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
@@ -25,8 +26,28 @@ project/assembly_name="isometric-fantasy-2d"
 
 [physics]
 
+common/physics_interpolation=true
 3d/physics_engine="Jolt Physics"
 
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+
+[input]
+
+player_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194319)]
+}
+player_up={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194320)]
+}
+player_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194321)]
+}
+player_down={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194322)]
+}

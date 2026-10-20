@@ -1,6 +1,8 @@
 # Isometric Fantasy — Survival Action RPG
 
-> **Project status:** Early concept / pre-production. This README is a living design overview, not a claim that the described systems are implemented.
+> **Project status:** Early prototype. The first fixed-camera 3D courtyard / 2D SVG player implementation is present, but C# compilation and Godot play-testing are pending. The larger systems below remain design goals.
+
+**Run the visual test:** Open `project.godot` in Godot .NET, build C#, then F5. Arrow keys move the explorer. See [SCENES/README.md](SCENES/README.md) for setup and checks.
 
 A **fixed-camera isometric survival/action RPG in a 3D world**, developed in **Godot with C#**, using **2D pixel-art sprites alongside 3D environments**. The goal is a world that feels worth inhabiting: welcoming towns and detailed, interactive buildings surrounded by dangerous wilderness, ancient ruins, dungeons, and recognizable fantasy creatures.
 
@@ -14,7 +16,7 @@ The project takes inspiration from the *feeling* of several games without aiming
 ## 1. Current direction (decided)
 
 - **Setting:** Full fantasy. Medieval/rustic fantasy settlements, magic, undead, monsters, ruins, castles, and wilderness. **No sci-fi crossover** for this project. A sci-fi game might be developed separately later, potentially reusing mature technical systems.
-- **Presentation (updated preference, not implemented):** a genuine **3D world with a fixed-angle isometric Camera3D**, 2D pixel-art sprites for the player and many enemies, and a mix of 3D models and sprite cards for environment assets. No player-controlled camera rotation. Strong atmosphere, detailed pixel-inspired materials, believable lighting and physically coherent terrain.
+- **Presentation (first test implemented; runtime verification pending):** a genuine **3D world with a fixed-angle isometric Camera3D**, 2D pixel-art sprites for the player and many enemies, and a mix of 3D models and sprite cards for environment assets. No player-controlled camera rotation. Strong atmosphere, detailed pixel-inspired materials, believable lighting and physically coherent terrain.
 - **World structure:** An explorable **finite open world**, rather than an infinite random map. The intent is to move naturally between settlements, roads, wilderness, and nearby structures.
 - **World authorship:** The designer defines the **world map, regions, and major points of interest (POIs)**. Procedural systems generate terrain and surrounding content *around* those authored anchors.
 - **World character:** Settlements should feel warm, safe, inhabited, and useful. The wilderness should feel substantially more dangerous.
@@ -145,7 +147,7 @@ Combat may include melee weapons, ranged weapons, spells, defensive abilities, a
 
 ## 6. Visual direction, camera, and future asset replacement
 
-**Current preferred approach (design decision; not yet implemented):** Use Godot's **3D scene/physics framework** for the actual world, and combine it with **2D pixel-art visuals**. This replaces the earlier 2D-only and rotating-camera proposals.
+**Current preferred approach (first courtyard test implemented; runtime verification pending):** Use Godot's **3D scene/physics framework** for the actual world, and combine it with **2D pixel-art visuals**. This replaces the earlier 2D-only and rotating-camera proposals.
 
 - **Camera:** fixed isometric-style angle, no player-controlled turning. Orthographic vs perspective projection, precise pitch, zoom, and pixel scaling still require visual testing.
 - **World:** Node3D terrain, real elevation/slopes, cliffs, caves, bridges, paths, buildings, physics and shadows. Separate cave/dungeon scenes are a valid option, not a mandate.

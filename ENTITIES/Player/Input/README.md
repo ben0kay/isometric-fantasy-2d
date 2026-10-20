@@ -1,9 +1,3 @@
 # Player / Input
 
-Future owner of player input mapping and a lightweight `PlayerInput` reader/controller.
-
-- Read keyboard, mouse, or gamepad actions; expose requests such as movement direction, sprint held, jump pressed, dodge pressed, interact, and attack.
-- This layer does **not** directly move the player, assign physics velocity, or animate sprites.
-- Keep input remapping/configurable bindings possible without changing movement logic.
-
-**Status:** Documentation/folder only; no input code yet.
+`PlayerInput.cs` reads `player_left/right/up/down` Input Map actions using Input.GetVector. Arrow bindings live in project.godot and can be remapped in Project Settings. The returned intent has length at most one; this component never moves physics bodies. Implemented, runtime validation pending.

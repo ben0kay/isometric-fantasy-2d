@@ -1,6 +1,6 @@
 # WORK — Prototype 01: Fixed Isometric 3D + 2D Sprite Player
 
-**Status:** Ready for Codex implementation (not yet implemented).  
+**Status:** Implementation committed; runtime validation pending.  
 **Repository:** `ben0kay/isometric-fantasy-2d`  
 **Scope:** A minimal *playable visual test* to evaluate our preferred art/technical direction. This is a **3D** test environment with a **2D SVG player placeholder**. Do not build survival, combat, chunk generation, inventory, quests, or any other unrelated systems in this job.
 
@@ -95,4 +95,21 @@ Notes/
 Review screenshots and movement feel **before** choosing a detailed pixel-art pipeline. Next experiments can compare (a) a 2D sprite tree versus (b) a low-poly 3D trunk + foliage cards, and then prototype a small cave entrance. Future sprite-to-model upgrades must remain a swap of **visual representations**, not a rewrite of the entity's 3D gameplay logic.
 
 ---
-*Authored as Codex implementation instructions on 2026-10-20. This document is a plan, not a declaration that the prototype has been built.*
+*Authored 2026-10-20. Implementation record below distinguishes authored features from runtime validation.*
+
+
+## Implementation record — 2026-10-20
+
+- [x] Fixed-angle reusable camera, existing MasterConfig, orthographic/perspective options, exponential follow including height.
+- [x] Authored 3D courtyard, terrain collider, ramp/terrace, walls, pillars/arch, crates, landmark and spawn marker.
+- [x] Sun shadows and ambient WorldEnvironment.
+- [x] Original SVG explorer in Sprite3D, upright fixed-camera alignment, nearest filtering, lighting/alpha-cut/double-sided shadows.
+- [x] Separate Input, Movement and Visuals components in the existing mixed-case Player subfolders.
+- [x] Arrow Input Map, camera-relative normalized movement, gravity, floor snap and slope handling.
+- [x] Main scene and C# project scaffold; folder docs and root status updated.
+- [x] Static checks of resource references, node paths, key codes and diagonal mapping.
+- [ ] Restore/build C# and verify SDK matches installed Godot .NET version.
+- [ ] Launch Godot and verify scene/SVG import, sprite visibility, feet, shadows and appearance.
+- [ ] Play-test all arrows/diagonals, ramp ascent/descent, collisions and smooth nonrotating follow.
+
+The session had no usable shell/Godot runtime, so no runtime checks or screenshots are claimed. Source review is not compilation. The SDK version follows project.godot's existing 4.7 feature declaration; local restore needs a matching Godot .NET SDK. No animation or obstruction fading. Raised props and walls intentionally occlude the player. Ramp uses a rotated box collider with a small overlap at the terrace seam; play-test this transition.
