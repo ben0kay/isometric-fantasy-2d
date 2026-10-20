@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://ENTITIES/Player/DefaultPlayerConfig.tres" id="2"]
 [ext_resource type="Script" path="res://ENTITIES/Player/Input/PlayerInput.cs" id="3"]
 [ext_resource type="Script" path="res://ENTITIES/Player/Visuals/PlayerVisual.cs" id="4"]
-[ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/player_placeholder.svg" id="5"]
+[ext_resource type="Texture2D" path="res://ENTITIES/Player/Visuals/Sprites/player.png" id="5"]
 
 [sub_resource type="CapsuleShape3D" id="Body"]
 radius = 0.28

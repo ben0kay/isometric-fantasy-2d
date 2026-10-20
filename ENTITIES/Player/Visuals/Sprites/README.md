@@ -1,9 +1,8 @@
 # Player / Visuals / Sprites
 
-Place **exported 2D renders** from Blender here: directional idle/walk/run/attack sprite sheets or individual PNG frames.
+Reusable player sprite images and future animation sheets live here.
 
-Each export should preserve consistent canvas size, character scale, feet origin, view direction, and transparent background. Keep art organized by action and direction only when real files exist.
+- `player.png` — current static fantasy explorer artwork, shown on a Sprite3D in the courtyard test.
+- Future directional idle/walk/run/attack assets should use consistent sizing, feet origin and transparent backgrounds.
 
-Do not store `.blend` sources here (see `../Source3D/`). Godot playback setup belongs in `../Animations/`.
-
-**Status:** Empty documentation scaffold; no sprite assets added.
+The 3D gameplay body, camera-relative movement and collision are independent of which visual asset is assigned. Keep Blender sources in `../Source3D/` and playback work in `../Animations/`.

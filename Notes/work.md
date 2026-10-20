@@ -126,3 +126,12 @@ User requested a second courtyard with 3D terrain and 2D props, and disposable a
 - [x] New 2D-prop comparison is the default; open either scene with F6 to compare.
 - [x] Updated references and documented deleting the test folder after replacing/clearing the main scene.
 - [ ] Godot/C# runtime validation remains pending; only static source checks were available.
+
+
+## Artwork update — 2026-10-20
+
+- [x] Relocated `image-gen-1.png` to `ENTITIES/Player/Visuals/Sprites/player.png`.
+- [x] Relocated `image-gen-2.png` to `DEBUG/VisualTests/Artwork/tree_01.png`.
+- [x] Replaced placeholder SVG references in test player and 2D-prop courtyard scenes; removed the two superseded SVGs and tracked import configs.
+- [x] Rescaled sprite cards for their larger PNG dimensions (player ~1.8m, tree ~4.8m); retained fixed-angle camera alignment.
+- [ ] Verify imported artwork, appearance, shadows and player/tree placement in the Godot editor. No local runtime validation claimed.

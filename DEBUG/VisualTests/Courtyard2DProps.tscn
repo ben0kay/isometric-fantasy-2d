@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/arch.svg" id="art_arch"]
 [ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/wall.svg" id="art_wall"]
 [ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/shrine.svg" id="art_shrine"]
-[ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/tree.svg" id="art_tree"]
+[ext_resource type="Texture2D" path="res://DEBUG/VisualTests/Artwork/tree_01.png" id="art_tree"]
 
 [sub_resource type="StandardMaterial3D" id="Grass"]
 albedo_color = Color(0.23, 0.32, 0.24, 1)
@@ -419,7 +419,7 @@ position = Vector3(-5, 0, -8)
 position = Vector3(0, 2.4, 0)
 rotation_degrees = Vector3(0, 45, 0)
 texture = ExtResource("art_tree")
-pixel_size = 0.03
+pixel_size = 0.0038
 texture_filter = 0
 shaded = true
 double_sided = true
@@ -438,7 +438,7 @@ position = Vector3(8, 0, 7)
 position = Vector3(0, 2.4, 0)
 rotation_degrees = Vector3(0, 45, 0)
 texture = ExtResource("art_tree")
-pixel_size = 0.03
+pixel_size = 0.0038
 texture_filter = 0
 shaded = true
 double_sided = true
@@ -457,7 +457,7 @@ position = Vector3(-9, 0, 8)
 position = Vector3(0, 2.4, 0)
 rotation_degrees = Vector3(0, 45, 0)
 texture = ExtResource("art_tree")
-pixel_size = 0.03
+pixel_size = 0.0038
 texture_filter = 0
 shaded = true
 double_sided = true
