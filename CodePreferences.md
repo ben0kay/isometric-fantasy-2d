@@ -19,3 +19,4 @@ Only do one commit for github per job instead of multiple commits.
 
 Refer to https://github.com/ben0kay/godot-tower-defense for folder / notes structure
 Refer to https://github.com/ben0kay/isometric-new-2d for similar game mechanics
+Refer to https://github.com/ben0kay/Ben_MonsterExpansion for Grim Dawns spawn mechanics just for ideas
