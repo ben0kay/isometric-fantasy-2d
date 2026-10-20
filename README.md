@@ -68,6 +68,31 @@ The generator should be **deterministic from seeds**. Where practical, independe
 
 **Open design question:** How much large-scale geography is painted/placed by hand versus generated from region rules? The present preference is to retain strong author control over geography.
 
+### Procedural content placement rules (planned)
+
+The world blueprint should support **designer-authored population rules**: choose *what* can be generated, *how many*, *where*, and *what areas to avoid*. A rule might say **"Generate 100 caves across the world, but keep them away from crucial POIs."** The number and constraints are editable design data, not hard-coded cave logic.
+
+A placement rule should be able to describe:
+
+- **Content identity and quantity:** cave entrances, bandit camps, shrines, graveyards, ruins, etc.; a target count or density, optionally with minimum/maximum bounds.
+- **Scope and region filters:** world-wide or per-region rules; include or exclude named regions, biome types, elevation/slope ranges, and suitable terrain.
+- **Protected POI exclusions:** minimum separation from designated story locations, cities, castles, important structures, and their reserved footprints.
+- **Custom POI protection:** each major POI can declare its own protected boundary or buffer and specify what may or may not appear nearby. For example, a town may allow farms and roads but exclude hostile camps and cave entrances.
+- **Spacing and clustering:** minimum distance between generated sites, optional clustering preferences, and caps per region.
+- **Accessibility:** suitable entrance footprints, navigable approaches, and no blocked critical roads, gates, dungeon entrances, or authored routes.
+- **Priority and conflict resolution:** fixed story POIs and required infrastructure take precedence over optional content. Placement should never quietly overwrite them.
+- **Validation and reporting:** record requested vs. successfully placed counts, rejected candidates, and any unmet constraints. If 100 caves cannot fit legally, report the shortage rather than silently violating exclusion rules.
+
+#### Example: world cave distribution
+
+> **Illustrative, not a finalized setting:** Try to place **100 cave entrances** throughout allowed mountain, highland, and forest regions. Keep cave entrances outside protected major-POI zones, a configurable distance from each other, and off critical road footprints. Require appropriate terrain and reachable entrances. If a region lacks enough valid space, redistribute to other eligible regions where permitted; otherwise report the remaining shortfall.
+
+These rules should be **data-driven**, preferably using Godot Resource (`.tres`) definitions and Inspector-friendly controls, rather than requiring special-case C# scripts for every new type of location. Global defaults, regional overrides, and POI-specific exclusions should have explicit precedence.
+
+**Important for chunk streaming:** Decide major/generated location placements in a deterministic **world-planning step** (or equivalent persistent spatial plan) before chunks instantiate. Do not let each independently loaded chunk invent major locations, because global counts, protected zones, and spacing would become unreliable. Chunks render or instantiate their assigned results; generated placement data and player changes must remain stable across unload/reload.
+
+The longer-term authoring workflow should let the designer preview placement candidates, exclusion zones, distribution counts, and validation problems on a world map, and regenerate an individual placement pass without changing unrelated authored POIs.
+
 ### Authoring workflow goal
 
 Eventually, a lightweight **world-map authoring/preview tool** should make it possible to draw regions, place named POIs, configure constraints, preview terrain, and reseed content without hand-tiling the entire world. The exact editor/tooling approach has not been selected.
