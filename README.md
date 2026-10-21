@@ -46,9 +46,17 @@ Aim for large, diverse, explorable environments with **data-driven biomes, encou
 
 - [WORLD/](WORLD/README.md): reusable scenery/content, biome definitions, terrain, water, caves, locations, generation and runtime world management.
 - [ENVIRONMENT/](ENVIRONMENT/README.md): time/calendar, lighting, weather, wind, seasonal progression and shared atmospheric effects. Biomes reference optional local environmental profiles; tree-specific seasonal sprites remain with their WORLD content definitions.
-- [DEBUG/TopDownTest/](DEBUG/TopDownTest/README.md): disposable visual tests, including the current day/night, projected shadow and wind experiment. These are **not yet promoted** to ENVIRONMENT production systems.
+- [ENTITIES/Player/](ENTITIES/Player/README.md): production player component layout with modular Survival (needs, temperature, health, conditions and sleep).
+- [CORE/](CORE/README.md): stable IDs, shared contracts, events, registries and future simulation scheduling.
+- [ITEMS/](ITEMS/README.md): central item library, clothing, food, materials and tools.
+- [SYSTEMS/](SYSTEMS/README.md): interaction, harvesting, crafting, farming, building, skills and reusable gameplay effects.
+- [SAVE/](SAVE/README.md): save-game lifecycle, profiles, serialization and coordination with WORLD chunk persistence.
+- [UI/](UI/README.md): HUD and player-facing screens.
+- [AUDIO/](AUDIO/README.md): general ambience, music and shared sound effects.
+- [COMBAT/](COMBAT/README.md): shared combat and damage resolution, separate from player combat input.
+- [DEBUG/TopDownTest/](DEBUG/TopDownTest/README.md): disposable visual tests, including the current day/night, projected shadow and wind experiment. These are **not yet promoted** to production systems.
 
-Both WORLD and ENVIRONMENT are currently **planning/scaffolding only**; no production features are implied by these folders.
+The new folders are **planning/scaffolding only**; no production gameplay features are implied by these directories. The existing disposable 2D visual tests remain unchanged.
 
 ## Scope and next steps
 

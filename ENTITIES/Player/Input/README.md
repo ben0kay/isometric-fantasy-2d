@@ -1,3 +1,5 @@
 # Player / Input
 
-`PlayerInput.cs` reads `player_left/right/up/down` Input Map actions using Input.GetVector. Arrow bindings live in project.godot and can be remapped in Project Settings. The returned intent has length at most one; this component never moves physics bodies. Implemented, runtime validation pending.
+Future production player keyboard/controller bindings and actions translated into simple intents (movement, interacting, attacking, equipping). Input should not directly own physics/locomotion or player needs.
+
+**Current state:** Documentation/folder scaffolding only. The arrow-key movement input code is currently disposable code in `DEBUG/TopDownTest/TestPlayerInput.cs`; no production `PlayerInput.cs` exists here.

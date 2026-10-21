@@ -4,4 +4,3 @@
 
 [resource]
 script = ExtResource("1_config")
-SpritePixelSize = 0.00124

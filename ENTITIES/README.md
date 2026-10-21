@@ -1,11 +1,12 @@
 # ENTITIES
 
-Shared actors and entity-specific content will live here. The **player is intentionally located at `ENTITIES/Player/`** for now, matching the chosen layout.
+Actors and entity-owned content live here: the player, eventual wildlife, monsters and NPCs. The player remains under [Player/](Player/README.md).
 
-**Status:** Folder and blank configuration template only. No entity base class, movement, combat, or AI is implemented.
+**Status:** Production actors beyond the current debug test have not been implemented. `EntityMasterConfig.cs` / `DefaultEntityConfig.tres` are inspector-ready placeholders. The active disposable top-down test uses its own character and settings under `DEBUG/TopDownTest/`.
 
-- `EntityMasterConfig.cs`: empty Inspector-ready configuration resource template.
-- `DefaultEntityConfig.tres`: blank instance for future shared entity settings.
-- `Player/`: future playable-character content and settings.
+- Keep actor-owned sprite variants, state, species behaviour and entity-specific data with their actor/species folder.
+- Shared combat resolution will belong in `COMBAT/`, generic item definitions in `ITEMS/`, and shared interactive gameplay mechanics in `SYSTEMS/`.
+- Biomes under `WORLD/Biomes/` eventually reference eligible creature species and their spawn conditions; they do not duplicate actor assets or AI.
+- Player-specific survival needs and body temperature are planned under `Player/Survival/`, driven by conditions in `ENVIRONMENT/` and `WORLD/`.
 
-As the project grows, creature families and NPCs can have their own self-contained folders (including their artwork, animations, and sounds). Share behavior in clearly owned components rather than copying it into every actor.
+Avoid copying generic behavior into each creature or player implementation.

@@ -1,7 +1,7 @@
 # Player / Visuals
 
-Presentation remains separate from 3D movement and collision. `PlayerVisual.cs` aligns the visual card once with the fixed camera yaw and positions its bottom at the ground. Later, visuals may be exchanged for a 3D model without rewriting movement.
+Future **2D top-down** player presentation: directional sprites, feet/origin alignment, facing, animation playback, equipment overlays and status appearance (injury/wetness). Keep visuals replaceable without changing movement or game-state logic.
 
-**Current art:** `Sprites/player.png` — a transparent, static full-body pixel-inspired fantasy explorer image. The test `DEBUG/VisualTests/Player.tscn` loads this shared image as a `Sprite3D`. The `ENTITIES/Player/DefaultPlayerConfig.tres` sets `SpritePixelSize = 0.00124` for its 1448-pixel height (~1.8 world units). Resizing the art requires retuning pixel size.
+An optional future workflow is to create/rig/animate a source model in Blender, then render it into 2D spritesheets. Blender source materials can eventually live in `Source3D/`; the Godot runtime itself uses 2D sprites, **not Sprite3D**, and production art may live in `Sprites/` and `Animations/` when created.
 
-Alpha-scissor, nearest texture filtering and double-sided shadow casting are configured in the test scene. Inspect silhouette, transparency, scale and shadowing in Godot: these PNGs are high-resolution illustrations and may require future resolution/style adjustments for a consistently chunky pixel-art aesthetic. Animation sheets and Blender source files remain future work.
+**Current state:** This is documentation/folder scaffolding only. The temporary explorer artwork and sprite code are entirely in `DEBUG/TopDownTest/`. Do not confuse those debug assets with the eventual production player rig.
