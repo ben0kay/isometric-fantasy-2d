@@ -9,6 +9,7 @@ public partial class DebugWeather : Node2D
     public Vector2 Displacement { get; private set; }
     public float Rain { get; private set; }
     public float CloudCover => Config.Overcast ? Rain : 0f;
+    public DebugLightning Lightning { get; private set; }
     private GpuParticles2D _rain;
     private ParticleProcessMaterial _particles;
     private DebugRainSplashes _splashes;
@@ -48,6 +49,8 @@ public partial class DebugWeather : Node2D
         AddChild(_rain);
         _splashes = new DebugRainSplashes { Name = "GroundSplashes", ZIndex = -4, Weather = this };
         AddChild(_splashes);
+        Lightning = new DebugLightning { Name = "Lightning", Weather = this, ZIndex = 7 };
+        AddChild(Lightning);
         BuildControls();
     }
 
@@ -76,6 +79,12 @@ public partial class DebugWeather : Node2D
         splashes.Toggled += value => Config.Splashes = value; controls.AddChild(splashes);
         var overcast = new CheckButton { Text = "Rain overcast lighting", ButtonPressed = Config.Overcast };
         overcast.Toggled += value => Config.Overcast = value; controls.AddChild(overcast);
+        var lightning = new CheckButton { Text = "Storm lightning", ButtonPressed = Config.Lightning, FocusMode = Control.FocusModeEnum.None };
+        lightning.Toggled += value => Config.Lightning = value; controls.AddChild(lightning);
+        var nearby = new Button { Text = "Test nearby flash", FocusMode = Control.FocusModeEnum.None };
+        nearby.Pressed += () => Lightning.Trigger(false); controls.AddChild(nearby);
+        var strike = new Button { Text = "Test visible strike", FocusMode = Control.FocusModeEnum.None };
+        strike.Pressed += () => Lightning.Trigger(true); controls.AddChild(strike);
     }
 
     // Prevent sliders from retaining keyboard focus and consuming movement arrow keys.

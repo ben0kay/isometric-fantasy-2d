@@ -126,6 +126,8 @@ public partial class DebugDayNight : Node2D
         float noon = Edge(0f, 0.70f, Mathf.Max(0, altitude));
         Color ambient = Config.NightColour.Lerp(Config.HorizonColour.Lerp(Config.NoonColour, noon), daylight);
         _ambient.Color = ambient * Colors.White.Lerp(_weather.Config.OvercastTint, _weather.CloudCover * daylight);
+        // Blend the actual scene illumination, so nearby lightning reveals props at night.
+        _ambient.Color = _ambient.Color.Lerp(_weather.Config.LightningTint, _weather.Lightning.Flash);
         float length = Mathf.Lerp(Config.MaximumLength, Config.MinimumLength, Mathf.Sqrt(Mathf.Max(0, altitude)));
         float dayProgress = Mathf.Clamp((_hour - 6f) / 12f, 0f, 1f);
         float angle = Mathf.DegToRad(Mathf.Lerp(150f, 30f, dayProgress) + Config.SunDirectionOffsetDegrees);

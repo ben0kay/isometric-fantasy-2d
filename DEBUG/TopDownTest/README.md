@@ -33,3 +33,5 @@ Scene resource paths, node order, prop counts, overlay dimensions and generated 
 ## Rain and unified wind prototype
 
 Weather/ is another disposable comparison, not a production system. Rain starts at 55%, builds over two seconds, and can be changed from 0–100%. The signed wind slider runs -3 (left), 0 (calm), +3 (right) and drives rain slant, tree/shadow sway, haze, cloud shade, pollen, leaves, smoke and embers. Ground splashes render below actors and avoid conservative prop artwork bounds. Rain/overcast do not pause with the demo clock. Previous separate wind/drift settings were removed; Weather owns the shared values.
+
+Lightning comparisons are also available in the Weather panel: automatic nearby flashes during rain, rare visible ground strikes, a master toggle and manual test buttons. All remain disposable; see Weather/README.md.

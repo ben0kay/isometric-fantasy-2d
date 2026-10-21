@@ -82,6 +82,22 @@ public partial class DebugRainSplashes : Node2D
         QueueRedraw();
     }
 
+    // Reuse cached exclusions for rare lightning impacts; never rebuild scenery bounds per strike.
+    // =========================================================
+    public bool TryGroundPoint(Rect2 requested, RandomNumberGenerator random, out Vector2 point)
+    {
+        Rect2 area = requested.Intersection(_world);
+        Rect2 player = _player == null ? new Rect2() : WorldRect(_player, _player.GetRect()).Grow(10);
+        point = Vector2.Zero;
+        if (!area.HasArea()) return false;
+        for (int attempt = 0; attempt < 40; attempt++)
+        {
+            point = area.Position + new Vector2(random.Randf(), random.Randf()) * area.Size;
+            if (ClearGround(point, player)) return true;
+        }
+        return false;
+    }
+
     // Reject full prop artwork bounds, not only their small ground colliders.
     // =========================================================
     private bool ClearGround(Vector2 point, Rect2 player)

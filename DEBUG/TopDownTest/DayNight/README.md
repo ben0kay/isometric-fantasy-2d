@@ -38,3 +38,5 @@ Seeded scale/mirror variants created at test startup use positive instance-root 
 ## Weather integration
 
 DayNight reads shared signed wind from DebugWeather and applies it to the cached tree/silhouette materials. Mirrored sprites receive an instance shader orientation so their wind direction remains consistent. Rain overcast multiplies the current daylight tint and attenuates sun shadows; setting rain to zero restores the original light. See Weather/README.md for current validation.
+
+The optional debug lightning helper briefly blends the computed ambient tint toward its flash colour. It restores the regular clock/overcast result afterward and does not modify saved time or ambient settings.
