@@ -30,3 +30,7 @@ These are **art-directed flat-ground projections**, not 3D light simulation: sha
 Static resource checks and a full-cycle numerical check cover wrapping, twilight values, finite shadow lengths, daytime/nighttime opacity and projection anchoring. No Godot/.NET executable is installed here, so C# compilation, shader compilation and actual rendering/play-testing are still pending.
 
 Everything lives under DEBUG/TopDownTest/. For later promotion, move the config/controller/materials into your chosen environment folders, update resource paths and replace the demo clock controls with your game clock. Production folders currently have no dependency on this prototype.
+
+## Tree and rock scene variants
+
+The fixed-size/mirror variants authored in `TopDownVisualTest.tscn` use instance-root uniform scaling and `Sprite.flip_h`. Sun-shadow projection includes the parent's scale so size-varied trees cast matching silhouettes; contact oval sizes scale as well. The mirrored sprite texture uses the same horizontal flip in its copied sun shadow. Rock silhouettes and contact shadows use the new reusable rock scene. These are still simplified 2D shadows.

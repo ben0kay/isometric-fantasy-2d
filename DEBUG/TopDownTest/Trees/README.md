@@ -1,6 +1,6 @@
 # Debug trees: collision and wind
 
-All 12 clearing trees instance **Tree01.tscn**. Edit that one scene to update this sprite variant everywhere.
+All 12 clearing trees instance **Tree01.tscn**. Edit that one scene to update the shared sprite and footprint everywhere. `TopDownVisualTest.tscn` now applies **fixed, editor-visible** size and mirror variations per instance (not procedural generation).
 
 ## Anchor and collision
 
@@ -18,6 +18,14 @@ For future tree shapes:
 5. Instance the scene under the Y-sorted Actors node. Uniformly scale the whole tree root for size variations so artwork and collision scale together.
 
 Alpha outlines cannot reliably identify a ground footprint: leaves, roots, shadows and padding differ. Author the footprint once per sprite variant. No new collision code is needed for each tree.
+
+## Authored variation and collider scaling
+
+- The 12 current trees use **uniform instance-root scales from 0.93 to 1.07** (the packed tree scene remains at 1). That changes the entire StaticBody2D, Sprite2D and CollisionPolygon2D together, keeping collisions at the tree roots aligned. Y-sort positions stay at the original ground anchor.
+- Trees 1, 3, 5, 6, 8 and 10 have `Sprite.flip_h = true`. Their **TrunkFootprint polygons are horizontally mirrored** to match the root shape, rather than using a negative physics-body scale (which is risky for Godot physics).
+- These are fixed values in the main debug scene, deliberately visible in the editor. The future WORLD content/biome variation system can decide seeded mirroring and scale, but this scene **does not** implement that system.
+- The day/night demo's sun silhouettes now include the parent's uniform scale and the already copied `FlipH`; generated root contact shadows also follow the root scale.
+
 
 ## Sway
 

@@ -86,7 +86,8 @@ public partial class DebugDayNight : Node2D
     private void AddContactShadow(Node2D body, Node2D shadows, bool tree)
     {
         var points = new Vector2[16];
-        Vector2 radius = tree ? new Vector2(25, 9) : new Vector2(20, 6);
+        // Root scaling is used for variations, so also scale the generated contact oval.
+        Vector2 radius = (tree ? new Vector2(25, 9) : new Vector2(28, 8)) * body.Scale.Abs();
         for (int i = 0; i < points.Length; i++)
         {
             float angle = Mathf.Tau * i / points.Length;
@@ -127,7 +128,11 @@ public partial class DebugDayNight : Node2D
         float opacity = Config.ShadowOpacity * Edge(0f, 0.18f, altitude);
         foreach (Caster caster in _casters)
         {
-            caster.Shadow.Transform = new Transform2D(0f, caster.Body.Position) * projection * caster.Source.Transform;
+            // Preserve the static body's local scale/rotation so size-varied trees and rocks
+            // project silhouettes matching their actual sprite and collision footprints.
+            Transform2D bodyBasis = caster.Body.Transform;
+            bodyBasis.Origin = Vector2.Zero;
+            caster.Shadow.Transform = new Transform2D(0f, caster.Body.Position) * projection * bodyBasis * caster.Source.Transform;
             caster.Shadow.Modulate = new Color(1, 1, 1, opacity);
             caster.Shadow.Visible = opacity > 0.001f && caster.Source.IsVisibleInTree();
         }

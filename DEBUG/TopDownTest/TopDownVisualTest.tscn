@@ -1,11 +1,11 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/DefaultTopDownTestConfig.tres" id="config"]
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass.svg" id="grass"]
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Trees/Tree01.tscn" id="tree"]
-[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/rock.svg" id="rock"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Rocks/Rock01.tscn" id="rock"]
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/player.svg" id="player"]
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/DayNight/DayNightDemo.tscn" id="daynight"]
@@ -17,9 +17,6 @@
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
-
-[sub_resource type="RectangleShape2D" id="Rock"]
-size = Vector2(34, 16)
 
 [sub_resource type="RectangleShape2D" id="HorizontalBound"]
 size = Vector2(960, 16)
@@ -406,91 +403,98 @@ position = Vector2(155, 185)
 
 [node name="Tree1" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(260, 140)
+scale = Vector2(0.95, 0.95)
+
+[node name="Sprite" parent="Actors/Tree1" index="0"]
+flip_h = true
+
+[node name="TrunkFootprint" parent="Actors/Tree1" index="1"]
+polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
 
 [node name="Tree2" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(355, 150)
+scale = Vector2(1.04, 1.04)
 
 [node name="Tree3" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(600, 140)
+scale = Vector2(0.97, 0.97)
+
+[node name="Sprite" parent="Actors/Tree3" index="0"]
+flip_h = true
+
+[node name="TrunkFootprint" parent="Actors/Tree3" index="1"]
+polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
 
 [node name="Tree4" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(735, 180)
+scale = Vector2(1.07, 1.07)
 
 [node name="Tree5" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(830, 260)
+scale = Vector2(0.93, 0.93)
+
+[node name="Sprite" parent="Actors/Tree5" index="0"]
+flip_h = true
+
+[node name="TrunkFootprint" parent="Actors/Tree5" index="1"]
+polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
 
 [node name="Tree6" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(165, 350)
+scale = Vector2(1.02, 1.02)
+
+[node name="Sprite" parent="Actors/Tree6" index="0"]
+flip_h = true
+
+[node name="TrunkFootprint" parent="Actors/Tree6" index="1"]
+polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
 
 [node name="Tree7" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(280, 460)
+scale = Vector2(0.96, 0.96)
 
 [node name="Tree8" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(680, 480)
+scale = Vector2(1.05, 1.05)
+
+[node name="Sprite" parent="Actors/Tree8" index="0"]
+flip_h = true
+
+[node name="TrunkFootprint" parent="Actors/Tree8" index="1"]
+polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
 
 [node name="Tree9" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(820, 540)
+scale = Vector2(0.94, 0.94)
 
 [node name="Tree10" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(130, 560)
+scale = Vector2(1.03, 1.03)
+
+[node name="Sprite" parent="Actors/Tree10" index="0"]
+flip_h = true
+
+[node name="TrunkFootprint" parent="Actors/Tree10" index="1"]
+polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
 
 [node name="Tree11" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(410, 570)
+scale = Vector2(0.98, 0.98)
 
-[node name="Rock0" type="StaticBody2D" parent="Actors"]
+[node name="Rock0" parent="Actors" instance=ExtResource("rock")]
 position = Vector2(325, 285)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Rock0"]
-texture = ExtResource("rock")
-offset = Vector2(0, -12)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Rock0"]
-position = Vector2(0, -5)
-shape = SubResource("Rock")
-
-[node name="Rock1" type="StaticBody2D" parent="Actors"]
+[node name="Rock1" parent="Actors" instance=ExtResource("rock")]
 position = Vector2(635, 310)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Rock1"]
-texture = ExtResource("rock")
-offset = Vector2(0, -12)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Rock1"]
-position = Vector2(0, -5)
-shape = SubResource("Rock")
-
-[node name="Rock2" type="StaticBody2D" parent="Actors"]
+[node name="Rock2" parent="Actors" instance=ExtResource("rock")]
 position = Vector2(580, 490)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Rock2"]
-texture = ExtResource("rock")
-offset = Vector2(0, -12)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Rock2"]
-position = Vector2(0, -5)
-shape = SubResource("Rock")
-
-[node name="Rock3" type="StaticBody2D" parent="Actors"]
+[node name="Rock3" parent="Actors" instance=ExtResource("rock")]
 position = Vector2(210, 440)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Rock3"]
-texture = ExtResource("rock")
-offset = Vector2(0, -12)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Rock3"]
-position = Vector2(0, -5)
-shape = SubResource("Rock")
-
-[node name="Rock4" type="StaticBody2D" parent="Actors"]
+[node name="Rock4" parent="Actors" instance=ExtResource("rock")]
 position = Vector2(770, 350)
-
-[node name="Sprite" type="Sprite2D" parent="Actors/Rock4"]
-texture = ExtResource("rock")
-offset = Vector2(0, -12)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Rock4"]
-position = Vector2(0, -5)
-shape = SubResource("Rock")
 
 [node name="Torch" parent="Actors" instance=ExtResource("torch")]
 position = Vector2(540, 345)
