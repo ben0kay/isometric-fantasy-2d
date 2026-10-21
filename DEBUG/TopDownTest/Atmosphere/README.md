@@ -39,8 +39,12 @@ The haze shader and native scene resources are validated with headless Godot 4.5
 Try noon versus 06:00 and 22:00 using the existing time slider, toggle each effect separately, walk across mist patches, and disable the torch to confirm both emissions disappear.
 
 
-### Organic noise correction
+### Shared noise seam correction
 
-Haze and cloud shade now share `Atmosphere/OrganicNoise.gdshaderinc`: continuous simplex kernels, domain warping and three rotated noise scales replace the square-grid value noise. Broader opacity transitions soften the contours. Existing toggles, density settings, wind drift and day/night behaviour are retained; cloud patches use a slightly larger base scale.
+The shader-calculated grid noise and its later simplex replacement are superseded. Both overlays now sample **Atmosphere/AtmosphereNoise.tres**, a shared 512×512 seamless FastNoiseLite texture with linear filtering and repeat enabled. OrganicNoise.gdshaderinc performs only smooth texture sampling/warping; it no longer calculates gradient cells or sine hashes in the fragment shader. Both scene materials explicitly bind the same noise texture.
 
-Both updated shaders passed headless Godot 4.5.1 validation. A numerical field preview was inspected for continuous irregular shapes; this is not a GPU screenshot of the game. Actual appearance on the project's renderer still needs local comparison. The warped field evaluates more noise than the earlier prototype, so profile before scaling its use.
+This addresses the shared path behind the visible straight cutoffs instead of changing only the pattern's shapes. The exact artifact reported on the user's graphics backend was not reproduced locally, so backend-specific diagnosis is not claimed as confirmed.
+
+Validation now includes actual rendered Godot 4.5.1 Compatibility images using software OpenGL: haze with ambient night tint and a PointLight2D, plus cloud shade in isolation. Both rendered outputs were inspected for continuous patches. These are isolated rendering tests, not a C# build or full-scene screenshot in Godot .NET 4.7.x on the user's backend. Existing controls, day/night blending and drift are retained.
+
+The texture is generated once and shared; there are no per-frame image uploads. Its seamless setting prevents a hard tiling edge, and explicit sampler filtering is independent of the pixel-art filtering used for scenery.

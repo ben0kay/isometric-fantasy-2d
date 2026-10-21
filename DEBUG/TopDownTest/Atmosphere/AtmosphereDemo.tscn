@@ -1,11 +1,14 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/Atmosphere/DebugAtmosphere.cs" id="script"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Atmosphere/DefaultAtmosphereConfig.tres" id="config"]
 [ext_resource type="Shader" path="res://DEBUG/TopDownTest/Atmosphere/GroundHaze.gdshader" id="haze"]
 
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereNoise.tres" id="atmosphere_noise"]
+
 [sub_resource type="ShaderMaterial" id="HazeMaterial"]
 shader = ExtResource("haze")
+shader_parameter/atmosphere_noise_texture = ExtResource("atmosphere_noise")
 
 [sub_resource type="CanvasItemMaterial" id="ParticleMaterial"]
 light_mode = 1

@@ -1,14 +1,17 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/Polish/DebugVisualPolish.cs" id="script"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Polish/DefaultPolishConfig.tres" id="config"]
 [ext_resource type="Shader" path="res://DEBUG/TopDownTest/Polish/ColourGrade.gdshader" id="grade"]
 [ext_resource type="Shader" path="res://DEBUG/TopDownTest/Polish/CloudShade.gdshader" id="cloud"]
+
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereNoise.tres" id="atmosphere_noise"]
 
 [sub_resource type="ShaderMaterial" id="GradeMaterial"]
 shader = ExtResource("grade")
 
 [sub_resource type="ShaderMaterial" id="CloudMaterial"]
 shader = ExtResource("cloud")
+shader_parameter/atmosphere_noise_texture = ExtResource("atmosphere_noise")
 
 [node name="Polish" type="Node2D"]
 script = ExtResource("script")
