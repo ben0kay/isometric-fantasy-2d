@@ -7,7 +7,7 @@ public partial class DebugSnowfall : GpuParticles2D
     public DebugWeather Weather { get; set; }
     private ParticleProcessMaterial _motion;
 
-    // Create a tiny soft flake texture once; random size and speed avoid uniform rain-like lines.
+    // Generate distinct pixel flake shapes once; random atlas frame, size and speed add variation.
     // =========================================================
     public override void _Ready()
     {
@@ -15,16 +15,31 @@ public partial class DebugSnowfall : GpuParticles2D
         {
             EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
             Direction = new Vector3(0, 1, 0), Gravity = Vector3.Zero, Spread = 18,
-            InitialVelocityMin = 24, InitialVelocityMax = 48, ScaleMin = 0.45f, ScaleMax = 1.2f,
-            Color = new Color(0.90f, 0.95f, 1f, 0.8f)
+            InitialVelocityMin = 24, InitialVelocityMax = 48, ScaleMin = 0.45f, ScaleMax = 1.0f,
+            AnimOffsetMin = 0f, AnimOffsetMax = 0.999f,
+            Color = new Color(0.97f, 0.985f, 1f, 0.88f)
         };
         _motion.SetParticleFlag(ParticleProcessMaterial.ParticleFlags.DisableZ, true);
-        var image = Image.CreateEmpty(7, 7, false, Image.Format.Rgba8);
-        for (int y = 0; y < 7; y++) for (int x = 0; x < 7; x++)
-            image.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp(1f - new Vector2(x - 3, y - 3).Length() / 3.2f, 0f, 1f)));
+        // Four crisp atlas frames: small cross, diamond, sparse speck and branched crystal.
+        var image = Image.CreateEmpty(20, 5, false, Image.Format.Rgba8);
+        image.Fill(Colors.Transparent);
+        string[][] shapes = {
+            new[] { ".....", "..#..", ".###.", "..#..", "....." },
+            new[] { "..#..", ".###.", "#####", ".###.", "..#.." },
+            new[] { ".....", ".....", "..##.", "..#..", "....." },
+            new[] { "#.#.#", ".###.", "#####", ".###.", "#.#.#" }
+        };
+        for (int frame = 0; frame < 4; frame++)
+            for (int y = 0; y < 5; y++) for (int x = 0; x < 5; x++)
+                if (shapes[frame][y][x] == '#') image.SetPixel(frame * 5 + x, y, Colors.White);
         Texture = ImageTexture.CreateFromImage(image);
         ProcessMaterial = _motion;
-        Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded };
+        Material = new CanvasItemMaterial
+        {
+            LightMode = CanvasItemMaterial.LightModeEnum.Unshaded,
+            ParticlesAnimation = true, ParticlesAnimHFrames = 4, ParticlesAnimVFrames = 1, ParticlesAnimLoop = false
+        };
+        TextureFilter = TextureFilterEnum.Nearest;
         Amount = 1300; Lifetime = 4; Preprocess = 4; LocalCoords = false; Emitting = false;
         ZIndex = 6;
     }

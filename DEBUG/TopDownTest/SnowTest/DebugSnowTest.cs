@@ -21,8 +21,11 @@ public partial class DebugSnowTest : Node2D
         var weather = GetNode<DebugWeather>("../Weather");
         Texture2D noise = GD.Load<Texture2D>("res://DEBUG/TopDownTest/Ground/Noise/GroundNoise.tres");
         _trees.Attach(GetNode<Node2D>("../Actors"), noise);
+        Node2D grass = GetNodeOrNull<Node2D>("../GrassPatches");
+        if (grass != null) _trees.Attach(grass, noise, true);
         _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://DEBUG/TopDownTest/SnowTest/GroundSnow.gdshader") };
-        _ground.SetShaderParameter("snow_noise", noise);
+        _ground.SetShaderParameter("snow_noise", GD.Load<Texture2D>("res://DEBUG/TopDownTest/SnowTest/SnowCoverageNoise.tres"));
+        _ground.SetShaderParameter("snow_detail", noise);
         Rect2 world = GetNode<DebugWorldScatter>("../Actors").Config.WorldBounds;
         _cover = new MeshInstance2D { Name = "GroundCover", Mesh = new QuadMesh { Size = world.Size }, Position = world.GetCenter(), ZIndex = -7, Material = _ground };
         AddChild(_cover);
@@ -46,6 +49,7 @@ public partial class DebugSnowTest : Node2D
         controls.AddChild(new Label { Text = "Snowfall intensity" });
         HSlider rate = AddSlider(controls, Config.SnowfallRate);
         rate.ValueChanged += value => Config.SnowfallRate = (float)value;
+        AddSwitch(controls, "Snow on grass sprites", Config.GrassSnow, value => Config.GrassSnow = value);
         AddSwitch(controls, "Auto accumulate / melt", Config.AutoAccumulate, value => Config.AutoAccumulate = value);
     }
 
@@ -77,7 +81,7 @@ public partial class DebugSnowTest : Node2D
         _cover.Visible = _coverage > 0f;
         _ground.SetShaderParameter("snow_coverage", _coverage);
         _ground.SetShaderParameter("snow_colour", Config.SnowColour);
-        _trees.Update(_coverage, Config.SnowColour);
+        _trees.Update(_coverage, Config.SnowColour, Config.GrassSnow);
         _syncing = true; _slider.Value = Config.Coverage; _syncing = false;
         _label.Text = $"Settled snow: {_coverage:P0}";
     }
