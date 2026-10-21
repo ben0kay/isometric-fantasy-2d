@@ -1,6 +1,8 @@
 # Fantasy Survival Sandbox — New Direction
 
-> **Status (October 2026):** Fresh-start planning stage. The previous fixed-camera 3D/isometric fantasy prototype has been retired as the project's active direction. This README records the new vision, not implemented features. Existing notes under `Notes/` are retained as historical reference and are not automatically current requirements.
+> **Status (October 2026):** Fresh-start planning stage. The previous fixed-camera 3D/isometric fantasy prototype has been retired as the project's active direction. The small 2D debug visual test is implemented (runtime validation pending); the wider vision below remains planned. Existing notes under `Notes/` are retained as historical reference and are not automatically current requirements.
+
+**Run the debug test:** Build C# in Godot .NET, then F5. Arrow keys move the static explorer around a 2D forest clearing. Everything for this disposable test lives in [DEBUG/TopDownTest/](DEBUG/TopDownTest/README.md); open TopDownVisualTest.tscn and press F6 to run it directly.
 
 ## Vision
 

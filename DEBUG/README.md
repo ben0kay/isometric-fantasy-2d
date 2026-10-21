@@ -1,11 +1,7 @@
 # DEBUG
 
-Disposable development content lives here. `VisualTests/` owns both comparison scenes, their temporary Player scene and **all prototype SVG artwork**. Camera/player C# components and master configs remain in their feature folders.
+Disposable test content only. The current runnable test is [TopDownTest/TopDownVisualTest.tscn](TopDownTest/TopDownVisualTest.tscn): fully 2D forest clearing, static pixel-art player, arrow movement, collision, Y sorting and Camera2D. All its scripts, settings and SVG artwork live inside TopDownTest/.
 
-- `VisualTests/Courtyard3DProps.tscn`: original courtyard, 3D mesh props and sprite player.
-- `VisualTests/Courtyard2DProps.tscn`: same 3D floor, ramp, terrace, camera and player; all visible props are 2D SVG cards. This is now the project main scene.
-- `VisualTests/Player.tscn`: disposable assembly referencing reusable player scripts.
-- `VisualTests/Artwork/`: original SVG explorer, crate, pillar, arch, wall, shrine and tree sources.
-- `DebugMasterConfig.cs` / `DefaultDebugConfig.tres`: existing reserved config; no new runtime debug settings are needed for these authored scenes.
+Build C# in Godot .NET, then F5; or open the scene and press F6. See [test README](TopDownTest/README.md) for settings, limitations and removal instructions.
 
-Build C# in Godot .NET, then F5 for 2D props. Open either scene and press F6 to compare. See VisualTests/README.md for limitations and removal instructions.
+DebugMasterConfig.cs and DefaultDebugConfig.tres remain generic scaffolding. VisualTests/ contains retired 3D leftovers and historical terrain notes; those are not dependencies of the new test.
