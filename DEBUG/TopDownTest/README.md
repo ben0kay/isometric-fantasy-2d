@@ -36,6 +36,10 @@ Weather/ is another disposable comparison, not a production system. Rain starts 
 
 Lightning comparisons are also available in the Weather panel: automatic nearby flashes during rain, rare visible ground strikes, a master toggle and manual test buttons. All remain disposable; see Weather/README.md.
 
+## Decorative wind-swaying grass clumps
+
+The four new PNG sprites are scattered as individual tufts and natural-looking clusters by a separate Grass/ debug module. They use the existing tree wind shader, driven by the shared Weather wind slider, with no collisions or per-clump sunlight shadow. Counts and placement are editable in Grass/DefaultGrassPatchConfig.tres; see [Grass/README.md](Grass/README.md).
+
 ## Organic grass comparison
 
 Ground/ contains the separate grass palette, fine surface-detail and sampled-noise modules, their material/config and a small C# comparison controller. The left-side controls below Polish toggle the original grass, colour patches and fine detail, and adjust variation. See [ground guide](Ground/README.md). Paths/clearing and the weather/lighting systems remain independently owned.

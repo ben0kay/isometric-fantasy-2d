@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereDemo.tscn" id="atmosphere"]
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weather/WeatherDemo.tscn" id="weather"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Grass/GrassPatches.tscn" id="grasspatches"]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/Ground/DebugGroundSurface.cs" id="ground_script"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Ground/DefaultGroundConfig.tres" id="ground_config"]
@@ -448,6 +449,8 @@ limit_top = -320
 limit_right = 1440
 limit_bottom = 960
 position_smoothing_enabled = false
+
+[node name="GrassPatches" parent="." instance=ExtResource("grasspatches")]
 
 [node name="Bounds" type="StaticBody2D" parent="."]
 

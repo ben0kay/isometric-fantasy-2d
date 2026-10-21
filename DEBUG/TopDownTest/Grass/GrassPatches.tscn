@@ -1,0 +1,16 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Grass/DebugGrassPatches.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Grass/DefaultGrassPatchConfig.tres" id="config"]
+[ext_resource type="Material" path="res://DEBUG/TopDownTest/Grass/GrassWind.tres" id="wind"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass_01.png" id="grass1"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass_02.png" id="grass2"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass_03.png" id="grass3"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass_04.png" id="grass4"]
+
+[node name="GrassPatches" type="Node2D"]
+z_index = -9
+script = ExtResource("script")
+Config = ExtResource("config")
+WindMaterial = ExtResource("wind")
+GrassTextures = Array[Texture2D]([ExtResource("grass1"), ExtResource("grass2"), ExtResource("grass3"), ExtResource("grass4")])

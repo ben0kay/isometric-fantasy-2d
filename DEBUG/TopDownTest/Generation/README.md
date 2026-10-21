@@ -51,3 +51,7 @@ The center-to-center spacing test keeps objects from overlapping **at their base
 - Change Seed and run again to confirm another arrangement. Keep the same seed and settings to reproduce it.
 - Scrub time and enable wind, haze, leaves and cloud shade to check they work on *generated* objects.
 - No Godot/.NET executable was available in the authoring environment, so compilation, physics and visual playback still require local verification.
+
+## Decorative grass patches
+
+Grass/ runs after tree/rock scattering and uses CanPlaceGrassDecoration to avoid occupied bases, the main trail, and the starting clearing. Grass has a separate seeded RNG and does not change tree/rock placement.

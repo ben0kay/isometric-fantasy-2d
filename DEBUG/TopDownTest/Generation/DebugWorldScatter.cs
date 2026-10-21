@@ -85,6 +85,23 @@ public partial class DebugWorldScatter : Node2D
     #endregion
 
     #region Placement
+    // Allow non-collidable grass near trees without intersecting physical bases or paths.
+    // =========================================================
+    public bool CanPlaceGrassDecoration(Vector2 point, float clearance)
+    {
+        if (Config == null || !Config.WorldBounds.HasPoint(point)) return false;
+        float extra = Mathf.Max(0f, clearance);
+        float clearing = Config.StartClearingRadius + extra;
+        if (point.DistanceSquaredTo(Config.PlayerSpawn) < clearing * clearing) return false;
+        if (TooNearPath(point, Config.PathHalfWidth + extra)) return false;
+        foreach (var obstacle in _occupied)
+        {
+            float radius = obstacle.Radius * 0.72f + extra;
+            if (point.DistanceSquaredTo(obstacle.Center) < radius * radius) return false;
+        }
+        return true;
+    }
+
     // Bounded rejection sampling: avoid existing roots/rocks, central clearing and the main path.
     // =========================================================
     private bool FindPlacement(RandomNumberGenerator random, bool tree, float radius, out Vector2 position)
