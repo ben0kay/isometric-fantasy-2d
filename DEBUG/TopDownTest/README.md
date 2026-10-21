@@ -6,7 +6,7 @@ Disposable **fully 2D** forest clearing for the new README direction. Open `TopD
 - CharacterBody2D and foot collider handle tree trunks, rocks and map bounds; Camera2D follows without rotation.
 - Actors sort at their feet using Y sorting, so the explorer can pass behind tree canopies.
 - All ground, scenery, colliders and spawn are authored in the scene and visible in the editor. Nothing generates the terrain at runtime.
-- Artwork/ contains original pixel-shaped SVGs: a detailed 32×48 explorer, 32px grass, layered tree and rock. Godot rasterizes SVG on import; nearest filtering keeps edges crisp. This is a temporary palette/proportion test, not final production art.
+- Artwork/ contains the original 32×48 explorer, grass, rock, and placeholder tree SVGs, plus the new transparent `tree_01.png`. All 12 scene trees now use `tree_01.png`, displayed at 0.115 scale with the visual base aligned to the existing trunk collider. The source PNG is preserved at full resolution; its sprite uses linear texture filtering for downscaling. This is a temporary palette/proportion test, not final production art.
 - Ground details and the small player shadow are simple 2D polygons. No day/night, dynamic lighting, combat, survival or world generation.
 
 ## Tuning
