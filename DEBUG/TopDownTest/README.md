@@ -13,6 +13,8 @@ Disposable **fully 2D** forest clearing for the new README direction. Open `TopD
 
 **Visual-polish comparison:** a second panel toggles colour grading, soft sun shadows, moving cloud shade and a flickering torch. Settings live in `Polish/DefaultPolishConfig.tres`; see [polish notes](Polish/README.md). These are disposable debug effects.
 
+**Atmosphere comparison:** the top-right panel independently toggles drifting ground haze, sparse pollen, falling leaves, torch smoke and embers. Tune `Atmosphere/DefaultAtmosphereConfig.tres`; see [atmosphere notes](Atmosphere/README.md). All additions remain disposable debug content.
+
 ## Tuning
 
 Edit `DefaultTopDownTestConfig.tres` in the Inspector: walking speed defaults to 150 pixels/second and camera zoom to 2. Config is separate from the input/movement scripts. Sprite nodes and scenery are editable directly in the scene. Edit `Trees/Tree01.tscn` for the shared footprint and `Trees/Tree01Wind.tres` for wind strength/speed/canopy cutoff. See the [tree guide](Trees/README.md) for new sprite shapes. The root DEBUG master config remains a generic reserved resource; this test owns its settings.

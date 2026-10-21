@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -12,6 +12,8 @@
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/PolishDemo.tscn" id="polish"]
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/Torch.tscn" id="torch"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereDemo.tscn" id="atmosphere"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -544,3 +546,5 @@ shape = SubResource("VerticalBound")
 [node name="DayNight" parent="." instance=ExtResource("daynight")]
 
 [node name="Polish" parent="." instance=ExtResource("polish")]
+
+[node name="Atmosphere" parent="." instance=ExtResource("atmosphere")]
