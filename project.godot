@@ -10,17 +10,15 @@ config_version=5
 
 [application]
 
-run/main_scene="res://DEBUG/TopDownTest/TopDownVisualTest.tscn"
-
 config/name="isometric-fantasy-2d"
+run/main_scene="res://DEBUG/TopDownTest/TopDownVisualTest.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
-
+window/size/viewport_width=1920
+window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
