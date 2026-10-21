@@ -5,6 +5,7 @@ public partial class DebugVisualPolish : Node2D
 {
     [Export] public PolishMasterConfig Config { get; set; }
     private DebugDayNight _day;
+    private DebugWeather _weather;
     private ColorRect _grade;
     private Polygon2D _cloud;
     private ShaderMaterial _gradeMaterial, _cloudMaterial;
@@ -18,6 +19,7 @@ public partial class DebugVisualPolish : Node2D
     {
         Config ??= new PolishMasterConfig();
         _day = GetNode<DebugDayNight>("../DayNight");
+        _weather = GetNode<DebugWeather>("../Weather");
         _grade = GetNode<ColorRect>("Post/Grade");
         _cloud = GetNode<Polygon2D>("Clouds");
         _gradeMaterial = (ShaderMaterial)_grade.Material;
@@ -53,7 +55,7 @@ public partial class DebugVisualPolish : Node2D
         _gradeMaterial.SetShaderParameter("saturation", Config.Saturation);
         _gradeMaterial.SetShaderParameter("vignette", Config.Vignette);
         _cloudMaterial.SetShaderParameter("opacity", Config.CloudOpacity);
-        _cloudMaterial.SetShaderParameter("velocity", Config.CloudVelocity);
+        _cloudMaterial.SetShaderParameter("drift", -_weather.Displacement);
         _cloudMaterial.SetShaderParameter("daylight", _day.Daylight);
         _day.SetShadowSoftness(Config.SoftShadows ? Config.ShadowSoftness : 0f);
         float flicker = 1f + 0.07f * Mathf.Sin(_elapsed * 8.7f) + 0.035f * Mathf.Sin(_elapsed * 17.3f);

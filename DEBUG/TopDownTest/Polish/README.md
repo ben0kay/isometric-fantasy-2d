@@ -10,7 +10,7 @@ Pause the existing clock at midday to compare grading/clouds/shadows, then scrub
 
 ## Settings and ownership
 
-**DefaultPolishConfig.tres** owns switches, Contrast, Saturation, Vignette, CloudOpacity, CloudVelocity, ShadowSoftness and TorchEnergy. Values are read live and can be tweaked through the Remote Inspector. The checkbox controls update this resource in memory; restarting restores saved settings. Configuration changes in the Remote Inspector affect the effects but do not refresh checkbox states automatically.
+**DefaultPolishConfig.tres** owns switches, Contrast, Saturation, Vignette, CloudOpacity, ShadowSoftness and TorchEnergy. Values are read live and can be tweaked through the Remote Inspector. The checkbox controls update this resource in memory; restarting restores saved settings. Configuration changes in the Remote Inspector affect the effects but do not refresh checkbox states automatically.
 
 PolishDemo.tscn contains the cloud overlay, fullscreen grading and comparison UI. Torch.tscn is placed in the existing Y-sorted Actors group. DebugVisualPolish.cs coordinates them and uses the existing day/night controller's Daylight value. Existing shadow shaders accept a softness uniform; the optional polish controller controls it.
 
@@ -44,3 +44,7 @@ The texture is generated once and shared; there are no per-frame image uploads. 
 ## Expanded world
 
 The debug cloud-shade Polygon2D now covers the enlarged 1920×1280 world rectangle, while the UI colour grading remains a viewport overlay. Existing torch near the start clearing and comparisons are unchanged.
+
+## Shared wind integration
+
+Cloud shade now samples integrated displacement from DebugWeather instead of TIME multiplied by a separate CloudVelocity. Changing or reversing wind does not jump the cloud pattern. The old velocity setting was removed; Weather owns wind. See Weather/README.md for current validation.

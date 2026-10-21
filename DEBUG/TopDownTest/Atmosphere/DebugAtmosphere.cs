@@ -7,6 +7,7 @@ public partial class DebugAtmosphere : Node2D
     [Export] public AtmosphereMasterConfig Config { get; set; }
     [Export] public Texture2D SmokeTexture { get; set; }
     private DebugDayNight _day;
+    private DebugWeather _weather;
     private Node2D _torch;
     private Polygon2D _haze;
     private ShaderMaterial _mistMaterial;
@@ -15,6 +16,8 @@ public partial class DebugAtmosphere : Node2D
     private double _time;
     private Vector2 _drift;
     private Rect2 _worldBounds;
+    private readonly Vector2[] _leafDrift = new Vector2[40], _smokeDrift = new Vector2[40], _emberDrift = new Vector2[40];
+    private readonly float[] _leafAge = new float[40], _smokeAge = new float[40], _emberAge = new float[40];
 
     #region Setup
     // Cache emitters once and add controls beside the existing polish switches.
@@ -23,6 +26,7 @@ public partial class DebugAtmosphere : Node2D
     {
         Config ??= new AtmosphereMasterConfig();
         _day = GetNode<DebugDayNight>("../DayNight");
+        _weather = GetNode<DebugWeather>("../Weather");
         _torch = GetNode<Node2D>("../Actors/Torch");
         _haze = GetNode<Polygon2D>("Haze");
         _mistMaterial = (ShaderMaterial)_haze.Material;
@@ -56,14 +60,29 @@ public partial class DebugAtmosphere : Node2D
     public override void _Process(double delta)
     {
         _time += delta;
-        _drift += Config.DriftVelocity * (float)delta;
+        _drift = _weather.Displacement;
+        IntegrateParticleWind(_leafDrift, _leafAge, 14f, 5.37f, 0.5f, (float)delta);
+        IntegrateParticleWind(_smokeDrift, _smokeAge, 6f, 0.43f, 0.7f, (float)delta);
+        IntegrateParticleWind(_emberDrift, _emberAge, 2.2f, 0.31f, 0.3f, (float)delta);
         _haze.Visible = Config.Haze && Config.HazeDensity > 0;
         _mistMaterial.SetShaderParameter("density", Config.HazeDensity);
         _mistMaterial.SetShaderParameter("patch_size", Config.PatchSize);
         _mistMaterial.SetShaderParameter("haze_colour", Config.HazeColour);
         _mistMaterial.SetShaderParameter("daylight", _day.Daylight);
-        _mistMaterial.SetShaderParameter("drift", _drift);
+        _mistMaterial.SetShaderParameter("drift", -_drift);
         QueueRedraw();
+    }
+
+    // Integrate per-cycle drift so wind changes move existing particles without position jumps.
+    // =========================================================
+    private void IntegrateParticleWind(Vector2[] drift, float[] previousAge, float period, float phase, float response, float delta)
+    {
+        for (int i = 0; i < drift.Length; i++)
+        {
+            float age = Mathf.PosMod((float)(_time % 100000) + i * phase, period);
+            drift[i] = age < previousAge[i] ? Vector2.Zero : drift[i] + _weather.Velocity * delta * response;
+            previousAge[i] = age;
+        }
     }
 
     // Fixed-count deterministic trajectories avoid spawning nodes or allocating per particle.
@@ -103,7 +122,7 @@ public partial class DebugAtmosphere : Node2D
         float age = Mathf.PosMod((float)(_time % 100000) + i * 5.37f, 14f);
         if (age > 9f) return;
         Vector2 start = _trees[(i * 17) % _trees.Count] + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
-        Vector2 p = start + new Vector2(Config.DriftVelocity.X * age * 0.5f + Mathf.Sin(age * 2f + i) * 7f, age * 11f);
+        Vector2 p = start + new Vector2(_leafDrift[i].X + Mathf.Sin(age * 2f + i) * 7f, age * 11f);
         float alpha = Mathf.Min(age, 1f) * Mathf.Clamp((9f - age) / 2f, 0f, 1f);
         alpha *= 0.25f + 0.65f * _day.Daylight;
         DrawSetTransform(p, age * 2f + i, new Vector2(1f, 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(age * 3f + i))));
@@ -117,7 +136,7 @@ public partial class DebugAtmosphere : Node2D
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 0.43f, 6f);
         Vector2 p = _torch.Position + new Vector2(0, -43) +
-            new Vector2(Config.DriftVelocity.X * age * 0.7f + Mathf.Sin(age + i) * age, -age * 12f);
+            new Vector2(_smokeDrift[i].X + Mathf.Sin(age + i) * age, -age * 12f);
         float size = 7f + age * 4f;
         float alpha = Mathf.Min(age * 2f, 1f) * (1f - age / 6f) * 0.13f;
         alpha *= 0.4f + 0.6f * _day.Daylight;
@@ -131,7 +150,7 @@ public partial class DebugAtmosphere : Node2D
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 0.31f, 2.2f);
         Vector2 p = _torch.Position + new Vector2(0, -42) +
-            new Vector2(Mathf.Sin(age * 3f + i) * 3f + Config.DriftVelocity.X * age * 0.3f, -age * (14f + i % 4));
+            new Vector2(Mathf.Sin(age * 3f + i) * 3f + _emberDrift[i].X, -age * (14f + i % 4));
         float alpha = Mathf.Min(age * 5f, 1f) * (1f - age / 2.2f) * 0.75f;
         DrawCircle(p, 0.6f, new Color(1f, 0.48f + age * 0.1f, 0.10f, alpha));
     }

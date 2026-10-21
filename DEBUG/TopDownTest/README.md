@@ -16,8 +16,9 @@
 - Arrow keys move the small test explorer; camera follows at zoom 2 by default with bounds clamped to the expanded map. The CharacterBody2D foot collider blocks trees, rocks, torch and map borders. Static actors are Y-sorted by root.
 - `DefaultTopDownTestConfig.tres`: walk speed (150 pixels/sec) and camera zoom.
 - `Generation/DefaultScatterConfig.tres`: world sampling bounds, seed, counts, spacing, root scale ranges and mirror chance. These are **startup parameters**; restart the test after editing.
-- `DayNight/DefaultDayNightConfig.tres`: 30-second daylight cycle by default, sun-shadow length and strength and overall tree wind multiplier. Scrub/pause via the top-left UI.
+- `DayNight/DefaultDayNightConfig.tres`: 30-second daylight cycle by default, sun-shadow length and strength and sun settings (shared wind now lives in Weather). Scrub/pause via the top-left UI.
 - `Polish/DefaultPolishConfig.tres`: colour grading, soft shadows, cloud shade, flickering torch and related UI switches.
+- `Weather/DefaultWeatherConfig.tres`: shared signed wind, GPU rain, ground splashes and overcast. Live sliders appear below the atmosphere panel. See [weather guide](Weather/README.md).
 - `Atmosphere/DefaultAtmosphereConfig.tres`: ground haze, pollen, leaves, smoke and embers. Its comparison controls are at the top right.
 - `Trees/Tree01.tscn` and `Rocks/Rock01.tscn`: edit shared artwork anchor and physically grounded collision polygons. The test rock uses `Artwork/rock_01.webp`; the tree uses `Artwork/tree_01.png`. These are **debug-only**, not production content.
 
@@ -28,3 +29,7 @@ The world grass/path and bounds are still **authored directly in the scene**, no
 The update stays inside `DEBUG/TopDownTest/`, with no new production world, environment, items or survival systems. Procedural props are instantiated only at scene startup and never scattered each frame. Rock/tree spacing is approximate; no complete pathfinding or world streaming is included.
 
 Scene resource paths, node order, prop counts, overlay dimensions and generated collider-transform logic were inspected statically. The environment used for this change does **not** include Godot/.NET, so compile/visual/physics tests need to be run locally. Use **Debug → Visible Collision Shapes** and watch Godot's output for generated totals.
+
+## Rain and unified wind prototype
+
+Weather/ is another disposable comparison, not a production system. Rain starts at 55%, builds over two seconds, and can be changed from 0–100%. The signed wind slider runs -3 (left), 0 (calm), +3 (right) and drives rain slant, tree/shadow sway, haze, cloud shade, pollen, leaves, smoke and embers. Ground splashes render below actors and avoid conservative prop artwork bounds. Rain/overcast do not pause with the demo clock. Previous separate wind/drift settings were removed; Weather owns the shared values.

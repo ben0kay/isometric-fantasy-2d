@@ -16,6 +16,4 @@ public partial class DayNightMasterConfig : Resource
     [Export] public float MinimumLength { get; set; } = 0.18f;
     [Export] public float MaximumLength { get; set; } = 1.65f;
     [Export] public float SunDirectionOffsetDegrees { get; set; } = 0f;
-    [ExportGroup("Shared test wind")]
-    [Export(PropertyHint.Range, "0,3,0.05")] public float WindStrengthMultiplier { get; set; } = 1f;
 }

@@ -14,8 +14,6 @@ public partial class AtmosphereMasterConfig : Resource
     [Export(PropertyHint.Range, "0,0.6,0.01")] public float HazeDensity { get; set; } = 0.22f;
     [Export(PropertyHint.Range, "60,500,5")] public float PatchSize { get; set; } = 190f;
     [Export] public Color HazeColour { get; set; } = new(0.74f, 0.80f, 0.79f);
-    [ExportGroup("Breeze")]
-    [Export] public Vector2 DriftVelocity { get; set; } = new(5f, 1.5f);
     [ExportGroup("Particle intensity")]
     [Export(PropertyHint.Range, "0,100,1")] public int PollenCount { get; set; } = 35;
     [Export(PropertyHint.Range, "0,40,1")] public int LeafCount { get; set; } = 10;

@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -16,6 +16,8 @@
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/Torch.tscn" id="torch"]
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereDemo.tscn" id="atmosphere"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weather/WeatherDemo.tscn" id="weather"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -455,6 +457,8 @@ shape = SubResource("VerticalBound")
 [node name="East" type="CollisionShape2D" parent="Bounds"]
 position = Vector2(1448, 320)
 shape = SubResource("VerticalBound")
+
+[node name="Weather" parent="." instance=ExtResource("weather")]
 
 [node name="DayNight" parent="." instance=ExtResource("daynight")]
 

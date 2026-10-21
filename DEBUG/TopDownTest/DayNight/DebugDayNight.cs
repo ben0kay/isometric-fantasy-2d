@@ -14,6 +14,7 @@ public partial class DebugDayNight : Node2D
     private readonly List<Caster> _casters = new();
     private readonly List<ShaderMaterial> _windMaterials = new();
     private readonly HashSet<ShaderMaterial> _shadowMaterials = new();
+    private DebugWeather _weather;
     private CanvasModulate _ambient;
     private Label _clock;
     private HSlider _slider;
@@ -28,6 +29,7 @@ public partial class DebugDayNight : Node2D
     public override void _Ready()
     {
         Config ??= new DayNightMasterConfig();
+        _weather = GetNode<DebugWeather>("../Weather");
         _hour = Mathf.PosMod(Config.StartHour, 24f);
         _ambient = GetNode<CanvasModulate>("Ambient");
         _clock = GetNode<Label>("UI/Panel/Controls/Clock");
@@ -55,6 +57,7 @@ public partial class DebugDayNight : Node2D
                     _windMaterials.Add(litWind);
                 }
                 source.Material = litWind;
+                source.SetInstanceShaderParameter("wind_orientation", source.FlipH ? -1f : 1f);
                 if (!sharedWindShadows.TryGetValue(original, out ShaderMaterial windShadow))
                 {
                     windShadow = (ShaderMaterial)litWind.Duplicate();
@@ -73,6 +76,8 @@ public partial class DebugDayNight : Node2D
                 TextureFilter = source.TextureFilter, Material = shadowMaterial
             };
             shadows.AddChild(shadow);
+            if (source.Material is ShaderMaterial)
+                shadow.SetInstanceShaderParameter("wind_orientation", source.FlipH ? -1f : 1f);
             _casters.Add(new Caster { Body = body, Source = source, Shadow = shadow });
             // The player already has a contact shadow; trees and rocks get matching grounding.
             if (body.GetNodeOrNull<Polygon2D>("Shadow") == null)
@@ -119,13 +124,14 @@ public partial class DebugDayNight : Node2D
         float daylight = Edge(-0.12f, 0.20f, altitude);
         Daylight = daylight;
         float noon = Edge(0f, 0.70f, Mathf.Max(0, altitude));
-        _ambient.Color = Config.NightColour.Lerp(Config.HorizonColour.Lerp(Config.NoonColour, noon), daylight);
+        Color ambient = Config.NightColour.Lerp(Config.HorizonColour.Lerp(Config.NoonColour, noon), daylight);
+        _ambient.Color = ambient * Colors.White.Lerp(_weather.Config.OvercastTint, _weather.CloudCover * daylight);
         float length = Mathf.Lerp(Config.MaximumLength, Config.MinimumLength, Mathf.Sqrt(Mathf.Max(0, altitude)));
         float dayProgress = Mathf.Clamp((_hour - 6f) / 12f, 0f, 1f);
         float angle = Mathf.DegToRad(Mathf.Lerp(150f, 30f, dayProgress) + Config.SunDirectionOffsetDegrees);
         Vector2 direction = Vector2.FromAngle(angle);
         var projection = new Transform2D(Vector2.Right, -direction * Mathf.Max(0.01f, length), Vector2.Zero);
-        float opacity = Config.ShadowOpacity * Edge(0f, 0.18f, altitude);
+        float opacity = Config.ShadowOpacity * Edge(0f, 0.18f, altitude) * (1f - _weather.CloudCover * 0.85f);
         foreach (Caster caster in _casters)
         {
             // Preserve the static body's local scale/rotation so size-varied trees and rocks
@@ -137,7 +143,7 @@ public partial class DebugDayNight : Node2D
             caster.Shadow.Visible = opacity > 0.001f && caster.Source.IsVisibleInTree();
         }
         foreach (ShaderMaterial material in _windMaterials)
-            material.SetShaderParameter("wind_multiplier", Config.WindStrengthMultiplier);
+            material.SetShaderParameter("wind_multiplier", _weather.WindStrength);
         _updatingSlider = true;
         _slider.Value = _hour;
         _updatingSlider = false;

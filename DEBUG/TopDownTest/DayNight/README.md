@@ -9,7 +9,7 @@ Edit **DefaultDayNightConfig.tres** in the Inspector:
 - ShadowOpacity: maximum sunlight shadow alpha.
 - MinimumLength / MaximumLength: projected height multipliers (0.18 and 1.65), not pixels. Tall sprites naturally cast larger shadows.
 - SunDirectionOffsetDegrees: rotate the demonstration sun path.
-- WindStrengthMultiplier: shared strength for all trees in this test; 0 disables wind. Each tree material retains its own base strength/speed/canopy cutoff.
+- Shared wind is now controlled in `Weather/DefaultWeatherConfig.tres` and its live signed slider, rather than this resource. Each tree retains its own base strength/speed/canopy cutoff.
 
 The settings are read while running, so they can also be adjusted through the Remote Inspector. StartHour initializes the clock only; scrub the slider to change current time.
 
@@ -34,3 +34,7 @@ Everything lives under DEBUG/TopDownTest/. For later promotion, move the config/
 ## Tree and rock scene variants
 
 Seeded scale/mirror variants created at test startup use positive instance-root uniform scaling and `Sprite.flip_h`. Sun-shadow projection includes the parent's scale so size-varied trees cast matching silhouettes; contact oval sizes scale as well. The mirrored sprite texture uses the same horizontal flip in its copied sun shadow. Rock silhouettes and contact shadows use the new reusable rock scene. These are still simplified 2D shadows.
+
+## Weather integration
+
+DayNight reads shared signed wind from DebugWeather and applies it to the cached tree/silhouette materials. Mirrored sprites receive an instance shader orientation so their wind direction remains consistent. Rain overcast multiplies the current daylight tint and attenuates sun shadows; setting rain to zero restores the original light. See Weather/README.md for current validation.

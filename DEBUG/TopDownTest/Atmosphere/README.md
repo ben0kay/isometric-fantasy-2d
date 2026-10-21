@@ -14,7 +14,7 @@ Smoke and embers follow the existing torch visibility switch. Their individual s
 
 Edit **DefaultAtmosphereConfig.tres**:
 - HazeDensity, HazeColour, PatchSize: opacity/tint and the size of mist patches.
-- DriftVelocity: shared X/Y mist and pollen drift in world pixels per second; X also influences leaf/smoke/ember trajectories.
+- shared Weather wind velocity: shared X/Y mist and pollen drift in world pixels per second; X also influences leaf/smoke/ember trajectories.
 - PollenCount, LeafCount, SmokeCount, EmberCount: independent intensity settings. Defaults are 35, 10, 14, 10 with hard caps of 100, 40, 40, 40.
 - Five enable switches match the comparison panel.
 
@@ -52,3 +52,7 @@ The texture is generated once and shared; there are no per-frame image uploads. 
 ## Expanded map and generated trees
 
 The new debug world is 1920×1280 (origin -480,-320). Ground haze covers the enlarged polygon and samples its edge fade against the configurable debug scatter bounds instead of the old 960×640 values. Pollen wraps across the full area. Tree crown positions are collected **after runtime generation**, and the leaf sources are distributed across more of the available trees. Smoke/embers remain near the unchanged central torch. These are still capped preview particle counts, not scaled-up particle counts per square metre.
+
+## Shared wind integration
+
+The separate atmosphere DriftVelocity setting has been removed. DebugWeather integrates one shared displacement for haze, cloud shade and pollen, while leaves/smoke/embers integrate per-cycle drift without teleporting when wind changes. Haze samples negative displacement so visible movement follows wind direction. Controls and clock remain independent. See Weather/README.md for current validation.
