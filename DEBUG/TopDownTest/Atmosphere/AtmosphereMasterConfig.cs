@@ -17,6 +17,9 @@ public partial class AtmosphereMasterConfig : Resource
     [ExportGroup("Particle intensity")]
     [Export(PropertyHint.Range, "0,100,1")] public int PollenCount { get; set; } = 35;
     [Export(PropertyHint.Range, "0,40,1")] public int LeafCount { get; set; } = 10;
+    [ExportGroup("Leaves / wind")]
+    [Export(PropertyHint.Range, "0,2,0.05")] public float LeafWindCountBoost { get; set; } = 1f;
+    [Export(PropertyHint.Range, "0,6,0.25")] public float LeafWindDrift { get; set; } = 2f;
     [Export(PropertyHint.Range, "0,40,1")] public int SmokeCount { get; set; } = 14;
     [Export(PropertyHint.Range, "0,40,1")] public int EmberCount { get; set; } = 10;
 }

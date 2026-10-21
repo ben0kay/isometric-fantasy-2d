@@ -6,7 +6,7 @@ Open the existing TopDownVisualTest.tscn or press F5. The top-right **Atmosphere
 
 - **Haze:** patchy, slowly drifting, ground-level mist with clear gaps. More visible at night/dawn, reduced at midday. It is drawn above the terrain/shadows but below actors, preserving tree and player readability.
 - **Pollen:** sparse tiny specks with a slow drift and subtle brightness changes; much fainter at night.
-- **Leaves:** occasional small brown leaves fall from the existing tree crowns, flutter sideways, tumble, then fade. They do not accumulate on the ground.
+- **Leaves:** small brown leaves fall from generated tree crowns, flutter sideways, tumble, then fade. **Stronger absolute wind produces more falling leaves, more sideways/downwind travel and livelier flutter.** A negative Weather wind blows left; a positive value blows right. They do not accumulate on the ground.
 - **Smoke:** faint, soft expanding puffs rise from the torch and drift sideways.
 - **Embers:** tiny orange sparks rise quickly from the torch and fade. They stay luminous at night.
 
@@ -15,7 +15,10 @@ Smoke and embers follow the existing torch visibility switch. Their individual s
 Edit **DefaultAtmosphereConfig.tres**:
 - HazeDensity, HazeColour, PatchSize: opacity/tint and the size of mist patches.
 - shared Weather wind velocity: shared X/Y mist and pollen drift in world pixels per second; X also influences leaf/smoke/ember trajectories.
-- PollenCount, LeafCount, SmokeCount, EmberCount: independent intensity settings. Defaults are 35, 10, 14, 10 with hard caps of 100, 40, 40, 40.
+- PollenCount, LeafCount, SmokeCount, EmberCount: independent baseline intensity settings. Defaults are 35, 10, 14, 10 with hard caps of 100, 40, 40, 40.
+- LeafWindCountBoost (default 1): multiplies how many **leaf slots** are active as absolute wind increases: `clamp(LeafCount × (1 + abs(WindStrength) × LeafWindCountBoost), 0, 40)`. With LeafCount=10 and the default boost: wind 0 → 10 slots, wind ±1 → 20, wind ±3 → 40. Leaves are age-staggered and invisible for part of their lifecycle, so the number **drawn in one frame** is lower.
+- LeafWindDrift (default 2): multiplies signed `DebugWeather.Velocity` to push leaves over time in the wind direction, with slightly larger flutter and spin in stronger winds. It is **separate from** the shedding-count boost. Existing leaves reverse smoothly when the wind direction changes, rather than teleporting.
+- Both settings are in the `Leaves / wind` group of `AtmosphereMasterConfig.cs` and editable via `DefaultAtmosphereConfig.tres`. The wind strength and direction themselves stay under **Weather's existing slider/config** (−3 left, 0 calm, +3 right).
 - Five enable switches match the comparison panel.
 
 Settings are read live, so use the Remote Inspector to tune values while running. Checkbox edits change the resource only in memory and reset on restart. Remote Inspector edits do not automatically refresh checkbox states.
@@ -56,3 +59,11 @@ The new debug world is 1920×1280 (origin -480,-320). Ground haze covers the enl
 ## Shared wind integration
 
 The separate atmosphere DriftVelocity setting has been removed. DebugWeather integrates one shared displacement for haze, cloud shade and pollen, while leaves/smoke/embers integrate per-cycle drift without teleporting when wind changes. Haze samples negative displacement so visible movement follows wind direction. Controls and clock remain independent. See Weather/README.md for current validation.
+
+## Wind-linked leaf shedding (debug only)
+
+The leaf effect now reuses the shared Weather wind vector. `LeafCount` is the calm-weather baseline. Stronger wind activates more of the existing 40 leaf slots; newly active slots fade in, instead of instantly appearing at full opacity. Wind also changes horizontal travel, flutter amplitude and tumble speed, while preserving the leaf starting positions beneath generated tree canopies. A signed velocity is integrated per leaf lifetime, so slider direction reversals bend the flight paths without jumps.
+
+**Try it:** Keep Falling leaves enabled. Set the Weather wind slider to 0 and observe sparse mostly vertical falling. Move it to +3 to see more leaves blowing to the right, then −3 to see them drift left. Tweak `LeafWindCountBoost` and `LeafWindDrift` independently if the effect is too busy or too forceful. Counts remain hard-capped at 40 and no particle nodes are spawned.
+
+Only the debug atmosphere renderer/configuration has changed. Wind, rain, tree sway, weather controls and production folders are otherwise untouched. Gameplay testing in the Godot .NET editor is still needed.

@@ -16,6 +16,7 @@ public partial class DebugAtmosphere : Node2D
     private double _time;
     private Vector2 _drift;
     private Rect2 _worldBounds;
+    private float _leafWindMagnitude; // Smooth count/animation changes when the wind slider moves.
     private readonly Vector2[] _leafDrift = new Vector2[40], _smokeDrift = new Vector2[40], _emberDrift = new Vector2[40];
     private readonly float[] _leafAge = new float[40], _smokeAge = new float[40], _emberAge = new float[40];
 
@@ -27,6 +28,7 @@ public partial class DebugAtmosphere : Node2D
         Config ??= new AtmosphereMasterConfig();
         _day = GetNode<DebugDayNight>("../DayNight");
         _weather = GetNode<DebugWeather>("../Weather");
+        _leafWindMagnitude = Mathf.Abs(_weather.WindStrength);
         _torch = GetNode<Node2D>("../Actors/Torch");
         _haze = GetNode<Polygon2D>("Haze");
         _mistMaterial = (ShaderMaterial)_haze.Material;
@@ -61,7 +63,9 @@ public partial class DebugAtmosphere : Node2D
     {
         _time += delta;
         _drift = _weather.Displacement;
-        IntegrateParticleWind(_leafDrift, _leafAge, 14f, 5.37f, 0.5f, (float)delta);
+        // Fade in extra leaves over roughly a second rather than popping on a slider change.
+        _leafWindMagnitude = Mathf.MoveToward(_leafWindMagnitude, Mathf.Abs(_weather.WindStrength), (float)delta * 1.5f);
+        IntegrateParticleWind(_leafDrift, _leafAge, 14f, 5.37f, Mathf.Clamp(Config.LeafWindDrift, 0f, 6f), (float)delta);
         IntegrateParticleWind(_smokeDrift, _smokeAge, 6f, 0.43f, 0.7f, (float)delta);
         IntegrateParticleWind(_emberDrift, _emberAge, 2.2f, 0.31f, 0.3f, (float)delta);
         _haze.Visible = Config.Haze && Config.HazeDensity > 0;
@@ -93,7 +97,13 @@ public partial class DebugAtmosphere : Node2D
         if (Config.Pollen)
             for (int i = 0; i < Mathf.Clamp(Config.PollenCount, 0, 100); i++) DrawPollen(i);
         if (Config.Leaves && _trees.Count > 0)
-            for (int i = 0; i < Mathf.Clamp(Config.LeafCount, 0, 40); i++) DrawLeaf(i);
+        {
+            // The existing LeafCount is the calm-weather base; stronger wind reveals
+            // more staggered leaf trajectories, capped by the 40 pooled particles.
+            float count = Mathf.Clamp(Config.LeafCount * (1f + _leafWindMagnitude * Mathf.Max(0f, Config.LeafWindCountBoost)), 0f, _leafDrift.Length);
+            for (int i = 0; i < Mathf.CeilToInt(count); i++)
+                DrawLeaf(i, Mathf.Clamp(count - i, 0f, 1f));
+        }
         if (_torch.IsVisibleInTree())
         {
             if (Config.Smoke && SmokeTexture != null)
@@ -115,17 +125,18 @@ public partial class DebugAtmosphere : Node2D
         DrawCircle(p, i % 4 == 0 ? 0.8f : 0.5f, new Color(0.82f, 0.79f, 0.57f, alpha));
     }
 
-    // Leaves start under tree crowns and tumble down; they fade before looping.
+    // Wind drives direction and flutter while the original tree-origin fall cycle stays intact.
     // =========================================================
-    private void DrawLeaf(int i)
+    private void DrawLeaf(int i, float visibility)
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 5.37f, 14f);
-        if (age > 9f) return;
+        if (age > 9f || visibility <= 0f) return;
         Vector2 start = _trees[(i * 17) % _trees.Count] + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
-        Vector2 p = start + new Vector2(_leafDrift[i].X + Mathf.Sin(age * 2f + i) * 7f, age * 11f);
+        float flutter = 7f + _leafWindMagnitude * 2.5f;
+        Vector2 p = start + _leafDrift[i] + new Vector2(Mathf.Sin(age * (2f + _leafWindMagnitude * 0.15f) + i) * flutter, age * 11f);
         float alpha = Mathf.Min(age, 1f) * Mathf.Clamp((9f - age) / 2f, 0f, 1f);
-        alpha *= 0.25f + 0.65f * _day.Daylight;
-        DrawSetTransform(p, age * 2f + i, new Vector2(1f, 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(age * 3f + i))));
+        alpha *= (0.25f + 0.65f * _day.Daylight) * visibility;
+        DrawSetTransform(p, age * (2f + _leafWindMagnitude * 0.3f) + i, new Vector2(1f, 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(age * 3f + i))));
         DrawColoredPolygon(LeafShape, new Color(0.63f, 0.48f, 0.25f, alpha));
         DrawSetTransform(Vector2.Zero);
     }
