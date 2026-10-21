@@ -38,7 +38,7 @@ Lightning comparisons are also available in the Weather panel: automatic nearby 
 
 ## Decorative wind-swaying grass clumps
 
-The four new PNG sprites are scattered as individual tufts and natural-looking clusters by a separate Grass/ debug module. They use the existing tree wind shader, driven by the shared Weather wind slider, with no collisions or per-clump sunlight shadow. Counts and placement are editable in Grass/DefaultGrassPatchConfig.tres; see [Grass/README.md](Grass/README.md).
+The four replacement `grass_small_01.png`–`grass_small_04.png` sprites are scattered as individual tufts and natural-looking clusters by the separate Grass/ debug module. They use the existing tree wind shader, driven by the shared Weather wind slider, with no collisions or per-clump sunlight shadow. Counts and placement are editable in Grass/DefaultGrassPatchConfig.tres; see [Grass/README.md](Grass/README.md).
 
 ## Organic grass comparison
 

@@ -1,10 +1,12 @@
 # Decorative grass patches — disposable top-down visual test
 
-Four source PNGs from repository root (Grass01.png through Grass04.png) are now stored as Artwork/grass_01.png through grass_04.png. The PNG contents are reused without modification.
+Four updated transparent 128×128 grass sprites (`Grass_Small01.png` through `Grass_Small04.png`) have replaced the original four grass variants. They are now stored under `DEBUG/TopDownTest/Artwork/` as `grass_small_01.png` through `grass_small_04.png` and referenced by `GrassPatches.tscn`. The old `grass_01.png`–`grass_04.png` assets have been deleted. The PNG contents were moved unchanged from the repository root.
 
 ## Generation
 
 GrassPatches.tscn is a modular scene referenced by the main test **after Actors**. It creates 36 scattered clusters of 3–7 clumps each, plus 30 solitary clumps (roughly 210 requested, fewer if constrained). Tufts are sampled from circular distributions with slight central density, seeded from the same world seed with a separate offset, and avoid the main path, start clearing and physical tree/rock bases. Each clump selects one of four artwork variants, a subtle scale (0.26–0.42), brightness (0.88–1.0) and optional mirroring. No collisions, physics, individual shadows or per-clump C# ticks; clumps draw above terrain and below actors.
+
+The **placement, scale, collision-free behavior, and shared TreeSway wind material are unchanged**. Both the original and replacement textures are 128×128, so existing ground anchoring and variation settings remain compatible.
 
 ## Wind
 
