@@ -1,6 +1,6 @@
 # Debug rocks: shared sprite, root anchor and collision
 
-Five boulders in `TopDownVisualTest.tscn` instance `Rock01.tscn`. The old `Artwork/rock.svg` and its obsolete SVG import metadata have been removed from this **debug folder only**.
+The disposable generator now instantiates **about 24** boulders from `Rock01.tscn` during `Actors._Ready()`; see [Generation](../Generation/README.md). The old `Artwork/rock.svg` and its obsolete SVG import metadata have been removed from this **debug folder only**.
 
 ## Art
 
@@ -13,9 +13,11 @@ Five boulders in `TopDownVisualTest.tscn` instance `Rock01.tscn`. The old `Artwo
 
 - Root `StaticBody2D` is the ground anchor; the shared `RockFootprint` is a convex polygon around the physical rock's lower mass, not a giant rectangle covering the transparent sprite canvas.
 - Open `Rock01.tscn`, select **RockFootprint** and edit its points in the 2D editor if you want it wider/narrower. Godot's **Debug → Visible Collision Shapes** makes alignment easier to judge.
-- If you uniformly scale any rock **root instance**, artwork, collision and contact-shadow size change together. Never apply visual-only Sprite scaling as an instance-level size variation.
+- Every generated rock gets a **positive, uniform 0.90–1.10 scale** by default, applied to the complete StaticBody2D so the sprite and collision scale together. Its sunlight and contact shadows are sized accordingly.
+- Roughly half of rocks are mirrored horizontally: Sprite2D.FlipH is paired with a reflected, correctly wound RockFootprint polygon. Negative body scaling is avoided for physics stability.
+- Rock spacing is checked against other rocks and trees, plus the initial clearing and the walkable trail, using approximate placement radii. Seed and density are Inspector-tunable under `Generation/DefaultScatterConfig.tres`.
 - The debug day/night projected shadow now includes the root transform basis, so resizing rock instances also resizes the sunlight silhouette.
 
 ## Scope / verification
 
-This is a fixed, editor-authored visual test; no runtime rock spawning or production WORLD content was implemented. Scene/resource references and collision vertices were inspected statically. Godot rendering and physics play-tests are not available in this connector environment.
+This is a bounded **runtime-scattered** visual test, not a production WORLD generation system. Scene/resource references and collision vertices were inspected statically. Godot rendering and physics play-tests are not available in this connector environment.

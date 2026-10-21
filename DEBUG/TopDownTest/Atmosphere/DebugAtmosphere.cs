@@ -14,6 +14,7 @@ public partial class DebugAtmosphere : Node2D
     private static readonly Vector2[] LeafShape = { new(-3, 0), new(0, -1.5f), new(3, 0), new(0, 1.5f) };
     private double _time;
     private Vector2 _drift;
+    private Rect2 _worldBounds;
 
     #region Setup
     // Cache emitters once and add controls beside the existing polish switches.
@@ -25,6 +26,10 @@ public partial class DebugAtmosphere : Node2D
         _torch = GetNode<Node2D>("../Actors/Torch");
         _haze = GetNode<Polygon2D>("Haze");
         _mistMaterial = (ShaderMaterial)_haze.Material;
+        // Scenery is generated in Actors._Ready before this atmosphere node is ready.
+        _worldBounds = GetNode<DebugWorldScatter>("../Actors").Config.WorldBounds;
+        _mistMaterial.SetShaderParameter("world_min", _worldBounds.Position);
+        _mistMaterial.SetShaderParameter("world_max", _worldBounds.End);
         foreach (Node child in GetNode<Node2D>("../Actors").GetChildren())
             if (child is Node2D tree && child.Name.ToString().StartsWith("Tree")) _trees.Add(tree.Position);
         VBoxContainer controls = GetNode<VBoxContainer>("UI/Panel/Controls");
@@ -85,8 +90,8 @@ public partial class DebugAtmosphere : Node2D
     {
         float phase = i * 2.39996f;
         Vector2 p = new(
-            Mathf.PosMod(i * 137.4f + _drift.X + Mathf.Sin((float)_time * 0.4f + phase) * 6f, 960f),
-            Mathf.PosMod(i * 83.7f + _drift.Y + Mathf.Sin((float)_time * 0.3f + phase) * 4f, 640f));
+            _worldBounds.Position.X + Mathf.PosMod(i * 137.4f + _drift.X + Mathf.Sin((float)_time * 0.4f + phase) * 6f, _worldBounds.Size.X),
+            _worldBounds.Position.Y + Mathf.PosMod(i * 83.7f + _drift.Y + Mathf.Sin((float)_time * 0.3f + phase) * 4f, _worldBounds.Size.Y));
         float alpha = (0.10f + 0.35f * _day.Daylight) * (0.6f + 0.4f * Mathf.Sin((float)_time + phase));
         DrawCircle(p, i % 4 == 0 ? 0.8f : 0.5f, new Color(0.82f, 0.79f, 0.57f, alpha));
     }
@@ -97,7 +102,7 @@ public partial class DebugAtmosphere : Node2D
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 5.37f, 14f);
         if (age > 9f) return;
-        Vector2 start = _trees[i % _trees.Count] + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
+        Vector2 start = _trees[(i * 17) % _trees.Count] + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
         Vector2 p = start + new Vector2(Config.DriftVelocity.X * age * 0.5f + Mathf.Sin(age * 2f + i) * 7f, age * 11f);
         float alpha = Mathf.Min(age, 1f) * Mathf.Clamp((9f - age) / 2f, 0f, 1f);
         alpha *= 0.25f + 0.65f * _day.Daylight;

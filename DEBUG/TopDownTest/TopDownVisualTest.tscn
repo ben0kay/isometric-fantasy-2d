@@ -1,7 +1,9 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Generation/DebugWorldScatter.cs" id="scatter"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Generation/DefaultScatterConfig.tres" id="scatter_config"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/DefaultTopDownTestConfig.tres" id="config"]
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass.svg" id="grass"]
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Trees/Tree01.tscn" id="tree"]
@@ -19,10 +21,10 @@
 size = Vector2(14, 10)
 
 [sub_resource type="RectangleShape2D" id="HorizontalBound"]
-size = Vector2(960, 16)
+size = Vector2(1920, 16)
 
 [sub_resource type="RectangleShape2D" id="VerticalBound"]
-size = Vector2(16, 640)
+size = Vector2(16, 1280)
 
 [node name="TopDownVisualTest" type="Node2D"]
 texture_filter = 1
@@ -31,14 +33,15 @@ texture_filter = 1
 z_index = -10
 
 [node name="Grass" type="Sprite2D" parent="Ground"]
+position = Vector2(-480, -320)
 texture_repeat = 2
 texture = ExtResource("grass")
 centered = false
 region_enabled = true
-region_rect = Rect2(0, 0, 960, 640)
+region_rect = Rect2(0, 0, 1920, 1280)
 
 [node name="Path" type="Polygon2D" parent="Ground"]
-polygon = PackedVector2Array(418, 0, 488, 0, 500, 160, 472, 270, 500, 355, 650, 410, 960, 420, 960, 473, 624, 460, 450, 395, 424, 302, 448, 150)
+polygon = PackedVector2Array(418, -320, 488, -320, 488, 0, 500, 160, 472, 270, 500, 355, 650, 410, 960, 420, 1440, 443, 1440, 495, 960, 473, 624, 460, 450, 395, 424, 302, 448, 150, 418, 0)
 color = Color(0.38, 0.33, 0.23, 1)
 
 [node name="Clearing" type="Polygon2D" parent="Ground"]
@@ -397,104 +400,10 @@ color = Color(0.43, 0.45, 0.29, 0.65)
 
 [node name="Actors" type="Node2D" parent="."]
 y_sort_enabled = true
-
-[node name="Tree0" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(155, 185)
-
-[node name="Tree1" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(260, 140)
-scale = Vector2(0.95, 0.95)
-
-[node name="Sprite" parent="Actors/Tree1" index="0"]
-flip_h = true
-
-[node name="TrunkFootprint" parent="Actors/Tree1" index="1"]
-polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
-
-[node name="Tree2" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(355, 150)
-scale = Vector2(1.04, 1.04)
-
-[node name="Tree3" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(600, 140)
-scale = Vector2(0.97, 0.97)
-
-[node name="Sprite" parent="Actors/Tree3" index="0"]
-flip_h = true
-
-[node name="TrunkFootprint" parent="Actors/Tree3" index="1"]
-polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
-
-[node name="Tree4" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(735, 180)
-scale = Vector2(1.07, 1.07)
-
-[node name="Tree5" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(830, 260)
-scale = Vector2(0.93, 0.93)
-
-[node name="Sprite" parent="Actors/Tree5" index="0"]
-flip_h = true
-
-[node name="TrunkFootprint" parent="Actors/Tree5" index="1"]
-polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
-
-[node name="Tree6" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(165, 350)
-scale = Vector2(1.02, 1.02)
-
-[node name="Sprite" parent="Actors/Tree6" index="0"]
-flip_h = true
-
-[node name="TrunkFootprint" parent="Actors/Tree6" index="1"]
-polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
-
-[node name="Tree7" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(280, 460)
-scale = Vector2(0.96, 0.96)
-
-[node name="Tree8" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(680, 480)
-scale = Vector2(1.05, 1.05)
-
-[node name="Sprite" parent="Actors/Tree8" index="0"]
-flip_h = true
-
-[node name="TrunkFootprint" parent="Actors/Tree8" index="1"]
-polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
-
-[node name="Tree9" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(820, 540)
-scale = Vector2(0.94, 0.94)
-
-[node name="Tree10" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(130, 560)
-scale = Vector2(1.03, 1.03)
-
-[node name="Sprite" parent="Actors/Tree10" index="0"]
-flip_h = true
-
-[node name="TrunkFootprint" parent="Actors/Tree10" index="1"]
-polygon = PackedVector2Array(17, 1, 0, 5, -18, 1, -30, -8, -8, -15, 14, -16, 29, -10)
-
-[node name="Tree11" parent="Actors" instance=ExtResource("tree")]
-position = Vector2(410, 570)
-scale = Vector2(0.98, 0.98)
-
-[node name="Rock0" parent="Actors" instance=ExtResource("rock")]
-position = Vector2(325, 285)
-
-[node name="Rock1" parent="Actors" instance=ExtResource("rock")]
-position = Vector2(635, 310)
-
-[node name="Rock2" parent="Actors" instance=ExtResource("rock")]
-position = Vector2(580, 490)
-
-[node name="Rock3" parent="Actors" instance=ExtResource("rock")]
-position = Vector2(210, 440)
-
-[node name="Rock4" parent="Actors" instance=ExtResource("rock")]
-position = Vector2(770, 350)
+script = ExtResource("scatter")
+Config = ExtResource("scatter_config")
+TreeScene = ExtResource("tree")
+RockScene = ExtResource("rock")
 
 [node name="Torch" parent="Actors" instance=ExtResource("torch")]
 position = Vector2(540, 345)
@@ -523,28 +432,28 @@ script = ExtResource("input")
 [node name="Camera" type="Camera2D" parent="Actors/Player"]
 position = Vector2(0, -16)
 zoom = Vector2(2, 2)
-limit_left = 0
-limit_top = 0
-limit_right = 960
-limit_bottom = 640
+limit_left = -480
+limit_top = -320
+limit_right = 1440
+limit_bottom = 960
 position_smoothing_enabled = false
 
 [node name="Bounds" type="StaticBody2D" parent="."]
 
 [node name="North" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(480, -8)
+position = Vector2(480, -328)
 shape = SubResource("HorizontalBound")
 
 [node name="South" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(480, 648)
+position = Vector2(480, 968)
 shape = SubResource("HorizontalBound")
 
 [node name="West" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(-8, 320)
+position = Vector2(-488, 320)
 shape = SubResource("VerticalBound")
 
 [node name="East" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(968, 320)
+position = Vector2(1448, 320)
 shape = SubResource("VerticalBound")
 
 [node name="DayNight" parent="." instance=ExtResource("daynight")]

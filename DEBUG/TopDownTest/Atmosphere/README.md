@@ -48,3 +48,7 @@ This addresses the shared path behind the visible straight cutoffs instead of ch
 Validation now includes actual rendered Godot 4.5.1 Compatibility images using software OpenGL: haze with ambient night tint and a PointLight2D, plus cloud shade in isolation. Both rendered outputs were inspected for continuous patches. These are isolated rendering tests, not a C# build or full-scene screenshot in Godot .NET 4.7.x on the user's backend. Existing controls, day/night blending and drift are retained.
 
 The texture is generated once and shared; there are no per-frame image uploads. Its seamless setting prevents a hard tiling edge, and explicit sampler filtering is independent of the pixel-art filtering used for scenery.
+
+## Expanded map and generated trees
+
+The new debug world is 1920×1280 (origin -480,-320). Ground haze covers the enlarged polygon and samples its edge fade against the configurable debug scatter bounds instead of the old 960×640 values. Pollen wraps across the full area. Tree crown positions are collected **after runtime generation**, and the leaf sources are distributed across more of the available trees. Smoke/embers remain near the unchanged central torch. These are still capped preview particle counts, not scaled-up particle counts per square metre.

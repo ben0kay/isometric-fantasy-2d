@@ -21,7 +21,7 @@ Projected shadows and static prop contact ovals are visual helpers created once 
 
 Tree silhouette materials reuse the crown sway shader in shadow-only mode. Tree visuals and silhouettes share a scene-wide wind multiplier; materials are cloned for the test so no saved resource values are changed at runtime. Tree/shadow wind phases can differ slightly because phase derives from each rendered sprite's transform.
 
-The controller caches 18 casters (12 trees, 5 rocks and the player), uses shared materials, and does not search the scene every frame. Each projected shadow adds a sprite draw and transparent overdraw. Profile before scaling to large forests; this is a contained visual experiment.
+The controller now caches the **procedurally spawned** trees and rocks plus the player (about 83 casters with default counts), uses shared materials, and does not search the scene every frame. Generator `Actors._Ready()` completes before the day/night node caches these objects. Each projected shadow adds a sprite draw and transparent overdraw. Profile before scaling to large forests; this is a contained visual experiment.
 
 ## Limits and validation
 
@@ -33,4 +33,4 @@ Everything lives under DEBUG/TopDownTest/. For later promotion, move the config/
 
 ## Tree and rock scene variants
 
-The fixed-size/mirror variants authored in `TopDownVisualTest.tscn` use instance-root uniform scaling and `Sprite.flip_h`. Sun-shadow projection includes the parent's scale so size-varied trees cast matching silhouettes; contact oval sizes scale as well. The mirrored sprite texture uses the same horizontal flip in its copied sun shadow. Rock silhouettes and contact shadows use the new reusable rock scene. These are still simplified 2D shadows.
+Seeded scale/mirror variants created at test startup use positive instance-root uniform scaling and `Sprite.flip_h`. Sun-shadow projection includes the parent's scale so size-varied trees cast matching silhouettes; contact oval sizes scale as well. The mirrored sprite texture uses the same horizontal flip in its copied sun shadow. Rock silhouettes and contact shadows use the new reusable rock scene. These are still simplified 2D shadows.
