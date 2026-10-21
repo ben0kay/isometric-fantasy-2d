@@ -37,3 +37,10 @@ The drift setting is a debug atmosphere control, not a production weather/wind s
 The haze shader and native scene resources are validated with headless Godot 4.5.1, and static checks cover scene resource counts, dependencies, particle bounds and alpha ranges. Matching Godot .NET 4.7.x and a C# compiler are not installed here; full C# compilation, GPU rendering, visual tuning and performance measurements remain pending.
 
 Try noon versus 06:00 and 22:00 using the existing time slider, toggle each effect separately, walk across mist patches, and disable the torch to confirm both emissions disappear.
+
+
+### Organic noise correction
+
+Haze and cloud shade now share `Atmosphere/OrganicNoise.gdshaderinc`: continuous simplex kernels, domain warping and three rotated noise scales replace the square-grid value noise. Broader opacity transitions soften the contours. Existing toggles, density settings, wind drift and day/night behaviour are retained; cloud patches use a slightly larger base scale.
+
+Both updated shaders passed headless Godot 4.5.1 validation. A numerical field preview was inspected for continuous irregular shapes; this is not a GPU screenshot of the game. Actual appearance on the project's renderer still needs local comparison. The warped field evaluates more noise than the earlier prototype, so profile before scaling its use.

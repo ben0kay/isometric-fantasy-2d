@@ -29,3 +29,10 @@ Grading draws in CanvasLayer 10; both UI panels draw at layer 20 and are not gra
 All four shaders passed headless Godot 4.5.1 shader parsing/compilation as an additional compatibility check. Scene resource counts, references and UI ordering were checked. This is not a GPU-rendered screenshot test or a build in the project's Godot version: the project uses Godot .NET 4.7.x, and matching .NET tooling is unavailable here. C# build, visual appearance, toggle comparisons and GPU performance remain to be checked in your local editor.
 
 Cost: one screen-copy grading pass, one procedural cloud overlay, one PointLight2D, and eight extra alpha samples per softened shadow pixel. Toggles disable the relevant rendering work. Profile before promoting this to a large forest.
+
+
+### Organic noise correction
+
+Haze and cloud shade now share `Atmosphere/OrganicNoise.gdshaderinc`: continuous simplex kernels, domain warping and three rotated noise scales replace the square-grid value noise. Broader opacity transitions soften the contours. Existing toggles, density settings, wind drift and day/night behaviour are retained; cloud patches use a slightly larger base scale.
+
+Both updated shaders passed headless Godot 4.5.1 validation. A numerical field preview was inspected for continuous irregular shapes; this is not a GPU screenshot of the game. Actual appearance on the project's renderer still needs local comparison. The warped field evaluates more noise than the earlier prototype, so profile before scaling its use.
