@@ -50,3 +50,9 @@ Inspector settings in WeatherMasterConfig: Lightning, LightningIntervalMin/Max, 
 Cost: a small fixed set of line segments and a single local light during visible strikes. Nearby events only alter the existing ambient colour. No per-frame geometry randomization or particle/node spawning. The glow is an inexpensive approximation, not volumetric lightning or HDR bloom.
 
 Lightning validation: all debug scripts compile against GodotSharp 4.7.2 and with the Godot 4.5.1 source generators. A full-scene software OpenGL run rendered both events at night and asserted ambient brightening, impact-light activation only for visible strikes, exact restoration and immediate toggle cancellation. A headless timed simulation additionally checked automatic nearby events, automatic visible events with probability forced to 100% for testing, and suppression after rain stops. No Windows D3D12 or hardware performance validation is claimed.
+
+## More visible ground splashes
+
+Splashes sample uniformly across the **entire camera-visible world rectangle**, intersected with map bounds, including upper/middle/lower terrain. Prop artwork and player exclusions still apply; dense foliage therefore reduces accepted splashes. There is no bottom-of-screen restriction.
+
+Defaults now use SplashOpacity 0.72, SplashSize 1.25 and SplashLifetime 0.38 seconds, with slightly thicker rings/spray and an unshaded material so night tint does not hide them. Rain intensity still controls spawn rate and visibility. These three settings are live Inspector controls in DefaultWeatherConfig.tres. The fixed 96-slot pool and bounded spawn attempts are retained. Exclusion margins cover the larger rings. This remains a disposable debug comparison.

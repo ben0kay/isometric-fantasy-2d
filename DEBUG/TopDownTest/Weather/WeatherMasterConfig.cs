@@ -16,6 +16,9 @@ public partial class WeatherMasterConfig : Resource
     [ExportGroup("Ground splashes")]
     [Export] public bool Splashes { get; set; } = true;
     [Export(PropertyHint.Range, "0,200,1")] public float SplashesPerSecond { get; set; } = 95f;
+    [Export(PropertyHint.Range, "0,1,0.01")] public float SplashOpacity { get; set; } = 0.72f;
+    [Export(PropertyHint.Range, "0.5,2,0.05")] public float SplashSize { get; set; } = 1.25f;
+    [Export(PropertyHint.Range, "0.15,0.6,0.01")] public float SplashLifetime { get; set; } = 0.38f;
     [ExportGroup("Lightning")]
     [Export] public bool Lightning { get; set; } = true;
     [Export(PropertyHint.Range, "2,120,1")] public float LightningIntervalMin { get; set; } = 8f;

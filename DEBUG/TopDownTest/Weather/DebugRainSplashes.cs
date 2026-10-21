@@ -19,6 +19,8 @@ public partial class DebugRainSplashes : Node2D
     // =========================================================
     public override void _Ready()
     {
+        // Match rain visibility at night without a separate light for every splash.
+        Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded };
         Node2D actors = GetNode<Node2D>("../../Actors");
         _world = ((DebugWorldScatter)actors).Config.WorldBounds;
         foreach (Node child in actors.GetChildren())
@@ -32,12 +34,12 @@ public partial class DebugRainSplashes : Node2D
     // =========================================================
     private void CacheArtwork(Node node)
     {
-        if (node is Sprite2D sprite) _blocked.Add(WorldRect(sprite, sprite.GetRect()).Grow(5));
+        if (node is Sprite2D sprite) _blocked.Add(WorldRect(sprite, sprite.GetRect()).Grow(8));
         if (node is Polygon2D polygon && polygon.Polygon.Length > 0)
         {
             Rect2 rect = new(polygon.Polygon[0], Vector2.Zero);
             foreach (Vector2 point in polygon.Polygon) rect = rect.Expand(point);
-            _blocked.Add(WorldRect(polygon, rect).Grow(5));
+            _blocked.Add(WorldRect(polygon, rect).Grow(8));
         }
         foreach (Node child in node.GetChildren()) CacheArtwork(child);
     }
@@ -59,12 +61,12 @@ public partial class DebugRainSplashes : Node2D
     public override void _Process(double delta)
     {
         for (int i = 0; i < _pool.Length; i++)
-            if (_pool[i].Active) { _pool[i].Age += (float)delta; if (_pool[i].Age >= 0.28f) _pool[i].Active = false; }
+            if (_pool[i].Active) { _pool[i].Age += (float)delta; if (_pool[i].Age >= Mathf.Clamp(Weather.Config.SplashLifetime, 0.15f, 0.6f)) _pool[i].Active = false; }
         if (Weather.Config.Splashes && Weather.Rain > 0.001f)
         {
             _budget = Mathf.Min(8f, _budget + (float)delta * Mathf.Clamp(Weather.Config.SplashesPerSecond, 0f, 200f) * Weather.Rain);
             Rect2 area = Weather.VisibleWorldRect().Intersection(_world);
-            Rect2 player = _player == null ? new Rect2() : WorldRect(_player, _player.GetRect()).Grow(5);
+            Rect2 player = _player == null ? new Rect2() : WorldRect(_player, _player.GetRect()).Grow(8);
             while (_budget >= 1f && area.HasArea())
             {
                 _budget -= 1f;
@@ -115,13 +117,14 @@ public partial class DebugRainSplashes : Node2D
         foreach (Splash splash in _pool)
         {
             if (!splash.Active) continue;
-            float t = splash.Age / 0.28f, radius = 0.5f + t * 2.5f;
-            var colour = new Color(0.66f, 0.76f, 0.80f, (1f - t) * Weather.Rain * 0.45f);
+            float t = Mathf.Clamp(splash.Age / Mathf.Clamp(Weather.Config.SplashLifetime, 0.15f, 0.6f), 0f, 1f);
+            float size = Mathf.Clamp(Weather.Config.SplashSize, 0.5f, 2f), radius = (0.5f + t * 2.5f) * size;
+            var colour = new Color(0.72f, 0.81f, 0.86f, (1f - t) * Mathf.Sqrt(Weather.Rain) * Mathf.Clamp(Weather.Config.SplashOpacity, 0f, 1f));
             DrawSetTransform(splash.Position, 0, new Vector2(1, 0.4f));
-            DrawArc(Vector2.Zero, radius, 0, Mathf.Tau, 10, colour, 0.55f, true);
+            DrawArc(Vector2.Zero, radius, 0, Mathf.Tau, 10, colour, 0.8f, true);
             DrawSetTransform(splash.Position);
-            float rise = Mathf.Sin(t * Mathf.Pi) * 3f;
-            DrawLine(new Vector2(-radius, -rise), new Vector2(-radius - 0.4f, -rise - 0.9f), colour, 0.5f, true);
+            float rise = Mathf.Sin(t * Mathf.Pi) * 3f * size;
+            DrawLine(new Vector2(-radius, -rise), new Vector2(-radius - 0.4f, -rise - 0.9f), colour, 0.7f, true);
             DrawLine(new Vector2(radius, -rise), new Vector2(radius + 0.4f, -rise - 0.9f), colour, 0.5f, true);
         }
         DrawSetTransform(Vector2.Zero);
