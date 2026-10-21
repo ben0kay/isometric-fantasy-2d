@@ -1,0 +1,37 @@
+SNOW ACCUMULATION — CODEX DEBUG TEST BRIEF
+Date: 2026-10-21
+Status: Proposed experiment only; not production/season-system work.
+
+GOAL
+Prototype attractive, gradual snow on the existing leafy oak trees and ground WITHOUT hand-painting snow masks or creating multiple snow sprites. Keep everything disposable and isolated to DEBUG/TopDownTest. Do not implement a full season calendar or change production folders.
+
+EXISTING TEST (inspect first)
+- Scene: DEBUG/TopDownTest/TopDownVisualTest.tscn (F6 to run directly)
+- Tree: DEBUG/TopDownTest/Trees/Tree01.tscn
+- Original tree art: DEBUG/TopDownTest/Artwork/tree_01.png
+- Existing wind+shadow shader: DEBUG/TopDownTest/Trees/TreeSway.gdshader
+- Wind material: DEBUG/TopDownTest/Trees/Tree01Wind.tres
+- Ground: DEBUG/TopDownTest/Ground/ (see README.md and Shaders/GrassSurface.gdshader)
+- Rain/shared wind: DEBUG/TopDownTest/Weather/ (see README.md)
+- Day/night projected tree shadows: DEBUG/TopDownTest/DayNight/ (see README.md)
+
+REQUESTED EXPERIMENT
+1. Trees: Try a shader-only snow appearance using the EXISTING tree texture. Approximate canopy/foliage regions via colour, brightness, directional highlights/texture structure and stable noise. Build uneven white/silver patches that increase smoothly with one 0..1 accumulation parameter. Avoid whitening trunk, roots, transparent pixels or tree shadows. Preserve tree sway, Y sorting, mirroring and collisions. Snow must sway with the tree rather than looking like a detached overlay.
+2. Ground: Add irregular snow coverage to the current organic grass material using world-space noise, not a screen-fixed overlay. Include the separately drawn brown path and clearing, which aren't part of the grass shader. Light dusting -> patchy snow -> heavy coverage, while retaining some surface texture.
+3. Weather: Simple falling snow particles, preferably reusing the current shared wind direction/intensity. Allow snow to accumulate gradually as a visual test and fade/melt when reduced. Do not break the rain, storm, day/night or lightning tests.
+4. Controls: Add a compact debug toggle and 0..100% snow-coverage slider, plus optional snowfall toggle/rate, so we can compare instantly and manually scrub snow levels. Keep settings in small dedicated DEBUG config(s) where sensible.
+5. No new manual tree sprites, painted masks or dozens of per-object nodes for V1. Keep code modular, simple, data-driven and GPU-friendly. Snowfall and accumulation do not need realistic physics or persistence yet.
+
+IMPORTANT — BETTER IDEAS WELCOME
+Codex: inspect the actual textures/shaders first. If you find a SIMPLER, faster, or better-looking approach (e.g. automatic procedural mask, generated overlay texture, different material composition, or more appropriate shader logic), USE YOUR JUDGMENT. You do NOT have to implement the exact colour-detection idea. Explain briefly what you chose and why. Prefer no new hand-authored artwork; if a manual mask or separate sprite is genuinely necessary, flag that tradeoff before relying on it. Don't let snow break the existing shared wind shader or the shadow-only branch.
+
+ACCEPTANCE / TEST
+- Open the existing TopDownVisualTest scene; trees show gradual, irregular accumulating snow at slider values 0%, ~25%, ~60% and 100%.
+- Tree trunk remains largely brown; crown still sways and snow follows its motion. Projected shadows remain normal dark silhouettes.
+- Ground, path and clearing build patchy snow without visible repeating squares or camera-locked motion.
+- Snowfall follows left/calm/right wind, using the weather system's shared wind value.
+- Switching snow fully off restores existing visuals. Existing debug features continue working.
+- Avoid needless per-tree frame updates; profile if possible. Compile/run Godot tests when tooling allows, and report anything unverified.
+- Everything stays in DEBUG/TopDownTest; update its relevant README with test controls and limitations.
+
+NOTE: Bare leafless winter trees are OUT OF SCOPE. Their hidden branches cannot be reconstructed convincingly from the existing summer art; one optional winter silhouette may be considered later.
