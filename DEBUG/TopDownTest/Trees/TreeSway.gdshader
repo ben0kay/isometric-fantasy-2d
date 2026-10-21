@@ -5,6 +5,9 @@ uniform float strength_pixels : hint_range(0.0, 30.0, 0.5) = 14.0;
 uniform float speed : hint_range(0.0, 3.0, 0.05) = 0.8;
 uniform float canopy_end : hint_range(0.1, 0.95, 0.01) = 0.70;
 
+uniform float wind_multiplier : hint_range(0.0, 3.0) = 1.0;
+uniform bool shadow_only = false;
+
 varying float tree_phase;
 varying vec4 sprite_tint;
 
@@ -24,8 +27,9 @@ void fragment() {
         + 0.25 * sin(t * 1.83 + tree_phase * 0.63);
     float crown_weight = 1.0 - smoothstep(0.12, canopy_end, UV.y);
     vec2 sample_uv = UV;
-    sample_uv.x -= sway * gust * strength_pixels * TEXTURE_PIXEL_SIZE.x * crown_weight;
+    sample_uv.x -= sway * gust * strength_pixels * wind_multiplier * TEXTURE_PIXEL_SIZE.x * crown_weight;
     vec4 pixel = texture(TEXTURE, clamp(sample_uv, vec2(0.0), vec2(1.0)));
     float inside = step(0.0, sample_uv.x) * step(sample_uv.x, 1.0);
+    if (shadow_only) pixel.rgb = vec3(0.055, 0.075, 0.09);
     COLOR = pixel * sprite_tint * inside;
 }

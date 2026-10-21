@@ -7,7 +7,9 @@ Disposable **fully 2D** forest clearing for the new README direction. Open `TopD
 - Actors sort at their feet using Y sorting, so the explorer can pass behind tree canopies.
 - All ground, scenery, colliders and spawn are authored in the scene and visible in the editor. Nothing generates the terrain at runtime.
 - Artwork/ contains the original 32×48 explorer, grass, rock, and placeholder tree SVGs, plus the new transparent `tree_01.png`. All 12 trees now instance `Trees/Tree01.tscn`, displaying `tree_01.png` at 0.115 scale with a root-centred anchor and editable collision polygon. A subtle shader breeze moves the crown while the lower trunk stays fixed. The source PNG is preserved at full resolution; its sprite uses linear texture filtering for downscaling. This is a temporary palette/proportion test, not final production art.
-- Ground details and the small player shadow are simple 2D polygons. No day/night, dynamic lighting, combat, survival or world generation.
+- Ground details and the small player shadow are simple 2D polygons. A contained [day/night preview](DayNight/README.md) now adds a 30-second full cycle, ambient colour changes, contact shadows and projected sun shadows. No combat, survival or world generation.
+
+**Day/night controls:** use the top-left slider to scrub time and Pause to freeze the cycle. Edit `DayNight/DefaultDayNightConfig.tres` for cycle length, colours, shadow lengths/opacity and shared test wind strength.
 
 ## Tuning
 
