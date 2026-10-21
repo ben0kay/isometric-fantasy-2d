@@ -594,6 +594,7 @@ color = Color(0.08, 0.12, 0.10, 0.5)
 
 [node name="Sprite" type="Sprite2D" parent="Actors/Player"]
 texture = ExtResource("player")
+scale = Vector2(0.8, 0.8)
 offset = Vector2(0, -24)
 
 [node name="Collision" type="CollisionShape2D" parent="Actors/Player"]
