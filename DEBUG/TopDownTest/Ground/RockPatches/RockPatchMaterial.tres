@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=3]
+[ext_resource type="Shader" path="res://DEBUG/TopDownTest/Ground/RockPatches/RockPatch.gdshader" id="shader"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Ground/Noise/GroundNoise.tres" id="broad"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Ground/RockPatches/PebbleNoise.tres" id="pebbles"]
+[resource]
+shader = ExtResource("shader")
+shader_parameter/broad_noise = ExtResource("broad")
+shader_parameter/pebble_noise = ExtResource("pebbles")

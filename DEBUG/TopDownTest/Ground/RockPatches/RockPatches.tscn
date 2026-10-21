@@ -1,0 +1,9 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Ground/RockPatches/DebugRockPatches.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Ground/RockPatches/DefaultRockPatchConfig.tres" id="config"]
+[ext_resource type="Material" path="res://DEBUG/TopDownTest/Ground/RockPatches/RockPatchMaterial.tres" id="material"]
+[node name="RockGround" type="Node2D"]
+z_index = -8
+script = ExtResource("script")
+Config = ExtResource("config")
+PatchMaterial = ExtResource("material")

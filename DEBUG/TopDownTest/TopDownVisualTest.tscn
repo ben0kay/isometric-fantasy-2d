@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -22,6 +22,8 @@
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/Ground/DebugGroundSurface.cs" id="ground_script"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Ground/DefaultGroundConfig.tres" id="ground_config"]
 [ext_resource type="Material" path="res://DEBUG/TopDownTest/Ground/GrassMaterial.tres" id="grass_material"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Ground/RockPatches/RockPatches.tscn" id="rock_ground"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -464,6 +466,8 @@ shape = SubResource("VerticalBound")
 [node name="East" type="CollisionShape2D" parent="Bounds"]
 position = Vector2(1448, 320)
 shape = SubResource("VerticalBound")
+
+[node name="RockGround" parent="." instance=ExtResource("rock_ground")]
 
 [node name="Weather" parent="." instance=ExtResource("weather")]
 
