@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -9,6 +9,9 @@
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/player.svg" id="player"]
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/DayNight/DayNightDemo.tscn" id="daynight"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/PolishDemo.tscn" id="polish"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/Torch.tscn" id="torch"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -487,6 +490,9 @@ offset = Vector2(0, -12)
 position = Vector2(0, -5)
 shape = SubResource("Rock")
 
+[node name="Torch" parent="Actors" instance=ExtResource("torch")]
+position = Vector2(540, 345)
+
 [node name="Player" type="CharacterBody2D" parent="Actors"]
 position = Vector2(480, 320)
 script = ExtResource("movement")
@@ -536,3 +542,5 @@ position = Vector2(968, 320)
 shape = SubResource("VerticalBound")
 
 [node name="DayNight" parent="." instance=ExtResource("daynight")]
+
+[node name="Polish" parent="." instance=ExtResource("polish")]

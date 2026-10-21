@@ -1,0 +1,48 @@
+[gd_scene load_steps=7 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Polish/DebugVisualPolish.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Polish/DefaultPolishConfig.tres" id="config"]
+[ext_resource type="Shader" path="res://DEBUG/TopDownTest/Polish/ColourGrade.gdshader" id="grade"]
+[ext_resource type="Shader" path="res://DEBUG/TopDownTest/Polish/CloudShade.gdshader" id="cloud"]
+
+[sub_resource type="ShaderMaterial" id="GradeMaterial"]
+shader = ExtResource("grade")
+
+[sub_resource type="ShaderMaterial" id="CloudMaterial"]
+shader = ExtResource("cloud")
+
+[node name="Polish" type="Node2D"]
+script = ExtResource("script")
+Config = ExtResource("config")
+
+[node name="Clouds" type="Polygon2D" parent="."]
+z_index = 5
+material = SubResource("CloudMaterial")
+polygon = PackedVector2Array(0, 0, 960, 0, 960, 640, 0, 640)
+
+[node name="Post" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Grade" type="ColorRect" parent="Post"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("GradeMaterial")
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+offset_left = 16.0
+offset_top = 150.0
+offset_right = 336.0
+offset_bottom = 350.0
+
+[node name="Controls" type="VBoxContainer" parent="UI/Panel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/Panel/Controls"]
+layout_mode = 2
+text = "Visual polish comparison"

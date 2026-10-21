@@ -13,10 +13,12 @@ public partial class DebugDayNight : Node2D
     }
     private readonly List<Caster> _casters = new();
     private readonly List<ShaderMaterial> _windMaterials = new();
+    private readonly HashSet<ShaderMaterial> _shadowMaterials = new();
     private CanvasModulate _ambient;
     private Label _clock;
     private HSlider _slider;
     private CheckButton _pause;
+    public float Daylight { get; private set; }
     private float _hour;
     private bool _updatingSlider;
 
@@ -62,6 +64,7 @@ public partial class DebugDayNight : Node2D
                 }
                 shadowMaterial = windShadow;
             }
+            if (shadowMaterial is ShaderMaterial cachedShadow) _shadowMaterials.Add(cachedShadow);
             var shadow = new Sprite2D
             {
                 Name = body.Name + "SunShadow", Texture = source.Texture,
@@ -113,6 +116,7 @@ public partial class DebugDayNight : Node2D
     {
         float altitude = Mathf.Sin((_hour - 6f) / 24f * Mathf.Tau);
         float daylight = Edge(-0.12f, 0.20f, altitude);
+        Daylight = daylight;
         float noon = Edge(0f, 0.70f, Mathf.Max(0, altitude));
         _ambient.Color = Config.NightColour.Lerp(Config.HorizonColour.Lerp(Config.NoonColour, noon), daylight);
         float length = Mathf.Lerp(Config.MaximumLength, Config.MinimumLength, Mathf.Sqrt(Mathf.Max(0, altitude)));
@@ -136,6 +140,14 @@ public partial class DebugDayNight : Node2D
         int minutes = (int)((_hour - hours) * 60);
         _clock.Text = $"{hours:00}:{minutes:00}  |  {Config.CycleSeconds:0}s per day";
     }
+    // Called by the optional polish preview; modify cached shadow materials only.
+    // =========================================================
+    public void SetShadowSoftness(float softness)
+    {
+        foreach (ShaderMaterial material in _shadowMaterials)
+            material.SetShaderParameter("softness_uv", softness);
+    }
+
     // Smoothly map a value between two thresholds (unlike value-interpolating Mathf.SmoothStep).
     // =========================================================
     private static float Edge(float low, float high, float value)
