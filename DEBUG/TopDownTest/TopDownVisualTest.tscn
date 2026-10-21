@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -19,6 +19,10 @@
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weather/WeatherDemo.tscn" id="weather"]
 
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Ground/DebugGroundSurface.cs" id="ground_script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Ground/DefaultGroundConfig.tres" id="ground_config"]
+[ext_resource type="Material" path="res://DEBUG/TopDownTest/Ground/GrassMaterial.tres" id="grass_material"]
+
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
 
@@ -33,8 +37,11 @@ texture_filter = 1
 
 [node name="Ground" type="Node2D" parent="."]
 z_index = -10
+script = ExtResource("ground_script")
+Config = ExtResource("ground_config")
 
 [node name="Grass" type="Sprite2D" parent="Ground"]
+material = ExtResource("grass_material")
 position = Vector2(-480, -320)
 texture_repeat = 2
 texture = ExtResource("grass")
