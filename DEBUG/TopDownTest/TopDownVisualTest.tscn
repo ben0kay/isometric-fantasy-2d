@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -25,6 +25,8 @@
 [ext_resource type="Material" path="res://DEBUG/TopDownTest/Ground/GrassMaterial.tres" id="grass_material"]
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Ground/RockPatches/RockPatches.tscn" id="rock_ground"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/SnowTest/SnowTest.tscn" id="snowtest"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -479,3 +481,5 @@ shape = SubResource("VerticalBound")
 [node name="Polish" parent="." instance=ExtResource("polish")]
 
 [node name="Atmosphere" parent="." instance=ExtResource("atmosphere")]
+
+[node name="SnowTest" parent="." instance=ExtResource("snowtest")]

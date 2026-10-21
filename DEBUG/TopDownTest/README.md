@@ -43,3 +43,7 @@ The four replacement `grass_small_01.png`–`grass_small_04.png` sprites are sca
 ## Organic grass comparison
 
 Ground/ contains the separate grass palette, fine surface-detail and sampled-noise modules, their material/config and a small C# comparison controller. The left-side controls below Polish toggle the original grass, colour patches and fine detail, and adjust variation. See [ground guide](Ground/README.md). Paths/clearing and the weather/lighting systems remain independently owned.
+
+## Removable snow test
+
+SnowTest/ implements the snow-accumulation note as an independent scene instance, initially off. Its left-side panel controls coverage, falling snow/intensity and automatic accumulation/melting. Tree canopies and all flat ground (including path/clearing) receive snow while wind/shadows remain independent. Toggle off to compare, or remove the SnowTest scene instance and folder to discard it. See [snow guide](SnowTest/README.md) for exact cleanup, settings and limitations.
