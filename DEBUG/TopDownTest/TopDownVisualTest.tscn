@@ -1,18 +1,15 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/DefaultTopDownTestConfig.tres" id="config"]
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass.svg" id="grass"]
-[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/tree_01.png" id="tree"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Trees/Tree01.tscn" id="tree"]
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/rock.svg" id="rock"]
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/player.svg" id="player"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
-
-[sub_resource type="RectangleShape2D" id="Trunk"]
-size = Vector2(14, 12)
 
 [sub_resource type="RectangleShape2D" id="Rock"]
 size = Vector2(34, 16)
@@ -396,161 +393,41 @@ color = Color(0.43, 0.45, 0.29, 0.65)
 [node name="Actors" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Tree0" type="StaticBody2D" parent="Actors"]
+[node name="Tree0" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(155, 185)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree0"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree0"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree1" type="StaticBody2D" parent="Actors"]
+[node name="Tree1" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(260, 140)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree1"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree1"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree2" type="StaticBody2D" parent="Actors"]
+[node name="Tree2" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(355, 150)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree2"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree2"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree3" type="StaticBody2D" parent="Actors"]
+[node name="Tree3" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(600, 140)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree3"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree3"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree4" type="StaticBody2D" parent="Actors"]
+[node name="Tree4" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(735, 180)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree4"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree4"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree5" type="StaticBody2D" parent="Actors"]
+[node name="Tree5" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(830, 260)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree5"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree5"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree6" type="StaticBody2D" parent="Actors"]
+[node name="Tree6" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(165, 350)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree6"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree6"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree7" type="StaticBody2D" parent="Actors"]
+[node name="Tree7" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(280, 460)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree7"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree7"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree8" type="StaticBody2D" parent="Actors"]
+[node name="Tree8" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(680, 480)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree8"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree8"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree9" type="StaticBody2D" parent="Actors"]
+[node name="Tree9" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(820, 540)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree9"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree9"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree10" type="StaticBody2D" parent="Actors"]
+[node name="Tree10" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(130, 560)
 
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree10"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree10"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
-
-[node name="Tree11" type="StaticBody2D" parent="Actors"]
+[node name="Tree11" parent="Actors" instance=ExtResource("tree")]
 position = Vector2(410, 570)
-
-[node name="Sprite" type="Sprite2D" parent="Actors/Tree11"]
-texture = ExtResource("tree")
-texture_filter = 2
-scale = Vector2(0.115, 0.115)
-offset = Vector2(0, -724)
-
-[node name="Collision" type="CollisionShape2D" parent="Actors/Tree11"]
-position = Vector2(0, -5)
-shape = SubResource("Trunk")
 
 [node name="Rock0" type="StaticBody2D" parent="Actors"]
 position = Vector2(325, 285)
