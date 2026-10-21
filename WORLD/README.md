@@ -37,7 +37,7 @@ All reusable trees, plants, rocks, props, ores and structures live in `Content/`
 - `Terrain/` and `Water/` hold the *domain assets and definitions*; `Generation/Terrain/` and `Generation/Water/` hold the *algorithms* that place/shape them.
 - `Caves/` is for underground world-region concepts, entrances and features; a reusable stalagmite/rock can still be defined once under `Content/Rocks/`.
 - `WORLD` biome population definitions may **reference** wildlife/enemies from `ENTITIES/`; their AI, sprites and gameplay definitions should remain in `ENTITIES/`.
-- The future **time, day/night, wind, weather and seasonal simulation** is better considered for a separate top-level `ENVIRONMENT/` module. Environmental systems can query or affect biomes and content without being owned by each biome. **No ENVIRONMENT folder or code is created in this pass.**
+- **Time, day/night, wind, weather, season progression and reusable visual atmospheric effects** belong to [ENVIRONMENT/](../ENVIRONMENT/README.md) (currently scaffolding only). A biome may eventually have an optional `Atmosphere.tres` or climate-profile reference to override local fog/lighting/weather tendencies; reusable shaders/effects remain centralized in ENVIRONMENT. Environmental conditions may affect trees and the world without moving tree-specific seasonal art out of WORLD/Content.
 - `DEBUG/TopDownTest/` remains disposable and independent. It is **not** silently promoted to production code by these folders.
 
 ## Workflow

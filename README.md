@@ -42,6 +42,14 @@ Aim for large, diverse, explorable environments with **data-driven biomes, encou
 - Use inspector-editable Resources / MasterConfigs where appropriate; maintain clear READMEs and code organization.
 - Performance matters for many entities, vegetation, lighting, and large worlds. Profile rather than assume.
 
+## Production folder foundations
+
+- [WORLD/](WORLD/README.md): reusable scenery/content, biome definitions, terrain, water, caves, locations, generation and runtime world management.
+- [ENVIRONMENT/](ENVIRONMENT/README.md): time/calendar, lighting, weather, wind, seasonal progression and shared atmospheric effects. Biomes reference optional local environmental profiles; tree-specific seasonal sprites remain with their WORLD content definitions.
+- [DEBUG/TopDownTest/](DEBUG/TopDownTest/README.md): disposable visual tests, including the current day/night, projected shadow and wind experiment. These are **not yet promoted** to ENVIRONMENT production systems.
+
+Both WORLD and ENVIRONMENT are currently **planning/scaffolding only**; no production features are implied by these folders.
+
 ## Scope and next steps
 
 **Do not treat the ideas above as implemented.** This is a reboot; prioritize a tiny playable vertical slice before expanding content:
