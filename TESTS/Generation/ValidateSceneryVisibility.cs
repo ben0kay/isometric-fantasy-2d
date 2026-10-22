@@ -20,7 +20,7 @@ public partial class ValidateSceneryVisibility : Node
         world.Config.Streaming = (WorldStreamingConfig)world.Config.Streaming.Duplicate();
         AddChild(world);
         var env = world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment");
-        var player = world.GetNode<PlayerMovement>("Actors/Player"); var stream = world.Stream;
+        var player = world.Player; var stream = world.Stream;
         Check(world.GetNode("TerrainRoot/StreamedGroundRoot").GetChildCount() == 25,"Ground ownership changed");
         Check(world.GetNodeOrNull("DebugUIRoot/EnvironmentDebugPanel") != null,"F9 owner missing");
         Check(world.GetNodeOrNull("DebugUIRoot/FireDebugPanel") != null,"Fire panel missing");
@@ -55,7 +55,7 @@ public partial class ValidateSceneryVisibility : Node
         for (int i = 0; i < 80 && !partialBinding; i++)
         {
             await Settle(1);
-            partialBinding = world.GetNode("Actors").GetChildren().OfType<Node2D>()
+            partialBinding = world.ChunkActorsRoot.GetChildren().OfType<Node2D>()
                 .Any(n => n.HasMeta("world_chunk_id") && !n.Visible && n.HasMeta("chunk_wind"));
         }
         Check(partialBinding,"Cancellation fixture never reached partial adapter registration");
@@ -70,17 +70,17 @@ public partial class ValidateSceneryVisibility : Node
         player.GlobalPosition = world.Config.PlayerSpawn; player.ResetPhysicsInterpolation(); await Settle(260);
         Check(stream.PendingCount == 0 && stream.CanMoveTo(player.GlobalPosition),"Cancellation left a frontier stuck");
         Check(env.RegisteredChunkCount == stream.LoadedCount,"Cancelled binding leaked environmental adapters");
-        var registeredProps = world.GetNode("Actors").FindChildren("*","",true,false).OfType<Node2D>().Where(n => n.HasMeta("world_instance_id")).ToArray();
-        int torchCount = world.GetNode("Actors").GetChildren().OfType<Node2D>().Count(n => n.Name.ToString().Contains("Torch"));
+        var registeredProps = world.ActorsRoot.FindChildren("*","",true,false).OfType<Node2D>().Where(n => n.HasMeta("world_instance_id")).ToArray();
+        int torchCount = world.PropsRoot.GetChildren().OfType<Node2D>().Count(n => n.Name.ToString().Contains("Torch"));
         Check(rain.SourceCount == registeredProps.Length+torchCount,"Rain cache leaked cancelled/unloaded sources");
         Check(atmosphere.TreeSourceCount == registeredProps.OfType<FantasyGame.World.Trees.Tree>().Count(t => t.Definition.HasFoliage),"Leaf cache leaked cancelled/unloaded trees");
         Check(env.GetChildren().OfType<VegetationWind>().Count() == stream.LoadedCount+1,"Chunk wind adapters leaked");
-        foreach (var chunk in world.GetNode("Actors").GetChildren().OfType<Node2D>().Where(n => n.HasMeta("world_chunk_id")))
+        foreach (var chunk in world.ChunkActorsRoot.GetChildren().OfType<Node2D>().Where(n => n.HasMeta("world_chunk_id")))
             Check(chunk.PhysicsInterpolationMode == PhysicsInterpolationModeEnum.Off,"Static chunk interpolates from identity");
         foreach (var visual in world.GetNode("TerrainRoot/StreamedGroundRoot").GetChildren().OfType<Node2D>())
             Check(visual.PhysicsInterpolationMode == PhysicsInterpolationModeEnum.Off,"Ground interpolates from identity");
         Rect2 view = SceneryVisualBounds.View(env);
-        var visibleTrees = world.GetNode("Actors").FindChildren("*","",true,false).OfType<FantasyGame.World.Trees.Tree>()
+        var visibleTrees = world.ActorsRoot.FindChildren("*","",true,false).OfType<FantasyGame.World.Trees.Tree>()
             .Select(t => t.GetNode<Sprite2D>("Sprite")).Where(s => SceneryVisualBounds.Sprite(s).Intersects(view)).ToArray();
         Check(visibleTrees.Length > 0,"No visible tree fixture");
         foreach (var sprite in visibleTrees)

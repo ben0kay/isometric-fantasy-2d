@@ -48,7 +48,7 @@ public partial class ValidateRainSleeping : Node
         await Frames(25);
         Check(wetness.Coverage==0 && env.GetChildren().OfType<VegetationWetness>().All(w=>!w.IsProcessing()),"Drying never goes to sleep");
         env.Wind.Config.Strength=-2; await Frames(3);
-        var material=world.GetNode("Actors").FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
+        var material=world.ActorsRoot.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
             .Select(s=>s.Material).OfType<ShaderMaterial>().First(m=>m.Shader.Code.Contains("wet_foliage_colour"));
         Check(Mathf.Abs(material.GetShaderParameter("wind_multiplier").AsSingle()+2)<0.001f,"Sleeping wetness freezes shared vegetation wind");
         Check(!wetness.IsProcessing() && env.GroundQueries.SourceCount==sources,"Dry wind updates wake rain or discard shared ground queries");

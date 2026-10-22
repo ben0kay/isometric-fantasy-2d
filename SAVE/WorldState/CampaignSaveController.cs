@@ -28,7 +28,7 @@ public partial class CampaignSaveController : Node
         BuildControls();
         _autosave = new Timer { Name = "Autosave", WaitTime = float.IsFinite(CampaignSession.Settings().AutosaveSeconds) ? Math.Clamp(CampaignSession.Settings().AutosaveSeconds,1,1800) : 120, ProcessMode = ProcessModeEnum.Pausable };
         AddChild(_autosave); _autosave.Timeout += OnAutosave;
-        var player = _world.GetNode<PlayerMovement>("Actors/Player"); player.SetPhysicsProcess(false);
+        var player = _world.Player; player.SetPhysicsProcess(false);
         // Physics receives freshly loaded colliders before input is enabled.
         await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);
         await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);
@@ -49,12 +49,12 @@ public partial class CampaignSaveController : Node
     public CampaignSnapshot Capture()
     {
         using var trace = RuntimeFrameTrace.Measure("Campaign snapshot");
-        var player = _world.GetNode<PlayerMovement>("Actors/Player");
-        var clock = _world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Clock;
+        var player = _world.Player;
+        var clock = _world.Environment.Clock;
         var b = _world.Blueprint;
         return new(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,_fingerprint,DateTime.UtcNow.ToString("O"),b,
             new SavedPlayer(player.GlobalPosition.X,player.GlobalPosition.Y),new SavedClock(clock.Hour,clock.Config.CycleSeconds,clock.Config.Paused),
-            _world.GetNode<WorldEntityPlacement>("SystemsRoot/EntityPlacement").Capture(),_world.Stream.CaptureChanges());
+            _world.EntityPlacement.Capture(),_world.Stream.CaptureChanges());
     }
     // Only one write runs at a time; repeated requests coalesce, while Leave takes a fresh final snapshot.
     // =========================================================

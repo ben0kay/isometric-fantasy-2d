@@ -14,7 +14,7 @@ func run():
         root.add_child(world)
         var startup = Time.get_ticks_msec() - before
         var signature = []
-        for actor in world.get_node("Actors").get_children():
+        for actor in world.get_node("WorldActorsRoot/PreviewSceneryRoot").get_children():
             if actor.has_meta("world_content_id"): signature.append([actor.get_meta("world_content_id"),actor.position,actor.scale])
         fingerprints.append(hash(signature))
         var frame_total = 0.0

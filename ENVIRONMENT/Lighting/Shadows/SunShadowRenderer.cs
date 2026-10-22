@@ -49,7 +49,7 @@ public partial class SunShadowRenderer : Node2D
         Shader flatShader = GD.Load<Shader>("res://ENVIRONMENT/Lighting/Shadows/Silhouette.gdshader");
         var flatMaterial = new ShaderMaterial { Shader = flatShader };
         var sharedWindShadows = new Dictionary<Material, ShaderMaterial>();
-        foreach (Node child in actors.GetChildren())
+        foreach (Node child in WorldActorSources.Initial(actors))
         {
             if (child is not Node2D body || (body.HasMeta("environment_shadows") && !body.GetMeta("environment_shadows").AsBool())) continue;
             Sprite2D source = body.GetNodeOrNull<Sprite2D>("Sprite");

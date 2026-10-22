@@ -2,6 +2,8 @@
 using System.IO;
 public static class SaveCompatibility
 {
+    // Exact source scene accepted by the SO1 → SO2 layout-only compatibility bridge.
+    public const string SO2SceneSourceHash = "F5B98A79AEA0DDEEB52685E827EE8B159835C841CBF3944C3B4A86F35CC3247E";
     // Schema and generator versions are independent; never silently reshape an established world.
     // =========================================================
     public static void RequireSupported(int schema, WorldBlueprintManifest b)

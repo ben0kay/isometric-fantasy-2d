@@ -18,7 +18,7 @@ public sealed class VegetationSnowAdapter
         const string output = "    COLOR = pixel * sprite_tint * inside;";
         var variants = new Dictionary<(ShaderMaterial, bool, int), ShaderMaterial>();
         var shaders = sharedShaders ?? new Dictionary<Shader, Shader>();
-        foreach (Node child in actors.GetChildren())
+        foreach (Node child in WorldActorSources.Initial(actors))
         {
             if (!child.HasMeta("environment_snow") || child.GetMeta("environment_snow").AsInt32() != 1) continue;
             bool grass = child.GetMeta("environment_grass").AsBool();

@@ -17,7 +17,7 @@ public partial class WorldChunkStream : Node
     private readonly Dictionary<string,float> _burns = new();
     private readonly HashSet<string> _removed = new();
     private readonly Dictionary<string,ChunkCoord> _editOwners = new();
-    private WorldScene _world; private Node2D _actors; private PlayerMovement _player;
+    private WorldScene _world; private Node2D _actors, _groundRoot, _navigationRoot; private WorldEntityPlacement _entityPlacement; private PlayerMovement _player;
     private WorldMasterConfig _config; private WorldStreamingConfig _settings; private ChunkSceneryData _data;
     private ShaderMaterial _ground; private Chunk _applying; private bool _bound;
     private EnvironmentRuntime _environment; private FireRuntime _fire; private OcclusionController _visibility;
@@ -45,9 +45,9 @@ public partial class WorldChunkStream : Node
     #region Startup
     // Load only the initial active square before input; no whole-world scenery or navigation is built.
     // =========================================================
-    public void Initialize(WorldScene world, Node2D actors, PlayerMovement player, WorldMasterConfig config, WorldLiquidRegion liquid, SavedChunk[] restored = null)
+    public void Initialize(WorldScene world, Node2D actors, Node2D groundRoot, Node2D navigationRoot, WorldEntityPlacement entityPlacement, PlayerMovement player, WorldMasterConfig config, WorldLiquidRegion liquid, SavedChunk[] restored = null)
     {
-        _world = world; _actors = actors; _player = player; _config = config; _settings = config.Streaming; WorldId = world.Blueprint.WorldId;
+        _world = world; _actors = actors; _groundRoot = groundRoot; _navigationRoot = navigationRoot; _entityPlacement = entityPlacement; _player = player; _config = config; _settings = config.Streaming; WorldId = world.Blueprint.WorldId;
         if (_settings.ChunkSize < 256 || _settings.ChunkSize > 2048 || _settings.ActiveRadius < 2 || _settings.PreloadRadius < _settings.ActiveRadius
             || _settings.UnloadRadius <= _settings.PreloadRadius || _settings.UnloadRadius > 6 || _settings.CandidateCellSize < 32 || _settings.CandidateCellSize > 256
             || _settings.NodesPerFrame < 1 || _settings.NodesPerFrame > 128 || !float.IsFinite(_settings.ApplyBudgetMilliseconds) || _settings.ApplyBudgetMilliseconds <= 0)
@@ -65,7 +65,7 @@ public partial class WorldChunkStream : Node
             if (p.Content is TreeDefinition tree) foreach (var variant in tree.VisualVariants)
                 artMargin = Mathf.Max(artMargin,Mathf.Max(variant.VisualMinimum.Length(),variant.VisualMaximum.Length())*p.MaximumScale);
         }
-        var lighting = config.Biome.Environment?.Lighting ?? world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Config.Defaults.Lighting;
+        var lighting = config.Biome.Environment?.Lighting ?? world.Environment.Config.Defaults.Lighting;
         artMargin *= Mathf.Max(1,lighting.MaximumLength);
         Vector2 halfView = player.GetViewportRect().Size.Max(new Vector2(1920,1080)) / (player.Config.CameraZoom / player.Config.CameraMaxViewMultiplier) * 0.5f;
         if (_settings.ChunkSize*_settings.ActiveRadius < Mathf.Max(halfView.X,halfView.Y)+artMargin+64)
@@ -132,7 +132,7 @@ public partial class WorldChunkStream : Node
         if (_navDirty && _navTimer > 0.5 && timer.Elapsed.TotalMilliseconds < _settings.ApplyBudgetMilliseconds)
         {
             var navTimer = System.Diagnostics.Stopwatch.StartNew();
-            _world.GetNodeOrNull<WorldEntityPlacement>("SystemsRoot/EntityPlacement")?.RefreshNavigation(_actors,_player,LocalBounds);
+            _entityPlacement.RefreshNavigation(_navigationRoot,_player,LocalBounds);
             LastNavigationMilliseconds = navTimer.Elapsed.TotalMilliseconds;
             _navDirty = false; _navTimer = 0;
         }
@@ -180,7 +180,7 @@ public partial class WorldChunkStream : Node
         chunk.Ground = StreamedGroundPalette.Create(coord.Bounds(_settings.ChunkSize).Intersection(_world.MacroMap.Bounds),_ground);
         chunk.Ground.Name = $"ChunkGround_{coord.X}_{coord.Y}";
         chunk.Ground.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
-        chunk.Ground.Visible = false; _world.GetNode("TerrainRoot/StreamedGroundRoot").AddChild(chunk.Ground); chunk.State = WorldChunkState.ApplyingScene;
+        chunk.Ground.Visible = false; _groundRoot.AddChild(chunk.Ground); chunk.State = WorldChunkState.ApplyingScene;
         return chunk;
     }
     // Generic tree/scenery templates retain the canonical data-owned artwork, metadata and colliders.

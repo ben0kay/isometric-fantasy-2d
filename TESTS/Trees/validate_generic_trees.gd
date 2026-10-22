@@ -101,8 +101,8 @@ func run():
     for tree in samples.values():
         check(tree.get_node("FireEffects/Flames").process_material.direction.x<0,"shared wind in flame effects")
         check(tree.get_node("Sprite").material.get_shader_parameter("wind_multiplier")==-2,"shared wind in snow/erosion material")
-    world.get_node("Actors/Player").global_position=pink.global_position+Vector2(100,50)
-    world.get_node("Actors/Player").reset_physics_interpolation()
+    world.get_node("WorldActorsRoot/PersistentEntitiesRoot/Player").global_position=pink.global_position+Vector2(100,50)
+    world.get_node("WorldActorsRoot/PersistentEntitiesRoot/Player").reset_physics_interpolation()
     await create_timer(0.15).timeout
     if DisplayServer.get_name()!="headless":
         await RenderingServer.frame_post_draw
@@ -140,7 +140,7 @@ func run():
     for mirrored in [false,true]:
         var extra=load(TEMPLATE).instantiate()
         extra.call("Configure",third,1,mirrored)
-        world.get_node("Actors").add_child(extra)
+        world.get_node("WorldActorsRoot/PreviewSceneryRoot").add_child(extra)
         check(extra.get("SelectedVariant")==variant,"second variant selected without scene/script")
         check(anchor(extra.get_node("Sprite"),variant.get("SourceAnchor")).distance_to(extra.global_position)<0.001,"asymmetric centered/offset mirrored source anchor")
         check(not extra.get_node("Burnable").call("TryIgnite",extra.global_position,"Disabled"),"optional fire disabled")

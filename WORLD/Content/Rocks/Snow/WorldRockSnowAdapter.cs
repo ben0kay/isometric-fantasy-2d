@@ -20,7 +20,7 @@ public sealed class WorldRockSnowAdapter
             Shader = GD.Load<Shader>("res://WORLD/Content/Rocks/Snow/RockSnow.gdshader")
         };
         _shared.SetShaderParameter("snow_noise", noise);
-        foreach (Node child in actors.GetChildren())
+        foreach (Node child in WorldActorSources.Initial(actors))
         {
             if (child is not Node2D rock || !rock.HasMeta("environment_snow") || rock.GetMeta("environment_snow").AsInt32() != 2) continue;
             Sprite2D sprite = rock.GetNodeOrNull<Sprite2D>("Sprite");

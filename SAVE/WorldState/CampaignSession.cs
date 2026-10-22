@@ -30,14 +30,22 @@ public static class CampaignSession
 
     // Hash text scene/resource dependencies, excluding seed policy. Textures stay external; generation versions gate algorithms.
     // =========================================================
-    public static string ContentFingerprint()
+    public static string ContentFingerprint() => BuildContentFingerprint(null);
+    // Narrow SO2 compatibility bridge: only the previously shipped scene text is substituted.
+    // =========================================================
+    internal static string LegacySO1ContentFingerprint() => BuildContentFingerprint("res://SAVE/Migrations/References/SO1WorldScene.txt");
+    // Compare the full dependency set; the sole optional substitution is frozen scene-layout text.
+    // =========================================================
+    private static string BuildContentFingerprint(string previousWorldScene)
     {
+        if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
+            throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
         var files = new SortedDictionary<string,string>(StringComparer.Ordinal);
         void Visit(string path)
         {
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
-            string source = Godot.FileAccess.GetFileAsString(path).Replace("\r\n","\n");
+            string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
             string normalized = string.Join("\n",source.Split('\n').Where(line => !line.StartsWith("RandomSeedOnLoad = ",StringComparison.Ordinal) && !line.StartsWith("FixedSeed = ",StringComparison.Ordinal)));
             files.Add(path,normalized);
             foreach (Match match in Regex.Matches(source,"path=\"(res://[^\"]+\\.(?:tres|tscn))\"")) Visit(match.Groups[1].Value);
@@ -51,7 +59,11 @@ public static class CampaignSession
     // =========================================================
     public static void RequireContent(CampaignSnapshot snapshot)
     {
-        if (snapshot.ContentFingerprint != ContentFingerprint())
-            throw new InvalidDataException("Campaign content/settings have changed. A deliberate migration is required; the saved world was preserved.");
+        if (snapshot.ContentFingerprint == ContentFingerprint()) return;
+        // This bridge is valid only for the exact shipped SO2 layout, not arbitrary future scene edits.
+        string scene = Godot.FileAccess.GetFileAsString("res://SCENES/World/World.tscn").Replace("\r\n","\n");
+        if (CheckpointFiles.Digest(Encoding.UTF8.GetBytes(scene)) == SaveCompatibility.SO2SceneSourceHash
+            && snapshot.ContentFingerprint == LegacySO1ContentFingerprint()) return;
+        throw new InvalidDataException("Campaign content/settings have changed. A deliberate migration is required; the saved world was preserved.");
     }
 }

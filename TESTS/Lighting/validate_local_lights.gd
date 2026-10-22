@@ -30,8 +30,8 @@ func run():
     root.add_child(world)
     var env=world.get_node("SystemsRoot/Environment")
     var profile=env.get("Settings").get("Torch")
-    var torch=world.get_node("Actors/Torch")
-    check(world.has_node("Actors/PreviewTorch1") and world.has_node("Actors/PreviewTorch2"),"three torches")
+    var torch=world.get_node("WorldActorsRoot/PersistentPropsRoot/Torch")
+    check(world.has_node("WorldActorsRoot/PersistentPropsRoot/PreviewTorch1") and world.has_node("WorldActorsRoot/PersistentPropsRoot/PreviewTorch2"),"three torches")
     env.get("Clock").get("Config").set("Paused",true)
     env.get("Clock").call("SetHour",0)
     env.get("Wind").get("Config").set("Strength",0)
@@ -53,7 +53,7 @@ func run():
         if d<distance:nearest=tree;distance=d
     check(mirrors.size()==2,"both mirror orientations")
     var rocks=0
-    for child in world.get_node("Actors").get_children():
+    for child in world.get_node("WorldActorsRoot/PreviewSceneryRoot").get_children():
         if child.has_node("RockFootprint"):
             rocks+=1
             check(polygons_match(child.get_node("LocalLightOccluder").occluder.polygon,child.get_node("RockFootprint").polygon),"rock blocker")
@@ -71,7 +71,7 @@ func run():
     profile.set("TextureScale",1.5)
     await settle()
     for name in ["Torch","PreviewTorch1","PreviewTorch2"]:
-        check(world.get_node("Actors/"+name+"/Light").shadow_enabled,"all torches opt-in")
+        check(world.get_node("WorldActorsRoot/PersistentPropsRoot/"+name+"/Light").shadow_enabled,"all torches opt-in")
     # Freeze flicker for deterministic image comparisons and isolate one local light.
     for child in env.get_children():
         if str(child.name)=="TorchLight" or str(child.name).begins_with("PreviewTorchLight"):
@@ -80,7 +80,7 @@ func run():
     var light=torch.get_node("Light")
     light.enabled=true;light.energy=1.4;light.texture_scale=2.0
     light.shadow_filter=0
-    var player=world.get_node("Actors/Player")
+    var player=world.get_node("WorldActorsRoot/PersistentEntitiesRoot/Player")
     player.global_position=nearest.global_position+Vector2(0,100)
     player.reset_physics_interpolation()
     await create_timer(0.1).timeout

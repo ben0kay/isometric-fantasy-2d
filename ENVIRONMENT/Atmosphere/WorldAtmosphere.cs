@@ -62,7 +62,7 @@ public partial class WorldAtmosphere : Node2D
     // =========================================================
     public void RefreshTrees()
     {
-        foreach (Node child in Actors.GetChildren())
+        foreach (Node child in WorldActorSources.Initial(Actors))
             if (child is Node2D source && !source.HasMeta("world_chunk_id")) RegisterSource(source);
     }
     // Cache references, position and species colour once, without enumerating unrelated scene descendants.
@@ -212,7 +212,7 @@ public partial class WorldAtmosphere : Node2D
     private void DrawSmoke(int i)
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 0.43f, 6f);
-        Vector2 p = _torch.Position + new Vector2(0, -43) +
+        Vector2 p = ToLocal(_torch.GlobalPosition) + new Vector2(0, -43) +
             new Vector2(_smokeDrift[i].X + Mathf.Sin(age + i) * age, -age * 12f);
         float size = 7f + age * 4f;
         float alpha = Mathf.Min(age * 2f, 1f) * (1f - age / 6f) * 0.13f;
@@ -226,7 +226,7 @@ public partial class WorldAtmosphere : Node2D
     private void DrawEmber(int i)
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 0.31f, 2.2f);
-        Vector2 p = _torch.Position + new Vector2(0, -42) +
+        Vector2 p = ToLocal(_torch.GlobalPosition) + new Vector2(0, -42) +
             new Vector2(Mathf.Sin(age * 3f + i) * 3f + _emberDrift[i].X, -age * (14f + i % 4));
         float alpha = Mathf.Min(age * 5f, 1f) * (1f - age / 2.2f) * 0.75f;
         DrawCircle(p, 0.6f, new Color(1f, 0.48f + age * 0.1f, 0.10f, alpha));

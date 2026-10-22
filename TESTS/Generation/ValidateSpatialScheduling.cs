@@ -41,7 +41,7 @@ public partial class ValidateSpatialScheduling : Node
         // An inactive chunk enters at prepare bounds and leaves only beyond retention bounds.
         Rect2 prepared=SceneryVisualBounds.View(env).Grow(Mathf.Max(64,env.Config.SceneryPrepareMargin));
         float band=env.Config.SceneryRetentionMargin;
-        var chunk=new Node2D(); world.GetNode("Actors").AddChild(chunk);
+        var chunk=new Node2D(); world.ChunkActorsRoot.AddChild(chunk);
         var marker=new StaticBody2D { Position=new Vector2(prepared.End.X+band+64,prepared.GetCenter().Y) }; chunk.AddChild(marker);
         marker.AddChild(new Sprite2D { Name="Sprite",Texture=new GradientTexture2D { Width=20,Height=20 } });
         env.RegisterChunk(chunk);

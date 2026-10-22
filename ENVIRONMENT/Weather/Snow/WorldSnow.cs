@@ -13,6 +13,7 @@ public partial class WorldSnow : Node2D
     private MeshInstance2D _cover;
     public WorldWeather Weather { get; set; }
     public Node2D Actors { get; set; }
+    public PlayerMovement Player { get; set; }
     public Rect2 WorldBounds { get; set; }
     public float Coverage => _coverage;
     private float _coverage, _lastCoverage = float.NaN;
@@ -39,7 +40,7 @@ public partial class WorldSnow : Node2D
         AddChild(_cover);
         Config.Changed += RefreshState;
         RefreshState();
-        PlayerSnowVisual.Ensure(Actors.GetNode<PlayerMovement>("Player")).Snow = this;
+        if (Player != null) PlayerSnowVisual.Ensure(Player).Snow = this;
     }
 
     // Each loaded chunk owns its material adapters; unload restores before actor nodes are released.

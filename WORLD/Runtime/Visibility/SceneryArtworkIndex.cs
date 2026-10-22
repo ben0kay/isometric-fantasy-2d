@@ -19,7 +19,7 @@ public sealed class SceneryArtworkIndex
     public void Initialize(Node2D actors,Rect2 bounds)
     {
         WorldBounds = bounds;
-        foreach (Node child in actors.GetChildren())
+        foreach (Node child in WorldActorSources.Initial(actors))
         {
             if (child.Name == "Player") { _player = child.GetNode<Sprite2D>("Sprite"); continue; }
             if (child is Node2D source && child is not CharacterBody2D && !source.HasMeta("world_chunk_id")) RegisterSource(source);

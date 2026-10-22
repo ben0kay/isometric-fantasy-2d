@@ -20,12 +20,12 @@ public partial class WorldEntityPlacement : Node
     #region Placement
     // Use the existing random forest's actual obstacles, never a separately randomized map.
     // =========================================================
-    public void Populate(Node2D actors, CharacterBody2D player, Rect2 bounds, SavedTestEntity restored = null)
+    public void Populate(Node2D destination, Node2D navigationSource, CharacterBody2D player, Rect2 bounds, SavedTestEntity restored = null)
     {
         if (restored?.Exists == false) return;
         if (!Enabled || EntityScene == null) return;
         var navigation = _navigation = new StaticObstacleNavigation();
-        navigation.Build(actors, bounds, GridCellSize, ColliderClearance, FreeCellSearchRadius);
+        navigation.Build(navigationSource, bounds, GridCellSize, ColliderClearance, FreeCellSearchRadius);
 
         Vector2 wanted = restored == null ? player.GlobalPosition + SpawnOffsetFromPlayer : new Vector2(restored.X,restored.Y);
         Vector2 safeSpawn = wanted;
@@ -48,11 +48,11 @@ public partial class WorldEntityPlacement : Node
             if (EntityDefinition == null) { GD.PushError("Shared entity scene requires EntityDefinition."); instance.Free(); return; }
             entity.Configure(EntityDefinition);
         }
-        instance.Position = safeSpawn;
-        actors.AddChild(instance);
+        instance.Position = destination.ToLocal(safeSpawn);
+        destination.AddChild(instance);
         agent.ConfigureNavigation(player, navigation);
         if (restored != null && instance is Entity savedEntity) savedEntity.RestoreHealth(restored.Health);
-        instance.ProcessMode = bounds.HasPoint(instance.Position) ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+        instance.ProcessMode = bounds.HasPoint(instance.GlobalPosition) ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
         GD.Print($"World entity: spawned {instance.Name} at {safeSpawn}.");
     }
     // Rebuild only the active local grid; the single test agent keeps its identity while far away.

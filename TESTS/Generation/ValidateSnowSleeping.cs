@@ -41,11 +41,11 @@ public partial class ValidateSnowSleeping : Node
         Check(snow.GetNodeOrNull("Snowfall")==null,"Snowfall toggle leaves GPU state");
         applied=snow.AppliedUpdates; config.SnowColour=Colors.White;
         Check(snow.AppliedUpdates==applied+1 && !snow.IsProcessing(),"Sleeping coverage misses profile change");
-        var overlay=world.GetNode("Actors").FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
+        var overlay=world.ActorsRoot.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
             .Select(s=>s.Material).OfType<ShaderMaterial>().First(m=>m.Shader.Code.Contains("tree_snow_colour"));
         env.Wind.Config.Strength=-2; await Frames(3);
         Check(Mathf.Abs(overlay.GetShaderParameter("wind_multiplier").AsSingle()+2)<0.001f && !snow.IsProcessing(),"Sleeping snow freezes wind");
-        var chunkWithSnow=world.GetNode("Actors").GetChildren().OfType<Node2D>().First(n=>n.Name.ToString().StartsWith("Chunk_") &&
+        var chunkWithSnow=world.ChunkActorsRoot.GetChildren().OfType<Node2D>().First(n=>n.Name.ToString().StartsWith("Chunk_") &&
             n.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>().Any(v=>v.Material is ShaderMaterial m && m.Shader.Code.Contains("tree_snow_colour")));
         var chunkMaterial=chunkWithSnow.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
             .Select(v=>v.Material).OfType<ShaderMaterial>().First(m=>m.Shader.Code.Contains("tree_snow_colour"));
@@ -57,17 +57,17 @@ public partial class ValidateSnowSleeping : Node
         Check(chunkMaterial.GetShaderParameter("wind_multiplier").AsSingle()==1,"Re-entering snow misses current wind");
         env.Weather.Config.WetnessBuildSeconds=0.1f; env.Weather.Config.WetnessDrySeconds=0.1f;
         env.Weather.Config.TransitionSeconds=0.1f; env.Weather.Config.RainIntensity=0.5f; await Frames(40);
-        var wetOverlays=world.GetNode("Actors").FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
+        var wetOverlays=world.ActorsRoot.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
             .Select(s=>s.Material).OfType<ShaderMaterial>().Where(m=>m.Shader.Code.Contains("tree_snow_colour") && m.Shader.Code.Contains("wet_foliage_colour")).ToArray();
         Check(wetOverlays.Any(m=>m.GetShaderParameter("wet_coverage").AsSingle()>0.4f),"Sleeping snow freezes wet foliage");
         env.Weather.Config.RainIntensity=0; await Frames(30);
         Check(wetOverlays.All(m=>m.GetShaderParameter("wet_coverage").AsSingle()==0),"Snow overlay never dries");
         config.Enabled=false;
-        Check(!world.GetNode("Actors").FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
+        Check(!world.ActorsRoot.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>()
             .Select(s=>s.Material).OfType<ShaderMaterial>().Any(m=>m.Shader.Code.Contains("tree_snow_colour")),"Master off leaves hidden chunk snow materials active");
         Check(snow.Coverage==0 && !snow.IsProcessing() && !snow.GetNode<MeshInstance2D>("GroundCover").Visible,"Master off does not clear/sleep cover");
         config.Enabled=true; snow.SetCoverage(0.6f);
-        var chunk=new Node2D(); world.GetNode("Actors").AddChild(chunk); snow.RegisterChunk(chunk);
+        var chunk=new Node2D(); world.ChunkActorsRoot.AddChild(chunk); snow.RegisterChunk(chunk);
         snow.SetChunkVisualActive(chunk,false); snow.SetCoverage(0.3f); snow.SetChunkVisualActive(chunk,true); snow.UnregisterChunk(chunk); chunk.QueueFree();
         Check(!snow.IsProcessing() && snow.Coverage==0.3f,"Chunk lifecycle wakes settled simulation");
         config.AutoAccumulate=true; config.Snowfall=true;

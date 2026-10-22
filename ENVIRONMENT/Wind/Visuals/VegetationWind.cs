@@ -13,7 +13,7 @@ public partial class VegetationWind : Node
     public void Attach(Node2D actors)
     {
         var variants = new Dictionary<(ShaderMaterial, bool), ShaderMaterial>();
-        foreach (Node child in actors.GetChildren())
+        foreach (Node child in WorldActorSources.Initial(actors))
         {
             Sprite2D sprite = child.GetNodeOrNull<Sprite2D>("Sprite");
             if (sprite?.Material is not ShaderMaterial source || !source.Shader.Code.Contains("wind_multiplier")) continue;

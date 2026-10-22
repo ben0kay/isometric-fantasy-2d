@@ -17,3 +17,6 @@ TreeDefinition populations use VisualVariants and the one Shared/Tree.tscn. Seed
 
 ## P3 streamed placement
 ChunkSceneryData now supplies coordinate-keyed, density-based local candidate data with cross-chunk priority thinning. The stream materializes canonical tree/scenery templates and applies P2/water exclusions. This original WorldSceneryPlacement startup scatter is retained only for compatibility preview mode. See WORLD/Runtime/Streaming/README.md for density semantics and limits.
+
+## SO2 ownership — awaiting local validation
+WorldSceneryPlacement is now a plain Node under SystemsRoot. Generate receives PreviewSceneryRoot explicitly; generated props never become controller children. WorldEntityPlacement receives separate persistent entity destination and full actor navigation-source root. Canonical content, RNG order, placement rules and stable IDs are unchanged. See SCENES/World/SO2_Copilot_Handoff.md.

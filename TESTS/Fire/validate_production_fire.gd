@@ -41,7 +41,7 @@ func run():
         check(not b.call("TryIgnite",t.global_position,"Repeated"),"no repeated ignition")
         check(not t.get_node("HitResponse").get("HealthyLeaves"),"leaves disabled")
         check(t.has_node("FireEffects"),"production effects")
-    var player=world.get_node("Actors/Player")
+    var player=world.get_node("WorldActorsRoot/PersistentEntitiesRoot/Player")
     player.global_position=normal.get_parent().global_position+Vector2(100,50)
     wind.get("Config").set("Strength",-2)
     await create_timer(0.35).timeout

@@ -1,6 +1,6 @@
 # World Scene Organization — Codex Design / Refactor Plan
 
-> **Status (2026-10-22):** SO0 audit and SO1 grouping implemented; SO2–SO4 remain proposed. Additional GL0–GL3 location/session architecture is proposed below, not authorized code changes. See SO1 implementation notes near the end.
+> **Status (2026-10-22):** SO0/SO1 implemented; SO2 ownership implemented and awaiting local Copilot validation; SO3/SO4 remain proposed. Additional GL0–GL3 location/session architecture is proposed below, not authorized code changes. See SO1 implementation notes near the end.
 > **Date:** 2026-10-22
 > **Location:** This document intentionally lives beside `SCENES/World/World.tscn`.
 > **Goal:** Make Godot's **Remote Scene Tree** understandable at a glance, give spawned objects clear ownership/lifecycle, and prepare for entities, effects, large-world chunk streaming, profile saves and future A-Life **without breaking existing production gameplay or performance**.
@@ -280,3 +280,14 @@ Validation caveat: one repeated Godot 4.5.1 Mono fixture run logged `Handle is n
 7. **Validation and scope:** Give an SO2 then GL0–GL3 implementation order with exact rollback steps, real Windows renderer visual/perf checks and automated cross-profile/reload tests. Identify any SO3 features that should be postponed entirely.
 
 **Decision gate:** Codex should return a concise architecture review and proposed diffs first. No GL0–GL3 or broad save schema change is automatically authorized by this note. One small tested commit per approved implementation job.
+
+
+## SO2 implementation handoff — 22 October 2026
+
+SO2 is implemented, **awaiting local compilation/runtime/graphical/performance validation by GitHub Copilot** at the user's request. See [SO2_Copilot_Handoff.md](SO2_Copilot_Handoff.md) for the before/after paths, audited dependencies, changed files, exact commands and acceptance/rollback requirements. This supersedes earlier SO2-next/planned wording; SO3/SO4 and GL0–GL3 remain unimplemented and separately scoped.
+
+Actual hierarchy: WorldActorsRoot → PersistentEntitiesRoot (player/skeleton), PersistentPropsRoot (torches), ChunkActorsRoot (existing chunk roots), PreviewSceneryRoot (preview props). Ground stays under TerrainRoot/StreamedGroundRoot. SystemsRoot/SceneryPlacement is a plain Node controller, no longer the parent of runtime actors. WorldScene caches typed roots/services once; initial environment discovery crosses only marked ownership containers and skips chunks. All intermediate actor roots enable Y sorting and have identity transforms. No additional per-chunk roots, EffectsRoot, entity registry, duplicate streamer/clock/save system or process loops were added.
+
+P4 remains functionally accepted by the user on its prior revision, but SO2 save compatibility must be reverified. The exact previous source scene is frozen as migration input; only the known SO2 scene plus matching current dependency fingerprints permits the layout-only transition. Saved IDs, macro/features and edits do not regenerate. New checkpoints use the verified current fingerprint; unknown content/schema changes still fail with files preserved.
+
+Validation so far: source/dependency review and diff whitespace checks only. No Godot execution/build/benchmark occurred here. In particular nested Y sorting, seam overlaps, source adapter counts, preview mode, P4 old/new save restoration and Windows frame pacing are **pending**. No performance gain or visual equivalence is claimed until measured/inspected.

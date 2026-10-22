@@ -86,3 +86,6 @@ Validation: the dry-state suite passed 22 checks; streamed traversal/session del
 ## P4 campaign integration — awaiting local validation
 
 Menu-launched campaigns restore frozen macro/features and import SavedChunk deltas before initial chunk materialization. CaptureChanges snapshots loaded removed/burnt props plus retained unloaded edits at save boundaries; healthy visited trees do not accumulate records. SAVE owns the worker/checkpoint/menu lifecycle. Stable candidate IDs and cross-chunk placement remain unchanged. F6 direct sessions remain disposable; fire still pauses while unloaded. See SAVE/README.md and SAVE/P4_Copilot_Handoff.md for exact local test commands. No compilation/runtime/performance tests were executed here for P4.
+
+## SO2 destinations — awaiting local validation
+The existing stream receives ChunkActorsRoot, StreamedGroundRoot, the full actor navigation-source root and EntityPlacement explicitly. Chunk props remain immediate children of the same hidden/publication-controlled chunk node; binding/cancellation/unload and saved deltas are unchanged. Player/skeleton and authored torches now have persistent sibling roots. No additional streamed SceneryRoot/EntitiesRoot layers or streamer are introduced. Regression paths follow genuine hierarchy changes. See SCENES/World/SO2_Copilot_Handoff.md.

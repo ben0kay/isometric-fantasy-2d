@@ -42,7 +42,7 @@ public partial class VegetationWetness : Node
     {
         var shaders = sharedShaders ?? new Dictionary<Shader, Shader>();
         var variants = new Dictionary<(ShaderMaterial, int), ShaderMaterial>();
-        foreach (Node tree in actors.GetChildren())
+        foreach (Node tree in WorldActorSources.Initial(actors))
         {
             if (!tree.IsInGroup("world_trees")) continue;
             Sprite2D sprite = tree.GetNodeOrNull<Sprite2D>("Sprite");

@@ -26,10 +26,24 @@ Config = ExtResource("config")
 z_index = -10
 script = ExtResource("ground")
 [node name="Liquids" parent="TerrainRoot" instance=ExtResource("pond")]
-[node name="Actors" type="Node2D" parent="."]
+[node name="WorldActorsRoot" type="Node2D" parent="."]
 y_sort_enabled = true
+metadata/world_actor_container = true
+[node name="PersistentEntitiesRoot" type="Node2D" parent="WorldActorsRoot"]
+y_sort_enabled = true
+metadata/world_actor_container = true
+[node name="PersistentPropsRoot" type="Node2D" parent="WorldActorsRoot"]
+y_sort_enabled = true
+metadata/world_actor_container = true
+[node name="ChunkActorsRoot" type="Node2D" parent="WorldActorsRoot"]
+y_sort_enabled = true
+metadata/world_actor_container = true
+[node name="PreviewSceneryRoot" type="Node2D" parent="WorldActorsRoot"]
+y_sort_enabled = true
+metadata/world_actor_container = true
+[node name="Player" parent="WorldActorsRoot/PersistentEntitiesRoot" instance=ExtResource("player")]
+[node name="SceneryPlacement" type="Node" parent="SystemsRoot"]
 script = ExtResource("placement")
-[node name="Player" parent="Actors" instance=ExtResource("player")]
 
 [node name="EntityPlacement" type="Node" parent="SystemsRoot"]
 script = ExtResource("entity_placement")

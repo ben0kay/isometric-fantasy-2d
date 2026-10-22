@@ -17,7 +17,7 @@ public partial class BenchmarkSpatialScheduling : Node
         for(int i=0;i<200;i++) await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
         var env=world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment");
         var occlusion=world.GetNode<OcclusionController>("SystemsRoot/Occlusion");
-        var player=world.GetNode<Node2D>("Actors/Player"); Vector2 start=player.GlobalPosition;
+        var player=world.Player; Vector2 start=player.GlobalPosition;
         var viewport=GetViewport(); var canvas=viewport.CanvasTransform;
         foreach(bool moving in new[]{false,true})
         {

@@ -2,18 +2,20 @@
 using Godot;
 using System.Collections.Generic;
 
-public partial class WorldSceneryPlacement : Node2D
+public partial class WorldSceneryPlacement : Node
 {
     private readonly List<(Vector2 Point, float Radius)> _occupied = new();
     public WorldLiquidRegion ExcludedLiquid { get; set; }
 
     private static PackedScene _treeTemplate;
+    private Node2D _destination;
 
     #region Generation
     // Called once by world composition after config validation; order of populations is significant.
     // =========================================================
-    public void Generate(WorldMasterConfig config, int seed)
+    public void Generate(WorldMasterConfig config, int seed, Node2D destination)
     {
+        _destination = destination; _occupied.Clear();
         var random = new RandomNumberGenerator { Seed = (ulong)(uint)seed };
         GenerateBiome(config, random, config.Biome, false);
         if (config.Biomes.Secondary != null) GenerateBiome(config, random, config.Biomes.Secondary, true);
@@ -51,7 +53,7 @@ public partial class WorldSceneryPlacement : Node2D
                     || !FindPosition(config, random, content, treeVariant, scale, mirrored,
                         clusterSize > 1, center, population.ClusterRadius, secondary, out Vector2 point)) continue;
                 Node2D prop = scene.Instantiate<Node2D>();
-                prop.Position = point; prop.Scale = Vector2.One * scale;
+                prop.Position = _destination.ToLocal(point); prop.Scale = Vector2.One * scale;
                 if (prop is FantasyGame.World.Trees.Tree tree) tree.Configure(treeDefinition, variantIndex, mirrored);
                 else if (mirrored) Mirror(prop, content);
                 prop.SetMeta("world_biome_id", biome.Id);
@@ -61,7 +63,7 @@ public partial class WorldSceneryPlacement : Node2D
                 prop.SetMeta("environment_shadows", content.CastSunShadow);
                 prop.SetMeta("environment_contact", content.ContactShadowRadius);
                 if (content.GrassLike) prop.ZIndex = -6;
-                AddChild(prop);
+                _destination.AddChild(prop);
                 _occupied.Add((point, (treeVariant?.PlacementRadius(content.SpacingRadius) ?? Mathf.Max(0f, content.SpacingRadius)) * scale));
                 placed++;
             }

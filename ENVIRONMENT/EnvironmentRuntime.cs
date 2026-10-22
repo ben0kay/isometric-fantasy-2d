@@ -39,7 +39,7 @@ public partial class EnvironmentRuntime : Node2D
     #region Composition
     // Called once by the production world after ground, spawn and scenery are configured.
     // =========================================================
-    public void Initialize(WorldMasterConfig world, Node2D actors)
+    public void Initialize(WorldMasterConfig world, Node2D actors, Node2D persistentProps, PlayerMovement player)
     {
         if (Initialized) return;
         ProcessPriority = -20;
@@ -50,7 +50,7 @@ public partial class EnvironmentRuntime : Node2D
         Wind = new WindController { Name = "Wind", Config = Settings.Wind }; AddChild(Wind);
         var vegetation = new VegetationWind { Name = "VegetationWind", Wind = Wind }; AddChild(vegetation); vegetation.Attach(actors);
         var torch = GD.Load<PackedScene>("res://WORLD/Content/Props/Torch/Torch.tscn").Instantiate<Node2D>();
-        torch.Name = "Torch"; torch.Position = world.PlayerSpawn + Settings.Torch.OffsetFromSpawn; actors.AddChild(torch);
+        torch.Name = "Torch"; torch.Position = persistentProps.ToLocal(world.PlayerSpawn + Settings.Torch.OffsetFromSpawn); persistentProps.AddChild(torch);
         AddChild(new TorchLight { Name = "TorchLight", Torch = torch, Config = Settings.Torch });
         // Temporary comparison lamps share the existing profile/controller; no new lighting manager.
         int previewIndex = 0;
@@ -60,7 +60,7 @@ public partial class EnvironmentRuntime : Node2D
             Vector2 position = world.PlayerSpawn + offset;
             if (!world.Bounds.Grow(-20f).HasPoint(position)) continue;
             var extra = GD.Load<PackedScene>("res://WORLD/Content/Props/Torch/Torch.tscn").Instantiate<Node2D>();
-            extra.Name = "PreviewTorch" + previewIndex; extra.Position = position; actors.AddChild(extra);
+            extra.Name = "PreviewTorch" + previewIndex; extra.Position = persistentProps.ToLocal(position); persistentProps.AddChild(extra);
             AddChild(new TorchLight { Name = "PreviewTorchLight" + previewIndex, Torch = extra, Config = Settings.Torch });
         }
         Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds, GroundQueries = GroundQueries }; AddChild(Weather);
@@ -74,7 +74,7 @@ public partial class EnvironmentRuntime : Node2D
         var atmosphere = GD.Load<PackedScene>("res://ENVIRONMENT/Atmosphere/Atmosphere.tscn").Instantiate<WorldAtmosphere>();
         atmosphere.Config = Settings.Atmosphere; atmosphere.Day = DayNight; atmosphere.Wind = Wind;
         atmosphere.Actors = actors; atmosphere.Torch = torch; atmosphere.WorldBounds = world.Bounds; AddChild(atmosphere); _atmosphere = atmosphere;
-        Snow = new WorldSnow { Name = "Snow", Config = Settings.Snow, Weather = Weather, Actors = actors, WorldBounds = world.Bounds }; AddChild(Snow);
+        Snow = new WorldSnow { Name = "Snow", Config = Settings.Snow, Weather = Weather, Actors = actors, Player = player, WorldBounds = world.Bounds }; AddChild(Snow);
         Initialized = true;
     }
     // Per-chunk adapters share the one world clock/wind/weather and release their exact caches on unload.
