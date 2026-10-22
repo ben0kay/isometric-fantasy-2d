@@ -25,6 +25,19 @@ A refactor is complete only when: (1) the OFF/idle state demonstrably avoids nee
 
 ## P0 — Dormant effects should sleep
 
+### P0-0 — Atmospheric pollen/dust: reported large FPS regression (investigate first)
+
+**Files:** `ENVIRONMENT/Atmosphere/WorldAtmosphere.cs`, `ENVIRONMENT/Atmosphere/AtmosphereProfiles/AtmosphereProfile.cs`; inspect atmosphere scene, shader and F9 toggle wiring.
+
+**User observation (not yet benchmark-verified):** Disabling the atmospheric pollen/dust option produces approximately **+30 FPS on average** on the user's machine. This is the highest-priority reported A/B performance symptom. Record before/after **frame times in milliseconds**, not FPS alone, alongside CPU `WorldAtmosphere.Process` / `WorldAtmosphere.Draw` trace costs and Godot rendering profiler data. Check identical camera/seed/zoom and multiple repetitions. Do not assume `DrawCircle` itself is the root cause before isolating CPU and GPU work.
+
+**Observed source:** `WorldAtmosphere._Process` calls `QueueRedraw()` every frame regardless of whether pollen, smoke, embers, haze or other custom-drawn effects need it. Its `_Draw` path loops over up to `PollenCount` (default 35; maximum 100) and calls `DrawPollen` / `DrawCircle` with per-speck trigonometry; shared atmospheric shader bounds and uniforms are also written each frame. `Config.Pollen=false` skips the pollen drawing loop, **but not the other atmosphere updates or redraw request**. Confirm what exactly the F9 switch disables before attributing the 30 FPS to pollen alone.
+
+**Refactor:** Preserve the subtle drifting look while making pollen work bounded and independently controlled. When pollen is disabled or count is zero, do no pollen calculations or drawing and do not request redraws **for pollen**. Other atmosphere effects may still legitimately need redraws; evaluate separately rather than disabling the entire atmosphere node. While pollen is enabled, benchmark a single batched GPU/instanced particle approach versus existing immediate-mode `DrawCircle` rendering (or a modest controlled drawing cadence if visually acceptable). Avoid per-speck nodes, per-frame allocations, duplicate shader writes and camera-region work where unchanged. Keep `AtmosphereProfile`, F9 toggle and reactivation live; do not modify atmospheric **falling leaves**, which are owned by concurrent work.
+
+**Acceptance:** Document repeatable baseline and pollen-off FPS/frame-ms, `Process`/`Draw` and GPU measurements; pollen OFF does no pollen simulation/drawing; switching it back ON restores the previous appearance without requiring a restart; haze, torch smoke/embers, wind, camera zoom and leaf effects remain correct. Update atmosphere README with verified findings.
+
+
 ### P0-A — Snow coverage and snow materials
 
 **File:** `ENVIRONMENT/Weather/Snow/WorldSnow.cs`
@@ -134,7 +147,7 @@ A refactor is complete only when: (1) the OFF/idle state demonstrably avoids nee
 
 ## Codex execution guidance
 
-1. Start with **P0-A and P0-B**, then P0-C/D. Inspect the latest files and adjacent READMEs before editing, because concurrent development may already have changed them.
+1. Start by **profiling P0-0 pollen/dust** because the user reports approximately +30 FPS when disabled. Then tackle **P0-A and P0-B**, followed by P0-C/D; use measured results to reprioritize. Inspect the latest files and adjacent READMEs before editing, because concurrent development may already have changed them.
 2. Make a small scoped change, compile and test in Godot when available, inspect frame traces, and update the relevant subsystem README with what actually changed.
 3. Continue P1 then P2 based on measured cost, not blind preference for eliminating every `_Process`.
 4. Use **one GitHub commit per requested job**, preserve unrelated changes and leave DEBUG untouched.
