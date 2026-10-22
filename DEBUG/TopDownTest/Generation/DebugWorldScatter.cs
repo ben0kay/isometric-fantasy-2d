@@ -13,6 +13,7 @@ public partial class DebugWorldScatter : Node2D
 
     private readonly List<(Vector2 Center, float Radius)> _occupied = new();
     private readonly List<LiquidRegion> _liquids = new();
+    private int _treeSerial;
 
     // Keep the debug trail open from the northern edge through the starting clearing and east.
     // Coordinates align with the authored Polygon2D path in TopDownVisualTest.tscn.
@@ -35,16 +36,33 @@ public partial class DebugWorldScatter : Node2D
         foreach (Node node in GetTree().GetNodesInGroup("debug_liquid_regions"))
             if (node is LiquidRegion region) _liquids.Add(region);
         var random = new RandomNumberGenerator { Seed = (ulong)(uint)Config.Seed };
-        int trees = SpawnSet(random, TreeScene, true, Mathf.Max(0, Config.TreeCount));
+        bool biomeTrees = Biomes?.West?.TreeScene != null || Biomes?.East?.TreeScene != null;
+        int trees = biomeTrees ? SpawnBiomeTrees(random) : SpawnSet(random, TreeScene, true, Mathf.Max(0, Config.TreeCount));
         int rocks = SpawnSet(random, RockScene, false, Mathf.Max(0, Config.RockCount));
-        GD.Print($"DEBUG world scatter | seed {Config.Seed} | trees {trees}/{Config.TreeCount}, rocks {rocks}/{Config.RockCount}");
-        if (trees < Config.TreeCount || rocks < Config.RockCount)
+        int desiredTrees = biomeTrees
+            ? (Biomes.West?.AllowTrees == true ? Mathf.Max(0, Biomes.West.TreeCount) : 0)
+                + (Biomes.East?.AllowTrees == true ? Mathf.Max(0, Biomes.East.TreeCount) : 0)
+            : Config.TreeCount;
+        GD.Print($"DEBUG world scatter | seed {Config.Seed} | trees {trees}/{desiredTrees}, rocks {rocks}/{Config.RockCount}");
+        if (trees < desiredTrees || rocks < Config.RockCount)
             GD.PushWarning("Some debug props could not fit safely. Reduce counts/spacing, or increase the map size.");
+    }
+
+    // Let each test biome choose its tree species and count without cloning the generator.
+    // =========================================================
+    private int SpawnBiomeTrees(RandomNumberGenerator random)
+    {
+        int total = 0;
+        if (Biomes.West?.TreeScene != null && Biomes.West.AllowTrees)
+            total += SpawnSet(random, Biomes.West.TreeScene, true, Mathf.Max(0, Biomes.West.TreeCount), Biomes.West);
+        if (Biomes.East?.TreeScene != null && Biomes.East.AllowTrees)
+            total += SpawnSet(random, Biomes.East.TreeScene, true, Mathf.Max(0, Biomes.East.TreeCount), Biomes.East);
+        return total;
     }
 
     // Create matching visuals, collider orientation and uniformly scaled ground anchors.
     // =========================================================
-    private int SpawnSet(RandomNumberGenerator random, PackedScene template, bool tree, int requested)
+    private int SpawnSet(RandomNumberGenerator random, PackedScene template, bool tree, int requested, BiomeDefinition biome = null)
     {
         int placed = 0;
         for (int i = 0; i < requested; i++)
@@ -53,10 +71,10 @@ public partial class DebugWorldScatter : Node2D
             float maximum = tree ? Config.TreeScaleMax : Config.RockScaleMax;
             float scale = random.RandfRange(Mathf.Min(minimum, maximum), Mathf.Max(minimum, maximum));
             float radius = (tree ? Config.TreeSpacingRadius : Config.RockSpacingRadius) * scale;
-            if (!FindPlacement(random, tree, radius, out Vector2 position)) continue;
+            if (!FindPlacement(random, tree, radius, out Vector2 position, biome)) continue;
 
             StaticBody2D body = template.Instantiate<StaticBody2D>();
-            body.Name = (tree ? "Tree" : "Rock") + placed;
+            body.Name = tree ? "Tree" + _treeSerial++ : "Rock" + placed;
             body.Position = position;
             body.Scale = Vector2.One * scale;
 
@@ -111,7 +129,7 @@ public partial class DebugWorldScatter : Node2D
 
     // Bounded rejection sampling: avoid existing roots/rocks, central clearing and the main path.
     // =========================================================
-    private bool FindPlacement(RandomNumberGenerator random, bool tree, float radius, out Vector2 position)
+    private bool FindPlacement(RandomNumberGenerator random, bool tree, float radius, out Vector2 position, BiomeDefinition biome)
     {
         Rect2 world = Config.WorldBounds;
         float margin = Config.EdgeMargin;
@@ -127,6 +145,13 @@ public partial class DebugWorldScatter : Node2D
         {
             Vector2 candidate = new(random.RandfRange(minX, maxX), random.RandfRange(minY, maxY));
             if (Biomes != null && !Biomes.Allows(candidate, tree, false, tree ? 100f : radius)) continue;
+            if (biome != null)
+            {
+                if (Biomes.At(candidate) != biome) continue;
+                // Reserve room for full sprite canopies on either side of the blended boundary.
+                if (Mathf.Abs(candidate.X - Biomes.EdgeAt(candidate.Y))
+                    <= radius + 90f + Biomes.BlendWidth * 0.5f) continue;
+            }
             float clearing = Config.StartClearingRadius + radius;
             if (candidate.DistanceSquaredTo(Config.PlayerSpawn) < clearing * clearing) continue;
             if (TooNearPath(candidate, radius + Config.PathHalfWidth)) continue;

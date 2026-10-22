@@ -12,7 +12,7 @@ public sealed class TreeSnowAdapter
     public void Attach(Node2D actors, Texture2D noise, bool grass = false)
     {
         const string output = "    COLOR = pixel * sprite_tint * inside;";
-        var variants = new Dictionary<(ShaderMaterial, bool), ShaderMaterial>();
+        var variants = new Dictionary<(ShaderMaterial, bool, int), ShaderMaterial>();
         var shaders = new Dictionary<Shader, Shader>();
         foreach (Node child in actors.GetChildren())
         {
@@ -28,12 +28,17 @@ public sealed class TreeSnowAdapter
                 code = code.Replace(output, "    if (!shadow_only) pixel.rgb = tree_snow_colour(pixel.rgb, sample_uv);\n" + output);
                 extended = new Shader { Code = code }; shaders.Add(original, extended);
             }
-            var key = (material, sprite.FlipH);
+            // Per-sprite foliage profiles: 0=green leaves, 1=pink blossoms.
+            // This is optional sprite metadata, not a special-case tree filename.
+            int foliage = sprite.HasMeta("snow_foliage_profile")
+                ? (int)sprite.GetMeta("snow_foliage_profile").AsInt32() : 0;
+            var key = (material, sprite.FlipH, foliage);
             if (!variants.TryGetValue(key, out ShaderMaterial snow))
             {
                 snow = (ShaderMaterial)material.Duplicate(); snow.Shader = extended;
                 snow.SetShaderParameter("wind_orientation", sprite.FlipH ? -1f : 1f);
                 snow.SetShaderParameter("snow_noise", noise);
+                snow.SetShaderParameter("snow_foliage_profile", (float)foliage);
                 snow.SetShaderParameter("snow_crown_range", grass ? new Vector2(0.82f, 1f) : new Vector2(0.60f, 0.77f));
                 variants.Add(key, snow); _materials.Add((material, snow, grass));
             }

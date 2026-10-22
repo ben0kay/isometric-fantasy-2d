@@ -67,3 +67,7 @@ See [Biomes](Biomes/README.md) for the Oak Forest / Pink Meadow test. The curren
 ## Equipped axe prototype
 
 [Weapons/](Weapons/README.md) adds a permanently equipped cursor-aimed axe. Left-click outside the debug panels for a full-circle swing; arrow-key movement remains available. Close, aimed swings now produce a tree-local wobble and extra leaf burst; this is feedback only, without tree health/loot. DefaultWeaponConfig.tres controls reach, anchor, swing duration and aim response; remove the one player child instance to undo.
+
+## Pink Blossom and Shader Wind and Snow
+
+The eastern Pink Meadow generates 36 pink blossom trees via `Trees/PinkBlossom01.tscn`, while Oak Forest retains its 80 oaks. Both use the same procedural scatter, grounded collisions, wind shader, projected sun shadow and removable snow system. The snow shader now supports a reusable pink-blossom foliage profile; the existing axe hit helper also works on pink trees and produces pink petals. The SnowTest controls include a **Shader Wind and Snow** heading. See [Biomes/README.md](Biomes/README.md), [Trees/README.md](Trees/README.md) and [SnowTest/README.md](SnowTest/README.md). This remains entirely debug-only.

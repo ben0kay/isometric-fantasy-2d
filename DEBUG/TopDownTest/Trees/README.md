@@ -49,3 +49,9 @@ Checked the existing root anchor, reusable sprite references, polygon reflection
 ## Axe impact feedback
 
 Tree01 now opts into [HitFeedback](HitFeedback/README.md). Close aimed axe swings wobble only the struck tree artwork and emit a bounded burst of leaves. Collider, GPU wind and snow remain separate. No tree destruction or health is implemented.
+
+## Pink Blossom tree — Shader Wind and Snow
+
+The adjacent Pink Meadow now spawns **PinkBlossom01.tscn** using the same biome-aware scatter, root-collision mirroring, tree wind shader, DayNight projected shadows and SnowTest adapter as the forest oak. The artwork is a transparent palette-optimised rendering of the new concept, located at `Artwork/tree_pink_blossom_01.png` (160×213 source pixels), with a taller in-world proportion and an independently aligned root anchor. Its `PinkBlossomWind.tres` adjusts the sway strength for the smaller texture but **shares `TreeSway.gdshader`** rather than copying shader code. `snow_foliage_profile = 1` on the sprite opts into the reusable pink-blossom snow colour profile; green oak uses the default profile 0. The debug snow panel calls this shared experiment **Shader Wind and Snow**.
+
+Pink trees also opt into the existing axe `HitFeedback/TreeHitFeedback.cs` through the same `HitFeedback` node contract, with their own `HitFeedback/PinkBlossomHitConfig.tres` for pink petals on a hit. The original oak hit behavior remains unchanged. Biome-scoped count and template live in `Biomes/PinkMeadow.tres` (default 36), not in a second tree spawner.

@@ -74,3 +74,9 @@ Biome blending now spans 240 world pixels (previously 120), editable with Defaul
 PlayerSurfaceVisual is the single sprite/material owner shared by optional snow and lake tests. Liquid immersion takes precedence; snow produces no water rings and keeps the projected sun shadow. Toggles/melting ease the sprite back up. Removing both experiments restores its original position/material. The helper is installed by either test, so snow burial also works with the Liquids scene removed.
 
 Validation: all debug C# compiled against GodotSharp 4.7.2 / .NET 8 and native Godot 4.5.1 source generators. Software OpenGL rendering was inspected at full snow. Runtime checks passed for varied 0–4px burial, default 60% accumulation, camera stability, retained sun shadow, deeper lake priority, melt/off restoration, helper cleanup, and snow with the Liquids scene absent. Target Windows rendering/performance remains unverified.
+
+## Shader Wind and Snow — pink blossom profile
+
+The same SnowTest adapter now handles both green oak foliage and pink blossom foliage. Sprites can optionally set the integer metadata `snow_foliage_profile`: 0 (default) finds green leaves, 1 finds pink blossoms using red/blue colour separation from brown bark. The profile is chosen per sprite when shared snow material variants are built and does **not** change the shared TreeSway animation, GPU draw count or contact collider. The original green/grass mode remains the default for existing artwork.
+
+`Trees/PinkBlossom01.tscn` sets mode 1; any future non-green species can opt into the same profile without adding species-name conditions. The panel now has a **Shader Wind and Snow** heading, as requested. Colour heuristics are approximate: unusual bark/blossom colours may need a future configurable mask or custom foliage-channel texture. Snow remains initially off as before.

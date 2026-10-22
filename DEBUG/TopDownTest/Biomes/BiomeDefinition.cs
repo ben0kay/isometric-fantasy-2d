@@ -11,6 +11,10 @@ public partial class BiomeDefinition : Resource
     [Export] public Color ShadeColour { get; set; } = new(0.18f, 0.245f, 0.18f);
     [Export] public Color FreshColour { get; set; } = new(0.28f, 0.335f, 0.23f);
     [Export] public Color DryColour { get; set; } = new(0.32f, 0.32f, 0.22f);
+    [ExportGroup("Tree population")]
+    [Export] public PackedScene TreeScene { get; set; }
+    [Export(PropertyHint.Range, "0,150,1")] public int TreeCount { get; set; } = 0;
+
     [ExportGroup("Scenery permissions")]
     [Export] public bool AllowTrees { get; set; } = true;
     [Export] public bool AllowGrassTufts { get; set; } = true;

@@ -65,3 +65,7 @@ Liquids/Lake registers and builds its boundary before Actors.Ready. The generato
 ## Adjacent biome prototype
 
 See [Biomes](../Biomes/README.md) for the Oak Forest / Pink Meadow test. The current map is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with **80 trees / 50 rocks**. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.
+
+## Shared biome-scoped tree templates
+
+Each test `BiomeDefinition` can now specify `TreeScene` and `TreeCount`. The same `SpawnSet` placement path supports both oak and pink blossom trees, preserving random scale/mirror, matching collision polygons and the lake/path exclusions. Forest and meadow candidates are limited to their own biome side, with extra distance from the blend band for wide canopies; rock placement is still shared. The old `ScatterMasterConfig.TreeCount` is a fallback when biome-specific tree templates are absent. Current configured totals: 80 oak trees, 36 pink blossom trees and 50 shared rocks. Restart after changing tree populations.

@@ -42,6 +42,7 @@ public partial class DebugSnowTest : Node2D
         var panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 745, OffsetRight = 336, OffsetBottom = 1025 };
         ui.AddChild(panel);
         var controls = new VBoxContainer(); panel.AddChild(controls);
+        controls.AddChild(new Label { Text = "Shader Wind and Snow" });
         AddSwitch(controls, "Snow test (off restores scene)", Config.Enabled, value => Config.Enabled = value);
         _label = new Label(); controls.AddChild(_label);
         _slider = AddSlider(controls, Config.Coverage);
