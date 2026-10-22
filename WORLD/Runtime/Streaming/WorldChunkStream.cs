@@ -10,7 +10,7 @@ public partial class WorldChunkStream : Node
     private sealed class Chunk
     {
         public ChunkCoord Coord; public Node2D Actors; public MeshInstance2D Ground;
-        public WorldChunkState State; public List<ChunkSceneryItem> Items; public int Applied;
+        public WorldChunkState State; public List<ChunkSceneryItem> Items; public int Applied; public IEnumerator<int> Binding; public double BindMilliseconds; public bool AdaptersStarted;
         public readonly Dictionary<string,Node2D> Objects = new();
     }
     private readonly Dictionary<ChunkCoord,Chunk> _chunks = new();
@@ -26,6 +26,14 @@ public partial class WorldChunkStream : Node
     public int LoadedCount => _chunks.Values.Count(c => c.State == WorldChunkState.Loaded);
     public double LastDataMilliseconds { get; private set; }
     public double LastFrameMilliseconds { get; private set; }
+    public double PeakFrameMilliseconds { get; private set; }
+    public double LastBindMilliseconds { get; private set; }
+    public double LastNavigationMilliseconds { get; private set; }
+    public double LastUnloadMilliseconds { get; private set; }
+    public double LastApplyMilliseconds { get; private set; }
+    public double PeakDataMilliseconds { get; private set; }
+    public int PublishedChunks { get; private set; }
+    public int ReleasedChunks { get; private set; }
     public MacroRegion PlayerRegion => _world.MacroMap.RegionAt(_player.GlobalPosition);
     public string PlayerBiome => _world.MacroMap.BiomeAt(_player.GlobalPosition)?.Id ?? "outside";
     public int PendingCount => Desired(_settings.PreloadRadius).Count(c => !_chunks.ContainsKey(c)) + ApplyingCount;
@@ -51,7 +59,7 @@ public partial class WorldChunkStream : Node
             if (p.Content is TreeDefinition tree) foreach (var variant in tree.VisualVariants)
                 artMargin = Mathf.Max(artMargin,Mathf.Max(variant.VisualMinimum.Length(),variant.VisualMaximum.Length())*p.MaximumScale);
         }
-        var lighting = config.Biome.Environment?.Lighting ?? world.GetNode<EnvironmentRuntime>("Environment").Config.Defaults.Lighting;
+        var lighting = config.Biome.Environment?.Lighting ?? world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Config.Defaults.Lighting;
         artMargin *= Mathf.Max(1,lighting.MaximumLength);
         Vector2 halfView = player.GetViewportRect().Size.Max(new Vector2(1920,1080)) / (player.Config.CameraZoom / player.Config.CameraMaxViewMultiplier) * 0.5f;
         if (_settings.ChunkSize*_settings.ActiveRadius < Mathf.Max(halfView.X,halfView.Y)+artMargin+64)
@@ -73,6 +81,7 @@ public partial class WorldChunkStream : Node
     {
         _environment = environment; _fire = fire; _visibility = visibility; _bound = true;
         foreach (var chunk in _chunks.Values) BindChunk(chunk);
+        _navDirty = false; // Populate already built the initial active navigation area.
     }
     #endregion
 
@@ -95,16 +104,32 @@ public partial class WorldChunkStream : Node
         int count = 0;
         while (_applying != null && count++ < _settings.NodesPerFrame && timer.Elapsed.TotalMilliseconds < _settings.ApplyBudgetMilliseconds)
         {
-            if (_applying.Applied < _applying.Items.Count) ApplyOne(_applying);
-            else { Complete(_applying); _applying = null; }
+            if (_applying.Applied < _applying.Items.Count)
+            { var applyTimer = System.Diagnostics.Stopwatch.StartNew(); ApplyOne(_applying); LastApplyMilliseconds = applyTimer.Elapsed.TotalMilliseconds; }
+            else
+            {
+                _applying.Binding ??= BindChunkSteps(_applying).GetEnumerator();
+                var bindTimer = System.Diagnostics.Stopwatch.StartNew();
+                bool pending = _applying.Binding.MoveNext();
+                _applying.BindMilliseconds += bindTimer.Elapsed.TotalMilliseconds;
+                if (!pending)
+                {
+                    LastBindMilliseconds = _applying.BindMilliseconds;
+                    _applying.Binding.Dispose(); _applying.Binding = null;
+                    Complete(_applying); _applying = null;
+                }
+            }
         }
         _navTimer += delta;
-        if (_navDirty && _navTimer > 0.5)
+        if (_navDirty && _navTimer > 0.5 && timer.Elapsed.TotalMilliseconds < _settings.ApplyBudgetMilliseconds)
         {
-            _world.GetNodeOrNull<WorldEntityPlacement>("EntityPlacement")?.RefreshNavigation(_actors,_player,LocalBounds);
+            var navTimer = System.Diagnostics.Stopwatch.StartNew();
+            _world.GetNodeOrNull<WorldEntityPlacement>("SystemsRoot/EntityPlacement")?.RefreshNavigation(_actors,_player,LocalBounds);
+            LastNavigationMilliseconds = navTimer.Elapsed.TotalMilliseconds;
             _navDirty = false; _navTimer = 0;
         }
         LastFrameMilliseconds = timer.Elapsed.TotalMilliseconds;
+        PeakFrameMilliseconds = Math.Max(PeakFrameMilliseconds,LastFrameMilliseconds);
     }
     // Camera coverage plus canopy margin must be materialized before allowing movement into it.
     // =========================================================
@@ -140,10 +165,13 @@ public partial class WorldChunkStream : Node
         var chunk = new Chunk { Coord = coord, State = WorldChunkState.Queued };
         var timer = System.Diagnostics.Stopwatch.StartNew();
         _chunks.Add(coord,chunk); chunk.State = WorldChunkState.GeneratingData; chunk.Items = _data.Build(coord); LastDataMilliseconds = timer.Elapsed.TotalMilliseconds;
-        chunk.Actors = new Node2D { Name = $"Chunk_{coord.X}_{coord.Y}", YSortEnabled = true, Visible = false, ProcessMode = ProcessModeEnum.Disabled };
+        PeakDataMilliseconds = Math.Max(PeakDataMilliseconds,LastDataMilliseconds);
+        chunk.Actors = new Node2D { Name = $"Chunk_{coord.X}_{coord.Y}", YSortEnabled = true, PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off, Visible = false, ProcessMode = ProcessModeEnum.Disabled };
         chunk.Actors.SetMeta("world_chunk_id",FormattableString.Invariant($"{WorldId}/surface/{coord.X}/{coord.Y}")); _actors.AddChild(chunk.Actors);
         chunk.Ground = StreamedGroundPalette.Create(coord.Bounds(_settings.ChunkSize).Intersection(_world.MacroMap.Bounds),_ground);
-        chunk.Ground.Visible = false; _world.AddChild(chunk.Ground); chunk.State = WorldChunkState.ApplyingScene;
+        chunk.Ground.Name = $"ChunkGround_{coord.X}_{coord.Y}";
+        chunk.Ground.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
+        chunk.Ground.Visible = false; _world.GetNode("TerrainRoot/StreamedGroundRoot").AddChild(chunk.Ground); chunk.State = WorldChunkState.ApplyingScene;
         return chunk;
     }
     // Generic tree/scenery templates retain the canonical data-owned artwork, metadata and colliders.
@@ -174,44 +202,56 @@ public partial class WorldChunkStream : Node
     private void Complete(Chunk chunk)
     {
         chunk.State = WorldChunkState.Loaded;
-        if (_bound) BindChunk(chunk);
+        // Runtime binding is stepped while hidden; startup binds once after environment creation.
         chunk.Actors.ResetPhysicsInterpolation();
-        chunk.Actors.ProcessMode = ProcessModeEnum.Inherit; chunk.Actors.Visible = true; chunk.Ground.Visible = true; _navDirty = true;
+        chunk.Actors.ProcessMode = ProcessModeEnum.Inherit; chunk.Actors.Visible = true; chunk.Ground.Visible = true; _navDirty |= chunk.Coord.Distance(PlayerChunk) <= _settings.ActiveRadius; PublishedChunks++;
     }
     private void BindChunk(Chunk chunk)
     {
-        _environment.RegisterChunk(chunk.Actors);
+        foreach (int step in BindChunkSteps(chunk)) { }
+    }
+    // Adapter stages and each receiver are independent budget units; no scene appears half-registered.
+    // =========================================================
+    private IEnumerable<int> BindChunkSteps(Chunk chunk)
+    {
+        chunk.AdaptersStarted = true;
+        foreach (int step in _environment.RegisterChunkSteps(chunk.Actors)) yield return step;
         foreach (var pair in chunk.Objects)
         {
             var prop = pair.Value;
             if (prop is FantasyGame.World.Trees.Tree tree && tree.Definition.VisibilityProfile is { } profile)
                 _visibility.Register(tree,tree.GetNodeOrNull<Sprite2D>("Sprite"),profile);
             var burn = prop.GetNodeOrNull<Burnable>("Burnable");
-            if (burn == null) continue;
+            if (burn == null) { yield return 0; continue; }
             _fire.Register(burn,_environment.DayNight.Shadows);
             if (_burns.TryGetValue(pair.Key,out float progress)) burn.RestoreProgress(progress);
+            yield return 0;
         }
+
     }
     // Save only touched runtime deltas; release references before freeing nodes. Disk persistence is P4.
     // =========================================================
     private void Release(Chunk chunk)
     {
+        var releaseTimer = System.Diagnostics.Stopwatch.StartNew();
         bool loaded = chunk.State == WorldChunkState.Loaded; chunk.State = WorldChunkState.Unloading;
-        if (loaded)
+        chunk.Binding?.Dispose(); chunk.Binding = null;
+        if (loaded || chunk.AdaptersStarted)
         {
             foreach (var pair in chunk.Objects)
             {
                 if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion()) { _removed.Add(pair.Key); continue; }
                 var burn = pair.Value.GetNodeOrNull<Burnable>("Burnable");
                 if (burn != null)
-                { if (burn.State != BurnState.Healthy) _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); else _burns.Remove(pair.Key); _fire.Unregister(burn); }
+                { if (loaded) { if (burn.State != BurnState.Healthy) _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); else _burns.Remove(pair.Key); } _fire.Unregister(burn); }
                 _visibility.Unregister(pair.Value.GetNodeOrNull<Sprite2D>("Sprite"));
             }
             _environment.UnregisterChunk(chunk.Actors);
         }
         _actors.RemoveChild(chunk.Actors); chunk.Actors.QueueFree(); chunk.Ground.QueueFree(); _chunks.Remove(chunk.Coord);
         if (_applying == chunk) _applying = null;
-        _environment.RefreshLocalActors(); _navDirty = true;
+        _environment.RefreshLocalActors(); _navDirty |= chunk.Coord.Distance(PlayerChunk) <= _settings.ActiveRadius;
+        ReleasedChunks++; LastUnloadMilliseconds = releaseTimer.Elapsed.TotalMilliseconds;
     }
     #endregion
 }

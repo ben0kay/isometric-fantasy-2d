@@ -5,7 +5,7 @@ using System.Text;
 public partial class MacroMapDebugPanel : CanvasLayer
 {
     private PanelContainer _panel;
-    private WorldScene _world; private Label _live;
+    private WorldScene _world; private Label _live; private double _statusTimer;
     #region Overview
     // Bind after world startup; absent/failed generation simply omits this optional panel.
     // =========================================================
@@ -14,11 +14,14 @@ public partial class MacroMapDebugPanel : CanvasLayer
     // =========================================================
     private void BuildPanel()
     {
-        if (GetParent() is not WorldScene world || world.MacroMap is not { } map) return;
+        if (GetNodeOrNull<WorldScene>("../..") is not WorldScene world || world.MacroMap is not { } map) return;
         Layer = 30;
         _panel = new PanelContainer { Visible = false, OffsetLeft = 24, OffsetTop = 80, OffsetRight = 760, OffsetBottom = 780 };
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
+        var culling = new CheckButton { Text = "Cull off-screen scenery cosmetics", ButtonPressed = world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Config.CullOffscreenSceneryEffects };
+        culling.Toggled += enabled => world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Config.CullOffscreenSceneryEffects = enabled;
+        box.AddChild(culling);
         box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
@@ -56,7 +59,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
             if (features.Reservations.Features.Count > 4) text.AppendLine($"+ {features.Reservations.Features.Count - 4} more (see generation log)");
             foreach (string warning in features.Warnings.Take(2)) text.AppendLine(warning);
         }
-        var live = new Label(); box.AddChild(live);
+        var live = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill }; box.AddChild(live);
         _world = world; _live = live;
         var details = new ScrollContainer { CustomMinimumSize = new Vector2(700, 200),
             SizeFlagsVertical = Control.SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
@@ -69,8 +72,16 @@ public partial class MacroMapDebugPanel : CanvasLayer
     public override void _Process(double delta)
     {
         if (_panel?.Visible != true || _world?.Stream == null) return;
+        _statusTimer += delta; if (_statusTimer < 0.25) return; _statusTimer = 0;
         var stream = _world.Stream;
-        _live.Text = $"Player chunk {stream.PlayerChunk} | loaded {stream.LoadedCount} | pending {stream.PendingCount}\nRegion {stream.PlayerRegion?.Id} | {stream.PlayerBiome} | data {stream.LastDataMilliseconds:F1}ms / frame work {stream.LastFrameMilliseconds:F1}ms";
+        var environment = _world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment");
+        var shadows = environment.DayNight.Shadows;
+        _live.Text = $"Player chunk {stream.PlayerChunk} | loaded {stream.LoadedCount} | pending {stream.PendingCount}\n"
+            + $"{Engine.GetFramesPerSecond()} FPS | engine process {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
+            + $"Stream last/peak {stream.LastFrameMilliseconds:F2}/{stream.PeakFrameMilliseconds:F2}ms | data last/peak {stream.LastDataMilliseconds:F2}/{stream.PeakDataMilliseconds:F2}ms\n"
+            + $"Last item {stream.LastApplyMilliseconds:F2}ms | chunk bind total {stream.LastBindMilliseconds:F2}ms | nav {stream.LastNavigationMilliseconds:F2}ms | unload {stream.LastUnloadMilliseconds:F2}ms\n"
+            + $"Cosmetic chunks {environment.CosmeticChunkCount}/{environment.RegisteredChunkCount} | sun casters updated {shadows.UpdatedCasterCount}/{shadows.TotalCasterCount} | sun {shadows.LastProjectionMilliseconds:F2}ms\n"
+            + $"Published {stream.PublishedChunks} / released {stream.ReleasedChunks} | {stream.PlayerBiome}";
     }
     // Toggle only the overview, keeping input and preview behaviour independent.
     // =========================================================

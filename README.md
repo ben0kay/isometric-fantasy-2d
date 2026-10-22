@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**First P3 stability + SO1 pass:** Off-screen chunk wind/wetness/snow updates suspend through shared artwork bounds; sun casters use conservative shadow reach. Chunk effect binding is staged while hidden, partial binding cancels cleanly, and static streamed visuals disable interpolation. F7 exposes culling A/B and CPU timings. Terrain/systems/debug UI now have clear containers; Actors/Y-sorting stays intact. Target-machine rendering/flicker verification remains open. See [streaming](WORLD/Runtime/Streaming/README.md) and [scene organization](SCENES/World/scene%20organize.md).
+
 ## Current production state — 22 October 2026
 
 **Production F6 now runs the P0–P3 finite streamed world by default.** The current macro map is **45,000×33,750 world units**, currently filled by repeated Oak Forest/Pink Meadow regions. Its physical scenery, ground, collisions and local navigation load in chunks around the player; the old **3840×1728** adjacent-biome scene remains an optional **compatibility preview** when `WorldMasterConfig.Streaming.Enabled=false`. The independent F5 DEBUG/TopDownTest is preserved. This is a playable **technical foundation**, not a finished survival sandbox.

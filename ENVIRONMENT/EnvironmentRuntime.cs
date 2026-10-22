@@ -14,6 +14,17 @@ public partial class EnvironmentRuntime : Node2D
 
     private readonly System.Collections.Generic.Dictionary<Shader, Shader> _wetnessShaders = new();
     private bool _actorsDirty;
+    private sealed class ChunkVisuals
+    {
+        public Rect2 Bounds;
+        public VegetationWind Wind;
+        public VegetationWetness Wetness;
+        public bool Active = true;
+    }
+    private readonly System.Collections.Generic.Dictionary<Node2D,ChunkVisuals> _chunkVisuals = new();
+    public int CosmeticChunkCount { get; private set; }
+    public int RegisteredChunkCount => _chunkVisuals.Count;
+    public double LastVisibilityMilliseconds { get; private set; }
 
     #region Composition
     // Called once by the production world after ground, spawn and scenery are configured.
@@ -21,7 +32,9 @@ public partial class EnvironmentRuntime : Node2D
     public void Initialize(WorldMasterConfig world, Node2D actors)
     {
         if (Initialized) return;
+        ProcessPriority = -20;
         Config ??= GD.Load<EnvironmentMasterConfig>("res://ENVIRONMENT/DefaultEnvironmentConfig.tres");
+        Config = (EnvironmentMasterConfig)Config.Duplicate();
         Settings = (world.Biome.Environment ?? new BiomeEnvironmentProfile()).Resolve(Config.Defaults);
         Clock = new GameClock { Name = "Clock", Config = (ClockMasterConfig)Config.Clock.Duplicate(true) }; AddChild(Clock);
         Wind = new WindController { Name = "Wind", Config = Settings.Wind }; AddChild(Wind);
@@ -58,16 +71,26 @@ public partial class EnvironmentRuntime : Node2D
     // =========================================================
     public void RegisterChunk(Node2D chunk)
     {
+        foreach (int step in RegisterChunkSteps(chunk)) { }
+    }
+    // Yield between adapters so streamed completion shares the same application budget as scenery.
+    // =========================================================
+    public System.Collections.Generic.IEnumerable<int> RegisterChunkSteps(Node2D chunk)
+    {
         var wind = new VegetationWind { Name = "ChunkWind", Wind = Wind }; AddChild(wind); wind.Attach(chunk);
+        chunk.SetMeta("chunk_wind",wind.GetInstanceId()); yield return 0;
         var wetness = new VegetationWetness { Weather = Weather }; AddChild(wetness); wetness.Attach(chunk, _wetnessShaders);
         wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
-        chunk.SetMeta("chunk_wetness",wetness.GetInstanceId());
+        chunk.SetMeta("chunk_wetness",wetness.GetInstanceId()); yield return 0;
         var shadow = new SunShadowRenderer { Wind = Wind }; DayNight.Shadows.AddChild(shadow); shadow.Attach(chunk);
-        chunk.SetMeta("chunk_wind",wind.GetInstanceId()); chunk.SetMeta("chunk_shadow",shadow.GetInstanceId());
-        Snow.RegisterChunk(chunk); RefreshLocalActors();
+        chunk.SetMeta("chunk_shadow",shadow.GetInstanceId()); yield return 0;
+        Snow.RegisterChunk(chunk); yield return 0;
+        _chunkVisuals.Add(chunk,new ChunkVisuals { Bounds = SceneryVisualBounds.Chunk(chunk), Wind = wind, Wetness = wetness });
+        RefreshLocalActors();
     }
     public void UnregisterChunk(Node2D chunk)
     {
+        _chunkVisuals.Remove(chunk);
         Snow.UnregisterChunk(chunk);
         foreach (string key in new[] { "chunk_shadow","chunk_wetness","chunk_wind" })
             if (chunk.HasMeta(key) && GodotObject.InstanceFromId(chunk.GetMeta(key).AsUInt64()) is Node node) node.Free();
@@ -78,7 +101,31 @@ public partial class EnvironmentRuntime : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
-        if (!_actorsDirty || !Initialized) return;
+        if (!Initialized) return;
+        long started = System.Diagnostics.Stopwatch.GetTimestamp();
+        Rect2 view = SceneryVisualBounds.View(this).Grow(Mathf.Max(64,Config.SceneryPrepareMargin));
+        CosmeticChunkCount = 0;
+        foreach (var pair in _chunkVisuals)
+        {
+            var state = pair.Value;
+            bool active = !Config.CullOffscreenSceneryEffects || state.Bounds.Intersects(state.Active ? view.Grow(Mathf.Max(0,Config.SceneryRetentionMargin)) : view);
+            if (active != state.Active)
+            {
+                state.Active = active; state.Wind.SetProcess(active); state.Wetness.SetProcess(active);
+                Snow.SetChunkVisualActive(pair.Key,active);
+                if (active)
+                {
+                    state.Wind._Process(0);
+                    state.Wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
+                    state.Wetness._Process(0);
+                }
+            }
+            if (active) CosmeticChunkCount++;
+        }
+        DayNight.Shadows.CullOffscreen = Config.CullOffscreenSceneryEffects;
+        DayNight.Shadows.PrepareMargin = Mathf.Max(64,Config.SceneryPrepareMargin);
+        LastVisibilityMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+        if (!_actorsDirty) return;
         _actorsDirty = false;
         GetNode<WorldAtmosphere>("Atmosphere").RefreshTrees();
         Weather.GetNode<GroundRainSplashes>("GroundSplashes").RefreshActors();

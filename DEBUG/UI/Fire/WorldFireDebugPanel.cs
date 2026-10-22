@@ -9,7 +9,7 @@ public partial class WorldFireDebugPanel : CanvasLayer
     // =========================================================
     public override void _Ready()
     {
-        _actors = GetParent().GetNode<Node2D>("Actors"); _player = _actors.GetNode<Node2D>("Player");
+        _actors = GetNode<Node2D>("../../Actors"); _player = _actors.GetNode<Node2D>("Player");
         Layer = 21;
         var panel = new VBoxContainer { OffsetLeft = 730, OffsetTop = 12, OffsetRight = 1190 }; AddChild(panel);
         panel.AddChild(new Label { Text = "Production fire — FIRE1 / FIRE2" });

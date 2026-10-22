@@ -42,3 +42,9 @@ LL0–LL1 local lighting: three preview torches now stand near spawn. Set midnig
 
 ## P3 streamed world (current default)
 F6 now starts the finite generated map with a local chunk ring. F7 shows live counts. Set WorldMasterConfig.Streaming.Enabled=false to use the earlier small preview described above. The pond, torches, environment and skeleton remain; edits persist across chunks for this session only. See WORLD/Runtime/Streaming/README.md for settings, limits, controls and validation.
+
+## SO1 containers and stability (current)
+
+`TerrainRoot` owns Ground, StreamedGroundRoot, Liquids and runtime Bounds. `SystemsRoot` owns EntityPlacement, Environment, Fire, Streaming and Occlusion. `DebugUIRoot` owns F7/F9/fire controls. `Actors` deliberately retains its generator script and existing player/prop/chunk Y-sorting hierarchy; separating those responsibilities is SO2, not part of this pass. These are ordinary containers, not additional managers.
+
+F7 includes the off-screen cosmetic culling comparison switch and streaming/sun CPU counters. Configure margins via ENVIRONMENT/DefaultEnvironmentConfig.tres (EnvironmentMasterConfig). See WORLD/Runtime/Streaming/README.md for current streaming behaviour and remaining graphical validation. Older preview-only paragraphs above are historical and do not describe the default P3 world.

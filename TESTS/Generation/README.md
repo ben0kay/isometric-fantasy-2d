@@ -16,3 +16,5 @@ No save files are written. The original DEBUG main scene remains unchanged. F6 W
 P2 feature checks cover required-zone placement across 16 seeds, exact shape/clearance, independent RNG, priority/conflict handling, bounded preferred skips, permission/owner queries and manifest feature snapshots. They do not assert future terrain reachability or implement profile saving.
 
 P3 runs actual World startup, reverse-order neighbour generation, seam spacing, four long-distance traversal/return checks, loaded-node bounds, fire/session removal restoration and exit cleanup. measure_preview.gd explicitly disables Streaming so it continues measuring the preserved compatibility preview.
+
+Stability/SO1: run `godot --headless --path . res://TESTS/Generation/ValidateSceneryVisibility.tscn` for actual runtime-container checks, reversible cosmetic-culling A/B counters, partial-registration cancellation, wind/snow re-entry, long-shadow influence and compatibility preview. It reports CPU diagnostic timings, not a target-GPU frame-rate claim. F7 also supports manual fixed-seed A/B comparisons.

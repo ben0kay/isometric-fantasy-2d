@@ -1,0 +1,11 @@
+# Shared scenery visual bounds
+
+`SceneryVisualBounds` supplies transformed artwork and camera rectangles to existing production adapters. Trees, rocks and future static scenery use the same `Sprite` template convention; no per-species scene, ticking node or name branch is added. Sprite offsets, root scales/mirroring and container transforms are included. A future template with several visuals or a different sprite path must extend this shared bounds contract and the existing adapters together, rather than quietly bypassing registration.
+
+EnvironmentMasterConfig controls `CullOffscreenSceneryEffects`, `SceneryPrepareMargin` (160 units) and `SceneryRetentionMargin` (96 units). Per-chunk wind/wetness/snow updates pause outside the union of its actual artwork plus these margins. Wetness and snow resume from the authoritative world values; wind is refreshed before drawing. Culling does not change generation, stable IDs, collision, player-behind-tree fading, burn progression or chunk ownership. Godot handles ordinary off-screen sprite rasterization; this pass reduces custom CPU cosmetic updates, not all node processing.
+
+Sun casters use separately cached conservative artwork reach multiplied by current projection length. This deliberately retains off-screen trees whose shadows may enter the view. Dynamic actors refresh their bounds every frame; static scenery refreshes on appearance changes. Contact/projected shadows start hidden and never interpolate. Chunk roots/ground also disable interpolation, preventing static streamed artwork from interpolating from an initial identity transform.
+
+Static scenery is assumed not to move after registration. If a future mechanic moves/resizes it, add an explicit bounds invalidation/re-registration call; do not give every static prop a processor. Keep shader displacement within the configured conservative margins. Camera rotation/zoom/resizing are included in view queries, but streaming's separate maximum-view validation still applies.
+
+This is cosmetic scheduling, not A-Life. Local torch lights/native occluders and active burning effects retain their existing lifecycle and engine culling. Fine-grained individual sprite hiding, general local-light LOD and GPU shader prewarming are not implemented here.

@@ -201,3 +201,26 @@ This is **not a complete automated grep**; Codex must search the latest reposito
 ## 9. Suggested prompt for Codex
 
 > Read `SCENES/World/scene organize.md`, `SCENES/World/World.tscn`, `WORLD/Runtime/WorldScene.cs`, `WORLD/Runtime/Streaming/WorldChunkStream.cs`, `ENVIRONMENT/EnvironmentRuntime.cs`, `WORLD/Generation/Placement/WorldSceneryPlacement.cs`, `WORLD/Generation/Placement/WorldEntityPlacement.cs`, and `CodePreferences.md`. Inspect latest HEAD and the actual Remote scene hierarchy. I want readable container nodes such as TerrainRoot, WorldActorsRoot (with persistent actors and already-streamed chunk actors), EffectsRoot, SystemsRoot and DebugUIRoot. **Do SO0/SO1 only to start**: identify all node-path/parent/YSort/coordinate dependencies, then implement a small safe regrouping that preserves P3 chunk streaming, fallback preview mode, all lighting/weather/fire, camera and F7/F9. Avoid creating a new streaming/AI/save system or moving transform-sensitive effects unnecessarily. Run Godot/.NET checks and update notes honestly.
+
+## Implemented SO1 + first scenery stability pass — 22 October 2026
+
+SO0 source dependency audit and programmatic runtime hierarchy/baseline checks were performed. Interactive Remote-tree inspection, graphical profiler captures and Windows/D3D12 validation are still outstanding. SO1 containers are implemented; SO2–SO4 remain planned. The original PLAN ONLY banner applies to the remaining proposals, not this recorded implementation.
+
+Exact path migrations:
+
+| Old path under World | Current path under World |
+| --- | --- |
+| Ground / Liquids / Bounds | TerrainRoot/Ground / TerrainRoot/Liquids / TerrainRoot/Bounds |
+| Runtime ground meshes directly under World | TerrainRoot/StreamedGroundRoot/ChunkGround_X_Y |
+| EntityPlacement / Environment / Fire | SystemsRoot/EntityPlacement / SystemsRoot/Environment / SystemsRoot/Fire |
+| Streaming / Occlusion | SystemsRoot/Streaming / SystemsRoot/Occlusion |
+| EnvironmentDebugPanel / FireDebugPanel / MacroMapDebugPanel | DebugUIRoot/(same panel names) |
+| Actors, Actors/Player, Actors/Chunk_X_Y, torches, skeleton | Unchanged deliberately for SO1 |
+
+All container transforms are identity. Production WorldScene/streamer and F7/F9/fire paths were updated together; preview fixtures follow genuine production path changes. Transform-sensitive tree fire, rain/snow and atmosphere effects stay with their existing owners. New tests inspect actual instantiated ownership, not just .tscn text.
+
+Fixed-seed, paused-noon headless A/B sample at settled spawn: 49 loaded chunks; cosmetic updates in 16; sun updates fell from 367 casters to 90. Average sun-projection CPU time in that sample was 2.226ms without culling versus 1.392ms with culling. This is a narrow, environment-dependent CPU diagnostic, not a measured graphical FPS improvement; subsequent runs may differ. Loaded identity/counts remain unchanged by the switch.
+
+Runtime binding is now staged while hidden, and cancellation cleans partial adapters. Static chunk/ground/contact shadows disable interpolation; contact shadows also start hidden. Shared artwork/camera bounds and off-screen scheduling live in WORLD/Runtime/Visibility; existing environmental systems retain their ownership. Native local lights, active fire effects, worker-thread generation and hard real-time budgets remain outside this pass. Do not mark the user's flicker or target-machine lag resolved until verified visually.
+
+Validation caveat: one repeated Godot 4.5.1 Mono fixture run logged `Handle is not initialized` from ScriptManagerBridge/DisposablesTracker during process shutdown after all 160 assertions passed. An immediate repeat completed with no errors. This is recorded rather than treated as a proven production fix or ignored; check shutdown on the project's target Godot runtime if it recurs.

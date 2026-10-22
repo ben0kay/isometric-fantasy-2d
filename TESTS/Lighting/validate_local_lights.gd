@@ -28,7 +28,7 @@ func run():
     world.get("Config").set("Streaming",null) # Preserve the authored preview fixture; P3 has its own traversal suite.
     world.get("Config").set("RandomSeedOnLoad",false)
     root.add_child(world)
-    var env=world.get_node("Environment")
+    var env=world.get_node("SystemsRoot/Environment")
     var profile=env.get("Settings").get("Torch")
     var torch=world.get_node("Actors/Torch")
     check(world.has_node("Actors/PreviewTorch1") and world.has_node("Actors/PreviewTorch2"),"three torches")

@@ -25,8 +25,8 @@ func run():
         if b.get_parent().get_node("Sprite").flip_h:mirrored=b
         else:normal=b
     check(normal!=null and mirrored!=null,"normal and mirrored oaks")
-    var runtime=world.get_node("Fire")
-    var env=world.get_node("Environment")
+    var runtime=world.get_node("SystemsRoot/Fire")
+    var env=world.get_node("SystemsRoot/Environment")
     var snow=env.get("Snow")
     var wind=env.get("Wind")
     var pairs=[]
@@ -79,7 +79,7 @@ func run():
     await process_frame
     check(runtime.get("ActiveEffectCount")==0,"reset frees effects")
     # Feature works with tooling removed, capped effects do not cap burn states.
-    world.get_node("FireDebugPanel").queue_free()
+    world.get_node("DebugUIRoot/FireDebugPanel").queue_free()
     await process_frame
     runtime.get("Config").set("MaxActiveEffects",1)
     for b in [normal,mirrored]:check(b.call("TryIgnite",b.get_parent().global_position,"NoUI"),"no UI ignition")

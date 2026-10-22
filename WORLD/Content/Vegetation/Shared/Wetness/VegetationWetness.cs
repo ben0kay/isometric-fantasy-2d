@@ -15,7 +15,7 @@ public partial class VegetationWetness : Node
     public float Coverage => _coverage;
     // New chunks start at the shared world wetness instead of appearing dry during an ongoing storm.
     // =========================================================
-    public void StartAt(float value) { _coverage = Mathf.Clamp(value,0,1); _lastCoverage = -1; }
+    public void StartAt(float value) { _coverage = Mathf.Clamp(value,0,1); _lastCoverage = -1; _Process(0); }
     private float _coverage, _lastCoverage = -1f, _lastDarkening = -1f;
 
     #region Attach

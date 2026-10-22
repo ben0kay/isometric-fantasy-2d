@@ -25,7 +25,7 @@ func make_world(override_species=null):
         world.get("Config").get("Biomes").get("Primary").get("Populations")[0].set("Content",override_species)
     world.get("Config").set("RandomSeedOnLoad",false)
     root.add_child(world)
-    world.get_node("Environment").get("Weather").get("Config").set("Lightning",false)
+    world.get_node("SystemsRoot/Environment").get("Weather").get("Config").set("Lightning",false)
     return world
 func anchor(sprite,point):
     var offset=-sprite.texture.get_size()*0.5 if sprite.centered else Vector2.ZERO
@@ -74,7 +74,7 @@ func run():
         check(item[0].transform==item[1] and item[0].get_node("TrunkFootprint").polygon==item[2],"hit leaves physics stable")
     await create_timer(4).timeout
     for item in originals:check(not item[0].get_node("HitResponse").is_processing(),"hit processing finishes")
-    var environment=world.get_node("Environment")
+    var environment=world.get_node("SystemsRoot/Environment")
     var snow=environment.get("Snow")
     snow.get("Config").set("Enabled",true)
     snow.get("Config").set("TransitionSeconds",0.1)

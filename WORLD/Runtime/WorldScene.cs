@@ -52,9 +52,9 @@ public partial class WorldScene : Node2D
             Config.Biomes = Config.Biomes == null ? new AdjacentBiomeLayout() : (AdjacentBiomeLayout)Config.Biomes.Duplicate();
             string biomeId = MacroMap.BiomeAt(Config.PlayerSpawn).Id;
             foreach (var biome in Config.Generation.Biomes) if (biome.Id == biomeId) Config.Biomes.Primary = biome;
-            GetNode<GroundSurface>("Ground").Visible = false;
+            GetNode<GroundSurface>("TerrainRoot/Ground").Visible = false;
         }
-        else GetNode<GroundSurface>("Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
+        else GetNode<GroundSurface>("TerrainRoot/Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
         CharacterBody2D player = GetNode<CharacterBody2D>("Actors/Player");
         player.Position = Config.PlayerSpawn;
         Camera2D camera = player.GetNode<Camera2D>("Camera");
@@ -63,27 +63,27 @@ public partial class WorldScene : Node2D
         camera.LimitRight = Mathf.CeilToInt(Config.Bounds.End.X);
         camera.LimitBottom = Mathf.CeilToInt(Config.Bounds.End.Y);
         AddBounds();
-        var pond = GetNodeOrNull<WorldPond>("Liquids");
+        var pond = GetNodeOrNull<WorldPond>("TerrainRoot/Liquids");
         var placement = GetNode<WorldSceneryPlacement>("Actors");
         placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
         if (streaming)
         {
-            Stream = new WorldChunkStream { Name = "Streaming" }; AddChild(Stream);
+            Stream = new WorldChunkStream { Name = "Streaming" }; GetNode("SystemsRoot").AddChild(Stream);
             Stream.Initialize(this,placement,(PlayerMovement)player,Config,placement.ExcludedLiquid);
             Blueprint = Blueprint with { SchemaVersion = 3, LocalGeneratorVersion = ChunkSceneryData.GeneratorVersion,
                 ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };
         }
         else placement.Generate(Config, ActiveSeed);
         // Build entity navigation only after the seeded tree/rock colliders exist.
-        GetNodeOrNull<WorldEntityPlacement>("EntityPlacement")?.Populate(placement, player, Stream?.LocalBounds ?? Config.Bounds);
-        var environment = GetNodeOrNull<EnvironmentRuntime>("Environment");
+        GetNodeOrNull<WorldEntityPlacement>("SystemsRoot/EntityPlacement")?.Populate(placement, player, Stream?.LocalBounds ?? Config.Bounds);
+        var environment = GetNodeOrNull<EnvironmentRuntime>("SystemsRoot/Environment");
         environment?.Initialize(Config, GetNode<Node2D>("Actors"));
-        if (environment != null) GetNode<FireRuntime>("Fire").Initialize(GetNode<Node2D>("Actors"), environment);
+        if (environment != null) GetNode<FireRuntime>("SystemsRoot/Fire").Initialize(GetNode<Node2D>("Actors"), environment);
         if (pond != null && environment?.Weather != null) pond.Initialize(GetNode<PlayerMovement>("Actors/Player"), environment.Weather);
         var visibility = new OcclusionController { Name = "Occlusion" };
-        AddChild(visibility);
+        GetNode("SystemsRoot").AddChild(visibility);
         visibility.Initialize(player);
-        Stream?.Bind(environment,GetNode<FireRuntime>("Fire"),visibility);
+        Stream?.Bind(environment,GetNode<FireRuntime>("SystemsRoot/Fire"),visibility);
     }
 
     // Static boundary walls derive from the same bounds as ground and camera.
@@ -91,7 +91,7 @@ public partial class WorldScene : Node2D
     private void AddBounds()
     {
         Rect2 b = Config.Bounds;
-        var walls = new StaticBody2D { Name = "Bounds" }; AddChild(walls);
+        var walls = new StaticBody2D { Name = "Bounds" }; GetNode("TerrainRoot").AddChild(walls);
         AddWall(walls, new(b.GetCenter().X, b.Position.Y - 16), new(b.Size.X + 64, 32));
         AddWall(walls, new(b.GetCenter().X, b.End.Y + 16), new(b.Size.X + 64, 32));
         AddWall(walls, new(b.Position.X - 16, b.GetCenter().Y), new(32, b.Size.Y + 64));

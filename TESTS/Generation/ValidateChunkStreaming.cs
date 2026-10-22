@@ -51,7 +51,7 @@ public partial class ValidateChunkStreaming : Node
         var removed = world.GetNode<Node2D>("Actors").FindChildren("*","",true,false).OfType<Node2D>()
             .First(n => n.HasMeta("world_instance_id") && n.GetMeta("world_instance_id").AsString() != burntId);
         string removedId = removed.GetMeta("world_instance_id").AsString(); home.Remove(removedId); removed.QueueFree();
-        var env = world.GetNode<EnvironmentRuntime>("Environment"); env.Snow.Config.Enabled = true; env.Snow.SetCoverage(0.6f);
+        var env = world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment"); env.Snow.Config.Enabled = true; env.Snow.SetCoverage(0.6f);
         foreach (Vector2 destination in new[] { new Vector2(9000,5000),new Vector2(-9000,-5000),new Vector2(5000,-9000),Vector2.Zero })
         {
             player.GlobalPosition = destination; player.ResetPhysicsInterpolation();

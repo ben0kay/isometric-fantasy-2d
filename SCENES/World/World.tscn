@@ -18,30 +18,35 @@
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
-[node name="Ground" type="Sprite2D" parent="."]
+[node name="TerrainRoot" type="Node2D" parent="."]
+[node name="StreamedGroundRoot" type="Node2D" parent="TerrainRoot"]
+[node name="SystemsRoot" type="Node" parent="."]
+[node name="DebugUIRoot" type="Node" parent="."]
+[node name="Ground" type="Sprite2D" parent="TerrainRoot"]
 z_index = -10
 script = ExtResource("ground")
-[node name="Liquids" parent="." instance=ExtResource("pond")]
+[node name="Liquids" parent="TerrainRoot" instance=ExtResource("pond")]
 [node name="Actors" type="Node2D" parent="."]
 y_sort_enabled = true
 script = ExtResource("placement")
 [node name="Player" parent="Actors" instance=ExtResource("player")]
 
-[node name="EntityPlacement" type="Node" parent="."]
+[node name="EntityPlacement" type="Node" parent="SystemsRoot"]
 script = ExtResource("entity_placement")
 EntityScene = ExtResource("skeleton_basic")
 EntityDefinition = ExtResource("basic_definition")
 
-[node name="Environment" type="Node2D" parent="."]
+[node name="Environment" type="Node2D" parent="SystemsRoot"]
 script = ExtResource("environment")
 Config = ExtResource("environment_config")
-[node name="EnvironmentDebugPanel" parent="." instance=ExtResource("debug_ui")]
+[node name="EnvironmentDebugPanel" parent="DebugUIRoot" instance=ExtResource("debug_ui")]
+EnvironmentPath = NodePath("../../SystemsRoot/Environment")
 
-[node name="Fire" type="Node" parent="."]
+[node name="Fire" type="Node" parent="SystemsRoot"]
 script = ExtResource("fire_runtime")
 Config = ExtResource("fire_config")
-[node name="FireDebugPanel" type="CanvasLayer" parent="."]
+[node name="FireDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
 script = ExtResource("fire_debug")
 
-[node name="MacroMapDebugPanel" type="CanvasLayer" parent="."]
+[node name="MacroMapDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
 script = ExtResource("macro_debug")

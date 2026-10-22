@@ -76,6 +76,7 @@ public sealed class StaticObstacleNavigation
             top = Mathf.Min(top, p.Y); bottom = Mathf.Max(bottom, p.Y);
         }
         float c = Mathf.Max(0f, clearance);
+        if (!new Rect2(new Vector2(left-c,top-c),new Vector2(right-left+2*c,bottom-top+2*c)).Intersects(_bounds)) return;
         Vector2I start = ToCell(new Vector2(left - c, top - c));
         Vector2I end = ToCell(new Vector2(right + c, bottom + c));
         for (int y = start.Y; y <= end.Y; y++)

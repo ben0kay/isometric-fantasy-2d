@@ -56,7 +56,9 @@ public partial class WorldEntityPlacement : Node
     public void RefreshNavigation(Node2D actors, CharacterBody2D player, Rect2 bounds)
     {
         if (_navigation == null || !GodotObject.IsInstanceValid(_instance)) return;
-        _instance.ProcessMode = bounds.HasPoint(_instance.GlobalPosition) ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+        bool active = bounds.HasPoint(_instance.GlobalPosition);
+        _instance.ProcessMode = active ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+        if (!active) return;
         _navigation.Build(actors,bounds,GridCellSize,ColliderClearance,FreeCellSearchRadius);
     }
     #endregion

@@ -8,6 +8,7 @@ public partial class WorldSnow : Node2D
     private readonly WorldRockSnowAdapter _rocks = new();
     private readonly System.Collections.Generic.Dictionary<Node2D,(VegetationSnowAdapter Trees, WorldRockSnowAdapter Rocks)> _chunks = new();
     private readonly System.Collections.Generic.Dictionary<Shader, Shader> _vegetationShaders = new();
+    private readonly System.Collections.Generic.HashSet<Node2D> _inactiveChunks = new();
     private ShaderMaterial _ground;
     private MeshInstance2D _cover;
     public WorldWeather Weather { get; set; }
@@ -43,9 +44,20 @@ public partial class WorldSnow : Node2D
         var trees = new VegetationSnowAdapter(); var rocks = new WorldRockSnowAdapter();
         var noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
         trees.Attach(chunk,noise,_vegetationShaders); rocks.Attach(chunk,noise); _chunks.Add(chunk,(trees,rocks));
+        trees.Update(_coverage,Config.SnowColour); rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth);
+    }
+    // Suspend cosmetics only; coverage is world-owned and refreshed before the chunk re-enters view.
+    // =========================================================
+    public void SetChunkVisualActive(Node2D chunk, bool active)
+    {
+        if (!active) { _inactiveChunks.Add(chunk); return; }
+        _inactiveChunks.Remove(chunk);
+        if (_chunks.TryGetValue(chunk,out var adapters))
+        { adapters.Trees.Update(_coverage,Config.SnowColour); adapters.Rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth); }
     }
     public void UnregisterChunk(Node2D chunk)
     {
+        _inactiveChunks.Remove(chunk);
         if (!_chunks.Remove(chunk,out var adapters)) return;
         adapters.Trees.Restore(); adapters.Rocks.Restore();
     }
@@ -74,8 +86,11 @@ public partial class WorldSnow : Node2D
         _ground.SetShaderParameter("drift_scale", Config.DriftScale);
         _ground.SetShaderParameter("drift_contrast", Config.DriftContrast);
         // Every snow-compatible surface uses the same settled coverage; no per-kind on/off gates.
-        foreach (var adapters in _chunks.Values)
-        { adapters.Trees.Update(_coverage,Config.SnowColour); adapters.Rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth); }
+        foreach (var pair in _chunks)
+        {
+            if (_inactiveChunks.Contains(pair.Key)) continue;
+            pair.Value.Trees.Update(_coverage,Config.SnowColour); pair.Value.Rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth);
+        }
         _trees.Update(_coverage, Config.SnowColour);
         _rocks.Update(_coverage, Config.SnowColour, Config.RockCapDepth);
     }
