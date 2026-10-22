@@ -1,0 +1,137 @@
+# Production World — Performance Refactor Handoff
+
+**Date:** 2026-10-22  
+**Status:** Audit / proposed work only. No runtime refactors have been made by this note.  
+**Target:** `SCENES/World/World.tscn` and production environment/runtime systems (Godot C#).  
+**Authoring rules:** Read root `README.md`, `CodePreferences.md`, and the README beside each system before editing. Follow the new *Performance-first rules for every new mechanic*. Preserve data-driven Resource profiles, F9 live controls, streaming, and all DEBUG scenes.
+
+## Scope and ownership
+
+This audit is based on reading production source, **not benchmark measurements**. Priorities are candidate impact, not proven CPU cost. Work in small validated passes, comparing frame traces on the target PC with and without the proposed change.
+
+**Do not modify rain or falling-leaf systems in this pass:** they are being worked on separately. This includes `WorldWeather`, `RainVisualLayers`, `GroundRainSplashes`, liquid rain splashes, hit leaves and atmospheric falling-leaf code. Coordinate interfaces with those changes rather than overwriting parallel work. Vegetation wetness is rain-dependent: assess it in a separate coordinated pass.
+
+## Baseline and acceptance criteria
+
+Before changing code, capture a comparable idle scene and an active scene with F9/runtime trace diagnostics: 1920x1080, current zoom and widest zoom, steady camera and moving camera, same world seed/nearby scenery density. Record per-system elapsed ms, worst spikes, callback counts, allocation and GPU/frame observations where available. Be explicit when a result is unavailable; don't invent a percentage improvement.
+
+A refactor is complete only when: (1) the OFF/idle state demonstrably avoids needless callbacks, redraws and material updates; (2) activation and reactivation still work from Inspector/F9 signals or explicit methods, without sleeping controllers permanently; (3) transitions and existing visible effects remain intact; (4) streamed chunks load/unload/reappear correctly; (5) profiles remain data-driven and generic. When truly continuous effects run, justify their cadence.
+
+## P0 — Dormant effects should sleep
+
+### P0-A — Snow coverage and snow materials
+
+**File:** `ENVIRONMENT/Weather/Snow/WorldSnow.cs`
+
+**Observed:** `_Process` runs continuously, even with `Config.Enabled=false` or stable zero coverage. It updates camera-local cover geometry, cover visibility, multiple ground shader parameters and iterates `_chunks` to call tree/rock adapters, plus calls persistent adapters every frame.
+
+**Refactor:** Separate coverage transition/accumulation from material application. Cache applied coverage, tint and relevant settings; update dependent adapters only when actual values change (with a suitable small threshold for animated transitions) or a new chunk registers/returns to view. When disabled or at a stable endpoint, stop the unnecessary snow callback until an explicit state change. If settled nonzero coverage remains visible, keep its shader rendering but stop redundant C# material writes. Watch `SetCoverage`, auto-accumulate, on/off, chunk registration and F9 slider changes.
+
+**Acceptance:** Stable zero snow makes no repeated tree/rock shader writes or chunk walks; stable accumulated snow preserves appearance; slider changes, enabled toggles, accumulating/melting, and re-entry apply correctly.
+
+### P0-B — Snowfall particle emission
+
+**File:** `ENVIRONMENT/Weather/Snow/WorldSnowfall.cs`
+
+**Observed:** Every frame sets `Visible`, `Emitting`, `AmountRatio`, visible-camera bounds, emitter position, wind direction and velocity, even when snowfall disabled/rate zero. Configured particle budget currently 1,300 GPU flakes.
+
+**Refactor:** When snowfall is OFF, stop emission **and** idle callback; define explicit wake-up for F9/Resource updates. While active, update wind material only when changing, and camera coverage only when view position/size materially changes. Preserve wide-zoom edge coverage, transitions, and world-coordinate GPU motion.
+
+**Acceptance:** No particle-property writes per idle frame; re-enable and zoom/camera movement don't produce gaps.
+
+### P0-C — Lightning out of storm
+
+**File:** `ENVIRONMENT/Weather/Storms/WorldLightning.cs`
+
+**Observed:** `_Process` always checks storm threshold and calls `UpdateFlash()`; that unconditionally updates impact light properties and calls `QueueRedraw()` even with `Flash=0` and no storm.
+
+**Refactor:** Wake storm cadence on threshold crossing / explicit manual `Trigger`. During active flash/tail update continuously as needed; when no storm and the flash is fully gone, turn off processing and redraw once to clear stale bolt geometry. Maintain rare-strike timing and F9 manual lightning, and avoid coupling to automatic weather scheduling not yet implemented.
+
+**Acceptance:** Dry/no-strike state has no repeated lightning draws or light property updates; storm onset, strike, cooldown, storm end and manual triggering still work.
+
+### P0-D — Disabled cloud shade
+
+**File:** `ENVIRONMENT/Atmosphere/AmbientEffects/CloudShade.cs`
+
+**Observed:** Every frame writes `Visible` and four shader uniforms regardless of `Config.Enabled`.
+
+**Refactor:** Apply enable/disable as state change and skip disabled updates. During active drift, keep continuous animation if genuinely needed; skip uniform writes that have not changed. Ensure live F9 changes can reactivate without relying on a disabled node's own `_Process`.
+
+**Acceptance:** Disabled clouds perform no recurring material writes; re-enabled clouds resume at current daylight/wind without jumping.
+
+## P1 — Reduce repeated updates without freezing active visuals
+
+### P1-A — Shared vegetation wind shader synchronization
+
+**File:** `ENVIRONMENT/Wind/Visuals/VegetationWind.cs`
+
+**Observed:** One shared adapter per chunk/group (good), but `UpdateWind()` rewrites `wind_multiplier` on each cached material every frame irrespective of unchanged `Wind.Strength`.
+
+**Refactor:** Cache last-applied wind strength; update only on meaningful change or initial attach/reactivation. Keep consistent wind across material clones; don't add per-tree processes. A continuously varying signal may still require updates while active.
+
+### P1-B — Colour grade settings
+
+**File:** `ENVIRONMENT/Lighting/Colour/WorldColourGrade.cs`
+
+**Observed:** Rewrites `contrast`, `saturation`, `vignette`, and `Visible` every frame, even if settings never change or grade disabled.
+
+**Refactor:** Apply once and only on F9/profile changes; while disabled no shader updates. Ensure F9 changes propagate explicitly.
+
+### P1-C — Torch light static settings versus animation
+
+**File:** `ENVIRONMENT/Lighting/LocalLights/TorchLight.cs`
+
+**Observed:** `ApplySettings()` continuously writes visibility, light toggles, texture scale, colour, shadow configuration/filter; actual flicker energy does need changing while lit. Current setup may include multiple preview torches from `EnvironmentRuntime`.
+
+**Refactor:** Apply static settings on initialization/config changes only; active lit flicker can keep a small animation callback. When torch off, stop flicker callback until toggled back on. Do not change gameplay fire or the current shadow appearance.
+
+### P1-D — Sunlight and shared shadows (profile first)
+
+**Files:** `ENVIRONMENT/Lighting/DayNight/WorldDayNight.cs`, `ENVIRONMENT/Lighting/Shadows/SunShadowRenderer.cs`, `ENVIRONMENT/Time/Clock/GameClock.cs`
+
+**Observed:** Day/night updates ambient and calls `Shadows.UpdateProjection` every frame, walking cached shadow casters. The clock is intentionally continuous.
+
+**Refactor:** Profile before touching: cache stable shadow parameters; consider a measured capped cadence or thresholds for expensive caster projections while preserving smooth solar transition, camera movement, culling and lightning responsiveness. Avoid replacing smooth lighting with visibly stepped updates or disabling the clock.
+
+### P1-E — Coordinated only: wetness/wind forwarding
+
+**File:** `WORLD/Content/Vegetation/Shared/Wetness/VegetationWetness.cs`
+
+**Observed:** `_Process` loops over `_sources` to forward wind shader params before its wetness change guard, including fully dry steady state. The wetness material update is partly cached already.
+
+**Refactor later (coordinate with rain Codex):** Avoid needless wind synchronization when values unchanged. Sleep settled wetness work only after ensuring it wakes for rainfall onset, drying, changing wind and streamed chunk reloads. Do not edit during concurrent rain implementation.
+
+## P2 — Streaming and spatial relevance
+
+### P2-A — Cosmetic chunk activation checks
+
+**File:** `ENVIRONMENT/EnvironmentRuntime.cs`
+
+**Observed:** `_Process` computes camera view and walks all registered `_chunkVisuals` every frame to choose active status. It already turns chunk cosmetic wind/wetness off when outside view: keep that capability.
+
+**Refactor:** Reuse camera/streamer movement or zoom change notifications, or throttle comparisons to bounded intervals when appropriate; evaluate on chunk register/unregister and sufficiently changed view. Preserve hysteresis/retention margin and avoid blank or stale cosmetics when the camera jumps. Coordinate with `WORLD/Runtime/Streaming/WorldChunkStream.cs` rather than adding a competing full scan.
+
+### P2-B — Per-tree occlusion candidate selection
+
+**File:** `FEEDBACK/Visibility/OcclusionController.cs`
+
+**Observed:** Every ~0.1s tests every registered visual for player overlap and every frame loops over every registered visual to animate alpha, even when none are fading. This is shared (not per-tree processing), but scales with registered scenery count.
+
+**Refactor:** Use chunk/spatial nearby candidates for obstruction and a small active-fade collection for per-frame opacity changes. Re-evaluate on player movement/registered changes and preserve fade restore/unregister. Do not break species-generic visibility profiles or chunk stream cleanup.
+
+## Existing patterns worth preserving
+
+- `SYSTEMS/WorldInteractions/Fire/Simulation/Burnable.cs`: `_Ready` registers and calls `SetProcess(false)`; `TryIgnite` wakes only the selected tree; completed burn disables processing.
+- `SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs`: one-time signal registration, no frame-loop scan of all burnables; burning effect instances are temporary and capped.
+- `WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs`: activation/deactivation pattern for hit feedback (being refactored elsewhere; avoid conflicts).
+- Spatial/cached actor-source registration from the existing P3 streaming work: **don't restore full per-frame or load-triggered forest rescans**.
+
+## Codex execution guidance
+
+1. Start with **P0-A and P0-B**, then P0-C/D. Inspect the latest files and adjacent READMEs before editing, because concurrent development may already have changed them.
+2. Make a small scoped change, compile and test in Godot when available, inspect frame traces, and update the relevant subsystem README with what actually changed.
+3. Continue P1 then P2 based on measured cost, not blind preference for eliminating every `_Process`.
+4. Use **one GitHub commit per requested job**, preserve unrelated changes and leave DEBUG untouched.
+5. At each handoff report: activation trigger; shutdown condition; idle callbacks/material writes; scaling approach; measured before/after if obtainable; known unverified behavior.
+
+**Do not claim a refactor succeeded solely because `SetProcess(false)` appears in code.** A sleeping component must still reliably wake when the user changes an F9 setting, a gameplay event fires, a chunk reappears or a world service transitions state.
