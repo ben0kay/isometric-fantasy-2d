@@ -24,3 +24,11 @@ Foliage wetness is a reusable tree-material effect owned by WORLD/Content/Vegeta
 4. With rain high, oak foliage darkens gently, pink blossoms remain pink but slightly richer, trunks stay readable. Change Wet tree foliage and Leaf darkening live in F9; return rain to zero and confirm gradual drying.
 5. Check snow toggling, firing/reset of trees, canopy wind sway and tree-occlusion fade: shaders must coexist without permanently replacing other materials. Future weather states normally choose snow OR rain.
 6. Profile frame time and particle budget at 1920x1080, full rain and camera 25% zoomed out. Windows renderer/visual performance still needs checking locally.
+
+## Incremental source caches — 22 October 2026
+
+Target-machine traces identified `Rain source refresh` at 33.97–36.69ms during chunk lifecycle changes, even at zero rain. The old recursive walk over all loaded actors is removed from streaming. Each prop now registers its artwork bounds once during budgeted binding, and unregisters before removal/unload/cancellation. Persistent/preview props initialize once; the moving player remains a dynamic exclusion, and moving entities are not cached as static props.
+
+Cached artwork rectangles are indexed into 256-unit spatial cells (including negative coordinates). Ground-splash/lightning point queries inspect only the relevant cell, not all loaded source rectangles. Reverse cell membership allows local cleanup; empty cells are removed. Registration is idempotent, uses one polygon-array read per polygon, and transforms bounds through the shared geometry helper. Burning/reset artwork changes explicitly refresh that one source. Static props moved/resized by a future mechanic must likewise call EnvironmentRuntime.RefreshScenery; do not reintroduce global scene scans.
+
+Source caches stay ready at zero rain because manual lightning/open-ground queries also use them; updates are now proportional to changed props and occur inside existing streaming application steps. No per-prop processor is added. Trace labels are `Rain source registration`, not the removed global refresh. Future scenery participates through the same shared RegisterScenery/UnregisterScenery lifecycle.

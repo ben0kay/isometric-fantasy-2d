@@ -17,7 +17,10 @@ public partial class WorldAtmosphere : Node2D
     private Node2D _torch;
     private Polygon2D _haze;
     private ShaderMaterial _mistMaterial;
-    private readonly List<(WorldTree Tree, TreeHitResponse Hits)> _trees = new();
+    private readonly List<(WorldTree Tree, TreeHitResponse Hits, Vector2 Origin, Color Foliage)> _trees = new();
+    private readonly Dictionary<WorldTree,int> _indices = new();
+    public int TreeSourceCount => _trees.Count;
+    public int RegistrationCount { get; private set; }
     private static readonly Vector2[] LeafShape = { new(-3, 0), new(0, -1.5f), new(3, 0), new(0, 1.5f) };
     private double _time;
     private Vector2 _drift;
@@ -45,15 +48,33 @@ public partial class WorldAtmosphere : Node2D
         RefreshTrees();
         _haze.Polygon = new[] { _worldBounds.Position, new Vector2(_worldBounds.End.X, _worldBounds.Position.Y), _worldBounds.End, new Vector2(_worldBounds.Position.X, _worldBounds.End.Y) };
     }
-    // Bounded refresh only on chunk completion/removal, never a per-frame world scan.
+    // Persistent/preview trees register once; streamed trees use the same explicit lifecycle API.
     // =========================================================
     public void RefreshTrees()
     {
-        using var frameTrace = RuntimeFrameTrace.Measure("Atmosphere source refresh");
-        _trees.Clear();
-        foreach (Node child in Actors.FindChildren("*","",true,false))
-            if (child is WorldTree tree && tree.Definition.HasFoliage) _trees.Add((tree,tree.GetNode<TreeHitResponse>("HitResponse")));
+        foreach (Node child in Actors.GetChildren())
+            if (child is Node2D source && !source.HasMeta("world_chunk_id")) RegisterSource(source);
     }
+    // Cache references, position and species colour once, without enumerating unrelated scene descendants.
+    // =========================================================
+    public void RegisterSource(Node2D source)
+    {
+        using var frameTrace = RuntimeFrameTrace.Measure("Atmosphere source registration");
+        if (source is not WorldTree tree || !tree.Definition.HasFoliage || _indices.ContainsKey(tree)) return;
+        _indices.Add(tree,_trees.Count);
+        _trees.Add((tree,tree.GetNode<TreeHitResponse>("HitResponse"),tree.GlobalPosition,tree.Definition.FoliageColour));
+        RegistrationCount++;
+    }
+    // Swap removal retains dense bounded storage and repairs the moved source's index.
+    // =========================================================
+    public void UnregisterSource(Node2D source)
+    {
+        if (source is not WorldTree tree || !_indices.Remove(tree,out int index)) return;
+        int last = _trees.Count-1;
+        if (index != last) { _trees[index] = _trees[last]; _indices[_trees[index].Tree] = index; }
+        _trees.RemoveAt(last);
+    }
+    public override void _ExitTree() { _trees.Clear(); _indices.Clear(); }
     #endregion
 
     #region Simulation and drawing
@@ -139,9 +160,9 @@ public partial class WorldAtmosphere : Node2D
         if (age > 9f || visibility <= 0f) return;
         var source = _trees[(i * 17) % _trees.Count];
         WorldTree tree = source.Tree;
-        if (!GodotObject.IsInstanceValid(tree) || !GodotObject.IsInstanceValid(source.Hits) || !source.Hits.HealthyLeaves) return;
-        Color foliage = tree.Definition.FoliageColour;
-        Vector2 start = tree.Position + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
+        if (!_worldBounds.HasPoint(source.Origin) || !GodotObject.IsInstanceValid(tree) || !GodotObject.IsInstanceValid(source.Hits) || !tree.IsVisibleInTree() || !source.Hits.HealthyLeaves) return;
+        Color foliage = source.Foliage;
+        Vector2 start = ToLocal(source.Origin) + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
         float flutter = 7f + _leafWindMagnitude * 2.5f;
         Vector2 p = start + _leafDrift[i] + new Vector2(Mathf.Sin(age * (2f + _leafWindMagnitude * 0.15f) + i) * flutter, age * 11f);
         float alpha = Mathf.Min(age, 1f) * Mathf.Clamp((9f - age) / 2f, 0f, 1f);

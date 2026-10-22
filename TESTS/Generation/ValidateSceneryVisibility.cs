@@ -29,6 +29,11 @@ public partial class ValidateSceneryVisibility : Node
             GD.Print($"SO0 runtime /World/{section.Name}: {section.GetChildCount()} direct children");
         await Settle(220);
         Check(stream.PendingCount == 0,"Prefetch did not settle");
+        var rain = env.Weather.GetNode<GroundRainSplashes>("GroundSplashes");
+        var atmosphere = env.GetNode<WorldAtmosphere>("Atmosphere");
+        int rainRegistrations = rain.RegistrationCount, treeRegistrations = atmosphere.RegistrationCount;
+        await Settle(30);
+        Check(rain.RegistrationCount == rainRegistrations && atmosphere.RegistrationCount == treeRegistrations,"Stationary scenery rebuilds source caches");
         int baselineCount = stream.LoadedCount;
         env.Clock.Config.Paused = true; env.Clock.SetHour(12); // Identical sun projection in both A/B samples.
         env.Config.CullOffscreenSceneryEffects = false; await Settle(3);
@@ -65,6 +70,10 @@ public partial class ValidateSceneryVisibility : Node
         player.GlobalPosition = world.Config.PlayerSpawn; player.ResetPhysicsInterpolation(); await Settle(260);
         Check(stream.PendingCount == 0 && stream.CanMoveTo(player.GlobalPosition),"Cancellation left a frontier stuck");
         Check(env.RegisteredChunkCount == stream.LoadedCount,"Cancelled binding leaked environmental adapters");
+        var registeredProps = world.GetNode("Actors").FindChildren("*","",true,false).OfType<Node2D>().Where(n => n.HasMeta("world_instance_id")).ToArray();
+        int torchCount = world.GetNode("Actors").GetChildren().OfType<Node2D>().Count(n => n.Name.ToString().Contains("Torch"));
+        Check(rain.SourceCount == registeredProps.Length+torchCount,"Rain cache leaked cancelled/unloaded sources");
+        Check(atmosphere.TreeSourceCount == registeredProps.OfType<FantasyGame.World.Trees.Tree>().Count(t => t.Definition.HasFoliage),"Leaf cache leaked cancelled/unloaded trees");
         Check(env.GetChildren().OfType<VegetationWind>().Count() == stream.LoadedCount+1,"Chunk wind adapters leaked");
         foreach (var chunk in world.GetNode("Actors").GetChildren().OfType<Node2D>().Where(n => n.HasMeta("world_chunk_id")))
             Check(chunk.PhysicsInterpolationMode == PhysicsInterpolationModeEnum.Off,"Static chunk interpolates from identity");
@@ -82,6 +91,21 @@ public partial class ValidateSceneryVisibility : Node
         }
         world.QueueFree(); await Settle(3);
         Check(GetTree().GetNodesInGroup("world_trees").Count == 0,"World exit leaked registrations");
+        // A negative-coordinate prop crossing spatial cells blocks rain until explicitly removed.
+        var rainActors = new Node2D(); AddChild(rainActors);
+        var testWeather = new WorldWeather { Config = new WeatherProfile { Splashes=false } };
+        var isolatedRain = new GroundRainSplashes { Weather = testWeather, Actors = rainActors, WorldBounds = new Rect2(-2048,-2048,4096,4096) };
+        AddChild(isolatedRain); isolatedRain.SetProcess(false);
+        var blocker = new Node2D { Position = new Vector2(-256,-256) }; rainActors.AddChild(blocker);
+        blocker.AddChild(new Sprite2D { Name = "Sprite", Texture = new GradientTexture2D { Width=64,Height=64 } });
+        isolatedRain.RegisterSource(blocker); isolatedRain.RegisterSource(blocker);
+        Check(isolatedRain.SourceCount == 1 && isolatedRain.SpatialCellCount >= 4,"Spatial registration duplicates or loses negative border cells");
+        var random = new RandomNumberGenerator { Seed = 40 };
+        Check(!isolatedRain.TryGroundPoint(new Rect2(-260,-260,8,8),random,out _),"Rain ignores registered artwork");
+        isolatedRain.UnregisterSource(blocker);
+        Check(isolatedRain.SourceCount == 0 && isolatedRain.SpatialCellCount == 0,"Removal leaves ghost rain exclusions");
+        Check(isolatedRain.TryGroundPoint(new Rect2(-260,-260,8,8),random,out _),"Removed scenery still blocks rain");
+        isolatedRain.QueueFree(); rainActors.QueueFree(); await Settle(3); testWeather.Free();
         // A synthetic caster outside the view must stay active when its long shadow can reach the view.
         var actors = new Node2D(); AddChild(actors);
         var body = new StaticBody2D { Position = new Vector2(-100,100) }; actors.AddChild(body);

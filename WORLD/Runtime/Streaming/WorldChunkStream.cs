@@ -198,6 +198,7 @@ public partial class WorldChunkStream : Node
             if (!_bound || !GodotObject.IsInstanceValid(_fire) || !_fire.IsInsideTree()) return;
             var burn = prop.GetNodeOrNull<Burnable>("Burnable"); if (burn != null) _fire.Unregister(burn);
             _visibility.Unregister(prop.GetNodeOrNull<Sprite2D>("Sprite"));
+            _environment.UnregisterScenery(prop);
             if (chunk.State == WorldChunkState.Loaded) _removed.Add(item.Id);
         };
     }
@@ -223,6 +224,7 @@ public partial class WorldChunkStream : Node
         foreach (var pair in chunk.Objects)
         {
             var prop = pair.Value;
+            _environment.RegisterScenery(prop);
             if (prop is FantasyGame.World.Trees.Tree tree && tree.Definition.VisibilityProfile is { } profile)
                 _visibility.Register(tree,tree.GetNodeOrNull<Sprite2D>("Sprite"),profile);
             var burn = prop.GetNodeOrNull<Burnable>("Burnable");
@@ -250,12 +252,13 @@ public partial class WorldChunkStream : Node
                 if (burn != null)
                 { if (loaded) { if (burn.State != BurnState.Healthy) _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); else _burns.Remove(pair.Key); } _fire.Unregister(burn); }
                 _visibility.Unregister(pair.Value.GetNodeOrNull<Sprite2D>("Sprite"));
+                _environment.UnregisterScenery(pair.Value);
             }
             _environment.UnregisterChunk(chunk.Actors);
         }
         _actors.RemoveChild(chunk.Actors); chunk.Actors.QueueFree(); chunk.Ground.QueueFree(); _chunks.Remove(chunk.Coord);
         if (_applying == chunk) _applying = null;
-        _environment.RefreshLocalActors(); _navDirty |= chunk.Coord.Distance(PlayerChunk) <= _settings.ActiveRadius;
+        _navDirty |= chunk.Coord.Distance(PlayerChunk) <= _settings.ActiveRadius;
         ReleasedChunks++; LastUnloadMilliseconds = releaseTimer.Elapsed.TotalMilliseconds;
     }
     #endregion

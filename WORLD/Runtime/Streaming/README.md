@@ -63,3 +63,18 @@ Validation for this pass: compiled with the bundled Godot 4.5.1 SDK/source gener
 UI follow-up: live performance/streaming counters, the cosmetic-culling comparison and world/biome/reservation text now live in the right-side F9 diagnostics column. F7 is map-only. The diagnostics remain visible when the map is closed, and stop refreshing while hidden.
 
 Tracing follow-up: right-side F9 diagnostics can now capture production C# callbacks with nested exclusive timings. Streaming data/ground construction, instantiation, effect binding, release, navigation and source-cache refreshes are separated. Worst slow-frame reports preserve matching frame data instead of combining unrelated last-value counters. This is instrumentation to locate remaining target-machine stalls; no new performance fix is claimed. See CORE/Diagnostics/README.md.
+
+## Measured rain/atmosphere refresh hitch fix — 22 October 2026
+
+Two user captures isolated the same cause:
+
+| Frame | Interval / measured callbacks | Rain source refresh | Atmosphere source refresh | GC 0/1/2 |
+| --- | --- | --- | --- | --- |
+| 4323 | 51.99 / 46.67ms | 33.97ms | 6.81ms | 1/1/0 |
+| 23175 | 56.43 / 52.43ms | 36.69ms | 10.81ms | 1/1/0 |
+
+The accompanying recordings show rain disabled during traversal, but both caches were still globally rebuilt after lifecycle changes. Those refreshes explain about 87–91% of measured callback time in these frames. Collections coincided with them; their individual pause contribution was not measured.
+
+Streaming now registers rain and atmosphere sources per prop inside the existing yielded receiver-binding steps, and unregisters on explicit removal, chunk release and partial-registration cancellation. EnvironmentRuntime no longer has a dirty flag that scans all actors after chunk changes. Rain uses spatially indexed cached rectangles; atmosphere uses cached tree references/positions/colours and constant-time indexed removal. Fire appearance changes refresh only their owning prop. Unrelated chunks are untouched. The public shared lifecycle supports future canonical scenery templates without species branches.
+
+Compiled with Godot 4.5.1 source generators/.NET 8 while preserving the project's SDK setting. Headless P3 (4425 checks), visibility/source lifecycle (167 checks), runtime trace, generic tree and production fire fixtures passed. New assertions cover unchanged stationary registrations, complete cancellation/unload source counts, negative cell boundaries, idempotent registration and removal of ghost exclusions. No target-machine FPS or fixed hitch duration is claimed until the same route is captured again. Steady-state sun/atmosphere drawing costs remain separate follow-up work.

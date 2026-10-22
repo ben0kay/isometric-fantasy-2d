@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**Measured P3 hitch fix:** Rain/leaf source caches now register and remove changed props incrementally inside streaming binding, replacing full loaded-world rescans measured at 41–47.5ms combined in user traces. Rain exclusions use spatial cells. Target-machine recapture remains necessary; steady-state visual costs are a separate follow-up. See [streaming evidence and validation](WORLD/Runtime/Streaming/README.md).
+
 **First P3 stability + SO1 pass:** Off-screen chunk wind/wetness/snow updates suspend through shared artwork bounds; sun casters use conservative shadow reach. Chunk effect binding is staged while hidden, partial binding cancels cleanly, and static streamed visuals disable interpolation. The right-side F9 diagnostics expose culling A/B and CPU timings; F7 shows the map. Terrain/systems/debug UI now have clear containers; Actors/Y-sorting stays intact. Target-machine rendering/flicker verification remains open. See [streaming](WORLD/Runtime/Streaming/README.md) and [scene organization](SCENES/World/scene%20organize.md).
 
 ## Current production state — 22 October 2026

@@ -9,13 +9,14 @@ public partial class FireRuntime : Node
     private readonly Dictionary<TreeFireAppearance, TreeFireAppearance.AppearanceChangedEventHandler> _appearance = new();
     private readonly Dictionary<Burnable, BurningEffect> _active = new();
     private WindController _wind;
+    private EnvironmentRuntime _environment;
     public int ActiveEffectCount => _active.Count;
     // Bind after scenery, wind, snow and shadow caches exist; future content can register on spawn.
     // =========================================================
     public void Initialize(Node2D actors, EnvironmentRuntime environment)
     {
         Config ??= GD.Load<FireMasterConfig>("res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres");
-        _wind = environment.Wind;
+        _wind = environment.Wind; _environment = environment;
         foreach (Node node in GetTree().GetNodesInGroup("world_burnables"))
             if (node is Burnable burnable && actors.IsAncestorOf(node)) Register(burnable, environment.DayNight.Shadows);
     }
@@ -28,7 +29,11 @@ public partial class FireRuntime : Node
         receiver.Ignited += ignite; _ignition.Add(receiver, ignite);
         var art = receiver.GetParent().GetNodeOrNull<TreeFireAppearance>("FireAppearance");
         if (art == null) return;
-        TreeFireAppearance.AppearanceChangedEventHandler changed = () => shadows.RefreshAppearance((Node2D)receiver.GetParent());
+        TreeFireAppearance.AppearanceChangedEventHandler changed = () =>
+        {
+            var source = (Node2D)receiver.GetParent(); shadows.RefreshAppearance(source);
+            _environment.RefreshScenery(source);
+        };
         art.AppearanceChanged += changed; _appearance.Add(art, changed);
     }
     // Remove subscriptions/effects before an owning chunk releases its live actors.

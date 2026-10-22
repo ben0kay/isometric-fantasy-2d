@@ -7,7 +7,17 @@ public partial class GroundRainSplashes : Node2D
     public WorldWeather Weather { get; set; }
     private struct Splash { public Vector2 Position; public float Age; public bool Active; }
     private readonly Splash[] _pool = new Splash[96];
-    private readonly List<Rect2> _blocked = new();
+    private sealed class Source
+    {
+        public readonly List<Rect2> Areas = new();
+        public readonly List<Vector2I> Cells = new();
+    }
+    private const int CellSize = 256;
+    private readonly Dictionary<Node2D,Source> _sources = new();
+    private readonly Dictionary<Vector2I,List<Source>> _cells = new();
+    public int SourceCount => _sources.Count;
+    public int SpatialCellCount => _cells.Count;
+    public int RegistrationCount { get; private set; }
     private readonly RandomNumberGenerator _random = new() { Seed = 71391 };
     public Node2D Actors { get; set; }
     public Rect2 WorldBounds { get; set; }
@@ -26,43 +36,72 @@ public partial class GroundRainSplashes : Node2D
         RefreshActors();
     }
 
-    // Refresh bounded local artwork exclusions when chunks change.
+    // Capture persistent/preview roots once. Streamed roots register individually while binding.
     // =========================================================
     public void RefreshActors()
     {
-        using var frameTrace = RuntimeFrameTrace.Measure("Rain source refresh");
-        _blocked.Clear();
-        Node2D actors = Actors;
         _world = WorldBounds;
-        foreach (Node child in actors.GetChildren())
+        foreach (Node child in Actors.GetChildren())
         {
             if (child.Name == "Player") { _player = child.GetNode<Sprite2D>("Sprite"); continue; }
-            CacheArtwork(child);
+            if (child is Node2D source && child is not CharacterBody2D && !source.HasMeta("world_chunk_id")) RegisterSource(source);
         }
     }
-
-    // Includes polygon-authored torch artwork as well as tree/rock sprites, with sway clearance.
+    // Cache only one changed prop, then index its bounds for local point queries. Repeated registration is safe.
     // =========================================================
-    private void CacheArtwork(Node node)
+    public void RegisterSource(Node2D owner)
     {
-        if (node is Sprite2D sprite) _blocked.Add(WorldRect(sprite, sprite.GetRect()).Grow(8));
-        if (node is Polygon2D polygon && polygon.Polygon.Length > 0)
+        using var frameTrace = RuntimeFrameTrace.Measure("Rain source registration");
+        if (_sources.ContainsKey(owner)) return;
+        var source = new Source(); CacheArtwork(owner,source.Areas);
+        if (source.Areas.Count == 0) return;
+        var cells = new HashSet<Vector2I>();
+        foreach (Rect2 area in source.Areas)
         {
-            Rect2 rect = new(polygon.Polygon[0], Vector2.Zero);
-            foreach (Vector2 point in polygon.Polygon) rect = rect.Expand(point);
-            _blocked.Add(WorldRect(polygon, rect).Grow(8));
+            Vector2I first = CellAt(area.Position), last = CellAt(area.End);
+            for (int y=first.Y;y<=last.Y;y++) for (int x=first.X;x<=last.X;x++) cells.Add(new Vector2I(x,y));
         }
-        foreach (Node child in node.GetChildren()) CacheArtwork(child);
+        foreach (Vector2I cell in cells)
+        {
+            if (!_cells.TryGetValue(cell,out var bucket)) { bucket = new List<Source>(); _cells.Add(cell,bucket); }
+            bucket.Add(source); source.Cells.Add(cell);
+        }
+        _sources.Add(owner,source); RegistrationCount++;
     }
-
+    // Removal uses reverse cell membership, never a scan of other chunks or engine scene nodes.
+    // =========================================================
+    public void UnregisterSource(Node2D owner)
+    {
+        if (!_sources.Remove(owner,out var source)) return;
+        foreach (Vector2I cell in source.Cells)
+        {
+            var bucket = _cells[cell]; bucket.Remove(source);
+            if (bucket.Count == 0) _cells.Remove(cell);
+        }
+    }
+    // Includes polygon-authored torch artwork; gameplay component subtrees cannot block rain splashes.
+    // =========================================================
+    private void CacheArtwork(Node node,List<Rect2> areas)
+    {
+        if (node is Sprite2D sprite && sprite.Texture != null) areas.Add(WorldRect(sprite,sprite.GetRect()).Grow(8));
+        if (node is Polygon2D polygon)
+        {
+            Vector2[] points = polygon.Polygon; // One native-array copy per polygon, not one per vertex.
+            if (points.Length > 0)
+            {
+                Rect2 rect = new(points[0],Vector2.Zero);
+                foreach (Vector2 point in points) rect = rect.Expand(point);
+                areas.Add(WorldRect(polygon,rect).Grow(8));
+            }
+        }
+        foreach (Node child in node.GetChildren()) if (child is CanvasItem) CacheArtwork(child,areas);
+    }
+    private static Vector2I CellAt(Vector2 point) => new(Mathf.FloorToInt(point.X/CellSize),Mathf.FloorToInt(point.Y/CellSize));
     // Four transformed corners preserve scaled/mirrored prop bounds without texture pixel reads.
     // =========================================================
     private static Rect2 WorldRect(Node2D node, Rect2 local)
     {
-        Rect2 result = new(node.ToGlobal(local.Position), Vector2.Zero);
-        result = result.Expand(node.ToGlobal(new Vector2(local.End.X, local.Position.Y)));
-        result = result.Expand(node.ToGlobal(local.End));
-        return result.Expand(node.ToGlobal(new Vector2(local.Position.X, local.End.Y)));
+        return SceneryVisualBounds.Transform(local,node.GlobalTransform);
     }
     #endregion
 
@@ -117,7 +156,8 @@ public partial class GroundRainSplashes : Node2D
     private bool ClearGround(Vector2 point, Rect2 player)
     {
         if (player.HasPoint(point)) return false;
-        foreach (Rect2 rect in _blocked) if (rect.HasPoint(point)) return false;
+        if (_cells.TryGetValue(CellAt(point),out var bucket))
+            foreach (var source in bucket) foreach (Rect2 rect in source.Areas) if (rect.HasPoint(point)) return false;
         return true;
     }
 
@@ -142,5 +182,8 @@ public partial class GroundRainSplashes : Node2D
         }
         DrawSetTransform(Vector2.Zero);
     }
+    // Drop every world-owned reference on exit; no source survives a scene/profile change.
+    // =========================================================
+    public override void _ExitTree() { _sources.Clear(); _cells.Clear(); }
     #endregion
 }

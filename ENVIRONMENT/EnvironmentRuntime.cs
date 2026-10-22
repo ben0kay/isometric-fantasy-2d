@@ -12,8 +12,9 @@ public partial class EnvironmentRuntime : Node2D
     public WorldSnow Snow { get; private set; }
     public bool Initialized { get; private set; }
 
+    private GroundRainSplashes _rainSources;
+    private WorldAtmosphere _atmosphere;
     private readonly System.Collections.Generic.Dictionary<Shader, Shader> _wetnessShaders = new();
-    private bool _actorsDirty;
     private sealed class ChunkVisuals
     {
         public Rect2 Bounds;
@@ -54,6 +55,7 @@ public partial class EnvironmentRuntime : Node2D
             AddChild(new TorchLight { Name = "PreviewTorchLight" + previewIndex, Torch = extra, Config = Settings.Torch });
         }
         Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds }; AddChild(Weather);
+        _rainSources = Weather.GetNode<GroundRainSplashes>("GroundSplashes");
         // Wind is already attached; register leaf wetness before snow clones tree materials.
         var wetness = new VegetationWetness { Name = "VegetationWetness", Weather = Weather }; AddChild(wetness); wetness.Attach(actors, _wetnessShaders);
         var shadows = new SunShadowRenderer { Name = "SunShadows", ZIndex = -5, Wind = Wind }; AddChild(shadows); shadows.Attach(actors);
@@ -63,7 +65,7 @@ public partial class EnvironmentRuntime : Node2D
         grade.Name = "ColourGrade"; grade.Config = Settings.ColourGrade; AddChild(grade);
         var atmosphere = GD.Load<PackedScene>("res://ENVIRONMENT/Atmosphere/Atmosphere.tscn").Instantiate<WorldAtmosphere>();
         atmosphere.Config = Settings.Atmosphere; atmosphere.Day = DayNight; atmosphere.Wind = Wind;
-        atmosphere.Actors = actors; atmosphere.Torch = torch; atmosphere.WorldBounds = world.Bounds; AddChild(atmosphere);
+        atmosphere.Actors = actors; atmosphere.Torch = torch; atmosphere.WorldBounds = world.Bounds; AddChild(atmosphere); _atmosphere = atmosphere;
         Snow = new WorldSnow { Name = "Snow", Config = Settings.Snow, Weather = Weather, Actors = actors, WorldBounds = world.Bounds }; AddChild(Snow);
         Initialized = true;
     }
@@ -86,7 +88,6 @@ public partial class EnvironmentRuntime : Node2D
         chunk.SetMeta("chunk_shadow",shadow.GetInstanceId()); yield return 0;
         Snow.RegisterChunk(chunk); yield return 0;
         _chunkVisuals.Add(chunk,new ChunkVisuals { Bounds = SceneryVisualBounds.Chunk(chunk), Wind = wind, Wetness = wetness });
-        RefreshLocalActors();
     }
     public void UnregisterChunk(Node2D chunk)
     {
@@ -95,9 +96,21 @@ public partial class EnvironmentRuntime : Node2D
         foreach (string key in new[] { "chunk_shadow","chunk_wetness","chunk_wind" })
             if (chunk.HasMeta(key) && GodotObject.InstanceFromId(chunk.GetMeta(key).AsUInt64()) is Node node) node.Free();
     }
-    public void RefreshLocalActors() => _actorsDirty = true;
+    // One prop's visual-source lifecycle is shared by trees, rocks and future scenery templates.
+    // =========================================================
+    public void RegisterScenery(Node2D source)
+    {
+        _rainSources.RegisterSource(source);
+        _atmosphere.RegisterSource(source);
+    }
+    public void UnregisterScenery(Node2D source)
+    {
+        _rainSources.UnregisterSource(source);
+        _atmosphere.UnregisterSource(source);
+    }
+    public void RefreshScenery(Node2D source) { UnregisterScenery(source); RegisterScenery(source); }
 
-    // Coalesce all chunk lifecycle changes into one actor-source scan per frame.
+    // Evaluate cached chunk bounds only; source discovery is handled by explicit prop lifecycle events.
     // =========================================================
     public override void _Process(double delta)
     {
@@ -126,10 +139,6 @@ public partial class EnvironmentRuntime : Node2D
         DayNight.Shadows.CullOffscreen = Config.CullOffscreenSceneryEffects;
         DayNight.Shadows.PrepareMargin = Mathf.Max(64,Config.SceneryPrepareMargin);
         LastVisibilityMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
-        if (!_actorsDirty) return;
-        _actorsDirty = false;
-        GetNode<WorldAtmosphere>("Atmosphere").RefreshTrees();
-        Weather.GetNode<GroundRainSplashes>("GroundSplashes").RefreshActors();
     }
     #endregion
 }
