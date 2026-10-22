@@ -14,9 +14,24 @@ Read this handoff before the original design brief below. Historical snapshots a
 | P0/P1 | Macro map, arbitrary eligible biome collection, weights/target diameters, full land coverage, deterministic hash and blueprint contract implemented. Climate affinity remains deferred. | Generation/World/README.md and P0_P1_Audit.md |
 | P2 | Resource-driven feature reservations, priority/permissions, required/preferred outcomes and starting anchor implemented. Reservations do not create geological terrain or POI scenes. | Generation/World/Features/README.md |
 | P3 | Finite local streaming, density-based scenery, local navigation, environment lifecycle and session deltas implemented. Rendering fixes pushed; target-machine visual/performance acceptance is open. | Runtime/Streaming/README.md |
-| P4 | Not implemented: durable profile/run/world saves, restart restoration, recovery and migration. | SAVE/ and Runtime/Persistence/ |
+| P4 | **Menu/profile identity foundation exists (M0);** durable run/world saves, restart restoration, recovery and migration are **not implemented**. | UI/Menus/, SAVE/Profiles/, SAVE/WorldState/ and Runtime/Persistence/ |
 | P5 | Planned: actual priority POIs, paths and cave connections. | Original scope below |
 | P6 | Planned: abstract off-screen A-Life. | Original scope below |
+
+### P4 integration update — Boot/Main Menu and local profiles exist (M0)
+
+**Implemented at current HEAD:** `project.godot` launches `UI/Menus/Boot/BootScreen.tscn` on F5. Boot lists/creates/selects local profiles through `SAVE/Profiles/ProfileStore.cs` (GUID identity + display name in `user://profiles.cfg`), then opens `UI/Menus/Main/MainMenu.tscn`. **New Campaign** currently calls `UI/Menus/Shared/MenuNavigation.cs` to open the existing production `SCENES/World/World.tscn` as a **new unsaved session**. **Continue is deliberately disabled** until durable saves work. F6 on the selected world scene remains the direct testing route. Shared button presentation is in `UI/Shared/Buttons/UIButtonFactory.cs`; preserve this system rather than constructing another menu or profile registry.
+
+**P4 instructions for Codex:**
+
+- **Reuse and extend**, do not replace, the existing Boot/Main menus, `ProfileStore` identities and menu routing. Build durable `ProfileId → RunId/SaveSlotId → WorldId` association in `SAVE/` and world delta ownership in `WORLD/Runtime/Persistence/`, not inside UI scripts. Stable profile GUIDs are not saved-world IDs and a profile being selected does not imply a saved campaign exists.
+- Add a proper **New Campaign** path that creates/chooses an independent run and world identity, fixes seed/generator version and initializes world session state **before** loading the existing `World.tscn`. Do not allow clicking New Campaign to silently overwrite an existing save; obtain an explicit decision/confirmation for replacing or adding runs.
+- Enable **Continue only after** the selected profile has a verified compatible durable save. Continue must restore that run's exact world seed/blueprint, player position/layer, clock and modified chunk data; invalid/corrupt saves should show a clear menu error and remain recoverable. Avoid default-seed regeneration on Continue.
+- Keep menu navigation **independent of World.tscn child paths** so SO0–SO3 organizational work can proceed. Do not move streamed chunks, change Y-sorting, edit world scene root ownership or accidentally load gameplay under the menu to implement save selection.
+- Preserve `ProfileStore`'s existing local identity format and user data. Review its file-write/recovery behavior before expanding storage; do not casually rename, reset or delete `user://profiles.cfg`. Introduce migrations for save/schema changes and isolated profile/run/world IDs, not duplicate global singleton stores.
+- Existing `UI/Menus/README.md` and `SAVE/Profiles/README.md` are the M0 integration references. Full P4 QA remains mandatory: test two distinct profiles with **the same seed**, independent edited trees/clock/positions, switch A→B→A, quit/restart, chunk unload/reload and interrupted/corrupt writes. Preserve performance-first and one-commit-per-job rules.
+
+**Scope boundary:** M0 provides navigation and local profile creation, **not** autosaves, world persistence, player inventory saves, Continue, permadeath cleanup or multiple run-slot selection. Update these status claims only after implementation and validation.
 
 ### What currently runs
 
@@ -445,6 +460,8 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - **Pass when:** traverse several biome regions and return, no pop-in inside visible bounds, no full-world node explosion, controls/weather/pond/snow remain sound.
 
 **P4 — Per-profile persistent world saves and deterministic edits**
+
+**Existing starting point:** Boot/Main Menu and GUID-only local profile creation are implemented (see the P4 integration update near the top and `UI/Menus/README.md`). Integrate real New Campaign/Continue and save-slot selection with these existing scenes; do not build a second profile system. The existing New Campaign launches an unsaved world, so no P4 durability milestones have been met yet.
 - Implement the chosen ProfileId → RunId/SaveSlotId → WorldId association through SAVE/Profiles and SAVE/WorldState rather than global singleton save files.
 - Persist world seed/region plan, chosen macro features and chunk deltas for a minimal changed object (e.g. a removed tree/test marker), along with player coordinates, current layer, representative inventory and world clock.
 - Validate save/reload, exit/re-enter chunks, no resurrection of modified props, no duplicate object identities. Use atomic replacement, integrity validation and recovery handling.
