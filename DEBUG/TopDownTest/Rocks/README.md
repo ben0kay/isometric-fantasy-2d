@@ -21,3 +21,11 @@ The disposable generator now instantiates **about 24** boulders from `Rock01.tsc
 ## Scope / verification
 
 This is a bounded **runtime-scattered** visual test, not a production WORLD generation system. Scene/resource references and collision vertices were inspected statically. Godot rendering and physics play-tests are not available in this connector environment.
+
+## Optional snow caps (Shader Wind and Snow)
+
+The template `Rock01.tscn` opts into the existing removable snow demo using the group `debug_snow_rocks`. `SnowTest/RockSnowAdapter.cs` scans that group once after scatter and DayNight have created/cached the rocks and shadows. It applies **one shared** `RockSnow.gdshader` material to every rock when accumulation is enabled, with irregular deposits primarily on upper faces; lower/front facets remain visible. It reuses the same `SnowMasterConfig.Coverage`, `SnowColour` and terrain noise that drive snow on the ground/trees/grass. The rock-specific `RockCapDepth` setting controls how far down the artwork the cap reaches.
+
+The adapter preserves each rock's original material (usually none) and restores it when the Snow test or **Snow on rocks** is switched off, or the SnowTest scene is removed. There are no new rock sprites, physics bodies, shadow shaders or per-rock animation callbacks; rock sizes, mirroring, hit tests, gravel and sunlight silhouettes remain unchanged. Other rock scenes can opt in by joining the same group.
+
+The upper-face estimation uses the sprite's vertical UV coordinates, original lightness and low-frequency noise, because this 2D image has no true 3D normals. It is an art-directed preview rather than physical snow deposition. Tune the depth if the cap appears too high/low on different rock artwork.

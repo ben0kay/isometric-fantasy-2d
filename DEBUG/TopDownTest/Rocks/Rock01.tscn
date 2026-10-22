@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/rock_01.webp" id="art"]
 
-[node name="Rock01" type="StaticBody2D"]
+[node name="Rock01" type="StaticBody2D" groups=["debug_snow_rocks"]]
 
 [node name="Sprite" type="Sprite2D" parent="."]
 position = Vector2(-35.28, -37.30)
