@@ -360,15 +360,16 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 ## 14. Questions to resolve *with Codex* before P1/P2
 
 1. **World extent and scale:** What are the initial world dimensions in world units, and how many seconds/minutes should crossing one typical biome take? Pick testing presets (small/medium/huge) before locking region sizes.
-2. **Biome size unit:** Is Min/Max a *diameter* in world units, a number of macro cells, or an approximate area? Define one meaning and keep it stable for UI/resources.
-3. **Macro representation:** Raster grid, vector regions/sites with warped boundaries, or hybrid? Show why the choice guarantees full coverage and scales to the selected huge world.
-4. **Ocean/volcano priority:** Are they landmask + geological features, mandatory biome instances, or POIs? Use typed feature definitions rather than conflating them.
-5. **Climate bias:** Which rough fields are worth adding first (moisture/temp/elevation), and which should be deferred? Avoid prematurely forcing realism.
-6. **Persistence policy:** Freeze *all* macro biomes at creation or calculate immutable per-region seeds? Decide versioning and how future expansion works without changing already committed regions.
-7. **Chunk sizing:** What is the target loaded radius for the current 1920x1080 camera/zoom? Test against actual canopy and shader extent.
-8. **Gameplay time and A-Life:** What tick size/region resolution and major events matter initially? Which entities remain named/persistent? Avoid designing a universe-wide detailed simulator before a small proof.
-9. **Authoring:** Which Resource(s) should define major geographical directives? Can a future Avalonia World Creator edit them without duplicating the canonical data?
-10. **Backward compatibility:** How will the existing two-biome authored boundary and current saved/test seeds behave during migration? Have an explicit rollback/test mode.
+I'm updating this. My response: small = 3 min. med = 5 min. huge = 8 min (regular walking)
+2. **Biome size unit:** Is Min/Max a *diameter* in world units, a number of macro cells, or an approximate area? Define one meaning and keep it stable for UI/resources. --- whichever is easiest? approximate area in diameter and the biome will pick between
+3. **Macro representation:** Raster grid, vector regions/sites with warped boundaries, or hybrid? Show why the choice guarantees full coverage and scales to the selected huge world. --- not sure what this means
+4. **Ocean/volcano priority:** Are they landmask + geological features, mandatory biome instances, or POIs? Use typed feature definitions rather than conflating them. --- geological features, but big ones. some multi biome sized. ocean could be like equivalent of 10 biomes stacked together. things could exist only in the ocean.
+5. **Climate bias:** Which rough fields are worth adding first (moisture/temp/elevation), and which should be deferred? Avoid prematurely forcing realism. -- maybe i'd prefer biomes of certain close temps to be relatively close
+6. **Persistence policy:** Freeze *all* macro biomes at creation or calculate immutable per-region seeds? Decide versioning and how future expansion works without changing already committed regions. -- what?
+7. **Chunk sizing:** What is the target loaded radius for the current 1920x1080 camera/zoom? Test against actual canopy and shader extent. -- somewhere slightly outside this boundary
+8. **Gameplay time and A-Life:** What tick size/region resolution and major events matter initially? Which entities remain named/persistent? Avoid designing a universe-wide detailed simulator before a small proof. -- what
+9. **Authoring:** Which Resource(s) should define major geographical directives? Can a future Avalonia World Creator edit them without duplicating the canonical data? --- what
+10. **Backward compatibility:** How will the existing two-biome authored boundary and current saved/test seeds behave during migration? Have an explicit rollback/test mode. --- migration? what u mean. they are already in the production folders?
 
 ## 15. Recommended first instruction to Codex
 
