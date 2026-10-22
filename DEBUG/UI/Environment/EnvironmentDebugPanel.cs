@@ -64,6 +64,9 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Slider(weather, "Leaf darkening", 0, 0.35, 0.01, () => s.Weather.WetFoliageDarkening,
             v => s.Weather.WetFoliageDarkening = (float)v);
         Toggle(weather, "Overcast lighting", () => s.Weather.Overcast, v => s.Weather.Overcast = v);
+        Slider(weather, "Overcast shadow reduction", 0, 1, 0.01,
+            () => s.Weather.OvercastShadowReduction,
+            v => s.Weather.OvercastShadowReduction = (float)v);
         Toggle(weather, "Storm lightning", () => s.Weather.Lightning, v => s.Weather.Lightning = v);
         Button(weather, "Test nearby flash", () => _environment.Weather.Lightning.Trigger(false));
         Button(weather, "Test visible strike", () => _environment.Weather.Lightning.Trigger(true));

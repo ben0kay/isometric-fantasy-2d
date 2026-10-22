@@ -24,7 +24,8 @@ public partial class WorldDayNight : Node2D
         float length = Mathf.Lerp(Config.MaximumLength, Config.MinimumLength, Mathf.Sqrt(Mathf.Max(0, altitude)));
         float dayProgress = Mathf.Clamp((hour - 6f) / 12f, 0f, 1f);
         float angle = Mathf.DegToRad(Mathf.Lerp(150f, 30f, dayProgress) + Config.SunDirectionOffsetDegrees);
-        float opacity = Config.ShadowOpacity * SunCycle.Edge(0f, 0.18f, altitude) * (1f - Weather.CloudCover * 0.85f);
+        float opacity = Config.ShadowOpacity * SunCycle.Edge(0f, 0.18f, altitude)
+            * (1f - Weather.CloudCover * Mathf.Clamp(Weather.Config.OvercastShadowReduction, 0f, 1f));
         Shadows.UpdateProjection(angle, length, opacity, Config.SoftShadows ? Config.ShadowSoftness : 0f);
     }
 }

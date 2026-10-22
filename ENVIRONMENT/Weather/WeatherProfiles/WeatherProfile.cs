@@ -38,4 +38,5 @@ public partial class WeatherProfile : Resource
     [ExportGroup("Overcast")]
     [Export] public bool Overcast { get; set; } = true;
     [Export] public Color OvercastTint { get; set; } = new(0.72f, 0.77f, 0.83f);
+    [Export(PropertyHint.Range, "0,1,0.01")] public float OvercastShadowReduction { get; set; } = 0.85f;
 }
