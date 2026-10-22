@@ -12,3 +12,5 @@ Expected: `P4 PASS: ... checks` and exit 0 from each. The write phase creates is
 No tests/builds were run by Codex, per the requested workflow. See [../../SAVE/P4_Copilot_Handoff.md](../../SAVE/P4_Copilot_Handoff.md) for prerequisites, exact PowerShell commands, regressions, manual checks and reporting requirements.
 
 SO2 follow-up: fixture paths use the explicit actor roots. Write now also restores a legacy-layout fingerprint checkpoint and verifies retained WorldId/map/removal plus the current next-snapshot fingerprint. For an actual previous-revision disk checkpoint, follow the optional read-before-write procedure in SCENES/World/SO2_Copilot_Handoff.md. These added checks have not run here.
+
+SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.

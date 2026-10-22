@@ -6,3 +6,5 @@ Disable WorldMasterConfig.Streaming for the preserved adjacent-biome compatibili
 
 ## SO2 ownership — awaiting local validation
 WorldScene caches typed actor/entity/prop/chunk/preview/ground destinations and services once at tree entry. WorldActorSources.Initial traverses marked ownership containers only at initial adapter setup, excluding streamed roots; each chunk keeps its existing independent lifecycle. No registry or per-frame discovery is added. F5 P4 private campaigns and F6 disposable worlds use the same roots. See SCENES/World/SO2_Copilot_Handoff.md for local tests and exact migration paths.
+
+SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.

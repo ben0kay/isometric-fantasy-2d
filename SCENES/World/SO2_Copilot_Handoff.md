@@ -1,6 +1,6 @@
 # SO2 ownership refactor — implementation/testing handoff
 
-Status: implementation complete, awaiting local validation; compilation and Godot execution delegated to local GitHub Copilot at the user's request. Source review is not test evidence.
+Status: automated validation PASSED by Codex after the user requested testing here instead of Copilot. See [SO2_Validation.md](SO2_Validation.md) for actual results and environment details. Manual graphical/performance acceptance remains open. The delegation instructions below are retained for future local retesting.
 
 ## Audited path/destination changes (recorded before editing the scene)
 
@@ -85,7 +85,7 @@ If isolated `user://p4-validation` from the previously tested SO1 commit already
 
 ## Validation/rollback record
 
-Codex performed source/dependency review and `git diff --check` only. **No C# build, Godot import, headless tests, graphical tests or benchmarks were run for SO2.** P4's prior automated results and Ben's functional acceptance remain historical baseline evidence, not SO2 evidence. Large-save profiling and P3 rendering acceptance are not declared complete.
+Codex subsequently ran the build, clean editor import, all 15 listed runtime checks, and a real SO1-write → SO2-read checkpoint proof. All passed; exact counts, warnings, resolved tool-environment issues and the strengthened P4 fixture are recorded in [SO2_Validation.md](SO2_Validation.md). Graphical tests and target-PC profiling remain outstanding. Large-save profiling and P3 rendering acceptance are not declared complete.
 
 If SO2 fails, report the failure before fixes. To inspect rollback, use an isolated worktree at `a206a25`; do not destructively reset Ben's checkout. An SO2 checkpoint uses the current content fingerprint, so rolling code back to SO1 may intentionally reject that checkpoint; its prior `.bak` is retained. Back up a disposable campaign before any manual rollback experiment, and never manually edit checksum envelopes to bypass validation.
 

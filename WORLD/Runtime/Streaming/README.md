@@ -89,3 +89,5 @@ Menu-launched campaigns restore frozen macro/features and import SavedChunk delt
 
 ## SO2 destinations — awaiting local validation
 The existing stream receives ChunkActorsRoot, StreamedGroundRoot, the full actor navigation-source root and EntityPlacement explicitly. Chunk props remain immediate children of the same hidden/publication-controlled chunk node; binding/cancellation/unload and saved deltas are unchanged. Player/skeleton and authored torches now have persistent sibling roots. No additional streamed SceneryRoot/EntitiesRoot layers or streamer are introduced. Regression paths follow genuine hierarchy changes. See SCENES/World/SO2_Copilot_Handoff.md.
+
+SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.

@@ -37,3 +37,5 @@ Archived runs and unreferenced immutable blobs are retained deliberately; automa
 
 ## SO2 integration — awaiting local validation
 Player/environment/entity references now come from the world's typed ownership API. A narrowly gated source-layout compatibility bridge permits existing SO1/P4 campaigns to Continue without reseeding or losing edits; the next checkpoint uses the verified SO2 fingerprint. Unsupported content/schema still rejects. The user confirmed prior P4 functional tests passed; these SO2 changes require new local tests. See SCENES/World/SO2_Copilot_Handoff.md for the exact internal-test and save-compatibility handoff.
+
+SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.

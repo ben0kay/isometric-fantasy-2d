@@ -1,6 +1,6 @@
 # World Scene Organization — Codex Design / Refactor Plan
 
-> **Status (2026-10-22):** SO0/SO1 implemented; SO2 ownership implemented and awaiting local Copilot validation; SO3/SO4 remain proposed. Additional GL0–GL3 location/session architecture is proposed below, not authorized code changes. See SO1 implementation notes near the end.
+> **Status (2026-10-22):** SO0/SO1 implemented; SO2 ownership implemented and automated-tested; visual/performance acceptance pending; SO3/SO4 remain proposed. Additional GL0–GL3 location/session architecture is proposed below, not authorized code changes. See SO1 implementation notes near the end.
 > **Date:** 2026-10-22
 > **Location:** This document intentionally lives beside `SCENES/World/World.tscn`.
 > **Goal:** Make Godot's **Remote Scene Tree** understandable at a glance, give spawned objects clear ownership/lifecycle, and prepare for entities, effects, large-world chunk streaming, profile saves and future A-Life **without breaking existing production gameplay or performance**.
@@ -291,3 +291,8 @@ Actual hierarchy: WorldActorsRoot → PersistentEntitiesRoot (player/skeleton), 
 P4 remains functionally accepted by the user on its prior revision, but SO2 save compatibility must be reverified. The exact previous source scene is frozen as migration input; only the known SO2 scene plus matching current dependency fingerprints permits the layout-only transition. Saved IDs, macro/features and edits do not regenerate. New checkpoints use the verified current fingerprint; unknown content/schema changes still fail with files preserved.
 
 Validation so far: source/dependency review and diff whitespace checks only. No Godot execution/build/benchmark occurred here. In particular nested Y sorting, seam overlaps, source adapter counts, preview mode, P4 old/new save restoration and Windows frame pacing are **pending**. No performance gain or visual equivalence is claimed until measured/inspected.
+
+
+### SO2 automated validation update — 22 October 2026
+
+The user requested testing here because Copilot was unavailable. Codex built with the authored Godot 4.7.2 SDK/.NET 8, completed a clean editor import after resolving container SDK-discovery settings, and passed SO2 ownership (60), P1 (377085), P2 (175), P3 (4425), scenery stability (167), snow/rain/spatial/sun, tree/fire/light/preview and P4 write/read (39/33) checks. A real SO1 revision wrote isolated disk checkpoints, which SO2 then restored in a separate process (31 write / 33 read). No production-code fixes were needed. The save fixture now also commits and reloads the migrated checkpoint; script UID sidecars are included. See [SO2_Validation.md](SO2_Validation.md) for exact evidence. This supersedes earlier no-tests/pending-automated statements; manual rendered Y sorting/seams and Windows performance remain open.

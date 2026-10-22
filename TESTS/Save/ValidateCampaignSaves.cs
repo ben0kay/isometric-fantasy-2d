@@ -71,6 +71,12 @@ public partial class ValidateCampaignSaves : Node
         Check(migrated.Blueprint.WorldId == legacy.WorldId && migrated.MacroMap.Hash == legacy.Blueprint.MapHash,"SO1 compatibility bridge changed world identity");
         Check(!Props(migrated).Any(p => Id(p)==removed),"SO1 compatibility bridge resurrected an edit");
         Check(migrated.Saves.Capture().ContentFingerprint == CampaignSession.ContentFingerprint(),"SO2 checkpoint did not adopt verified current fingerprint");
+        Check(await migrated.Saves.SaveAsync(),"Verified legacy campaign could not commit an SO2 checkpoint");
+        var committedMigration = CampaignSession.Store().Load(A).Snapshot;
+        Check(committedMigration.ContentFingerprint == CampaignSession.ContentFingerprint()
+            && committedMigration.WorldId == legacy.WorldId && committedMigration.Blueprint.MapHash == legacy.Blueprint.MapHash
+            && committedMigration.Chunks.Any(c => c.Edits.Any(e => e.Id == removed && e.Removed)),
+            "Committed layout migration lost its fingerprint, identity, map or removal");
         await Remove(migrated);
     }
     // Restart must restore exact blueprint/edits rather than choose a fresh random seed.
