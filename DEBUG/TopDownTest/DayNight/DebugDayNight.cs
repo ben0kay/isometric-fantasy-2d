@@ -153,6 +153,20 @@ public partial class DebugDayNight : Node2D
         int minutes = (int)((_hour - hours) * 60);
         _clock.Text = $"{hours:00}:{minutes:00}  |  {Config.CycleSeconds:0}s per day";
     }
+    // Refresh one cached caster after an appearance swap; no cache rebuild or new shadow objects.
+    // =========================================================
+    public void RefreshShadowAppearance(Node2D body)
+    {
+        foreach (Caster caster in _casters)
+        {
+            if (caster.Body != body) continue;
+            caster.Shadow.Texture = caster.Source.Texture;
+            caster.Shadow.Offset = caster.Source.Offset; caster.Shadow.Centered = caster.Source.Centered;
+            caster.Shadow.FlipH = caster.Source.FlipH; caster.Shadow.FlipV = caster.Source.FlipV;
+            caster.Shadow.TextureFilter = caster.Source.TextureFilter;
+            return;
+        }
+    }
     // Called by the optional polish preview; modify cached shadow materials only.
     // =========================================================
     public void SetShadowSoftness(float softness)

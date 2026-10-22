@@ -80,3 +80,8 @@ The removable `SnowTest/` now shades the upper surfaces of generated boulders us
 ## Passive skeleton enemy test
 
 [Enemies/](Enemies/README.md) adds one basic unanimated SVG skeleton along the north trail. When approached it chases the player, following a lightweight precomputed grid around existing tree/rock colliders and the torch. The current equipped axe can hit it using the same shared IWeaponHitTarget contract used for tree wobble. Three close, aimed hits kill it; it briefly flashes red and fades out. No enemy attacks, player damage, loot, respawning or production systems are added. To disable/remove the experiment, remove the EnemyTest instance near the end of this scene and then delete Enemies/.
+
+
+## FIRE1 oak art lifecycle
+
+[Fire/](Fire/README.md) adds a top-centre **Ignite nearest oak** / **Reset all debug oaks** panel. One real nearby oak crossfades into the uploaded leafless charred art while retaining its collision; final/reset shadow appearance refreshes in place. State/events and handoff are documented there. FIRE1 has no flames or lightning ignition; FIRE2–FIRE4 remain planned.

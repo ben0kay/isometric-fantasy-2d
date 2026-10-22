@@ -4,6 +4,7 @@ using Godot;
 public partial class TreeHitFeedback : Node2D, IWeaponHitTarget
 {
     [Export] public TreeHitMasterConfig Config { get; set; }
+    public bool HealthyLeaves { get; private set; } = true;
     public int ReceivedHits { get; private set; }
     public Vector2 HitAnchor => ((Node2D)GetParent()).GlobalPosition;
     private Sprite2D _sprite;
@@ -32,6 +33,15 @@ public partial class TreeHitFeedback : Node2D, IWeaponHitTarget
         ProcessPriority = -1; // Let DayNight project the updated sprite transform.
     }
 
+    // Optional lifecycle callers can suppress foliage without coupling the hit receiver to fire.
+    // =========================================================
+    public void SetHealthyLeaves(bool enabled)
+    {
+        HealthyLeaves = enabled;
+        if (!enabled && _leaves != null) System.Array.Clear(_leaves);
+        QueueRedraw();
+    }
+
     // Measure actual transformed trunk polygon edges, including root scale and mirrored footprints.
     // =========================================================
     public Vector2 ClosestHitPoint(Vector2 origin)
@@ -54,7 +64,7 @@ public partial class TreeHitFeedback : Node2D, IWeaponHitTarget
         ReceivedHits++; _age = 0f; _push = direction.X < 0f ? -1f : 1f;
         _leaves ??= new Leaf[24];
         Rect2 art = _sprite.GetRect();
-        for (int i = 0; i < Mathf.Clamp(Config.LeavesPerHit, 0, _leaves.Length); i++)
+        for (int i = 0; i < (HealthyLeaves ? Mathf.Clamp(Config.LeavesPerHit, 0, _leaves.Length) : 0); i++)
         {
             Vector2 pixel = art.Position + art.Size * new Vector2(_random.RandfRange(0.20f, 0.80f), _random.RandfRange(0.20f, 0.58f));
             _leaves[_next] = new Leaf {

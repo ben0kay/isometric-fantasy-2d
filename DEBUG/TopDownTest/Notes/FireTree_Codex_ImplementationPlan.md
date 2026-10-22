@@ -1,6 +1,6 @@
 # Tree fire — Codex FIRE1 plan and follow-up implementation handoff
 
-**Status:** PLANNED / NOT IMPLEMENTED.  
+**Status:** FIRE1 IMPLEMENTED; FIRE2–FIRE4 remain planned.  
 **Project:** 2D top-down fantasy survival prototype (Godot .NET / C#).  
 **Scope:** `DEBUG/TopDownTest/` only. No production code changes in FIRE1.  
 **Art choice:** Use **`Charred Leafless Oak Sprite.png`** currently uploaded at repository root. **Do not use** `Charred Oak Tree Sprite.png` for this initial prototype. Keep the unused file unchanged.  
@@ -213,16 +213,19 @@ Once the effect is visually stable:
 
 ## 7. FIRE1 Status — Codex should update this section
 
-**State:** NOT STARTED. The only deliverable currently is this implementation plan.
+**State:** FIRE1 IMPLEMENTED — 21 October 2026. FIRE2–FIRE4 were not implemented.
 
-- Codex commit SHA: _not yet available_
-- Imported runtime image path and alignment: _pending_
-- BurnableTree path and exported API: _pending_
-- Burn lifecycle signals/events: _pending_
-- FireTest scene/control paths: _pending_
-- Shadow refresh integration: _pending_
-- Snow/axe interoperability: _pending_
-- Godot build/render evidence: _pending_
-- Known limitations/blockers for FIRE2: _pending_
+- Commit: the single **Implement FIRE1 oak burn lifecycle and aligned charred art transition** commit containing this status. Resolve its exact SHA from this file's Git history; the final response supplies the link. A commit cannot embed its own final SHA without changing that SHA.
+- Art: `Fire/Artwork/oak_charred_source.png`, exact existing blob cb9f85a132406bb567a09fc328b910d223ead325. Root source and unused second charred image preserved. No derivative/resampling: explicit source anchors healthy (548,1290), dead (565,1235), different source widths reflected on FlipH, Sprite.Offset alignment preserves original Sprite.Transform/root scale/collider.
+- API: `Fire/Simulation/BurnableTree.cs`; FireTreeState Healthy/Burning/Burnt, TryIgnite(Vector2,string="Debug") → bool, ResetBurn(), State, BurnProgress, WorldImpactPosition, IgnitionSource.
+- Signals: Ignited(Vector2,string), BurnCompleted(), BurnReset(), AppearanceChanged(). See Fire/README.md for lifecycle semantics.
+- Controls: Fire/FireTest.tscn, Fire/Debug/FireTestController.cs; main scene gains one optional instance after SnowTest. Ignite nearest healthy oak within configurable radius, reset all and selected progress; no spawn/teleport.
+- Shadow hook: targeted DebugDayNight.RefreshShadowAppearance(Node2D), called by AppearanceChanged subscription on final/reset; existing caster reused.
+- Axe hook: generic TreeHitFeedback.SetHealthyLeaves(bool) clears/suppresses healthy hit foliage through burning/burnt; reset restores it. Wobble and collision preserved.
+- Snow: no material replacement or stale material restoration by fire. Alpha-only transition and final texture/offset swap preserve the current runtime material. Charred branch snow/wind polish deferred.
+- Deviations: anchor offsets instead of a padded derivative; exact original source retained under Fire/Artwork. No Instant char button needed. No particle pass, lightning, collapse/ash, damage or production changes.
+- Remaining limitations: basic translucent crossfade, healthy shadow until final, ambient leaves still choose charred anchors, branch sway/dedicated charred snow profile deferred. Continue with FIRE2 using this receiver, not a replacement state machine.
 
-**Next action:** Ask Codex to **implement FIRE1 only** from this file; then provide that commit or the updated file to ChatGPT for FIRE2 onwards.
+- Validation: native Godot 4.5.1 / .NET 8 C# build, runtime API/integration assertions and actual software OpenGL mid/final renders passed. Normal/mirrored anchors, stable colliders/materials, one-shot events, shadow texture/offset, snow on/removal and reset controls checked. Reduced grass for software rendering only; existing 115/116 scatter warning unchanged. Windows D3D12/hardware performance unverified. The concurrently fixed rock-snow shader is preserved, not rewritten by FIRE1.
+
+**Next action:** Continue with FIRE2 only when requested; use the documented API above.

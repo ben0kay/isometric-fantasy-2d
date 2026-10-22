@@ -1,10 +1,13 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/tree_01.png" id="art"]
 [ext_resource type="Material" path="res://DEBUG/TopDownTest/Trees/Tree01Wind.tres" id="wind"]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/Trees/HitFeedback/TreeHitFeedback.cs" id="hit"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Trees/HitFeedback/DefaultTreeHitConfig.tres" id="hit_config"]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Fire/Simulation/BurnableTree.cs" id="burn"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Fire/DefaultFireConfig.tres" id="fire_config"]
 
 [node name="Tree01" type="StaticBody2D"]
 
@@ -22,3 +25,7 @@ polygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -1
 [node name="HitFeedback" type="Node2D" parent="."]
 script = ExtResource("hit")
 Config = ExtResource("hit_config")
+
+[node name="BurnableTree" type="Node" parent="."]
+script = ExtResource("burn")
+Config = ExtResource("fire_config")

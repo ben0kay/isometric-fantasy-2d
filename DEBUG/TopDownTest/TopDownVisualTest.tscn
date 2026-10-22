@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -36,6 +36,8 @@
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weapons/AxeTest.tscn" id="axe_test"]
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Enemies/EnemyTest.tscn" id="enemy_test"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Fire/FireTest.tscn" id="fire_test"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -502,3 +504,5 @@ shape = SubResource("VerticalBound")
 [node name="SnowTest" parent="." instance=ExtResource("snowtest")]
 
 [node name="EnemyTest" parent="." instance=ExtResource("enemy_test")]
+
+[node name="FireTest" parent="." instance=ExtResource("fire_test")]
