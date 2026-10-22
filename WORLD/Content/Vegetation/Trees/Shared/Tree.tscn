@@ -1,0 +1,17 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Tree.cs" id="tree"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs" id="hit"]
+[ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/Burnable.cs" id="burn"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Fire/TreeFireAppearance.cs" id="appearance"]
+[node name="Tree" type="StaticBody2D"]
+script = ExtResource("tree")
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 2
+centered = false
+[node name="TrunkFootprint" type="CollisionPolygon2D" parent="."]
+[node name="HitResponse" type="Node2D" parent="."]
+script = ExtResource("hit")
+[node name="Burnable" type="Node" parent="."]
+script = ExtResource("burn")
+[node name="FireAppearance" type="Node" parent="."]
+script = ExtResource("appearance")

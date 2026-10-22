@@ -1,2 +1,7 @@
 # Oak
-Oak.tres is the canonical tree definition; Oak.tscn owns the static art and rooted collision. Sprites owns its artwork. Biomes reference Oak.tres. Copied from DEBUG without gameplay hit/fire behaviour. OakWind.tres now references the shared production sway shader; content data opts into shared canopy snow and sun/contact shadows.
+
+Oak.tres is canonical species data for the shared ../Shared/Tree.tscn. Its inline TreeVisualVariant configures the existing sprite, root anchor, scale, footprint and placement bounds. The former species scene is removed; biomes continue referencing the same .tres path.
+
+Hit feedback, wind, snow, shadows and optional burning use shared components. OakFireProfile.tres supplies the existing charred art and anchor.
+
+For new species/variants, edit Resources and biome references only. See ../README.md.

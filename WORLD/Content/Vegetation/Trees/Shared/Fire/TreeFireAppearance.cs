@@ -34,8 +34,8 @@ public partial class TreeFireAppearance : Node
     // =========================================================
     private void OnIgnited(Vector2 worldImpactPosition, string source)
     {
-        if (Config?.BurntTexture == null) return;
         _hits?.SetHealthyLeaves(false);
+        if (Config?.BurntTexture == null) return;
         // Offset is in source pixels; inherited Sprite transform preserves scale and impact wobble.
         _overlay = new Sprite2D {
             Name = "CharredBlend", Texture = Config.BurntTexture, Centered = _sprite.Centered,
@@ -81,7 +81,8 @@ public partial class TreeFireAppearance : Node
         Vector2 alive = Config.HealthyAnchor, dead = Config.BurntAnchor;
         if (_sprite.FlipH) { alive.X = _healthy.GetWidth() - alive.X; dead.X = Config.BurntTexture.GetWidth() - dead.X; }
         if (_sprite.FlipV) { alive.Y = _healthy.GetHeight() - alive.Y; dead.Y = Config.BurntTexture.GetHeight() - dead.Y; }
-        return _healthyOffset + alive - dead;
+        Vector2 centeredDelta = _sprite.Centered ? (Config.BurntTexture.GetSize() - _healthy.GetSize()) * 0.5f : Vector2.Zero;
+        return _healthyOffset + alive - dead + centeredDelta;
     }
 
     // Only active burns process; use elapsed seconds rather than the accelerated day/night clock.

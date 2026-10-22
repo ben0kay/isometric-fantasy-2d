@@ -1,6 +1,6 @@
 # Codex Implementation Plan — Generic Resource-Driven Trees
 
-> **Status: PLANNED, NOT IMPLEMENTED.** This is a handoff specification, not permission to assume any files described as future work already exist.
+> **Status: IMPLEMENTED — 22 October 2026.** The plan below is retained as the original specification. Current Resource contracts and runtime details are documented in [README.md](README.md). Production trees now use Shared/Tree.tscn; no per-species scenes are required.
 >
 > **Goal:** One reusable, internally managed tree scene/controller for all tree species. Adding a species or sprite variant should require only Resources (.tres), artwork and biome data — **no species-specific scene editing or new C# scripts**. A future external **Avalonia toolbox** must be able to create/edit these definitions, without authoring Godot scenes.
 >
@@ -98,16 +98,18 @@ Audit existing fire consumers, type checks, metadata, source material caches and
 
 ## Acceptance checks
 
-- [ ] The world instantiates every tree species from a **single** shared `Tree.tscn`.
-- [ ] Adding a third tree species/variant requires only `.tres` definition(s), artwork and biome-reference data, not a new `.tscn` or species-specific C#.
-- [ ] Oak and Pink Blossom keep their existing appearance, trunk collisions, scaling, mirroring and seeded placement in the appropriate biome.
-- [ ] Axe input remains centralized; both species wobble and emit their configured leaves/petals.
-- [ ] Both species respond to shared wind, snow and sun/contact shadow systems.
-- [ ] Both species can burn through the shared FIRE system; Oak retains charred appearance and Pink Blossom burns with **no required charred image**.
-- [ ] Fire response does not accidentally alter/chop trees or implement unrelated damage/loot/inventory mechanics.
-- [ ] GPU/material/cache ownership remains bounded and efficient; no per-tree idle loops or unnecessary shader copies.
-- [ ] Godot C# build and `SCENES/World/World.tscn` run successfully. Both DEBUG and production remain loadable and functional.
-- [ ] Documentation updated; a **single GitHub commit** for the implementation job.
+Fire-spread wording in this original plan describes compatibility intent; current production has no spread simulation. This implementation preserves FIRE1/FIRE2 and adds no new fire mechanics. Headless/rendered checks passed; Windows renderer still requires local validation.
+
+- [x] The world instantiates every tree species from a **single** shared `Tree.tscn`.
+- [x] Adding a third tree species/variant requires only `.tres` definition(s), artwork and biome-reference data, not a new `.tscn` or species-specific C#.
+- [x] Oak and Pink Blossom keep their existing appearance, trunk collisions, scaling, mirroring and seeded placement in the appropriate biome.
+- [x] Axe input remains centralized; both species wobble and emit their configured leaves/petals.
+- [x] Both species respond to shared wind, snow and sun/contact shadow systems.
+- [x] Both species can burn through the shared FIRE system; Oak retains charred appearance and Pink Blossom burns with **no required charred image**.
+- [x] Fire response does not accidentally alter/chop trees or implement unrelated damage/loot/inventory mechanics.
+- [x] GPU/material/cache ownership remains bounded and efficient; no per-tree idle loops or unnecessary shader copies.
+- [x] Godot C# build and `SCENES/World/World.tscn` run successfully. Both DEBUG and production remain loadable and functional.
+- [x] Documentation updated; a **single GitHub commit** for the implementation job.
 
 ## Out of scope
 

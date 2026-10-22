@@ -253,3 +253,8 @@ Integration: the concurrently added production pond is retained, including place
 ## Production FIRE1 / FIRE2 — completed
 
 Shared lifecycle/effect ownership is in SYSTEMS/WorldInteractions/Fire; oak artwork/anchors and tree rendering adapters are in WORLD/Content/Vegetation/Trees. World scene initializes FireRuntime after the existing environment. Removable DEBUG/UI/Fire controls ignite/reset nearby oaks. Canopy GPU effects use production wind, preserve snow materials and refresh sun shadows. C# build and rendered/runtime lifecycle, mirror, collider, snow, wind, restoration and cap checks passed. FIRE3, spread, damage, extinguishing and persistence are not included. See the Fire README for configuration and validation.
+
+
+## Generic Resource-driven trees — completed
+
+All production trees now instantiate Shared/Tree.tscn from TreeDefinition + seeded TreeVisualVariant data; Oak/PinkBlossom .tres paths and biome references stay stable. Per-species scenes are removed after reference/runtime validation. Source anchors, mirroring, variant polygons/bounds, species hit/wind/snow/shadow and fire data are configured before child readiness. Both species receive tool hits and burn; Pink Blossom needs no charred artwork. Player input remains centralized. Non-tree scenery is unchanged. See WORLD/Content/Vegetation/Trees/README.md and TESTS/Trees. No fire spread, new damage rules, Avalonia implementation or streaming is added.

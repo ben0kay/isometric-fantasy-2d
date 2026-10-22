@@ -34,7 +34,7 @@ public partial class BurningEffect : Node2D
         Node2D root = (Node2D)Tree.GetParent();
         Sprite2D sprite = root.GetNode<Sprite2D>("Sprite");
         _appearance = root.GetNodeOrNull<TreeFireAppearance>("FireAppearance");
-        if (_appearance != null && _erosion.Attach(sprite, _burnNoise))
+        if (_appearance?.Config?.BurntTexture != null && _erosion.Attach(sprite, _burnNoise))
             _appearance?.SetFoliageErosion(true);
 
         // First build fallback box emitters; a cached alpha-mask turns them into

@@ -9,3 +9,8 @@ This is startup prop placement on a rectangular ground area, not macro terrain g
 Generation processes primary then optional secondary populations using one seeded RNG and one shared occupancy cache. Sampling is restricted to conservative side rectangles and membership is rejected against AdjacentBiomeLayout's actual curve. Scenery metadata records biome/content IDs for inspection. Count, variants, scale and sharing stay in definitions; neither Oak nor Pink Meadow is hardcoded into the placer.
 
 AvoidBiomeTransition is content data: trees/grass reserve the full blend plus sprite extent and conservative curve slope allowance. Shared rocks can occupy the transition, with ownership determined by their centre. Bounded retries may place fewer decorative tufts. Same seed + same layout/definitions/settings reproduces the same arrangement; changing composition changes old seed outputs.
+
+
+## Resource-driven trees
+
+TreeDefinition populations use VisualVariants and the one Shared/Tree.tscn. Seeded selection precedes fit checks; selected variant bounds and conservative trunk radius drive exclusion/occupancy. Configuration, mirrored root anchoring and collision reflection happen before AddChild, so downstream caches discover final sprites and components. Non-tree SceneryDefinition populations still use their existing PackedScene Variants.

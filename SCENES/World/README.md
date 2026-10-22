@@ -32,4 +32,4 @@ Skeleton Basic supports 3 HP, a damage flash and death fade via `TakeDamage(int)
 **Testing:** Open this production scene and press F6. Check that the skeleton appears near the starting player and follows around generated trees and rocks. Run different world seeds. Godot/.NET compilation and in-engine collision behaviour still require verification on the user's machine.
 
 
-Production FIRE1/FIRE2: build C# and F6 this scene; use the top-centre **Ignite nearest oak** / reset buttons. The optional `FireDebugPanel` can be removed while the `Fire` runtime and tree receivers remain. See [Fire documentation](../../SYSTEMS/WorldInteractions/Fire/README.md).
+Production FIRE1/FIRE2: build C# and F6 this scene; use the top-centre **Ignite nearest tree** / reset buttons. The optional `FireDebugPanel` can be removed while the `Fire` runtime and tree receivers remain. See [Fire documentation](../../SYSTEMS/WorldInteractions/Fire/README.md).

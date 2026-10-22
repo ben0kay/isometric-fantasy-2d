@@ -19,6 +19,7 @@ func run():
     var mirrored=null
     for b in burns:
         check(not b.is_processing(),"idle receiver")
+        if b.get("Profile")==null or b.get("Profile").get("BurntTexture")==null:continue
         if b.get_parent().get_node("Sprite").flip_h:mirrored=b
         else:normal=b
     check(normal!=null and mirrored!=null,"normal and mirrored oaks")

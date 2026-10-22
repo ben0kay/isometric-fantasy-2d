@@ -3,6 +3,7 @@ using Godot;
 
 public partial class TreeHitResponse : Node2D, IToolHitTarget
 {
+    [Export] public bool Enabled { get; set; } = true;
     [Export] public TreeHitConfig Config { get; set; }
     public bool HealthyLeaves { get; private set; } = true;
     public int ReceivedHits { get; private set; }
@@ -29,7 +30,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
         _original = _sprite.Transform;
         _weather = GetTree().Root.FindChild("Weather", true, false) as WorldWeather;
         _random.Seed = (ulong)GetInstanceId();
-        AddToGroup("world_tool_targets"); SetProcess(false);
+        if (Enabled) AddToGroup("world_tool_targets"); SetProcess(false);
         ProcessPriority = -1; // Let DayNight project the updated sprite transform.
     }
 
@@ -61,6 +62,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     // =========================================================
     public void ReceiveHit(Vector2 direction)
     {
+        if (!Enabled) return;
         ReceivedHits++; _age = 0f; _push = direction.X < 0f ? -1f : 1f;
         _leaves ??= new Leaf[24];
         Rect2 art = _sprite.GetRect();

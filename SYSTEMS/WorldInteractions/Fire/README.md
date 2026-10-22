@@ -10,16 +10,16 @@
 - `FireMasterConfig.cs`, `DefaultFireConfig.tres`: shared particle limits, intensities, wind response, smoke tail and warm flickering light.
 - `Visuals/BurningEffect.cs`: temporary C# GpuParticles2D flame/smoke/ember emitters. Reads the existing production WindController. Unsupported erosion materials fall back to crossfade.
 - `WORLD/Content/Vegetation/Trees/Shared/Fire/`: tree-specific profile, charred alignment/crossfade, erosion shader composition and cached canopy-alpha emission points.
-- `WORLD/Content/Vegetation/Trees/Oak/OakFireProfile.tres`, `Oak/Sprites/oak_charred.png`: canonical oak artwork/anchors and lifecycle settings. Each production Oak scene carries Burnable and FireAppearance nodes. Pink blossoms have no charred variant configured.
+- `WORLD/Content/Vegetation/Trees/Oak/OakFireProfile.tres`, `Oak/Sprites/oak_charred.png`: canonical oak artwork/anchors and lifecycle settings. The generic Shared/Tree.tscn carries Burnable and FireAppearance; TreeDefinition configures them for all opted-in species. Pink Blossom ignites and emits shared GPU flames without charred art.
 - `DEBUG/UI/Fire/`: removable ignition/reset buttons. Production ignition/effects/shadow refresh do not depend on the panel.
 
 C# types use `FantasyGame.WorldInteractions.Fire` to coexist with DEBUG names without Production prefixes. Config resources reference their scripts explicitly.
 
 ## Run and tweak
 
-Pull, build C#, open `SCENES/World/World.tscn` and press **F6**. Walk within 320 pixels of an oak; use **Ignite nearest oak** at the top centre. **Reset burnt / burning oaks** restores the world oaks. F5 still opens the independent debug sandbox.
+Pull, build C#, open `SCENES/World/World.tscn` and press **F6**. Walk within 320 pixels of an oak; use **Ignite nearest tree** at the top centre. **Reset burnt / burning trees** restores the world oaks. F5 still opens the independent debug sandbox.
 
-Tune shared effects in DefaultFireConfig; tune duration, charred texture, source-pixel ground anchors and canopy band in OakFireProfile. Other tree species can opt in with their own profile and the same two receiver/appearance nodes. No inventory/tool binding is required. All player input remains owned by PlayerInput; this feature adds no player input polling.
+Tune shared effects in DefaultFireConfig; tune duration, charred texture, source-pixel ground anchors and canopy band in OakFireProfile. Other tree species opt in through TreeDefinition Resources; the generic template installs the common nodes. No inventory/tool binding is required. All player input remains owned by PlayerInput; this feature adds no player input polling.
 
 The original root StaticBody2D/TrunkFootprint persists. Burning/burnt oaks suppress healthy axe-hit leaves; reset restores them. SunShadowRenderer refreshes only the changed caster's texture/offset/flip. Fire composes with the live wind/snow material and restores the current source on burnout/reset; no shared material asset is edited. An effect cap limits presentation, while every accepted ignition still completes its lifecycle.
 

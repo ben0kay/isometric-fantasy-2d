@@ -1,3 +1,5 @@
+**Generic production trees:** Oak and Pink Blossom now use one shared tree template, configured entirely by species/variant Resources. Both support axe feedback, wind, snow, shadows and fire; blossoms need no charred artwork to burn. Future species need .tres data/art/biome references only. See [tree authoring guide](WORLD/Content/Vegetation/Trees/README.md).
+
 **Production fire (FIRE1/FIRE2):** Oaks in World.tscn now support manual ignition, charred transformation, canopy-shaped GPU flames/smoke/embers and shared-wind firelight. Top-centre controls in `DEBUG/UI/Fire/` are removable. See [production fire](SYSTEMS/WorldInteractions/Fire/README.md). Spread, damage and lightning ignition remain future work.
 
 # Fantasy Survival Sandbox — 2D Top-Down Reboot

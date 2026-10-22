@@ -1,15 +1,33 @@
 [gd_resource type="Resource" script_class="TreeDefinition" format=3]
-[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossom.tscn" id="scene"]
 [ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeDefinition.cs" id="script"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeVisualVariant.cs" id="variant_script"]
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/Sprites/tree_pink_blossom_01.png" id="art"]
+[ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomWind.tres" id="wind"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomHitConfig.tres" id="hit"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomFireProfile.tres" id="fire"]
+[sub_resource type="Resource" id="variant"]
+script = ExtResource("variant_script")
+Id = "01"
+Texture = ExtResource("art")
+SourceAnchor = Vector2(80, 208.88889)
+SpriteScale = Vector2(0.85, 0.90)
+TrunkPolygon = PackedVector2Array(-28, -7, -17, -19, 0, -23, 18, -17, 28, -6, 20, 4, 0, 8, -19, 3)
+VisualMinimum = Vector2(-68, -188)
+VisualMaximum = Vector2(68, 4)
 [resource]
 script = ExtResource("script")
 Id = "tree.pink_blossom"
 DisplayName = "Pink Blossom"
-Variants = Array[PackedScene]([ExtResource("scene")])
+VisualVariants = Array[ExtResource("variant_script")]([SubResource("variant")])
 SpacingRadius = 40.0
 VisualMinimum = Vector2(-68, -188)
 VisualMaximum = Vector2(68, 4)
 FootprintPath = NodePath("TrunkFootprint")
 SnowResponse = 1
+SnowFoliageProfile = 1
 ContactShadowRadius = Vector2(25, 9)
 AvoidBiomeTransition = true
+HitConfig = ExtResource("hit")
+WindMaterial = ExtResource("wind")
+CanBurn = true
+FireProfile = ExtResource("fire")
