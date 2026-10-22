@@ -1,4 +1,4 @@
-// One production bounded 2D renderer handles haze, pollen, leaves and torch emissions.
+// Bounded world haze/leaves/torch renderer; owns an independent screen-dust layer.
 using Godot;
 using System.Collections.Generic;
 using WorldTree = FantasyGame.World.Trees.Tree;
@@ -99,6 +99,7 @@ public partial class WorldAtmosphere : Node2D
         bool pollen = Config.Pollen && Config.PollenCount > 0;
         if (pollen && _pollen == null) { _pollen = new PollenDust { Name = "PollenDust" }; AddChild(_pollen); }
         else if (!pollen && _pollen != null) { RemoveChild(_pollen); _pollen.Free(); _pollen = null; }
+        _pollen?.UpdateSettings(Config.PollenCount);
         bool haze = Config.Haze && Config.HazeDensity > 0;
         if (_haze.Visible != haze) _haze.Visible = haze;
         bool torch = GodotObject.IsInstanceValid(_torch) && _torch.IsVisibleInTree();
@@ -106,8 +107,8 @@ public partial class WorldAtmosphere : Node2D
             || (torch && ((Config.Smoke && Config.SmokeCount > 0 && SmokeTexture != null) || (Config.Embers && Config.EmberCount > 0)));
         if (_sharedDrawActive != shared) RequestRedraw();
         _sharedDrawActive = shared;
-        SetProcess(pollen || haze || shared);
-        if (pollen || haze) UpdateAmbient();
+        SetProcess(haze || shared);
+        if (haze || shared) UpdateAmbient();
     }
     private void RequestRedraw() { RedrawRequests++; QueueRedraw(); }
 
@@ -117,7 +118,6 @@ public partial class WorldAtmosphere : Node2D
     {
         _worldBounds = Day.Weather.VisibleWorldRect().Grow(200).Intersection(WorldBounds);
         _drift = _weather.Displacement;
-        _pollen?.UpdateState(Config.PollenCount,_worldBounds,_drift,_day.Daylight);
         if (!Config.Haze || Config.HazeDensity <= 0) return;
         if (_hazeBounds != _worldBounds)
         {

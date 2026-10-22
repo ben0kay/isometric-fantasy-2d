@@ -60,7 +60,8 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Slider(lighting, "Local shadow softness", 0, 8, 0.1, () => s.Torch.ShadowSoftness, v => s.Torch.ShadowSoftness = (float)v);
         var atmosphere = Section(controls, "Atmosphere", false);
         Toggle(atmosphere, "Ground haze", () => s.Atmosphere.Haze, v => s.Atmosphere.Haze = v);
-        Toggle(atmosphere, "Pollen / dust", () => s.Atmosphere.Pollen, v => s.Atmosphere.Pollen = v);
+        Toggle(atmosphere, "Screen dust", () => s.Atmosphere.Pollen, v => s.Atmosphere.Pollen = v);
+        Slider(atmosphere, "Screen dust budget", 0, 100, 1, () => s.Atmosphere.PollenCount, v => s.Atmosphere.PollenCount = (int)v);
         Toggle(atmosphere, "Falling leaves", () => s.Atmosphere.Leaves, v => s.Atmosphere.Leaves = v);
         Toggle(atmosphere, "Torch smoke", () => s.Atmosphere.Smoke, v => s.Atmosphere.Smoke = v);
         Toggle(atmosphere, "Torch embers", () => s.Atmosphere.Embers, v => s.Atmosphere.Embers = v);

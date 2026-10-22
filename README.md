@@ -2,7 +2,7 @@
 
 **P1-D sun/shadow caching:** Paused solar inputs reuse static shadows; moving actors, hit wobble, wind, camera and streaming remain responsive. Running-time static projection reuse is bounded by a configurable 0.25px tolerance (0 = exact), with immediate manual-time/settings refresh. F9 supports a 1440-second day and tolerance A/B. See [CPU evidence and target-PC limits](ENVIRONMENT/Lighting/Shadows/README.md).
 
-**Pollen/dust performance (P0-0):** Ambient specks now use one capped GPU-drawn instance batch instead of per-speck C# circles. OFF/zero removes it, and all-off atmosphere sleeps. Haze settings/bounds are cached; other effects retain independent controls. See [validation and target-PC limits](ENVIRONMENT/Atmosphere/README.md).
+**Screen dust (P0-0 follow-up):** Sparse, softly fading specks now float in an independent screen layer, unaffected by camera/scenery/wind/daylight. One capped GPU batch animates without C# frame callbacks. OFF/zero removes it, and all-off atmosphere sleeps. Haze settings/bounds are cached; other effects retain independent controls. See [validation and target-PC limits](ENVIRONMENT/Atmosphere/README.md).
 
 **Snow off contract (P0-A/P0-B):** Snow has its own master Enabled switch. OFF clears surface snow and frees snowfall; settled coverage sleeps, with profile/F9 changes waking it. Zero snowfall rate removes flakes independently of settled coverage. See [snow lifecycle and validation](ENVIRONMENT/Weather/Snow/README.md).
 
