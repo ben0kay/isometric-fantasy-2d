@@ -51,6 +51,8 @@ func run():
         check(sprite.get_meta("snow_foliage_profile")==definition.get("SnowFoliageProfile"),"species snow profile")
         if not samples.has(definition.get("Id")):samples[definition.get("Id")]=tree
     check(samples.size()==2,"two configured species")
+    for tree in samples.values():
+        check(tree.get_node("HitResponse").get("FoliageColour")==tree.get("Definition").get("FoliageColour"),"hit colour comes from tree foliage data")
     var query=load("res://ENTITIES/Player/Interaction/ToolHitQuery.cs").new()
     world.add_child(query)
     var originals=[]
@@ -63,7 +65,7 @@ func run():
         query.call("Strike",tree.global_position+Vector2(55,0),Vector2.LEFT,60,55)
         check(hit.get("ReceivedHits")==count+1,"actual shared tool query hits species")
         check(hit.get("Config").get("LeavesPerHit")>0,"species foliage enabled")
-    check(samples["tree.oak"].get_node("HitResponse").get("Config").get("LeafColour")!=samples["tree.pink_blossom"].get_node("HitResponse").get("Config").get("LeafColour"),"leaves and petals use different data")
+    check(samples["tree.oak"].get_node("HitResponse").get("FoliageColour")!=samples["tree.pink_blossom"].get_node("HitResponse").get("FoliageColour"),"leaves and petals use different data")
     await create_timer(0.12).timeout
     for item in originals:
         check(item[0].get_node("Sprite").transform!=item[3],"sprite wobbles")
@@ -117,6 +119,7 @@ func run():
     # A third species and asymmetric second artwork layout, created only as Resource data.
     var third=load("res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossom.tres").duplicate()
     third.set("Id","tree.resource_only_test")
+    third.set("HasFoliage",false)
     third.set("CanBurn",false)
     third.set("HitResponseEnabled",false)
     third.set("WindMaterial",null)
@@ -140,6 +143,9 @@ func run():
         check(anchor(extra.get_node("Sprite"),variant.get("SourceAnchor")).distance_to(extra.global_position)<0.001,"asymmetric centered/offset mirrored source anchor")
         check(not extra.get_node("Burnable").call("TryIgnite",extra.global_position,"Disabled"),"optional fire disabled")
         check(not extra.get_node("HitResponse").is_in_group("world_tool_targets"),"optional hit disabled")
+        check(not extra.get_node("HitResponse").get("HealthyLeaves"),"leafless species never sheds leaves")
+        extra.get_node("Burnable").call("ResetBurn")
+        check(not extra.get_node("HitResponse").get("HealthyLeaves"),"reset preserves leafless species")
         extra.queue_free()
     world.queue_free()
     await process_frame

@@ -1,3 +1,5 @@
-# Shared Tree Hit Response
+# Shared tree hit response
 
-Reusable visual-only tree wobble and bounded foliage burst adapted from DEBUG tree hits. Add HitResponse child to any tree scene with Sprite and TrunkFootprint; set TreeHitConfig per species for leaves, colour, wobble. Implements IToolHitTarget; no axe-specific logic, HP, chopping or loot. Original DEBUG retained.
+TreeHitResponse handles bounded sprite wobble and leaf bursts for all configured tree species. It reuses TreeDefinition.FoliageColour/HasFoliage, also consumed by ambient falling leaves. Burning/burnt trees suppress healthy foliage; reset respects HasFoliage.
+
+Default wobble/burst tuning comes from TreeHitConfig code defaults. No separate hit .tres is required. A species can embed a HitConfig subresource inside its existing tree .tres when timing/count overrides are needed. Player input stays in PlayerInput.cs.

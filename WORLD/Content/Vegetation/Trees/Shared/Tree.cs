@@ -57,6 +57,7 @@ public partial class Tree : StaticBody2D
         footprint.Polygon = polygon; footprint.Disabled = polygon.Length < 3;
         var hits = GetNode<TreeHitResponse>("HitResponse");
         hits.Enabled = Definition.HitResponseEnabled; hits.Config = Definition.HitConfig;
+        hits.FoliageColour = Definition.FoliageColour; hits.FoliageEnabled = Definition.HasFoliage;
         GetNode<FantasyGame.WorldInteractions.Fire.Burnable>("Burnable").Profile = Definition.CanBurn
             ? SelectedVariant.ResolveFireProfile(Definition.FireProfile) : null;
         SetMeta("world_content_id", Definition.Id); SetMeta("world_tree_variant", SelectedVariant.Id);

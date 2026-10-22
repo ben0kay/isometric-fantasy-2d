@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeVisualVariant.cs" id="variant_script"]
 [ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/Sprites/tree_pink_blossom_01.png" id="art"]
 [ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomWind.tres" id="wind"]
-[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomHitConfig.tres" id="hit"]
 [ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomFireProfile.tres" id="fire"]
 [sub_resource type="Resource" id="variant"]
 script = ExtResource("variant_script")
@@ -27,7 +26,7 @@ SnowResponse = 1
 SnowFoliageProfile = 1
 ContactShadowRadius = Vector2(25, 9)
 AvoidBiomeTransition = true
-HitConfig = ExtResource("hit")
 WindMaterial = ExtResource("wind")
 CanBurn = true
 FireProfile = ExtResource("fire")
+FoliageColour = Color(0.87, 0.45, 0.65, 1)

@@ -5,6 +5,8 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
 {
     [Export] public bool Enabled { get; set; } = true;
     [Export] public TreeHitConfig Config { get; set; }
+    public Color FoliageColour { get; set; } = new(0.58f, 0.57f, 0.24f);
+    public bool FoliageEnabled { get; set; } = true;
     public bool HealthyLeaves { get; private set; } = true;
     public int ReceivedHits { get; private set; }
     public Vector2 HitAnchor => ((Node2D)GetParent()).GlobalPosition;
@@ -24,7 +26,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     // =========================================================
     public override void _Ready()
     {
-        Config ??= new TreeHitConfig();
+        Config ??= new TreeHitConfig(); HealthyLeaves = FoliageEnabled;
         _sprite = GetParent().GetNode<Sprite2D>("Sprite");
         _footprint = GetParent().GetNode<CollisionPolygon2D>("TrunkFootprint");
         _original = _sprite.Transform;
@@ -38,7 +40,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     // =========================================================
     public void SetHealthyLeaves(bool enabled)
     {
-        HealthyLeaves = enabled;
+        HealthyLeaves = enabled && FoliageEnabled;
         if (!enabled && _leaves != null) System.Array.Clear(_leaves);
         QueueRedraw();
     }
@@ -113,7 +115,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
             if (leaf.Life <= 0f || leaf.Age >= leaf.Life) continue;
             float fade = Mathf.Clamp((leaf.Life - leaf.Age) / 0.7f, 0f, 1f);
             DrawSetTransform(leaf.Position, leaf.Phase + leaf.Age * 3f, new Vector2(1f, 0.4f + Mathf.Abs(Mathf.Sin(leaf.Age * 4f)) * 0.6f));
-            DrawColoredPolygon(LeafShape, new Color(Config.LeafColour, fade));
+            DrawColoredPolygon(LeafShape, new Color(FoliageColour, FoliageColour.A * fade));
         }
         DrawSetTransform(Vector2.Zero);
     }

@@ -1,6 +1,7 @@
 // One production bounded 2D renderer handles haze, pollen, leaves and torch emissions.
 using Godot;
 using System.Collections.Generic;
+using WorldTree = FantasyGame.World.Trees.Tree;
 
 public partial class WorldAtmosphere : Node2D
 {
@@ -16,7 +17,7 @@ public partial class WorldAtmosphere : Node2D
     private Node2D _torch;
     private Polygon2D _haze;
     private ShaderMaterial _mistMaterial;
-    private readonly List<Vector2> _trees = new();
+    private readonly List<(WorldTree Tree, TreeHitResponse Hits)> _trees = new();
     private static readonly Vector2[] LeafShape = { new(-3, 0), new(0, -1.5f), new(3, 0), new(0, 1.5f) };
     private double _time;
     private Vector2 _drift;
@@ -42,7 +43,7 @@ public partial class WorldAtmosphere : Node2D
         _mistMaterial.SetShaderParameter("world_min", _worldBounds.Position);
         _mistMaterial.SetShaderParameter("world_max", _worldBounds.End);
         foreach (Node child in Actors.GetChildren())
-            if (child is Node2D tree && child.HasMeta("environment_snow") && child.GetMeta("environment_snow").AsInt32() == 1 && !child.GetMeta("environment_grass").AsBool()) _trees.Add(tree.Position);
+            if (child is WorldTree tree && tree.Definition.HasFoliage) _trees.Add((tree, tree.GetNode<TreeHitResponse>("HitResponse")));
         _haze.Polygon = new[] { _worldBounds.Position, new Vector2(_worldBounds.End.X, _worldBounds.Position.Y), _worldBounds.End, new Vector2(_worldBounds.Position.X, _worldBounds.End.Y) };
     }
     #endregion
@@ -122,13 +123,17 @@ public partial class WorldAtmosphere : Node2D
     {
         float age = Mathf.PosMod((float)(_time % 100000) + i * 5.37f, 14f);
         if (age > 9f || visibility <= 0f) return;
-        Vector2 start = _trees[(i * 17) % _trees.Count] + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
+        var source = _trees[(i * 17) % _trees.Count];
+        WorldTree tree = source.Tree;
+        if (!GodotObject.IsInstanceValid(tree) || !GodotObject.IsInstanceValid(source.Hits) || !source.Hits.HealthyLeaves) return;
+        Color foliage = tree.Definition.FoliageColour;
+        Vector2 start = tree.Position + new Vector2(Mathf.Sin(i * 7.1f) * 28f, -100f);
         float flutter = 7f + _leafWindMagnitude * 2.5f;
         Vector2 p = start + _leafDrift[i] + new Vector2(Mathf.Sin(age * (2f + _leafWindMagnitude * 0.15f) + i) * flutter, age * 11f);
         float alpha = Mathf.Min(age, 1f) * Mathf.Clamp((9f - age) / 2f, 0f, 1f);
         alpha *= (0.25f + 0.65f * _day.Daylight) * visibility;
         DrawSetTransform(p, age * (2f + _leafWindMagnitude * 0.3f) + i, new Vector2(1f, 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(age * 3f + i))));
-        DrawColoredPolygon(LeafShape, new Color(0.63f, 0.48f, 0.25f, alpha));
+        DrawColoredPolygon(LeafShape, new Color(foliage, foliage.A * alpha));
         DrawSetTransform(Vector2.Zero);
     }
 

@@ -116,3 +116,6 @@ Fire-spread wording in this original plan describes compatibility intent; curren
 No Avalonia toolbox implementation yet, no additional tree species/art, no inventory/items/harvest/loot, no full tree-health/death system, no new weather/fire mechanics, no overhaul to caves, world chunk streaming or other scenery categories.
 
 **End state:** The future Avalonia editor authors a Resource such as `Willow.tres` and its image references; the shared runtime tree system handles placement, wind, snow, shadows, axe response and optional burning with no new scene files.
+
+
+**Foliage simplification:** FoliageColour/HasFoliage now live directly in TreeDefinition; ambient falling leaves and hit bursts share that data. Separate Oak/default and Pink Blossom hit .tres files are removed. Default TreeHitConfig tuning needs no resource file; optional overrides can be embedded inside the existing species .tres.
