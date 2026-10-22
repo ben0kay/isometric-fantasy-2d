@@ -31,6 +31,7 @@ public partial class WorldScene : Node2D
         camera.LimitBottom = Mathf.CeilToInt(Config.Bounds.End.Y);
         AddBounds();
         GetNode<WorldSceneryPlacement>("Actors").Generate(Config, ActiveSeed);
+        GetNodeOrNull<EnvironmentRuntime>("Environment")?.Initialize(Config, GetNode<Node2D>("Actors"));
     }
 
     // Static boundary walls derive from the same bounds as ground and camera.

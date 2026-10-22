@@ -1,5 +1,2 @@
-# ENVIRONMENT/Lighting
-
-Lighting presentation systems for the entire 2D world. **DayNight/** applies time-based ambient colours, **Sun/** and **Moon/** define light paths and appearance, **Shadows/** owns reusable shadow rendering, **LocalLights/** will handle torches, fireplaces, spells and lamps. Apply biome modifiers without copying lighting systems per biome.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+# Lighting
+Implemented: DayNight/ reads GameClock and weather; Sun/ owns daylight threshold math; Shadows/ caches ground projections/contact ovals; Colour/ owns fullscreen grading; LocalLights/ owns torch flicker. All settings come from typed environment profiles. Moon/ remains future work.

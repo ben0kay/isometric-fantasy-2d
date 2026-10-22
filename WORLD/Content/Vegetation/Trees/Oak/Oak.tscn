@@ -1,14 +1,16 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01.png" id="art"]
 
 
+[ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/Oak/OakWind.tres" id="wind"]
 [node name="Oak" type="StaticBody2D"]
 
 [node name="Sprite" type="Sprite2D" parent="."]
 position = Vector2(-63.02, -148.35)
 scale = Vector2(0.115, 0.115)
 texture_filter = 2
+material = ExtResource("wind")
 texture = ExtResource("art")
 centered = false
 

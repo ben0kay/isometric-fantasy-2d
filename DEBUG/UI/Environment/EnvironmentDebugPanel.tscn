@@ -1,0 +1,4 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.cs" id="script"]
+[node name="EnvironmentDebugPanel" type="CanvasLayer"]
+script = ExtResource("script")

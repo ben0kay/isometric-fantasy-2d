@@ -8,3 +8,6 @@ DisplayName = "Oak"
 Variants = Array[PackedScene]([ExtResource("v0")])
 SpacingRadius = 40.0
 FootprintPath = NodePath("TrunkFootprint")
+
+SnowResponse = 1
+ContactShadowRadius = Vector2(25, 9)

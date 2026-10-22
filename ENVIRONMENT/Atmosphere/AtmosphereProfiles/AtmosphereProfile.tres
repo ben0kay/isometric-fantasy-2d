@@ -1,0 +1,5 @@
+[gd_resource type="Resource" script_class="AtmosphereProfile" format=3]
+
+[ext_resource type="Script" path="res://ENVIRONMENT/Atmosphere/AtmosphereProfiles/AtmosphereProfile.cs" id="script"]
+[resource]
+script = ExtResource("script")

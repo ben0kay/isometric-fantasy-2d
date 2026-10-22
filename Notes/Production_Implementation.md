@@ -127,7 +127,7 @@ The exact names of some future production scripts/resources may be adjusted to a
 
 # Phase 2 — Production Environment and Debug UI Controls
 
-> **Status: planned — instruction set for Codex, not implemented by this documentation update.** Phase 1 production world is already implemented; see `SCENES/World/README.md`. This phase **copies and adapts** working environmental effects from `DEBUG/TopDownTest/` into production without moving or deleting anything from the original debug test.
+> **Status: IMPLEMENTED — 22 October 2026.** Phase 1 production world is already implemented; see `SCENES/World/README.md`. This phase **copies and adapts** working environmental effects from `DEBUG/TopDownTest/` into production without moving or deleting anything from the original debug test.
 >
 > **Important UI decision:** All developer-only environment sliders, checkboxes, test buttons and comparison panels must live under **`DEBUG/UI/`**, not inside `ENVIRONMENT/` or the player-facing `UI/`. Production systems must run even if every debug panel is removed.
 
@@ -210,17 +210,29 @@ If a subsystem can be migrated independently, prefer verifying it before migrati
 
 ## Phase 2 acceptance checklist
 
-- [ ] Existing production `SCENES/World/World.tscn` still runs with player movement, camera, ground and procedurally scattered Oak Forest scenery.
-- [ ] Day/night, illumination and projected shadows work on the **production** scene.
-- [ ] Shared wind drives production tree/grass visuals and applicable particles/weather.
-- [ ] Atmosphere and colour/polish effects visually work without debug resource references.
-- [ ] Rain, overcast, ground impacts and lightning are testable.
-- [ ] Snowfall and settled snow can be enabled/disabled and affect production ground, Oak trees, rocks and grass without breaking base materials.
-- [ ] Controls are located under `DEBUG/UI/`, work against production environment controllers, and can be removed without disabling those controllers.
-- [ ] Production environment scripts/scenes/resources contain no dependencies on `DEBUG/TopDownTest/`.
-- [ ] Original `DEBUG/TopDownTest/` remains intact and runnable.
-- [ ] Runtime C# build, scene/resource loading and visible rendering are checked; any untested target backend/performance limitations are documented.
-- [ ] Folder READMEs identify implemented systems and their MasterConfigs/settings.
-- [ ] **One GitHub commit per implementation job**, consistent with `CodePreferences.md`.
+- [x] Existing production `SCENES/World/World.tscn` still runs with player movement, camera, ground and procedurally scattered Oak Forest scenery.
+- [x] Day/night, illumination and projected shadows work on the **production** scene.
+- [x] Shared wind drives production tree/grass visuals and applicable particles/weather.
+- [x] Atmosphere and colour/polish effects visually work without debug resource references.
+- [x] Rain, overcast, ground impacts and lightning are testable.
+- [x] Snowfall and settled snow can be enabled/disabled and affect production ground, Oak trees, rocks and grass without breaking base materials.
+- [x] Controls are located under `DEBUG/UI/`, work against production environment controllers, and can be removed without disabling those controllers.
+- [x] Production environment scripts/scenes/resources contain no dependencies on `DEBUG/TopDownTest/`.
+- [x] Original `DEBUG/TopDownTest/` remains intact and runnable.
+- [x] Runtime C# build, scene/resource loading and visible rendering are checked; any untested target backend/performance limitations are documented.
+- [x] Folder READMEs identify implemented systems and their MasterConfigs/settings.
+- [x] **One GitHub commit per implementation job**, consistent with `CodePreferences.md`.
 
 **Phase separation:** The earlier Phase 1 `Keep out of scope` paragraph applies to **Phase 1 only**. This Phase 2 section explicitly authorizes extraction of the listed environment systems and creation of developer UI controls under `DEBUG/UI/`, but does not imply that Phase 2 is already implemented.
+
+## Phase 2 implementation handoff
+
+- Composition: ENVIRONMENT/EnvironmentRuntime.cs, invoked after production scenery. One GameClock, one WindController; no production environmental references to DEBUG/TopDownTest.
+- Data: EnvironmentMasterConfig -> default BiomeEnvironmentProfile; WorldBiomeDefinition.Environment optionally overrides component profiles. OakForest/Environment.tres selects its local Atmosphere.tres; other components inherit. Resolution is once per startup and explicitly clones each selected component. No region blending or toolbox integration is claimed.
+- Ownership: Lighting is split among DayNight/Sun/Shadows/Colour/LocalLights; haze/cloud/particles live in Atmosphere; precipitation/storm/coverage live in Weather. Surface-specific snow adapters/shaders remain with WORLD content/ground and the player visual adapter with ENTITIES. Canonical sprites/colliders remain unchanged.
+- Developer UI: DEBUG/UI/Environment/EnvironmentDebugPanel.tscn; collapsible/scrollable, F9 hide/show. Removing it leaves all systems running; live changes reset on restart.
+- Adaptations: content metadata replaces hardcoded tree names/debug groups; map bounds are supplied from production config; lake dependencies and comparison UI are removed from controllers; shared orientation materials replace per-instance wind uniforms to avoid the known software-renderer instance limit. Existing visual equations/noise/limits remain.
+- Validation: successful C# build; native runtime assertions for profiles, no-UI operation, wind, time/shadows, snow accumulation/melt/off/removal, player burial/camera, manual lightning/rain and movement. Full production-density 1920×1080 software OpenGL renders inspected at day/night, rain/lightning, partial/full snow and restore. Windows D3D12/target hardware remain untested.
+- Limits: one biome profile applied at load; startup caches require future registration for dynamic content/streaming. No new weather scheduling, calendar, season, lake, enemy, weapon or fire mechanics. Original DEBUG is preserved.
+
+Integration note: the concurrent FIRE2 commit contained a C# CS0136 local-name collision in DEBUG/TopDownTest/Fire/Debug/FireTestController.cs. The ignition event delegate was renamed from ignite to onIgnited to allow the full project to compile; fire behaviour and all other original debug files are preserved.

@@ -10,3 +10,6 @@ SpacingRadius = 34.0
 VisualMinimum = Vector2(-36, -38)
 VisualMaximum = Vector2(36, 5)
 FootprintPath = NodePath("RockFootprint")
+
+SnowResponse = 2
+ContactShadowRadius = Vector2(28, 8)

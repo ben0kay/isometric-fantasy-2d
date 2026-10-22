@@ -1,5 +1,2 @@
-# ENVIRONMENT/Lighting/LocalLights
-
-Future placeable lights including campfires, torches, candles, lamps and spells. A light's physical world object remains in WORLD/ENTITIES or other domain; shared illumination logic lives here.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+# Local lights
+TorchLight reads TorchProfile and animates one cached PointLight2D using the original two-frequency flicker. Canonical Torch.tscn art/collision stays under WORLD/Content/Props/Torch. OffsetFromSpawn positions this small look-development fixture inside the initial clear area. Removing the environment removes its fixture; disabling presentation retains its collider, matching DEBUG. No fire gameplay is implemented.

@@ -1,5 +1,4 @@
-# ENVIRONMENT/Weather
+# Weather presentation
+Rain/ contains WorldWeather and bounded GroundRainSplashes. Storms/ contains reusable visual lightning. Snow/ owns snowfall and settled coverage progression, while content-specific material adapters live with WORLD/ENTITIES. WeatherProfiles/ contains the typed rain/overcast/storm profile.
 
-Regional weather state and transitions, precipitation likelihood and intensity. **Rain/**, **Snow/** and **Storms/** contain effect logic; **WeatherProfiles/** will eventually define reusable climate patterns. Regions/biomes modify probabilities and severity, and seasons shift likelihoods. Reuse wind state rather than separate rain-wind/snow-wind values.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+These reproduce existing visuals; no climate scheduling, seasons, rain physics or meteorological simulation is added. One WindController supplies wind to all precipitation. UI remains removable under DEBUG/UI.

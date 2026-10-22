@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BiomeEnvironmentProfile" format=3]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Lighting/DayNight/DayNightProfile.tres" id="Lighting"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Wind/DefaultWindConfig.tres" id="Wind"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Atmosphere/AtmosphereProfiles/AtmosphereProfile.tres" id="Atmosphere"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Weather/WeatherProfiles/WeatherProfile.tres" id="Weather"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Weather/Snow/SnowProfile.tres" id="Snow"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Lighting/Colour/ColourGradeProfile.tres" id="ColourGrade"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Atmosphere/AmbientEffects/CloudShadeProfile.tres" id="Clouds"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Lighting/LocalLights/TorchProfile.tres" id="Torch"]
+[ext_resource type="Script" path="res://ENVIRONMENT/Profiles/BiomeEnvironmentProfile.cs" id="script"]
+[resource]
+script = ExtResource("script")
+Lighting = ExtResource("Lighting")
+Wind = ExtResource("Wind")
+Atmosphere = ExtResource("Atmosphere")
+Weather = ExtResource("Weather")
+Snow = ExtResource("Snow")
+ColourGrade = ExtResource("ColourGrade")
+Clouds = ExtResource("Clouds")
+Torch = ExtResource("Torch")

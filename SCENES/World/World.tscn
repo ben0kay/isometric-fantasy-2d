@@ -4,12 +4,21 @@
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/GroundSurface.cs" id="ground"]
 [ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldSceneryPlacement.cs" id="placement"]
 [ext_resource type="PackedScene" path="res://ENTITIES/Player/Player.tscn" id="player"]
+[ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentRuntime.cs" id="environment"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/DefaultEnvironmentConfig.tres" id="environment_config"]
+[ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
 [node name="Ground" type="Sprite2D" parent="."]
+z_index = -10
 script = ExtResource("ground")
 [node name="Actors" type="Node2D" parent="."]
 y_sort_enabled = true
 script = ExtResource("placement")
 [node name="Player" parent="Actors" instance=ExtResource("player")]
+
+[node name="Environment" type="Node2D" parent="."]
+script = ExtResource("environment")
+Config = ExtResource("environment_config")
+[node name="EnvironmentDebugPanel" parent="." instance=ExtResource("debug_ui")]

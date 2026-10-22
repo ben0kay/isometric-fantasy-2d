@@ -6,7 +6,10 @@ The map is 2560×1728, with 80 requested oaks, 34 rocks and 210 grass tufts; bou
 
 `WORLD/DefaultWorldConfig.tres` controls bounds, spawn, seed and placement limits. **RandomSeedOnLoad defaults to true.** Copy the printed `World seed` into FixedSeed and disable RandomSeedOnLoad to replay an arrangement. Same seed, same ordered definitions/settings and same Godot RNG version reproduce the same placement. Editing content/order/settings can change the result. No persistence or chunk streaming exists.
 
-The scene only composes production modules. Trees/grass are static for this pass; optional environment and gameplay experiments remain in DEBUG.
+The scene composes production world and environment modules. The optional EnvironmentDebugPanel lives under DEBUG/UI/Environment and can be removed independently. F9 hides/shows its collapsible controls. Original DEBUG experiments remain intact.
 
 ## Validation
 C# built successfully against the repository's Godot.NET.Sdk 4.7.2 / .NET 8 configuration. Runtime checks in Godot 4.5.1 .NET verified same-seed replay, different seeds, fresh random loads and replay from a logged random seed; movement, four boundary walls, collision and both camera zoom limits passed. The actual 1920×1080 scene was rendered and inspected with software OpenGL Compatibility. The unchanged DEBUG main scene also loaded. Windows D3D12 and target-machine performance still require local checking.
+
+## Environment profiles
+See ENVIRONMENT/README.md for ownership and validation. WORLD/Biomes/Definitions/OakForest/Environment.tres supplies optional local components (currently Atmosphere.tres); unspecified components inherit ENVIRONMENT/Profiles/DefaultEnvironmentProfile.tres. One clock is shared. Rain defaults to 55%, snow starts off. Runtime previews reset on restart.

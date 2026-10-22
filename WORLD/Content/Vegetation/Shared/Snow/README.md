@@ -1,0 +1,2 @@
+# Vegetation snow adapter
+VegetationSnowAdapter opts into content SnowResponse.Vegetation, with GrassLike selecting the blade UV profile. It extends the known VegetationSway composition, shares orientation/foliage-profile variants and copies wind per material. Unsupported shaders are skipped with a warning. Source materials are restored on snow off/removal. No species-name tests or per-sprite frame loops are introduced.

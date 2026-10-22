@@ -35,6 +35,11 @@ public partial class WorldSceneryPlacement : Node2D
                 Node2D prop = scene.Instantiate<Node2D>();
                 prop.Position = point; prop.Scale = Vector2.One * scale;
                 if (mirrored) Mirror(prop, content);
+                prop.SetMeta("environment_snow", (int)content.SnowResponse);
+                prop.SetMeta("environment_grass", content.GrassLike);
+                prop.SetMeta("environment_shadows", content.CastSunShadow);
+                prop.SetMeta("environment_contact", content.ContactShadowRadius);
+                if (content.GrassLike) prop.ZIndex = -6;
                 AddChild(prop);
                 _occupied.Add((point, Mathf.Max(0f, content.SpacingRadius) * scale));
                 placed++;

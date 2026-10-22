@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="EnvironmentMasterConfig" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentMasterConfig.cs" id="1"]
-
+[gd_resource type="Resource" script_class="EnvironmentMasterConfig" format=3]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Time/Clock/DefaultClockConfig.tres" id="clock"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Profiles/DefaultEnvironmentProfile.tres" id="defaults"]
+[ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentMasterConfig.cs" id="script"]
 [resource]
-script = ExtResource("1")
+script = ExtResource("script")
+Clock = ExtResource("clock")
+Defaults = ExtResource("defaults")

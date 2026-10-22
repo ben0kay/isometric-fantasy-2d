@@ -5,6 +5,7 @@
 [ext_resource type="Resource" path="res://WORLD/Content/Rocks/Rock.tres" id="rock"]
 [ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Grass/Grass.tres" id="grass"]
 [ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/ForestGrass.tres" id="surface"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Environment.tres" id="environment"]
 [sub_resource type="Resource" id="trees"]
 script = ExtResource("population")
 Content = ExtResource("oak")
@@ -27,6 +28,7 @@ ClusterSize = 5
 ClusterRadius = 55.0
 [resource]
 script = ExtResource("biome")
+Environment = ExtResource("environment")
 Id = "biome.oak_forest"
 DisplayName = "Oak Forest"
 Surface = ExtResource("surface")

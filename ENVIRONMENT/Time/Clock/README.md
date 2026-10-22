@@ -1,5 +1,2 @@
-# ENVIRONMENT/Time/Clock
-
-Future centralized clock service and speed controls. Real-time seconds per game day, pause, time scrubbing/debug tools and persistence belong here. The existing disposable clock remains in `DEBUG/TopDownTest/DayNight/` until consciously migrated.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+# Clock
+GameClock consumes ClockMasterConfig (StartHour, CycleSeconds, Paused). Hour wraps over 24 hours. SetHour supports paused scrubbing; every day/night consumer reads this node. No calendar/save integration is added.

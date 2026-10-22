@@ -1,6 +1,8 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**Production foundation added:** [SCENES/World/World.tscn](SCENES/World/World.tscn) is an independent playable Oak Forest world (F6): player/collision/camera, organic grass ground and data-driven oak/rock/grass placement. A fresh seed is chosen/logged each load; fixed-seed replay is configurable. DEBUG stays intact and remains the F5 default. Environment effects and survival/gameplay systems are not promoted. See [run/configuration guide](SCENES/World/README.md). Earlier scaffolding-only descriptions below are superseded for these specific modules.
+**Production foundation added:** [SCENES/World/World.tscn](SCENES/World/World.tscn) is an independent playable Oak Forest world (F6): player/collision/camera, organic grass ground and data-driven oak/rock/grass placement. A fresh seed is chosen/logged each load; fixed-seed replay is configurable. DEBUG stays intact and remains the F5 default. Production environmental visuals are now extracted as described below; survival/gameplay systems remain planned. See [run/configuration guide](SCENES/World/README.md). Earlier scaffolding-only descriptions below are superseded for these specific modules.
+
+**Phase 2 environment implemented:** The production world now includes day/night and cached sun/contact shadows, shared wind/vegetation sway, haze/particles, cloud shade, colour grade/torch, rain/splashes/lightning and snow on ground/trees/rocks/grass. Optional collapsible controls live in `DEBUG/UI/Environment/` (**F9**). Biomes can supply typed local profile overrides; shared renderers remain in their owning production folders. See [environment documentation](ENVIRONMENT/README.md). No lake, combat, fire gameplay, seasons or climate engine is promoted.
 
 > **Project snapshot — 21 October 2026:** An actively expanding, **runnable 2D debug sandbox**, not yet a production survival game. The earlier 3D/isometric approach is retired. The debug forest now demonstrates player movement, procedural scenery placement, two adjacent biomes, environmental visuals, water/snow comparisons and an axe/tree-hit experiment. Most gameplay, survival, simulation, persistence and world-generation ambitions below are **design or scaffolding**, not implemented features.
 
@@ -99,7 +101,7 @@ The active demo lives in **[DEBUG/TopDownTest/](DEBUG/TopDownTest/README.md)**. 
 
 ## Production folder foundations
 
-The following are **organization/scaffolding, not claims of completed gameplay mechanics**:
+These folders combine implemented production foundations and remaining scaffolding; see the current world/environment status above:
 
 - [WORLD/](WORLD/README.md): reusable scenery/content, biomes, terrain, water, caves, landmarks, generation and future runtime world management.
 - [ENVIRONMENT/](ENVIRONMENT/README.md): shared time/calendar, lighting, weather, wind, seasons and atmosphere. Biomes may reference local environment profiles; species-specific art stays with WORLD content.

@@ -1,5 +1,2 @@
-# ENVIRONMENT/Atmosphere/AtmosphereProfiles
-
-Future reusable lighting/fog/colour/particle/audio ambience profiles or composable presets for biomes/locations. Biomes can reference and locally override them; each effect renderer is implemented once. The source of truth should be compatible with a later Avalonia inspector.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+# Atmosphere profiles and noise
+AtmosphereProfile exposes haze/particles and bounded counts. AtmosphereNoise.tres and OrganicNoise.gdshaderinc are the original shared noise inputs for both haze and clouds. Biomes can reference local typed profiles without duplicating shaders or noise resources.

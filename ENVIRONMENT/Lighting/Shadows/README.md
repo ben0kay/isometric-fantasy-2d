@@ -1,5 +1,4 @@
-# ENVIRONMENT/Lighting/Shadows
+# Sun shadows
+SunShadowRenderer caches production sprites after scenery/wind setup. Shared silhouette materials preserve scale, mirror, offset and the sprite transform. Content data controls CastSunShadow and ContactShadowRadius; grass opts out. It updates projections from daylight and shared wind, never scans the scene each frame.
 
-Shared 2D shadow drawing and visibility policies (trees, rocks, buildings, characters); future torch/shadow interaction and profile-overdraw work. The projected shadow technique in `DEBUG/TopDownTest/DayNight/` is a test to evaluate rather than a production contract.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+Art-directed flat-ground silhouettes do not occlude one another or climb terrain. More casters add draw/overdraw cost; dynamic registration is outside this fixed-world pass.

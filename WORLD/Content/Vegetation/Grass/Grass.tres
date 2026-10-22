@@ -12,3 +12,7 @@ Variants = Array[PackedScene]([ExtResource("v0"), ExtResource("v1"), ExtResource
 SpacingRadius = 22.0
 VisualMinimum = Vector2(-64, -116)
 VisualMaximum = Vector2(64, 12)
+
+SnowResponse = 1
+GrassLike = true
+CastSunShadow = false

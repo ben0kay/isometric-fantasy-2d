@@ -1,5 +1,6 @@
-# ENVIRONMENT/Weather/Snow
+# Snow
+WorldSnow reads SnowProfile, progresses coverage/automatic accumulation or melt in real seconds, creates ground cover and the bounded 1300-flake WorldSnowfall GPU emitter, and updates shared content adapters. SetCoverage supports immediate developer scrubbing. Snow starts disabled; one master switch/coverage controls all compatible ground, tree, rock and grass surfaces. Falling snow and rate remain independently adjustable. Wind comes from the same source as rain and foliage.
 
-Future snowfall visuals, accumulation hooks, thawing and local precipitation conditions. Snow season probabilities vary by climate; world content owns snowy terrain and winter sprites.
+Surface ownership: ground shaders are WORLD/Terrain/Ground/Surfaces/Snow; vegetation variants are WORLD/Content/Vegetation/Shared/Snow; boulder caps are WORLD/Content/Rocks/Snow. PlayerSnowVisual under ENTITIES/Player/Visuals/Surfaces is the sole shallow burial adapter; no liquid/wading code is copied.
 
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+Disabling snow restores vegetation/rock material identities immediately and clears ground cover. Removing the snow node also restores them and removes the optional player visual helper. Authored resources and the separate sun shadow cache remain intact. Colour/UV heuristics retain the proven green foliage/optional pink profile limitations; unrelated artwork may need a new mask/profile. No footprints, snow physics or seasons are implemented.

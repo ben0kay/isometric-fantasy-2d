@@ -31,8 +31,8 @@ public partial class FireTestController : Node
             _oaks.Add(oak);
             BurnableTree.AppearanceChangedEventHandler refresh = () => { if (GodotObject.IsInstanceValid(_day)) _day.RefreshShadowAppearance((Node2D)oak.GetParent()); };
             _appearanceHandlers.Add(oak, refresh); oak.AppearanceChanged += refresh;
-            BurnableTree.IgnitedEventHandler ignite = (position, source) => SpawnEffects(oak);
-            _ignitionHandlers.Add(oak, ignite); oak.Ignited += ignite;
+            BurnableTree.IgnitedEventHandler onIgnited = (position, source) => SpawnEffects(oak);
+            _ignitionHandlers.Add(oak, onIgnited); oak.Ignited += onIgnited;
             oak.BurnCompleted += RefreshStatus; oak.BurnReset += RefreshStatus;
         }
         var ui = new CanvasLayer { Name = "UI", Layer = 20 }; AddChild(ui);

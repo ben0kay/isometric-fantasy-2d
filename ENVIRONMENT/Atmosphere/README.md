@@ -1,5 +1,4 @@
-# ENVIRONMENT/Atmosphere
+# Atmosphere
+WorldAtmosphere retains bounded pollen/leaf/smoke/ember pools and reads shared daylight/wind. Fog/ holds haze shading; AtmosphereProfiles/ holds data, shared noise and organic sampling; AmbientEffects/ owns independent CloudShade.
 
-Reusable atmospheric **render effects and profiles**. This folder handles *how* to draw fog, drifting dust/motes, fireflies and other ambient visuals. Biome-specific strength, colours and restrictions can live as an optional `WORLD/Biomes/<Biome>/Atmosphere.tres`, referencing assets here. Blend conditions at biome boundaries where sensible.
-
-> **Status:** Future architecture / folder placeholder only. No new production environmental mechanics are implemented in this folder.
+AtmosphereProfile tunes switches, haze palette/density/scale and capped particle counts. Leaf emitters are cached from content metadata instead of tree names. Torch emissions consume the actual local fixture. Oak Forest supplies a local Atmosphere profile; other biomes can reuse these renderers. No UI lives here.
