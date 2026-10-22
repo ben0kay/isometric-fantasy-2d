@@ -58,6 +58,31 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 5. **Do not silently promote debug experiments to production, reorganize unrelated modules, or implement idea documents on sight.** When promotion is requested, extract reusable parts into their owning production folders deliberately, preserving module boundaries, inspector-tweakable data and removable test wiring. Verify the real code and current scene rather than relying only on summaries.
 
 
+
+## AI assistant workflow — roles and handoffs
+
+**Codex is the primary implementation developer** for this Godot C# project, especially major features, multi-file integrations, structural changes, performance-sensitive work and phase implementation. The author uses other AI assistants deliberately to conserve Codex/ChatGPT Work usage; **being able to read GitHub does not grant an assistant permission to implement a plan or change code unprompted**. Each job's explicit user instructions decide who edits, tests and commits.
+
+| Assistant | Intended responsibility |
+| --- | --- |
+| **Codex / ChatGPT Work coding sessions — primary developer** | Own substantial implementation and architectural changes; inspect current code, integrate with existing production systems, update affected docs and make **one GitHub commit per job** when authorized. |
+| **Regular ChatGPT chats — planning and smaller tasks** | Discuss designs, break work into focused phases, clarify architecture, read code/docs, review diffs, diagnose specific issues and handle limited, explicitly assigned small edits. Avoid inventing APIs or asserting untested fixes. |
+| **Claude — optional second opinion / supporting assistant** | Independently review designs, C# changes, performance risks and bugs; may handle small, isolated tasks if assigned. Its advice is not authoritative without checking the actual repository and tests. |
+| **GitHub Copilot in VS Code — local tester and small-fix assistant** | Pull/review the designated commit; run .NET/Godot builds, headless tests and local diagnostics; capture precise commands, versions, exit codes, failures and performance evidence. **Test first without modifying code**, unless the user authorizes fixes. |
+| **User — final acceptance** | Decide scope and approvals; inspect graphics, gameplay, Godot profiler results and Windows performance; approve a phase only after the relevant checks, not merely because code was pushed. |
+
+### Rules shared by every assistant
+
+1. **Read before acting:** Start with this README and mandatory [CodePreferences.md](CodePreferences.md), then the owning feature README, related `MasterConfig` / `.tres` Resources, actual scripts/scenes and the relevant phase handoff. Current code and user instructions take precedence over historical notes. Clearly distinguish **production, DEBUG, scaffolding and planned** work.
+2. **Respect module ownership:** Reuse canonical `WORLD/Content`, `WORLD/Biomes`, `WORLD/Generation`, `WORLD/Runtime/Streaming`, `SAVE`, `ENVIRONMENT`, `ENTITIES`, `SYSTEMS` and shared `CORE` contracts. Don't build duplicate managers, species-specific generation paths, global caches or DEBUG dependencies in production. Prefer shared scenes, Resource-driven definitions, inspector-friendly configs and small modular C# files.
+3. **Performance is non-negotiable:** For each mechanic document **what wakes it, what makes it sleep, its idle cost and scaling under chunk streaming**. Prefer event-driven activation, shared/batched work, pooling, cached/spatial/chunk-local queries and explicit unload cleanup over per-object polling or unnecessary per-frame work. Preserve deterministic generation, save isolation and visible animation. Measure performance rather than claiming it.
+4. **Keep work scoped and coordinated:** One assistant should be the active code editor for a given task/branch at a time; others can review or test. Do not overwrite unrelated work, quietly broaden scope or merge conflicting edits. Use **one commit per job** as specified in CodePreferences; record its SHA and touched files.
+5. **Separate implementation from validation:** Codex normally performs appropriate validation, but **when the user requests a local-testing handoff**, it may implement and push without consuming time on local build/runtime/performance checks. Follow [CodePreferences' optional testing policy](CodePreferences.md) and the [P4 Copilot handoff example](SAVE/P4_Copilot_Handoff.md). Record exact checks run vs deferred; give Copilot commands, expected outcomes and manual visual/profiler checks. A passing headless test is not proof of visual smoothness or FPS, and **a commit is not an accepted feature**.
+6. **Return actionable handoffs:** State changed files, commit SHA, behaviour, remaining limitations, performance implications, failed/deferred checks and reproduction steps. Copilot/Claude/regular ChatGPT should hand major architectural fixes back to Codex unless the user explicitly assigns the change elsewhere.
+
+This is the preferred **collaboration workflow**, not a restriction against assigning a different assistant a clearly scoped task. All assistants follow the same coding conventions, architecture and performance standards.
+
+
 ## Long-term architectural north star — READ BEFORE CODING
 
 **Compiled from the full Notes collection and current feature READMEs.** This is a durable guide for future ChatGPT/Codex sessions so new systems fit the game's eventual scale and authoring model. **It is not a claim these features already exist, and not an implementation order.** For every job first inspect actual code, [CodePreferences](CodePreferences.md), the owning module and current scene wiring. Keep experimental proof-of-concepts separate from approved production work.
