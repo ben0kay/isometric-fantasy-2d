@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -31,6 +31,8 @@
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Liquids/LiquidTest.tscn" id="liquids"]
 
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Biomes/DefaultBiomeConfig.tres" id="biomes"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weapons/SwordTest.tscn" id="sword_test"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -459,6 +461,8 @@ limit_top = -544
 limit_right = 3040
 limit_bottom = 1184
 position_smoothing_enabled = false
+
+[node name="EquippedSword" parent="Actors/Player" instance=ExtResource("sword_test")]
 
 [node name="GrassPatches" parent="." instance=ExtResource("grasspatches")]
 

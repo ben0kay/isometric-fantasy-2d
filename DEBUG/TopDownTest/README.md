@@ -62,3 +62,8 @@ The `Liquids/` test now creates bounded expanding ripple rings when the existing
 ## Adjacent biome prototype
 
 See [Biomes](Biomes/README.md) for the Oak Forest / Pink Meadow test. The current map is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with **80 trees / 50 rocks**. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.
+
+
+## Equipped sword prototype
+
+[Weapons/](Weapons/README.md) adds a permanently equipped cursor-aimed sword. Left-click outside the debug panels for a full-circle swing; arrow-key movement remains available. This is a visual test with no damage/hitboxes. DefaultWeaponConfig.tres controls reach, anchor, swing duration and aim response; remove the one player child instance to undo.
