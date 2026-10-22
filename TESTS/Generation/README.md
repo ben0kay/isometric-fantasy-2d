@@ -30,3 +30,5 @@ Incremental source cache coverage in ValidateSceneryVisibility: stationary scene
 `ValidatePollenBatch.tscn` checks pollen instancing, hard off/zero/reactivation, sleeping all-off atmosphere, changed shared inputs and independent ambient effects. `BenchmarkPollen.tscn` records 180 CPU callback samples per count (35/0/100/0) after warm-up, fixed seed, other atmosphere effects off; GPU timing/FPS is deliberately not inferred from headless measurements.
 
 `ValidateCloudWindCaching.tscn` checks cloud never-active/off/zero/wake and changed shader uploads, stable vegetation wind uploads, inactive chunk/re-entry, fresh material initialization and unload restoration. Counters verify writes rather than inferring dormancy solely from SetProcess flags.
+
+`ValidateGradeTorchSleeping.tscn` checks event-driven grade uniforms, disabled/never-active grade, all shared preview lamps, unchanged static torch settings during flicker, off/zero-energy dormancy, deferred settings/wake and removal/unsubscribe (21 checks).

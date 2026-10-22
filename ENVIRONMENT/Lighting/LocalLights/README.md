@@ -34,7 +34,7 @@ Validation: C# compiled against GodotSharp 4.5.1; full production scene imported
 
 ### Read the current code before continuing
 
-- `TorchLight.cs` currently owns both applying common light settings and torch flicker. It applies settings every frame and frees its referenced torch in `_ExitTree`. A reusable controller must not inherit that ownership assumption: removing a light behaviour must not delete an unrelated entity or structure.
+- `TorchLight.cs` currently owns both applying common light settings and torch flicker. It applies static settings on Resource changes, flickers energy only while lit, and frees its referenced torch in `_ExitTree`. A reusable controller must not inherit that ownership assumption: removing a light behaviour must not delete an unrelated entity or structure.
 - `TorchProfile.cs` currently combines common illumination fields with temporary spawn offsets. `TorchProfile.tres` explicitly enables CastShadows and adds two preview offsets; the C# default remains opt-out.
 - `EnvironmentRuntime.Initialize` creates the original torch and at most two extras. All three share one resolved runtime TorchProfile, so current F9 controls affect all three. Only the main torch supplies the existing ambient smoke/embers.
 - `WORLD/Content/Shared/LocalLightOccluder.cs` is already reusable. It builds native polygons once and never processes. Reuse it; do not implement another blocker registry or per-light raycast system.
@@ -196,3 +196,11 @@ Put common controls in shared data, light-type-specific presets in their respect
 - [x] Update this README to distinguish implemented functionality from planned functionality after each pass; **one commit per job**.
 
 **Next phase:** LL0–LL1 are complete. After approval, continue with the LL2 scope in the continuation handoff above, starting with the reported preview-placement limitation. LL3 remains a separate streaming/performance/persistence follow-up. Preserve native Godot shadows and avoid a broad manager without measured need.
+
+## P1-C implemented — static settings versus active flicker
+
+TorchProfile live lighting fields emit Changed only on actual edits. All existing preview controllers share the resolved profile, so F9 changes still reach all lamps immediately. Static visibility, enabled state, range, colour and native shadow settings update only on profile events and only when the corresponding native property differs. Active _Process advances the original two-frequency flicker and updates energy; it no longer reapplies static settings.
+
+Enabled=false hides the torch artwork, disables its native light, sets energy to zero and sleeps its controller. Energy<=0 also disables the native light and sleeps flicker, while retaining artwork when Enabled=true (existing independent artwork/master semantics). Disabled profile edits defer appearance/shadow uploads until re-enable. Re-enable applies current settings immediately and resumes flicker. Exit unsubscribes and preserves the existing temporary-controller ownership/removal behavior. Physics/collision, sun rendering, native occluders and shadow appearance remain unchanged; this is not the LL2 shared light framework or LL3 light-budget/culling work.
+
+Performance handoff: profile edits wake/update; off/zero energy stops; one callback per lit preview controller remains for continuous flicker. Native lit/shadow rendering still costs GPU time. ValidateGradeTorchSleeping passed 21 lifecycle/property-write checks across grading and all preview lamps; the existing headless local-light suite reported 0 failures. No target-machine FPS improvement or new rendered shadow verification is claimed (local Godot 4.5.1/.NET 8 versus declared 4.7.2).
