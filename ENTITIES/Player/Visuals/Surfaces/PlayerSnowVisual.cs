@@ -4,7 +4,7 @@ using Godot;
 public partial class PlayerSnowVisual : Node
 {
     public WorldSnow Snow { get; set; }
-    public LiquidWading Liquid { get; set; }
+    public WorldLiquidWading Liquid { get; set; }
     private Sprite2D _sprite;
     private Polygon2D _contact;
     private Vector2 _original;

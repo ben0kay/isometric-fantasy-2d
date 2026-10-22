@@ -2,7 +2,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class LiquidMasterConfig : Resource
+public partial class WorldLiquidMasterConfig : Resource
 {
     [Export] public bool Enabled { get; set; } = true;
     [Export] public bool Animate { get; set; } = true;

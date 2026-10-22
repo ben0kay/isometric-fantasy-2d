@@ -1,4 +1,4 @@
-// Composes a bounded single-biome world from reusable production modules; no debug dependencies.
+// Composes a bounded adjacent-biome world from reusable production modules; no debug dependencies.
 using Godot;
 
 public partial class WorldScene : Node2D
@@ -12,6 +12,7 @@ public partial class WorldScene : Node2D
     public override void _Ready()
     {
         if (Config?.Biome?.Surface?.Texture == null || Config.Biome.Surface.Material == null
+            || (Config.Biomes.Secondary != null && Config.Biomes.Secondary.Surface == null)
             || Config.Bounds.Size.X <= 0f || Config.Bounds.Size.Y <= 0f
             || !Config.Bounds.HasPoint(Config.PlayerSpawn))
         {
@@ -21,7 +22,7 @@ public partial class WorldScene : Node2D
         if (Config.RandomSeedOnLoad) seedSource.Randomize();
         ActiveSeed = Config.RandomSeedOnLoad ? (int)(seedSource.Randi() & 0x7fffffff) : Config.FixedSeed;
         GD.Print($"World seed: {ActiveSeed} | {Config.Biome.Id} | random on load: {Config.RandomSeedOnLoad}");
-        GetNode<GroundSurface>("Ground").Configure(Config.Bounds, Config.Biome.Surface);
+        GetNode<GroundSurface>("Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
         CharacterBody2D player = GetNode<CharacterBody2D>("Actors/Player");
         player.Position = Config.PlayerSpawn;
         Camera2D camera = player.GetNode<Camera2D>("Camera");
@@ -32,7 +33,7 @@ public partial class WorldScene : Node2D
         AddBounds();
         var pond = GetNodeOrNull<WorldPond>("Liquids");
         var placement = GetNode<WorldSceneryPlacement>("Actors");
-        placement.ExcludedLiquid = pond?.GetNodeOrNull<LiquidRegion>("Pond");
+        placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
         placement.Generate(Config, ActiveSeed);
         var environment = GetNodeOrNull<EnvironmentRuntime>("Environment");
         environment?.Initialize(Config, GetNode<Node2D>("Actors"));

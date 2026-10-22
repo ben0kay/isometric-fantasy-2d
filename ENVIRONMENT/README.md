@@ -16,7 +16,7 @@ World defaults start at `DefaultEnvironmentConfig.tres` -> `Profiles/DefaultEnvi
 
 Oak Forest references `WORLD/Biomes/Definitions/OakForest/Environment.tres`, with its own `Atmosphere.tres`; other components inherit world defaults. To tune Oak rain, lighting, snow, wind, clouds or grading, create/reference the corresponding typed profile there. Shared renderers remain unchanged. This is ready for future Avalonia tooling to edit the same Resource data, but toolbox integration is not implemented.
 
-Selected profiles are explicitly cloned per component on startup. Developer controls edit private runtime copies; they do not save or mutate authored assets. Restart restores authored defaults. This bounded single-biome world resolves its profile once on load; multi-region sampling/blending, climates, calendars and seasons are future work.
+Selected profiles are explicitly cloned per component on startup. Developer controls edit private runtime copies; they do not save or mutate authored assets. Restart restores authored defaults. The two-biome preview resolves the primary biome profile once for the shared environment on load, matching DEBUG. Per-region environment sampling/blending, climates, calendars and seasons are future work.
 
 ## Defaults and limits
 Preserves the debug settings: 30 real seconds per day, 08:00 start, wind +1, rain target 55%, snow off, coverage target 60%. Mixed rain/snow is permitted; set rain to zero for pure snow. Existing effects are visual approximations, not snow physics or fire/heat simulation. The torch's authored collision remains while its presentation is disabled, matching the original test.

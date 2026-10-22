@@ -1,6 +1,7 @@
 // Grass material composition only; normal CanvasItem lighting remains handled by Godot.
 shader_type canvas_item;
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/NoiseSampling.gdshaderinc"
+#include "res://WORLD/Terrain/Transitions/AdjacentBiomeBlend.gdshaderinc"
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/PatchColours.gdshaderinc"
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/FineDetail.gdshaderinc"
 uniform bool natural_grass = true;
@@ -20,6 +21,6 @@ void fragment() {
         vec3 surface = grass_patch_colour(ground_world) * mix(vec3(1.0), artwork.rgb / base, 0.22);
         artwork.rgb = grass_fine_detail(surface, ground_world);
     }
-    else artwork.rgb *= base_colour.rgb / authored_base;
+    else artwork.rgb *= mix(base_colour.rgb, secondary_base.rgb, biome_weight(ground_world)) / authored_base;
     COLOR = artwork * ground_tint;
 }

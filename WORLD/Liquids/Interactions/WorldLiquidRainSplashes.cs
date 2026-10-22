@@ -2,11 +2,11 @@
 // Mirrors the dry-ground splash effect without extra physics bodies or per-drop nodes.
 using Godot;
 
-public partial class LiquidRainSplashes : Node2D
+public partial class WorldLiquidRainSplashes : Node2D
 {
-    public LiquidRegion Region { get; set; }
+    public WorldLiquidRegion Region { get; set; }
     public WorldWeather Weather { get; set; }
-    public LiquidMasterConfig Config { get; set; }
+    public WorldLiquidMasterConfig Config { get; set; }
 
     private struct Impact { public Vector2 Position; public float Age; public float Size; public bool Active; }
     private readonly Impact[] _pool = new Impact[96];

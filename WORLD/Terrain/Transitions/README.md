@@ -1,5 +1,4 @@
-# WORLD/Terrain/Transitions
+# Terrain transitions
+AdjacentBiomeBlend.gdshaderinc shares the analytical curved boundary used by AdjacentBiomeLayout. The ground renderer receives the geometry and both surface profiles once, then blends colours and variation/detail settings in world space. Sampling and placement use the same curve, avoiding a visual/physical mismatch.
 
-Tile/edge transitions between terrain types, such as dirt-to-grass, snow-to-rock or cliffs-to-ground.
-
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+The current two grass-family surfaces share artwork, shader composition and noise; each has its own editable palette and detail/variation data. Arbitrary material/texture transitions and a many-biome generator remain future work. No shader copies per biome or nodes per tile are added.

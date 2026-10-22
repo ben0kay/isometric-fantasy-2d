@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/Sprites/tree_pink_blossom_01.png" id="art"]
+[ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomWind.tres" id="wind"]
+
+[node name="PinkBlossom01" type="StaticBody2D"]
+
+[node name="Sprite" type="Sprite2D" parent="."]
+position = Vector2(-68, -188)
+scale = Vector2(0.85, 0.90)
+texture_filter = 2
+material = ExtResource("wind")
+texture = ExtResource("art")
+centered = false
+metadata/snow_foliage_profile = 1
+
+[node name="TrunkFootprint" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-28, -7, -17, -19, 0, -23, 18, -17, 28, -6, 20, 4, 0, 8, -19, 3)

@@ -2,12 +2,12 @@
 using Godot;
 public partial class WorldPond : Node2D
 {
-    public LiquidRegion Region { get; private set; }
+    public WorldLiquidRegion Region { get; private set; }
     public void Initialize(PlayerMovement player, WorldWeather weather)
     {
-        Region = GetNode<LiquidRegion>("Pond");
-        AddChild(new LiquidWading { Name = "Wading", Region = Region, Player = player });
-        Region.AddChild(new LiquidRainSplashes {
+        Region = GetNode<WorldLiquidRegion>("Pond");
+        AddChild(new WorldLiquidWading { Name = "Wading", Region = Region, Player = player });
+        Region.AddChild(new WorldLiquidRainSplashes {
             Name = "RainSplashes", Region = Region, Weather = weather, Config = Region.Config, ZIndex = -4
         });
     }

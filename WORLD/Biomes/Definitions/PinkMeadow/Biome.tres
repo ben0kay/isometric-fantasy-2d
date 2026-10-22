@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomePopulation.cs" id="population"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossom.tres" id="tree"]
+[ext_resource type="Resource" path="res://WORLD/Content/Rocks/Rock.tres" id="rock"]
+[ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/PinkMeadowGrass.tres" id="surface"]
+[sub_resource type="Resource" id="trees"]
+script = ExtResource("population")
+Content = ExtResource("tree")
+Count = 36
+MinimumScale = 0.93
+MaximumScale = 1.07
+[sub_resource type="Resource" id="rocks"]
+script = ExtResource("population")
+Content = ExtResource("rock")
+Count = 16
+MinimumScale = 0.85
+MaximumScale = 1.15
+[resource]
+script = ExtResource("biome")
+Id = "biome.pink_meadow"
+DisplayName = "Pink Meadow"
+Surface = ExtResource("surface")
+Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks")])

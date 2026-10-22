@@ -1,8 +1,8 @@
 // Reusable water wading, using the existing production player/snow visual owner.
 using Godot;
-public partial class LiquidWading : Node2D
+public partial class WorldLiquidWading : Node2D
 {
-    public LiquidRegion Region { get; set; }
+    public WorldLiquidRegion Region { get; set; }
     public PlayerMovement Player { get; set; }
     public float Immersion { get; private set; }
     private float _target, _time;

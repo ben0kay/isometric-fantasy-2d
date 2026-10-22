@@ -236,3 +236,15 @@ If a subsystem can be migrated independently, prefer verifying it before migrati
 - Limits: one biome profile applied at load; startup caches require future registration for dynamic content/streaming. No new weather scheduling, calendar, season, lake, enemy, weapon or fire mechanics. Original DEBUG is preserved.
 
 Integration note: the concurrent FIRE2 commit contained a C# CS0136 local-name collision in DEBUG/TopDownTest/Fire/Debug/FireTestController.cs. The ignition event delegate was renamed from ignite to onIgnited to allow the full project to compile; fire behaviour and all other original debug files are preserved.
+
+# Follow-up — second production biome (22 October 2026)
+
+Implemented the explicitly requested small second-biome pass: Pink Meadow copied from DEBUG into WORLD/Biomes/Definitions/PinkMeadow, with separate shared PinkBlossom content, its original collision/wind/snow profile, and PinkMeadowGrass surface data. OakAndMeadow.tres holds reusable two-region layout/boundary data. A shared shader include blends ground; the placer uses the identical analytical curve.
+
+Bounds expand only eastward to (-800,-544) -> (3040,1184), 3840×1728. Target populations are 80 oaks, 36 blossoms and 50 shared rocks (34 Oak, 16 Meadow); decorative grass stays Oak-only. Fresh random seeds and exact fixed-seed replay remain supported. Shared clock/wind/weather/snow are retained without region-specific environment switching.
+
+Reviewed world-generation/hostility/underground notes: future expandable finite worlds, fantasy contrast, meaningful encounters, streaming and underground surface influence remain design/planning. This pass adds none of those systems or large-world sizing decisions. Original DEBUG stays unchanged.
+
+C# build and native runtime validation cover three seeds, counts, membership, replay, transition traversal, enlarged ground/camera/shadow caches and pink snow integration. Actual software OpenGL transition/meadow/full-snow renders were inspected; Windows D3D12 and hardware performance remain untested.
+
+Integration: the concurrently added production pond is retained, including placement exclusions and wading. Its copied liquid classes were given unique WorldLiquid* names (and references updated) because the incoming global names collided with the preserved DEBUG liquid classes and prevented compilation. No original debug files were changed.

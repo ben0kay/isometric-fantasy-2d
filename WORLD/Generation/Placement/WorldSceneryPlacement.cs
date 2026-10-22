@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public partial class WorldSceneryPlacement : Node2D
 {
     private readonly List<(Vector2 Point, float Radius)> _occupied = new();
-    public LiquidRegion ExcludedLiquid { get; set; }
+    public WorldLiquidRegion ExcludedLiquid { get; set; }
 
     #region Generation
     // Called once by world composition after config validation; order of populations is significant.
@@ -13,7 +13,17 @@ public partial class WorldSceneryPlacement : Node2D
     public void Generate(WorldMasterConfig config, int seed)
     {
         var random = new RandomNumberGenerator { Seed = (ulong)(uint)seed };
-        foreach (BiomePopulation population in config.Biome.Populations)
+        GenerateBiome(config, random, config.Biome, false);
+        if (config.Biomes.Secondary != null) GenerateBiome(config, random, config.Biomes.Secondary, true);
+    }
+
+    // Layout defines membership; content stays data-driven and shared across region boundaries.
+    // =========================================================
+    private void GenerateBiome(WorldMasterConfig config, RandomNumberGenerator random, WorldBiomeDefinition biome, bool secondary)
+    {
+        Rect2 sampleBounds = config.Biomes.SamplingBounds(config.Bounds, secondary);
+        if (!sampleBounds.HasArea()) { GD.PushWarning($"Biome {biome.Id} has no sampling area inside world bounds."); return; }
+        foreach (BiomePopulation population in biome.Populations)
         {
             SceneryDefinition content = population?.Content;
             if (content == null || content.Variants.Count == 0)
@@ -26,16 +36,18 @@ public partial class WorldSceneryPlacement : Node2D
             for (int i = 0; i < requested; i++)
             {
                 int clusterSize = Mathf.Clamp(population.ClusterSize, 1, 50);
-                if (i % clusterSize == 0) center = RandomPoint(random, config.Bounds);
+                if (i % clusterSize == 0) center = RandomPoint(random, sampleBounds);
                 float scale = random.RandfRange(Mathf.Max(0.01f, Mathf.Min(population.MinimumScale, population.MaximumScale)),
                     Mathf.Max(0.01f, Mathf.Max(population.MinimumScale, population.MaximumScale)));
                 bool mirrored = random.Randf() < Mathf.Clamp(population.MirrorChance, 0f, 1f);
                 PackedScene scene = content.Variants[random.RandiRange(0, content.Variants.Count - 1)];
                 if (scene == null || !FindPosition(config, random, content, scale, mirrored,
-                    clusterSize > 1, center, population.ClusterRadius, out Vector2 point)) continue;
+                    clusterSize > 1, center, population.ClusterRadius, secondary, out Vector2 point)) continue;
                 Node2D prop = scene.Instantiate<Node2D>();
                 prop.Position = point; prop.Scale = Vector2.One * scale;
                 if (mirrored) Mirror(prop, content);
+                prop.SetMeta("world_biome_id", biome.Id);
+                prop.SetMeta("world_content_id", content.Id);
                 prop.SetMeta("environment_snow", (int)content.SnowResponse);
                 prop.SetMeta("environment_grass", content.GrassLike);
                 prop.SetMeta("environment_shadows", content.CastSunShadow);
@@ -45,7 +57,7 @@ public partial class WorldSceneryPlacement : Node2D
                 _occupied.Add((point, Mathf.Max(0f, content.SpacingRadius) * scale));
                 placed++;
             }
-            GD.Print($"World scenery | {content.Id} | {placed}/{requested}");
+            GD.Print($"World scenery | {biome.Id} | {content.Id} | {placed}/{requested}");
             if (placed < requested) GD.PushWarning($"{content.Id}: some objects could not fit; reduce count/spacing or enlarge bounds.");
         }
     }
@@ -55,20 +67,22 @@ public partial class WorldSceneryPlacement : Node2D
     // Reject overlaps, map-edge artwork clipping and the configured clear player spawn.
     // =========================================================
     private bool FindPosition(WorldMasterConfig config, RandomNumberGenerator random, SceneryDefinition content,
-        float scale, bool mirrored, bool clustered, Vector2 center, float clusterRadius, out Vector2 point)
+        float scale, bool mirrored, bool clustered, Vector2 center, float clusterRadius, bool secondary, out Vector2 point)
     {
         point = Vector2.Zero;
         float radius = Mathf.Max(0f, content.SpacingRadius) * scale;
         Vector2 minimum = content.VisualMinimum * scale, maximum = content.VisualMaximum * scale;
         if (mirrored) (minimum.X, maximum.X) = (-maximum.X, -minimum.X);
         Rect2 bounds = config.Bounds.Grow(-Mathf.Max(0f, config.EdgeMargin));
+        Rect2 sampleBounds = config.Biomes.SamplingBounds(bounds, secondary);
         for (int attempt = 0; attempt < Mathf.Clamp(config.AttemptsPerObject, 1, 120); attempt++)
         {
             Vector2 candidate = clustered
                 ? center + Vector2.FromAngle(random.RandfRange(0f, Mathf.Tau))
                     * Mathf.Pow(random.Randf(), 0.75f) * Mathf.Max(0f, clusterRadius)
-                : RandomPoint(random, bounds);
+                : RandomPoint(random, sampleBounds);
             if (!bounds.HasPoint(candidate + minimum) || !bounds.HasPoint(candidate + maximum)) continue;
+            if (!config.Biomes.Allows(candidate, secondary, minimum, maximum, content.AvoidBiomeTransition)) continue;
             float clearing = Mathf.Max(0f, config.SpawnClearance) + radius;
             if (candidate.DistanceSquaredTo(config.PlayerSpawn) < clearing * clearing) continue;
             bool blocked = false;

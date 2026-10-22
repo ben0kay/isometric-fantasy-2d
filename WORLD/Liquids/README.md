@@ -1,5 +1,7 @@
 # WORLD/Liquids — shared liquid domain
 
+**Production pond integrated:** WorldPond.tscn is present in the world scene. Shared data/region/wading/splash classes use unique WorldLiquid* names to coexist with the original DEBUG test; canonical liquid folders and data-driven water definitions are preserved.
+
 **Status: documentation/folder foundation only. No liquid implementation is copied from DEBUG yet.** The current production World scene remains unchanged.
 
 Liquid is an extensible domain: water, lava, toxic pools, sludge, quicksand and future types can reuse boundary/region mechanics without being forced to share identical visuals or player effects.

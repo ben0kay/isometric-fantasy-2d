@@ -8,5 +8,5 @@ vec3 grass_fine_detail(vec3 surface, vec2 world) {
     float detail = texture(ground_noise, pixel / 48.0 + vec2(0.23, 0.59)).r;
     float grain = texture(ground_noise, pixel / 13.0 + vec2(0.71, 0.19)).r;
     float fibres = smoothstep(0.48, 0.78, detail);
-    return surface * (1.0 + ((fibres - 0.5) + (grain - 0.5) * 0.45) * detail_strength);
+    return surface * (1.0 + ((fibres - 0.5) + (grain - 0.5) * 0.45) * mix(detail_strength, secondary_detail_strength, biome_weight(world)));
 }

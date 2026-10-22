@@ -1,10 +1,10 @@
 // One authoritative polygon supplies rendering distance, placement exclusion and wading depth.
 using Godot;
 
-public partial class LiquidRegion : Node2D
+public partial class WorldLiquidRegion : Node2D
 {
-    [Export] public LiquidMasterConfig Config { get; set; }
-    [Export] public LiquidDefinition Definition { get; set; }
+    [Export] public WorldLiquidMasterConfig Config { get; set; }
+    [Export] public WorldLiquidDefinition Definition { get; set; }
     public bool Active => Config.Enabled;
     public Vector2[] Boundary { get; private set; }
     public Rect2 SurfaceBounds { get; private set; } // World-space rectangle enclosing the fixed lake and its bank.
@@ -24,7 +24,7 @@ public partial class LiquidRegion : Node2D
     // =========================================================
     public override void _Ready()
     {
-        Config ??= new LiquidMasterConfig(); Definition ??= new LiquidDefinition();
+        Config ??= new WorldLiquidMasterConfig(); Definition ??= new WorldLiquidDefinition();
         Position = Config.Centre;
         Boundary = new Vector2[96]; _edgeDelta = new Vector2[96]; _inverseLength = new float[96];
         float phase = (Config.ShapeSeed % 997) * 0.01f;

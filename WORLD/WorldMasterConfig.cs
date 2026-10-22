@@ -5,9 +5,10 @@ using Godot;
 public partial class WorldMasterConfig : Resource
 {
     [ExportGroup("World")]
-    [Export] public Rect2 Bounds { get; set; } = new(-800, -544, 2560, 1728);
+    [Export] public Rect2 Bounds { get; set; } = new(-800, -544, 3840, 1728);
     [Export] public Vector2 PlayerSpawn { get; set; } = new(480, 320);
-    [Export] public WorldBiomeDefinition Biome { get; set; }
+    [Export] public AdjacentBiomeLayout Biomes { get; set; }
+    public WorldBiomeDefinition Biome => Biomes?.Primary;
     [ExportGroup("Seed")]
     [Export] public bool RandomSeedOnLoad { get; set; } = true;
     [Export] public int FixedSeed { get; set; } = 213876;

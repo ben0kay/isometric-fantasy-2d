@@ -4,3 +4,5 @@ SceneryDefinition owns a stable ID, display name, reusable scene variants, conse
 Scene roots must be Node2D (StaticBody2D for collidable props); artwork and collisions use a foot/root anchor. Existing oak/rock collisions are copied from proven debug scenes. Placement mirrors the polygon and Sprite2D together without negative body scaling. Spacing is conservative circular clearance, not an arbitrary geometry-overlap solver.
 
 Environment fields: SnowResponse opts content into vegetation or rock-cap adapters; GrassLike selects blade snow and the decorative ground layer; CastSunShadow and ContactShadowRadius select shadow helpers. Placement copies these settings to per-instance metadata once. Canonical scenes retain species-specific wind material parameters; environment controllers own the shared changing wind.
+
+Placement: AvoidBiomeTransition reserves the layout blend and artwork extents for trees/tufts. Shared rocks leave this off. The generic placer uses this data without species-name conditions.

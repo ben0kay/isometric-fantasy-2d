@@ -11,3 +11,5 @@ FootprintPath = NodePath("TrunkFootprint")
 
 SnowResponse = 1
 ContactShadowRadius = Vector2(25, 9)
+
+AvoidBiomeTransition = true

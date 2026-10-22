@@ -15,6 +15,7 @@ public partial class SceneryDefinition : Resource
     [Export] public bool CastSunShadow { get; set; } = true;
     [Export] public Vector2 ContactShadowRadius { get; set; } = Vector2.Zero;
     [ExportGroup("Footprint and artwork")]
+    [Export] public bool AvoidBiomeTransition { get; set; }
     [Export] public float SpacingRadius { get; set; } = 30f;
     [Export] public Vector2 VisualMinimum { get; set; } = new(-80, -150);
     [Export] public Vector2 VisualMaximum { get; set; } = new(80, 10);

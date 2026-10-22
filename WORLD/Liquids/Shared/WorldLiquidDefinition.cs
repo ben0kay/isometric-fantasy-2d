@@ -2,7 +2,7 @@
 using Godot;
 
 [GlobalClass]
-public partial class LiquidDefinition : Resource
+public partial class WorldLiquidDefinition : Resource
 {
     [Export] public string Id { get; set; } = "water";
     [Export] public string DisplayName { get; set; } = "Water";
