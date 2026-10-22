@@ -20,6 +20,7 @@ public partial class BurnableTree : Node
     private Color _healthyTint;
     private TreeHitFeedback _hits;
     private float _elapsed;
+    private bool _foliageErosion;
 
     #region Setup and lifecycle API
     // Cache only appearance data; never cache/replace the runtime snow/wind material.
@@ -56,10 +57,26 @@ public partial class BurnableTree : Node
         EmitSignal(SignalName.Ignited, worldImpactPosition, source); return true;
     }
 
+    // FIRE2 may activate a GPU erosion shader over the live art; FIRE1 crossfade is fallback.
+    // The charred overlay then draws BEHIND the healthy sprite so transparency reveals it.
+    // =========================================================
+    public void SetFoliageErosion(bool enabled)
+    {
+        if (State != FireTreeState.Burning || !GodotObject.IsInstanceValid(_overlay)) return;
+        _foliageErosion = enabled;
+        _overlay.ShowBehindParent = enabled;
+        if (enabled)
+        {
+            _sprite.SelfModulate = _healthyTint;
+            _overlay.SelfModulate = Colors.White;
+        }
+    }
+
     // Debug reset keeps whatever material SnowTest currently owns, instead of restoring a stale one.
     // =========================================================
     public void ResetBurn()
     {
+        _foliageErosion = false;
         RemoveOverlay(); _sprite.Texture = _healthy; _sprite.Offset = _healthyOffset; _sprite.SelfModulate = _healthyTint;
         State = FireTreeState.Healthy; BurnProgress = 0f; _elapsed = 0f; IgnitionSource = "";
         _hits?.SetHealthyLeaves(true); SetProcess(false);
@@ -87,10 +104,20 @@ public partial class BurnableTree : Node
         BurnProgress = Mathf.Clamp(_elapsed / (delay + duration), 0f, 1f);
         float blend = Mathf.Clamp((_elapsed - delay) / duration, 0f, 1f);
         blend = blend * blend * (3f - 2f * blend);
-        _sprite.SelfModulate = new Color(_healthyTint, _healthyTint.A * (1f - blend));
-        _overlay.SelfModulate = new Color(1f, 1f, 1f, blend);
+        if (_foliageErosion)
+        {
+            // Per-pixel erosion controls the alpha; keep the full charred art underneath.
+            _sprite.SelfModulate = _healthyTint;
+            _overlay.SelfModulate = Colors.White;
+        }
+        else
+        {
+            _sprite.SelfModulate = new Color(_healthyTint, _healthyTint.A * (1f - blend));
+            _overlay.SelfModulate = new Color(1f, 1f, 1f, blend);
+        }
         if (BurnProgress < 1f) return;
         _sprite.Texture = Config.BurntTexture; _sprite.Offset = BurntOffset(); _sprite.SelfModulate = _healthyTint;
+        _foliageErosion = false;
         RemoveOverlay(); State = FireTreeState.Burnt; SetProcess(false);
         EmitSignal(SignalName.AppearanceChanged); EmitSignal(SignalName.BurnCompleted);
     }

@@ -149,11 +149,11 @@ After implementation, Codex should:
 4. List remaining known issues, especially snow/material layering, projected shadow, leaf emission and transition artifacts.
 5. Stop there so the user can ask the next implementer to continue with FIRE2.
 
-## 3. FIRE2 — for ChatGPT after Codex: flames, smoke, embers and transition polish
+## 3. FIRE2 — IMPLEMENTED: flames, smoke, embers and transition polish
 
 **Depends on:** a working FIRE1 receiver and documented ignition/state events. Do not replace the state machine.
 
-**What to implement:**
+**Original scope (implemented by FIRE2 unless noted below):**
 
 - `FireVisualController` or `BurningTreeEffect` attached only to **active burning trees**; subscribe to lifecycle events and pool/reuse effect resources. No processor on every static tree.
 - **GPU flame particles** `GpuParticles2D` for bottom/trunk and a small number of art-directed canopy ignition patches; pixel-art-compatible animation atlas or small procedural stylized flame texture if suitable.
@@ -228,4 +228,17 @@ Once the effect is visually stable:
 
 - Validation: native Godot 4.5.1 / .NET 8 C# build, runtime API/integration assertions and actual software OpenGL mid/final renders passed. Normal/mirrored anchors, stable colliders/materials, one-shot events, shadow texture/offset, snow on/removal and reset controls checked. Reduced grass for software rendering only; existing 115/116 scatter warning unchanged. Windows D3D12/hardware performance unverified. The concurrently fixed rock-snow shader is preserved, not rewritten by FIRE1.
 
-**Next action:** Continue with FIRE2 only when requested; use the documented API above.
+**Next action:** FIRE2 is implemented. Continue with FIRE3 (tree-targeted lightning), then FIRE4 integration, only when requested.
+
+## 8. FIRE2 Status — 22 October 2026
+
+**State:** FIRE2 IMPLEMENTED, pending local Godot C# compile/GPU-render verification. One atomic GitHub commit covering the files described in `Fire/README.md`; inspect repository history for exact SHA.
+
+- Reused `BurnableTree.Ignited`, `BurnCompleted`, `BurnReset`; left FIRE1 state, timer, source texture alignment, collider, shadow event and debug controls intact.
+- Added `Visuals/BurningTreeEffect.cs`: GPU flames, grey smoke, hot embers, temporary flickering PointLight2D, common procedural textures, old-particle tail, and per-ignition cleanup.
+- Added `Visuals/FireErosionAdapter.cs` and `FireErosion.gdshaderinc`: per-active-tree dynamic composition with whatever wind/snow material currently exists; uneven canopy loss reveals FIRE1's charred underlay without changing global materials.
+- Expanded `FireMasterConfig.cs` with exported particle caps/intensities, wind response, char tint, light appearance, smoke tail and a max-active-effect limit (default 10).
+- `FireTestController` caches ignition subscriptions and gives each actively burning oak at most one FX child; excess active fires use FIRE1's fade.
+- `BurnableTree.SetFoliageErosion(bool)` provides the optional FX presentation hook, returning to FIRE1's crossfade if shader adaptation is unavailable.
+- Scope limits: FIRE3 tree lightning is **not** connected yet; FIRE4 partial shadows, charred-wood snow, ambient leaves and spread remain unimplemented.
+- Run a local Godot .NET build and test wind -3/0/+3, snow on/off, full burning→smoke tail, Reset all, and 1/5/10 active fires. No actual Godot rendering/test run is claimed by this commit.

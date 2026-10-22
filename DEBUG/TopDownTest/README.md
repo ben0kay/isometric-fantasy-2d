@@ -85,3 +85,7 @@ The removable `SnowTest/` now shades the upper surfaces of generated boulders us
 ## FIRE1 oak art lifecycle
 
 [Fire/](Fire/README.md) adds a top-centre **Ignite nearest oak** / **Reset all debug oaks** panel. One real nearby oak crossfades into the uploaded leafless charred art while retaining its collision; final/reset shadow appearance refreshes in place. State/events and handoff are documented there. FIRE1 has no flames or lightning ignition; FIRE2–FIRE4 remain planned.
+
+## FIRE2 — GPU tree fire and foliage erosion
+
+[Fire/](Fire/README.md) now extends Codex's FIRE1 oak burn with **GPU orange/yellow flames, grey smoke, drifting embers, one temporary flickering orange light and a per-pixel foliage erosion shader** that reveals the charred leafless oak beneath the healthy artwork. FIRE1's **Ignite nearest oak** and **Reset all debug oaks** buttons remain the trigger; no lightning-to-tree ignition yet (FIRE3). The original tree object/ground collision and snow/wind ownership are unchanged. Fire intensity, wind response, particle counts, light and temporary effects cap are Inspector options under `Fire/DefaultFireConfig.tres`. Rebuild the C# project and inspect GPU visuals locally; see the [FIRE2 validation steps](Fire/README.md).

@@ -1,8 +1,8 @@
-# FIRE1 — manual oak lifecycle and art transition
+# FIRE1 + FIRE2 — oak burning lifecycle, GPU fire and foliage erosion
 
 **Implemented 21 October 2026. FIRE1 only.** Run TopDownVisualTest, approach an oak, then use the top-centre **Ignite nearest oak** button. The closest healthy oak within 320 world pixels crossfades after a 1-second delay over 5 seconds into the uploaded charred leafless oak. **Reset all debug oaks** restores them without reloading. No tree is spawned or teleported. UI reports no eligible oak when none is nearby. Pink blossom trees are not burnable.
 
-This is the state/art foundation. There are deliberately no flames, smoke, lights, lightning integration, spreading, damage, drops, ash or collapse yet. FIRE2–FIRE4 remain planned.
+FIRE1 is the state/art foundation. **FIRE2 is now implemented** with active GPU flames, smoke, embers, a shared-wind response, warm flickering light and per-pixel foliage erosion. Lightning tree targeting, wildfire spread, gameplay damage, loot, ash piles and collapse are still out of scope (FIRE3/FIRE4).
 
 ## Modules and stable public contract
 
@@ -34,11 +34,46 @@ The temporary dead overlay inherits the living sprite transform and mirrors, use
 
 Reset oaks first, then remove FireTest from the main test scene and BurnableTree from Tree01, including their ext_resource references, and delete Fire/. No production files were touched. The generic DayNight refresh method and healthy-leaf switch can remain unused or be removed. Removing a receiver during play restores its healthy appearance. Removing the controls alone leaves receiver state available; it disconnects the UI by scene lifetime, so keep the controller while using its shadow event wiring.
 
+## FIRE2 — implemented GPU visuals and erosion
+
+FIRE2 listens to FIRE1's existing `Ignited`, `BurnCompleted` and `BurnReset` signals. The original `BurnableTree` still owns its one burn timer, controls the charred image, and performs the final texture swap. Only its temporary blending mode was extended: successful shader attachment shows the dead overlay **behind** the healthy image while the GPU removes green foliage in irregular patches; unsupported shaders retain the original FIRE1 crossfade.
+
+### Files and responsibilities
+
+- `Visuals/BurningTreeEffect.cs`: one temporary child only while an oak is burning or its smoke is finishing. Generates flame, soft smoke and ember textures **once**, reusing them for all burning trees. Uses three bounded `GpuParticles2D` emitters and one warm `PointLight2D` per burning tree. The emitters use `LocalCoords=false`, allowing earlier particles to finish drifting even after the tree or wind moves; they stop emitting when the fire goes out. The firelight flickers and fades with intensity.
+- `Visuals/FireErosionAdapter.cs`: temporarily clones **the current** tree wind/snow material only for an actively burning oak, extends its shader at the known `COLOR` output anchor, preserves existing sway/snow code and syncs shared weather wind and current snow parameters. Does not alter the shared tree or grass shaders. Material is restored on completion/reset, respecting an external SnowTest material swap.
+- `Visuals/FireErosion.gdshaderinc`: two noise scales gradually darken and erase the healthy upper canopy; the base/trunk survives until near the end, avoiding an obvious double trunk. The original charred leafless PNG shows through from underneath. No CPU texture repainting.
+- `Simulation/BurnableTree.cs`: adds `SetFoliageErosion(bool)` as a small *optional* visual hook; its original public state machine/events are otherwise unchanged.
+- `Debug/FireTestController.cs`: listens for ignition and spawns visuals only for fresh burns, with an Inspector-configurable concurrent-effects cap. An oak beyond the cap still burns using FIRE1's art-only transition. Existing nearest-oak/reset/status buttons remain and the scene still removes cleanly.
+- `FireMasterConfig.cs`: new Inspector groups for flames, smoke, ember counts/intensities, wind response, warm light, temporary-effect cap, smoke tail and char tint. All are reusable appearance parameters.
+
+### Behaviour and integration
+
+- In the main test, press **Ignite nearest oak** near a forest oak. FIRE2 should show the flame band around the upper trunk/crown, rising smoke, glowing embers drifting with the **same** `Weather.WindStrength` as the grass, trees, snowfall and clouds, plus flickering nearby light. Changing wind between -3 and +3 affects **newly emitted particles** without teleporting particles already in flight.
+- `BurnProgress` drives the erosion mask (with FIRE1's ignition delay respected). The charred PNG and pre-authored source anchors remain unchanged. At completion, FIRE1 switches the original permanent Sprite2D to charred art; FIRE2 restores the material and keeps smoke emitting weakly for `SmokeTailSeconds`, then lets existing GPU particles finish before removing the effect.
+- **Reset all debug oaks** removes fire, glow, smoke, embers and erosion immediately and returns the original material and art. Neither BurnableTree nor FX adds runtime physics bodies, damage, a new wind system or independent lightning targeting.
+- Shared `SnowTest/TreeSnowAdapter` and DayNight continue to own general vegetation snow/wind and cached silhouettes. FIRE2 clones their **runtime** material only during an active burn. Mid-burn snow coverage is copied, and the effect can rebind if another adapter changes the sprite material. Shadow images still use healthy leaves until the FIRE1 final swap; the partial-shadow treatment belongs to FIRE4.
+- At most `MaxActiveEffects` oaks allocate FX at once (default 10); only those FX and actually burning tree states process every frame. Each oak has no ongoing fire work while healthy or fully burned. One small 14×24 flame, 28×28 smoke, and 5×5 ember image plus a radial light/noise texture are shared globally. There are **no per-frame texture writes**.
+- The original tree/rock scene count, scatter/collision, pink blossom biome, Lightning ground strikes, weather rain, rock snow and player input were not changed.
+
+### Verification checklist for FIRE2
+
+1. Godot .NET: rebuild project, run `TopDownVisualTest.tscn`; confirm no C# or shader compile errors.
+2. Ignite an oak with SnowTest OFF. Confirm orange/yellow flames, rising grey smoke, sparks, warm light and **irregular** green-leaf removal revealing the charred oak, with no visibly offset trunks.
+3. Test shared Wind slider at **-3 / 0 / +3** while a tree burns; smoke drifts in the intended direction, sparks respond more than flames, and original tree sway remains present.
+4. Test at day and night. Firelight should illuminate the surroundings but vanish after burnout/reset.
+5. Enable SnowTest, ignite an oak, and change snow coverage while burning; check shader compatibility, materials after reset and a stable charred tree after completion.
+6. Press Reset all during a burn and immediately after burn completion; verify no stuck snow material, temporary FX or extra collision.
+7. Ignite 1, then 5, then up to 10 separate oaks; observe frame time and GPU particle workload. New FX are bounded by `MaxActiveEffects`; later ignition still performs the FIRE1 art-only transition when the cap is reached.
+8. Removing the `FireTest` scene while running must remove any live FX without deleting permanent tree entities. FIRE3 lightning targeting and FIRE4 partial shadows are **not** included.
+
+**Validation scope:** code/resource/scene paths were reviewed in the GitHub connector. The current environment cannot run the user's Godot .NET build or visually validate Forward+/Compatibility shaders; complete the checks above locally.
+
 ## Remaining handoff
 
-FIRE2 should subscribe to Ignited/BurnCompleted/BurnReset, use BurnProgress, keep one entity and use the existing shared Weather wind. Add bounded GPU effects and a proper erosion mask separately. FIRE3 must implement explicit oak targeting; current lightning is still open-ground only. FIRE4 covers accurate partial-burn shadows, charred-branch snow, ambient leaf eligibility and aftermath.
+FIRE2 now uses those FIRE1 signals, one per-burning-tree helper, shared wind, bounded GPU FX and an irregular GPU erosion mask. **Next: FIRE3** needs explicit oak targeting; current lightning is still open-ground only. FIRE4 covers accurate partial-burn shadows, charred-branch snow, ambient leaf eligibility and aftermath.
 
-Known limits: mid-transition shadow retains the healthy silhouette until final swap; ambient Atmosphere leaves can still originate at charred oak anchors; charred branches retain the existing wind shader; no charred-wood snow profile; the alpha crossfade is deliberately basic. The optional controller caches the startup oak set, suitable for this fixed generated test rather than dynamic world streaming.
+Known limits: mid-transition shadow retains the healthy silhouette until final swap; ambient Atmosphere leaves can still originate at charred oak anchors; charred branches retain the existing wind shader; no charred-wood snow profile; FIRE2 replaces the alpha crossfade only when the current shader can be extended. The optional controller caches the startup oak set, suitable for this fixed generated test rather than dynamic world streaming.
 
 ## Validation and handoff evidence
 
