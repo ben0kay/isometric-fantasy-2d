@@ -1,7 +1,7 @@
 # Production environment
 Implemented for `SCENES/World/World.tscn`: shared clock, signed wind, day/night illumination, projected/contact shadows, vegetation sway, cloud shade, colour grade, local torch light, bounded atmosphere particles, rain/ground splashes/lightning and removable snow coverage/snowfall.
 
-`EnvironmentRuntime.cs` only composes modules after production scenery is generated. `EnvironmentMasterConfig` references one ClockMasterConfig and a default BiomeEnvironmentProfile. Production modules never create sliders/panels or depend on DEBUG. The optional controls live in `DEBUG/UI/Environment/` and can be removed from World.tscn.
+`EnvironmentRuntime.cs` composes modules and schedules registered chunk cosmetics after production scenery is generated. `EnvironmentMasterConfig` references one ClockMasterConfig and a default BiomeEnvironmentProfile. Production modules never create sliders/panels or depend on DEBUG. The optional controls live in `DEBUG/UI/Environment/` and can be removed from World.tscn.
 
 ## Ownership
 - Time/Clock: the single hour-of-day, cycle duration and pause state.
@@ -21,7 +21,7 @@ Selected profiles are explicitly cloned per component on startup. Developer cont
 ## Defaults and limits
 Preserves the debug settings: 30 real seconds per day, 08:00 start, wind +1, rain target 0% (off), snow off, coverage target 60%. Mixed rain/snow is permitted; set rain to zero for pure snow. Existing effects are visual approximations, not snow physics or fire/heat simulation. The torch's authored collision remains while its presentation is disabled, matching the original test.
 
-Generation seed semantics and F5 debug launch are unchanged. No lake/wading, axe, enemies, burning, saves or chunk streaming are extracted. Content/lighting caches assume the current startup-generated world; dynamic spawn/despawn/streaming registration is not implemented.
+Generation seed semantics and F5 debug launch are unchanged. Production P3 now registers/unregisters streamed environment adapters explicitly; see WORLD/Runtime/Streaming and the root README for current world/liquid/fire/entity status. The early startup-only validation below is historical.
 
 ## Validation
 C# build uses the repository's Godot.NET.Sdk 4.7.2 and .NET 8. Godot 4.5.1 .NET runtime assertions cover biome override/default resolution, runtime isolation, one clock/wind, no-panel startup/removal, wind changes, day/night, rain/overcast, manual lightning, snow on/off/removal, automatic accumulation/melt, player burial/camera stability, environment removal and movement. Native 1920×1080 software OpenGL Compatibility renders were inspected for controls, day/night, rain/lightning, 25/60/100% snow and restoration at full production scenery density. Windows D3D12 and target hardware performance remain untested.
@@ -35,3 +35,7 @@ P3 stability: EnvironmentMasterConfig now owns shared cosmetic culling and prepa
 Incremental scenery sources: chunk binding registers each prop with rain/atmosphere once, and explicit removal/unload/cancellation unregisters it. Full loaded-world source rescans on lifecycle changes have been removed after target-machine traces measured them as the dominant hitch. Static appearance changes refresh only the changed prop; new scenery reuses the same lifecycle. See the streaming README for the measured evidence and validation limits.
 
 Production rain intensity zero is now a hard off state with signal-driven wakeup; dry wetness sleeps after drying. Shared ground queries and wind remain independent. Leaves use a bounded 40-slot pool; disabled leaf simulation/drawing is skipped. See module READMEs for exact limits.
+
+## P2-A implemented — nearby cosmetic scheduling
+
+Chunk artwork bounds are indexed; view/settings changes query nearby candidates plus currently active chunks. A safe expanded view window (SceneryVisibilitySlack, default 32 units; 0 exact) avoids repeated checks for tiny camera motion without missing prepared scenery. Retention hysteresis, new/refreshed bounds, culling toggles and camera jumps remain live. VisibilityPasses/VisibilityChunkChecks measure work; static views do not walk the chunk dictionary. Cached shared wetness removes transition-time node lookups. This changes cosmetic scheduling only, not chunk generation, physical simulation or ownership. See WORLD/Runtime/Visibility/README.md and FEEDBACK/Visibility/README.md for validation/CPU evidence.

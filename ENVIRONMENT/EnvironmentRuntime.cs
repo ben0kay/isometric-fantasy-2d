@@ -14,15 +14,24 @@ public partial class EnvironmentRuntime : Node2D
 
     public SceneryArtworkIndex GroundQueries { get; } = new();
     private WorldAtmosphere _atmosphere;
+    private VegetationWetness _sharedWetness;
     private readonly System.Collections.Generic.Dictionary<Shader, Shader> _wetnessShaders = new();
     private sealed class ChunkVisuals
     {
+        public Node2D Chunk;
         public Rect2 Bounds;
         public VegetationWind Wind;
         public VegetationWetness Wetness;
         public bool Active = true;
     }
     private readonly System.Collections.Generic.Dictionary<Node2D,ChunkVisuals> _chunkVisuals = new();
+    private readonly SpatialBoundsIndex<ChunkVisuals> _visualIndex=new(1024);
+    private readonly System.Collections.Generic.HashSet<ChunkVisuals> _activeVisuals=new(), _visualCandidates=new();
+    private Rect2 _lastView;
+    private bool _visibilityInitialized, _lastCull;
+    private float _lastPrepare, _lastRetention, _lastSlack;
+    public long VisibilityPasses { get; private set; }
+    public long VisibilityChunkChecks { get; private set; }
     public int CosmeticChunkCount { get; private set; }
     public int RegisteredChunkCount => _chunkVisuals.Count;
     public double LastVisibilityMilliseconds { get; private set; }
@@ -56,7 +65,7 @@ public partial class EnvironmentRuntime : Node2D
         }
         Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds, GroundQueries = GroundQueries }; AddChild(Weather);
         // Wind is already attached; register leaf wetness before snow clones tree materials.
-        var wetness = new VegetationWetness { Name = "VegetationWetness", Weather = Weather }; AddChild(wetness); wetness.Attach(actors, _wetnessShaders);
+        var wetness = new VegetationWetness { Name = "VegetationWetness", Weather = Weather }; _sharedWetness=wetness; AddChild(wetness); wetness.Attach(actors, _wetnessShaders);
         var shadows = new SunShadowRenderer { Name = "SunShadows", ZIndex = -5, Wind = Wind }; AddChild(shadows); shadows.Attach(actors);
         DayNight = new WorldDayNight { Name = "DayNight", Config = Settings.Lighting, Clock = Clock, Weather = Weather, Shadows = shadows }; AddChild(DayNight);
         var clouds = new CloudShade { Name = "Clouds", Config = Settings.Clouds, Day = DayNight, Wind = Wind }; clouds.Configure(world.Bounds); AddChild(clouds);
@@ -81,16 +90,19 @@ public partial class EnvironmentRuntime : Node2D
         var wind = new VegetationWind { Name = "ChunkWind", Wind = Wind }; AddChild(wind); wind.Attach(chunk);
         chunk.SetMeta("chunk_wind",wind.GetInstanceId()); yield return 0;
         var wetness = new VegetationWetness { Weather = Weather }; AddChild(wetness); wetness.Attach(chunk, _wetnessShaders);
-        wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
+        wetness.StartAt(_sharedWetness.Coverage);
         chunk.SetMeta("chunk_wetness",wetness.GetInstanceId()); yield return 0;
         var shadow = new SunShadowRenderer { Wind = Wind }; DayNight.Shadows.AddChild(shadow); shadow.Attach(chunk);
         chunk.SetMeta("chunk_shadow",shadow.GetInstanceId()); yield return 0;
         Snow.RegisterChunk(chunk); yield return 0;
-        _chunkVisuals.Add(chunk,new ChunkVisuals { Bounds = SceneryVisualBounds.Chunk(chunk), Wind = wind, Wetness = wetness });
+        var state=new ChunkVisuals { Chunk=chunk, Bounds=SceneryVisualBounds.Chunk(chunk), Wind=wind, Wetness=wetness };
+        _chunkVisuals.Add(chunk,state); _visualIndex.Set(state,state.Bounds); _activeVisuals.Add(state);
+        EvaluateChunk(chunk,state,CurrentVisibilityWindow());
     }
     public void UnregisterChunk(Node2D chunk)
     {
-        _chunkVisuals.Remove(chunk);
+        if(_chunkVisuals.Remove(chunk,out var state)) { _visualIndex.Remove(state); _activeVisuals.Remove(state); _visualCandidates.Remove(state); }
+        CosmeticChunkCount=_activeVisuals.Count;
         Snow.UnregisterChunk(chunk);
         foreach (string key in new[] { "chunk_shadow","chunk_wetness","chunk_wind" })
             if (chunk.HasMeta(key) && GodotObject.InstanceFromId(chunk.GetMeta(key).AsUInt64()) is Node node) node.Free();
@@ -107,7 +119,15 @@ public partial class EnvironmentRuntime : Node2D
         GroundQueries.UnregisterSource(source);
         _atmosphere.UnregisterSource(source);
     }
-    public void RefreshScenery(Node2D source) { UnregisterScenery(source); RegisterScenery(source); }
+    public void RefreshScenery(Node2D source)
+    {
+        UnregisterScenery(source); RegisterScenery(source);
+        if(source.GetParent() is Node2D chunk && _chunkVisuals.TryGetValue(chunk,out var state))
+        {
+            state.Bounds=SceneryVisualBounds.Chunk(chunk); _visualIndex.Set(state,state.Bounds);
+            EvaluateChunk(chunk,state,CurrentVisibilityWindow());
+        }
+    }
 
     // Evaluate cached chunk bounds only; source discovery is handled by explicit prop lifecycle events.
     // =========================================================
@@ -116,27 +136,53 @@ public partial class EnvironmentRuntime : Node2D
         using var frameTrace = RuntimeFrameTrace.Measure("EnvironmentRuntime.Process");
         if (!Initialized) return;
         long started = System.Diagnostics.Stopwatch.GetTimestamp();
-        Rect2 view = SceneryVisualBounds.View(this).Grow(Mathf.Max(64,Config.SceneryPrepareMargin));
-        CosmeticChunkCount = 0;
-        foreach (var pair in _chunkVisuals)
+        float prepare=Mathf.Max(64,Config.SceneryPrepareMargin),retention=Mathf.Max(0,Config.SceneryRetentionMargin);
+        float slack=Mathf.Max(0,Config.SceneryVisibilitySlack);
+        bool cull=Config.CullOffscreenSceneryEffects;
+        Rect2 view=cull ? SceneryVisualBounds.View(this).Grow(prepare) : _lastView;
+        if(_visibilityInitialized && cull==_lastCull && prepare==_lastPrepare && retention==_lastRetention && slack==_lastSlack && (!cull || _lastView.Encloses(view)))
+        { LastVisibilityMilliseconds=System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds; return; }
+        if(cull) view=view.Grow(slack);
+        VisibilityPasses++; _visualCandidates.Clear();
+        if(cull)
         {
-            var state = pair.Value;
-            bool active = !Config.CullOffscreenSceneryEffects || state.Bounds.Intersects(state.Active ? view.Grow(Mathf.Max(0,Config.SceneryRetentionMargin)) : view);
-            if (active != state.Active)
-            {
-                state.Active = active; state.Wind.SetProcess(active); state.Wetness.SetVisualActive(active);
-                Snow.SetChunkVisualActive(pair.Key,active);
-                if (active)
-                {
-                    state.Wind._Process(0);
-                    state.Wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
-                }
-            }
-            if (active) CosmeticChunkCount++;
+            _visualIndex.Query(view,_visualCandidates);
+            foreach(var state in _activeVisuals) _visualCandidates.Add(state);
         }
-        DayNight.Shadows.CullOffscreen = Config.CullOffscreenSceneryEffects;
-        DayNight.Shadows.PrepareMargin = Mathf.Max(64,Config.SceneryPrepareMargin);
-        LastVisibilityMilliseconds = System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+        else foreach(var state in _chunkVisuals.Values) _visualCandidates.Add(state);
+        foreach(var state in _visualCandidates) EvaluateChunk(state.Chunk,state,view);
+        DayNight.Shadows.CullOffscreen=cull; DayNight.Shadows.PrepareMargin=prepare;
+        _visibilityInitialized=true; _lastView=view; _lastCull=cull; _lastPrepare=prepare; _lastRetention=retention; _lastSlack=slack;
+        LastVisibilityMilliseconds=System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
     }
+    // New/refreshed chunks use the cached envelope too, so later movement inside it remains safe.
+    // =========================================================
+    private Rect2 CurrentVisibilityWindow()
+    {
+        float prepare=Mathf.Max(64,Config.SceneryPrepareMargin),retention=Mathf.Max(0,Config.SceneryRetentionMargin),slack=Mathf.Max(0,Config.SceneryVisibilitySlack);
+        Rect2 view=SceneryVisualBounds.View(this).Grow(prepare);
+        return _visibilityInitialized && _lastCull==Config.CullOffscreenSceneryEffects && _lastPrepare==prepare
+            && _lastRetention==retention && _lastSlack==slack && _lastView.Encloses(view) ? _lastView : view.Grow(slack);
+    }
+    // Active chunks retain hysteresis; distant inactive chunks are found only by the spatial query.
+    // =========================================================
+    private void EvaluateChunk(Node2D chunk,ChunkVisuals state,Rect2 view)
+    {
+        VisibilityChunkChecks++;
+        bool active=!Config.CullOffscreenSceneryEffects || state.Bounds.Intersects(state.Active?view.Grow(Mathf.Max(0,Config.SceneryRetentionMargin)):view);
+        if(active!=state.Active)
+        {
+            state.Active=active; state.Wind.SetProcess(active); state.Wetness.SetVisualActive(active); Snow.SetChunkVisualActive(chunk,active);
+            if(active)
+            {
+                _activeVisuals.Add(state); state.Wind._Process(0);
+                state.Wetness.StartAt(_sharedWetness.Coverage);
+            }
+            else _activeVisuals.Remove(state);
+        }
+        CosmeticChunkCount=_activeVisuals.Count;
+    }
+    public override void _ExitTree()
+    { _visualIndex.Clear(); _activeVisuals.Clear(); _visualCandidates.Clear(); _chunkVisuals.Clear(); }
     #endregion
 }

@@ -36,3 +36,5 @@ Incremental source cache coverage in ValidateSceneryVisibility: stationary scene
 `ValidateSunCaching.tscn` verifies paused caches, independent wind/actors/hit wobble/lightning, manual/settings invalidation, exact mode and pixel error/camera lifecycle (20 checks). `BenchmarkSunShadows.tscn` compares paused, 30-second and 1440-second cycles at simulated 120Hz on a fixed seed with 367 casters; eight warm-up/240 synchronous samples per case, CPU-only, no FPS/GPU claim.
 
 Screen-dust follow-up: ValidatePollenBatch now covers 26 checks. PollenDust is a separate CanvasLayer; camera, wind and daylight must not alter it. Dust alone sleeps the owner too; viewport resize/profile events are the only CPU updates. The old camera-local/wind/daylight expectations are superseded.
+
+`ValidateSpatialScheduling.tscn` verifies P2-A/B static skips, conservative camera envelope/exact mode, retention, re-entry, refreshed art, spatial edge cases, nearby-only occlusion, active fades/profile edits and cleanup (32 checks). `BenchmarkSpatialScheduling.tscn` samples stationary and simulated moving callback CPU times on a fixed-seed 49-chunk scene; no GPU/FPS conclusion is inferred.

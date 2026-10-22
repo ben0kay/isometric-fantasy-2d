@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**P2-A/P2-B cosmetic scheduling:** Cached camera envelopes and nearby chunk buckets replace repeated distant-chunk decisions. Occlusion queries nearby artwork and updates only active fades, with exact alpha restoration. All phases in [the performance refactor](Notes/performance_refactor.md) are implemented; target-PC visual/FPS verification remains separate.
+
 **P1-D sun/shadow caching:** Paused solar inputs reuse static shadows; moving actors, hit wobble, wind, camera and streaming remain responsive. Running-time static projection reuse is bounded by a configurable 0.25px tolerance (0 = exact), with immediate manual-time/settings refresh. F9 supports a 1440-second day and tolerance A/B. See [CPU evidence and target-PC limits](ENVIRONMENT/Lighting/Shadows/README.md).
 
 **Screen dust (P0-0 follow-up):** Sparse, softly fading specks now float in an independent screen layer, unaffected by camera/scenery/wind/daylight. One capped GPU batch animates without C# frame callbacks. OFF/zero removes it, and all-off atmosphere sleeps. Haze settings/bounds are cached; other effects retain independent controls. See [validation and target-PC limits](ENVIRONMENT/Atmosphere/README.md).

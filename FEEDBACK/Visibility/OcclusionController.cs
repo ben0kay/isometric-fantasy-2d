@@ -1,131 +1,133 @@
-// World-level visual-only occlusion for any registered prop; no per-prop ticking.
+// Shared spatial occlusion: nearby detection and a small active-fade set, without per-prop ticking.
 using Godot;
 using System.Collections.Generic;
 using FantasyGame.World.Trees;
-
 public partial class OcclusionController : Node
 {
-    [Export(PropertyHint.Range, "0.03,0.5,0.01")] public float CheckIntervalSeconds { get; set; } = 0.10f;
-    [Export] public Vector2 PlayerVisibilityOffset { get; set; } = new(0f, -16f);
-
+    [Export(PropertyHint.Range,"0.03,0.5,0.01")] public float CheckIntervalSeconds { get; set; }=0.10f;
+    [Export] public Vector2 PlayerVisibilityOffset { get; set; }=new(0,-16);
     private Node2D _player;
     private float _untilCheck;
-    private readonly Dictionary<Sprite2D, Entry> _registered = new();
-    private readonly List<Sprite2D> _invalid = new();
-
+    private bool _dirty=true, _hasPlayer;
+    private Vector2 _lastFeet,_lastOffset;
+    private readonly Dictionary<Sprite2D,Entry> _registered=new();
+    private readonly SpatialBoundsIndex<Sprite2D> _index=new(256);
+    private readonly HashSet<Sprite2D> _candidates=new();
+    private readonly HashSet<Entry> _obstructing=new(), _fading=new(), _dynamic=new();
+    private readonly List<Entry> _finished=new();
+    public int RegisteredCount => _registered.Count;
+    public int ActiveFadeCount => _fading.Count;
+    public long DetectionPasses { get; private set; }
+    public long CandidateChecks { get; private set; }
+    public long FadeWrites { get; private set; }
     private sealed class Entry
     {
-        public OcclusionProfile Profile;
-        public Node2D Owner;
-        public float BaseAlpha;
-        public float CurrentAlpha;
-        public bool Obstructing;
+        public Sprite2D Visual; public Node2D Owner; public OcclusionProfile Profile; public TreeHitResponse Hits;
+        public Rect2 Bounds; public Transform2D OwnerTransform,VisualTransform;
+        public float BaseAlpha,CurrentAlpha; public bool Obstructing;
+        public System.Action Changed,Gone;
     }
-
-    #region Registration
-    // Start only once, after authored/scattered world props are configured.
+    // Startup group discovery runs once; streamed props use explicit register/unregister.
     // =========================================================
     public void Initialize(Node2D player)
     {
-        _player = player;
-        foreach (Node node in GetTree().GetNodesInGroup("world_trees"))
-            if (node is FantasyGame.World.Trees.Tree tree && tree.Definition?.VisibilityProfile is { Enabled: true } profile)
-                Register(tree, tree.GetNodeOrNull<Sprite2D>("Sprite"), profile);
-        SetProcess(true);
+        _player=player; _dirty=true;
+        foreach(Node node in GetTree().GetNodesInGroup("world_trees"))
+            if(node is FantasyGame.World.Trees.Tree tree && tree.Definition?.VisibilityProfile is { Enabled:true } profile)
+                Register(tree,tree.GetNodeOrNull<Sprite2D>("Sprite"),profile);
+        SetProcess(_registered.Count>0);
     }
-
-    // Non-tree props may opt in without adding their own fade script.
+    // Other props reuse this registration contract; bounds include offsets/mirroring/scale/padding.
     // =========================================================
-    public void Register(Node2D owner, Sprite2D visual, OcclusionProfile profile)
+    public void Register(Node2D owner,Sprite2D visual,OcclusionProfile profile)
     {
-        if (owner == null || visual == null || profile == null || !profile.Enabled || _registered.ContainsKey(visual)) return;
-        float alpha = visual.Modulate.A;
-        _registered.Add(visual, new Entry { Owner = owner, Profile = profile, BaseAlpha = alpha, CurrentAlpha = alpha });
+        if(owner==null || visual==null || profile==null || !profile.Enabled || _registered.ContainsKey(visual)) return;
+        var entry=new Entry { Visual=visual,Owner=owner,Profile=profile,BaseAlpha=visual.Modulate.A,CurrentAlpha=visual.Modulate.A };
+        entry.Changed=()=>Refresh(visual); entry.Gone=()=>Unregister(visual);
+        _registered.Add(visual,entry);
+        visual.VisibilityChanged+=entry.Changed; visual.ItemRectChanged+=entry.Changed;
+        visual.TreeExiting+=entry.Gone; owner.TreeExiting+=entry.Gone; profile.Changed+=entry.Changed;
+        entry.Hits=owner.GetNodeOrNull<TreeHitResponse>("HitResponse");
+        if(entry.Hits!=null) entry.Hits.VisualTransformChanged+=entry.Changed;
+        if(owner is not StaticBody2D) _dynamic.Add(entry);
+        Refresh(visual); SetProcess(true);
     }
-
-    // Restore the exact original visual alpha when unregistering.
+    // Explicit static transform/appearance edits and active wobble refresh just one entry.
     // =========================================================
+    public void Refresh(Sprite2D visual)
+    {
+        if(!_registered.TryGetValue(visual,out var entry)) return;
+        if(!GodotObject.IsInstanceValid(visual) || !GodotObject.IsInstanceValid(entry.Owner)) { Unregister(visual); return; }
+        entry.Bounds=SceneryVisualBounds.Sprite(visual).Grow(entry.Profile.VisualPadding);
+        entry.OwnerTransform=entry.Owner.GlobalTransform; entry.VisualTransform=visual.Transform;
+        _index.Set(visual,entry.Bounds); _dirty=true;
+    }
     public void Unregister(Sprite2D visual)
     {
-        if (visual == null || !_registered.Remove(visual, out Entry entry)) return;
-        if (GodotObject.IsInstanceValid(visual))
+        if(visual==null || !_registered.Remove(visual,out var entry)) return;
+        _index.Remove(visual); _obstructing.Remove(entry); _fading.Remove(entry); _dynamic.Remove(entry);
+        entry.Profile.Changed-=entry.Changed;
+        if(GodotObject.IsInstanceValid(visual))
         {
-            Color color = visual.Modulate; color.A = entry.BaseAlpha; visual.Modulate = color;
+            visual.VisibilityChanged-=entry.Changed; visual.ItemRectChanged-=entry.Changed; visual.TreeExiting-=entry.Gone;
+            Color color=visual.Modulate; if(color.A!=entry.BaseAlpha) { color.A=entry.BaseAlpha; visual.Modulate=color; }
         }
+        if(GodotObject.IsInstanceValid(entry.Owner)) entry.Owner.TreeExiting-=entry.Gone;
+        if(GodotObject.IsInstanceValid(entry.Hits)) entry.Hits.VisualTransformChanged-=entry.Changed;
+        _dirty=true; if(_registered.Count==0) { _candidates.Clear(); _finished.Clear(); SetProcess(false); }
     }
-    #endregion
-
-    #region Detection and easing
-    // Candidate checks are throttled; opacity transitions remain smooth each frame.
+    // A shared position probe remains; only movement/source changes query nearby candidates.
     // =========================================================
     public override void _Process(double delta)
     {
-        using var frameTrace = RuntimeFrameTrace.Measure("OcclusionController.Process");
-        if (!GodotObject.IsInstanceValid(_player)) return;
-        float dt = (float)delta;
-        _untilCheck -= dt;
-        if (_untilCheck <= 0f)
+        using var frameTrace=RuntimeFrameTrace.Measure("OcclusionController.Process");
+        if(!GodotObject.IsInstanceValid(_player)) return;
+        float dt=(float)delta; _untilCheck-=dt;
+        Vector2 feet=_player.GlobalPosition;
+        bool teleport=_hasPlayer && feet.DistanceSquaredTo(_lastFeet)>256*256;
+        if(_untilCheck<=0 || _dirty || teleport)
         {
-            _untilCheck = Mathf.Max(0.03f, CheckIntervalSeconds);
-            Vector2 playerPoint = _player.GlobalPosition + PlayerVisibilityOffset;
-            foreach (var pair in _registered)
+            _untilCheck=Mathf.Max(0.03f,CheckIntervalSeconds);
+            foreach(var entry in _dynamic)
+                if(entry.Owner.GlobalTransform!=entry.OwnerTransform || entry.Visual.Transform!=entry.VisualTransform) Refresh(entry.Visual);
+            if(_dirty || !_hasPlayer || feet!=_lastFeet || PlayerVisibilityOffset!=_lastOffset)
             {
-                Sprite2D visual = pair.Key;
-                Entry entry = pair.Value;
-                if (!GodotObject.IsInstanceValid(visual) || !GodotObject.IsInstanceValid(entry.Owner))
+                DetectionPasses++; _candidates.Clear();
+                Vector2 point=feet+PlayerVisibilityOffset;
+                _index.Query(new Rect2(point-new Vector2(0.001f,0.001f),new Vector2(0.002f,0.002f)),_candidates);
+                foreach(var entry in _obstructing) _candidates.Add(entry.Visual);
+                foreach(var sprite in _candidates)
                 {
-                    _invalid.Add(visual);
-                    continue;
+                    var entry=_registered[sprite]; CandidateChecks++;
+                    bool obstructing=entry.Profile.Enabled && sprite.IsVisibleInTree() && sprite.Texture!=null
+                        && feet.Y<=entry.Owner.GlobalPosition.Y+entry.Profile.BehindAnchorTolerance
+                        && point.X>=entry.Bounds.Position.X && point.X<=entry.Bounds.End.X
+                        && point.Y>=entry.Bounds.Position.Y && point.Y<=entry.Bounds.End.Y;
+                    entry.Obstructing=obstructing;
+                    if(obstructing) _obstructing.Add(entry); else _obstructing.Remove(entry);
+                    float target=Target(entry);
+                    if(!Mathf.IsEqualApprox(entry.CurrentAlpha,target)) _fading.Add(entry);
                 }
-                entry.Obstructing = IsObstructing(visual, entry.Owner, playerPoint, _player.GlobalPosition, entry.Profile);
+                _dirty=false; _hasPlayer=true; _lastFeet=feet; _lastOffset=PlayerVisibilityOffset;
             }
         }
-        foreach (var pair in _registered)
+        _finished.Clear();
+        foreach(var entry in _fading)
         {
-            Sprite2D sprite = pair.Key;
-            Entry entry = pair.Value;
-            if (!GodotObject.IsInstanceValid(sprite)) continue;
-            float target = entry.Obstructing ? entry.BaseAlpha * Mathf.Clamp(entry.Profile.MinimumAlpha, 0.05f, 1f) : entry.BaseAlpha;
-            if (Mathf.IsEqualApprox(entry.CurrentAlpha, target)) continue;
-            float duration = target < entry.CurrentAlpha ? entry.Profile.FadeOutSeconds : entry.Profile.FadeInSeconds;
-            entry.CurrentAlpha = Mathf.MoveToward(entry.CurrentAlpha, target, dt / Mathf.Max(0.05f, duration) * entry.BaseAlpha);
-            Color tint = sprite.Modulate;
-            tint.A = entry.CurrentAlpha;
-            sprite.Modulate = tint;
+            float target=Target(entry),duration=target<entry.CurrentAlpha?entry.Profile.FadeOutSeconds:entry.Profile.FadeInSeconds;
+            entry.CurrentAlpha=Mathf.MoveToward(entry.CurrentAlpha,target,dt/Mathf.Max(0.05f,duration)*entry.BaseAlpha);
+            if(Mathf.IsEqualApprox(entry.CurrentAlpha,target)) { entry.CurrentAlpha=target; _finished.Add(entry); }
+            Color color=entry.Visual.Modulate;
+            if(color.A!=entry.CurrentAlpha) { color.A=entry.CurrentAlpha; entry.Visual.Modulate=color; FadeWrites++; }
         }
-        foreach (Sprite2D sprite in _invalid) _registered.Remove(sprite);
-        _invalid.Clear();
+        foreach(var entry in _finished) _fading.Remove(entry);
     }
-
-    // Check actual transformed sprite corners, not tree species or collision shapes.
-    // =========================================================
-    private static bool IsObstructing(Sprite2D sprite, Node2D owner, Vector2 point, Vector2 playerFeet, OcclusionProfile profile)
-    {
-        if (!profile.Enabled || !sprite.Visible || sprite.Texture == null) return false;
-        if (playerFeet.Y > owner.GlobalPosition.Y + profile.BehindAnchorTolerance) return false;
-        // Cheap conservative world radius before testing transformed sprite corners.
-        float radius = sprite.Texture.GetSize().Length() * sprite.GlobalScale.Length() * 0.7f + profile.VisualPadding;
-        if (point.DistanceSquaredTo(owner.GlobalPosition) > radius * radius) return false;
-        Rect2 r = sprite.GetRect();
-        Vector2 a = sprite.ToGlobal(r.Position), b = sprite.ToGlobal(r.Position + new Vector2(r.Size.X, 0f));
-        Vector2 c = sprite.ToGlobal(r.Position + new Vector2(0f, r.Size.Y)), d = sprite.ToGlobal(r.End);
-        float minX = Mathf.Min(Mathf.Min(a.X, b.X), Mathf.Min(c.X, d.X)) - profile.VisualPadding;
-        float maxX = Mathf.Max(Mathf.Max(a.X, b.X), Mathf.Max(c.X, d.X)) + profile.VisualPadding;
-        float minY = Mathf.Min(Mathf.Min(a.Y, b.Y), Mathf.Min(c.Y, d.Y)) - profile.VisualPadding;
-        float maxY = Mathf.Max(Mathf.Max(a.Y, b.Y), Mathf.Max(c.Y, d.Y)) + profile.VisualPadding;
-        return point.X >= minX && point.X <= maxX && point.Y >= minY && point.Y <= maxY;
-    }
-    #endregion
-
-    // Avoid leaving faded objects behind when world controller exits.
+    private static float Target(Entry entry) => entry.Obstructing?entry.BaseAlpha*Mathf.Clamp(entry.Profile.MinimumAlpha,0.05f,1):entry.BaseAlpha;
+    // Exact alpha restoration and signal/index cleanup on unload/world replacement.
     // =========================================================
     public override void _ExitTree()
     {
-        foreach (var pair in _registered)
-            if (GodotObject.IsInstanceValid(pair.Key))
-            {
-                Color tint = pair.Key.Modulate; tint.A = pair.Value.BaseAlpha; pair.Key.Modulate = tint;
-            }
-        _registered.Clear();
+        foreach(var sprite in new List<Sprite2D>(_registered.Keys)) Unregister(sprite);
+        _index.Clear(); _candidates.Clear(); _finished.Clear();
     }
 }
