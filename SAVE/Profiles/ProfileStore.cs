@@ -1,9 +1,10 @@
-// Local profile identities only: no world saves or gameplay serialization yet.
+// Local profile identity registry; durable campaigns reference these GUIDs without replacing this format.
 using Godot;
 using System;
 using System.Collections.Generic;
 public static class ProfileStore
 {
+    private static bool _fromBackup;
     private const string Path = "user://profiles.cfg";
     public sealed class Profile
     {
@@ -19,11 +20,15 @@ public static class ProfileStore
     // =========================================================
     public static void Load()
     {
-        _profiles.Clear(); Selected = null; LastError = "";
+        _profiles.Clear(); Selected = null; LastError = ""; _fromBackup = false;
         ConfigFile file = new();
         Error error = file.Load(Path);
-        if (error == Error.FileNotFound) return;
-        if (error != Error.Ok) { LastError = "Profiles could not be read: " + error; return; }
+        if (error != Error.Ok && FileAccess.FileExists(Path + ".bak"))
+        {
+            file = new ConfigFile(); error = file.Load(Path + ".bak"); _fromBackup = error == Error.Ok;
+        }
+        if (error == Error.FileNotFound && !FileAccess.FileExists(Path)) return;
+        if (error != Error.Ok) { LastError = "Profiles could not be read: " + error + ". Existing files were preserved."; return; }
         foreach (string id in file.GetSections())
         {
             if (!Guid.TryParse(id, out _)) continue;
@@ -35,6 +40,7 @@ public static class ProfileStore
     // =========================================================
     public static Profile Create(string name)
     {
+        if (!string.IsNullOrEmpty(LastError)) throw new InvalidOperationException(LastError);
         name = (name ?? "").Trim();
         if (name.Length < 2 || name.Length > 32) throw new ArgumentException("Profile name must be 2–32 characters.");
         foreach (var existing in _profiles)
@@ -63,8 +69,11 @@ public static class ProfileStore
         if (error != Error.Ok) throw new InvalidOperationException("Could not save profile: " + error);
         string absolute = ProjectSettings.GlobalizePath(Path);
         string temporary = ProjectSettings.GlobalizePath(Path + ".tmp");
-        // ConfigFile has already fully written the temp file before replacement.
-        error = DirAccess.RenameAbsolute(temporary, absolute);
-        if (error != Error.Ok) throw new InvalidOperationException("Could not commit profile: " + error);
+        // Preserve the original ConfigFile format and retain a recoverable previous registry.
+        if (_fromBackup && System.IO.File.Exists(absolute))
+            System.IO.File.Move(absolute,absolute + ".rejected-" + Guid.NewGuid().ToString("N"));
+        if (System.IO.File.Exists(absolute)) System.IO.File.Replace(temporary,absolute,absolute + ".bak");
+        else System.IO.File.Move(temporary,absolute);
+        _fromBackup = false;
     }
 }

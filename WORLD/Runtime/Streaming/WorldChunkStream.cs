@@ -16,6 +16,7 @@ public partial class WorldChunkStream : Node
     private readonly Dictionary<ChunkCoord,Chunk> _chunks = new();
     private readonly Dictionary<string,float> _burns = new();
     private readonly HashSet<string> _removed = new();
+    private readonly Dictionary<string,ChunkCoord> _editOwners = new();
     private WorldScene _world; private Node2D _actors; private PlayerMovement _player;
     private WorldMasterConfig _config; private WorldStreamingConfig _settings; private ChunkSceneryData _data;
     private ShaderMaterial _ground; private Chunk _applying; private bool _bound;
@@ -44,13 +45,18 @@ public partial class WorldChunkStream : Node
     #region Startup
     // Load only the initial active square before input; no whole-world scenery or navigation is built.
     // =========================================================
-    public void Initialize(WorldScene world, Node2D actors, PlayerMovement player, WorldMasterConfig config, WorldLiquidRegion liquid)
+    public void Initialize(WorldScene world, Node2D actors, PlayerMovement player, WorldMasterConfig config, WorldLiquidRegion liquid, SavedChunk[] restored = null)
     {
         _world = world; _actors = actors; _player = player; _config = config; _settings = config.Streaming; WorldId = world.Blueprint.WorldId;
         if (_settings.ChunkSize < 256 || _settings.ChunkSize > 2048 || _settings.ActiveRadius < 2 || _settings.PreloadRadius < _settings.ActiveRadius
             || _settings.UnloadRadius <= _settings.PreloadRadius || _settings.UnloadRadius > 6 || _settings.CandidateCellSize < 32 || _settings.CandidateCellSize > 256
             || _settings.NodesPerFrame < 1 || _settings.NodesPerFrame > 128 || !float.IsFinite(_settings.ApplyBudgetMilliseconds) || _settings.ApplyBudgetMilliseconds <= 0)
             throw new ArgumentException("Invalid streaming size, radii, candidate grid or apply budget.");
+        if (restored != null) foreach (var chunk in restored) foreach (var edit in chunk.Edits)
+        {
+            _editOwners.Add(edit.Id,new ChunkCoord(chunk.X,chunk.Y));
+            if (edit.Removed) _removed.Add(edit.Id); else if (edit.BurnProgress > 0) _burns.Add(edit.Id,edit.BurnProgress);
+        }
         float artMargin = 0;
         foreach (var biome in config.Generation.Biomes.Where(b => b != null && b.EnabledForGeneration)) foreach (var p in biome.Populations)
         {
@@ -199,7 +205,7 @@ public partial class WorldChunkStream : Node
             var burn = prop.GetNodeOrNull<Burnable>("Burnable"); if (burn != null) _fire.Unregister(burn);
             _visibility.Unregister(prop.GetNodeOrNull<Sprite2D>("Sprite"));
             _environment.UnregisterScenery(prop);
-            if (chunk.State == WorldChunkState.Loaded) _removed.Add(item.Id);
+            if (chunk.State == WorldChunkState.Loaded) { _removed.Add(item.Id); _editOwners[item.Id] = chunk.Coord; }
         };
     }
     // Publish only complete chunks; adapters/physics are ready together before the player may enter.
@@ -235,7 +241,35 @@ public partial class WorldChunkStream : Node
         }
 
     }
-    // Save only touched runtime deltas; release references before freeing nodes. Disk persistence is P4.
+    // Capture live changed state on the main thread without unloading or disturbing pending bindings.
+    // =========================================================
+    public SavedChunk[] CaptureChanges()
+    {
+        foreach (var chunk in _chunks.Values)
+        {
+            if (chunk.State != WorldChunkState.Loaded) continue;
+            foreach (var pair in chunk.Objects)
+            {
+                if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion())
+                { _removed.Add(pair.Key); _editOwners[pair.Key] = chunk.Coord; continue; }
+                var burn = pair.Value.GetNodeOrNull<Burnable>("Burnable");
+                if (burn == null) continue;
+                if (burn.State != BurnState.Healthy)
+                { _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); _editOwners[pair.Key] = chunk.Coord; }
+                else { _burns.Remove(pair.Key); if (!_removed.Contains(pair.Key)) _editOwners.Remove(pair.Key); }
+            }
+        }
+        var grouped = new Dictionary<ChunkCoord,List<ChunkEdit>>();
+        foreach (string id in _removed.Concat(_burns.Keys).Distinct(StringComparer.Ordinal).OrderBy(v => v,StringComparer.Ordinal))
+        {
+            var coord = _editOwners[id];
+            if (!grouped.TryGetValue(coord,out var edits)) grouped.Add(coord,edits = new());
+            edits.Add(new ChunkEdit(id,_removed.Contains(id),_removed.Contains(id) ? 0 : _burns[id]));
+        }
+        return grouped.OrderBy(p => p.Key.Y).ThenBy(p => p.Key.X)
+            .Select(p => new SavedChunk(WorldId,"surface",p.Key.X,p.Key.Y,p.Value.ToArray())).ToArray();
+    }
+    // Retain touched runtime deltas before release; SAVE captures these for durable campaign checkpoints.
     // =========================================================
     private void Release(Chunk chunk)
     {
@@ -247,10 +281,17 @@ public partial class WorldChunkStream : Node
         {
             foreach (var pair in chunk.Objects)
             {
-                if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion()) { _removed.Add(pair.Key); continue; }
+                if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion()) { _removed.Add(pair.Key); _editOwners[pair.Key] = chunk.Coord; continue; }
                 var burn = pair.Value.GetNodeOrNull<Burnable>("Burnable");
                 if (burn != null)
-                { if (loaded) { if (burn.State != BurnState.Healthy) _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); else _burns.Remove(pair.Key); } _fire.Unregister(burn); }
+                {
+                    if (loaded)
+                    {
+                        if (burn.State != BurnState.Healthy) { _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); _editOwners[pair.Key] = chunk.Coord; }
+                        else { _burns.Remove(pair.Key); if (!_removed.Contains(pair.Key)) _editOwners.Remove(pair.Key); }
+                    }
+                    _fire.Unregister(burn);
+                }
                 _visibility.Unregister(pair.Value.GetNodeOrNull<Sprite2D>("Sprite"));
                 _environment.UnregisterScenery(pair.Value);
             }

@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**P4 trial implemented — awaiting local VS Code Copilot validation:** existing profiles/menus now launch private durable campaigns; Continue restores frozen geography, player surface position, clock, generated-prop edits and the test skeleton. F8 saves; Esc offers save/return/quit; autosave defaults to 120 seconds. No compilation/runtime/performance checks were run here at the user's request. Read [SAVE/README.md](SAVE/README.md) and [Copilot test handoff](SAVE/P4_Copilot_Handoff.md). Older P4-planned statements below are historical; no acceptance is claimed until local checks pass. F5 now starts Boot/Main Menu; F6 direct World remains disposable.
+
 **P2-A/P2-B cosmetic scheduling:** Cached camera envelopes and nearby chunk buckets replace repeated distant-chunk decisions. Occlusion queries nearby artwork and updates only active fades, with exact alpha restoration. All phases in [the performance refactor](Notes/performance_refactor.md) are implemented; target-PC visual/FPS verification remains separate.
 
 **P1-D sun/shadow caching:** Paused solar inputs reuse static shadows; moving actors, hit wobble, wind, camera and streaming remain responsive. Running-time static projection reuse is bounded by a configurable 0.25px tolerance (0 = exact), with immediate manual-time/settings refresh. F9 supports a 1440-second day and tolerance A/B. See [CPU evidence and target-PC limits](ENVIRONMENT/Lighting/Shadows/README.md).
@@ -31,7 +33,7 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 | **P0/P1 macro map** | Seeded finite, queryable, connected biome regions; any number of eligible biome Resources; weighted target diameters, complete land coverage, hashes and detached blueprint manifest | No oceans/continents, true height, rivers or climate fields; full map is currently assigned land |
 | **P2 feature planner** | Required/preferred polygon reservations, protected start, seeded priorities/permissions/clearance, F7 overlays and detached *value-only* manifest feature snapshots | Reservations do not yet make villages, roads, water, volcanoes or caves |
 | **P3 chunk streaming** | 512-unit chunks, active radius 2, prefetch 3, unload 4, stable coordinate-keyed scenery density, cross-chunk spacing, ground/biome materials, chunk-local environment/light/fire/occlusion registration, local navigation | Loading data and some lifecycle/nav steps remain synchronous; no guaranteed FPS; **graphical/performance verification still pending** |
-| **P3 session world changes** | Removed objects and fire/burn progress survive chunk unload/reload **during this running scene** | **No disk save, Continue, persistent player profile, or offscreen fire simulation**; starting another world session loses edits |
+| **P3 session world changes** | Removed objects and fire/burn progress survive chunk unload/reload **during this running scene** | P4 campaign disk persistence is implemented but awaiting local validation; F6 direct sessions remain disposable. No offscreen fire simulation |
 | **Generic content/actors** | One [shared tree scene](WORLD/Content/Vegetation/Trees/README.md) with Oak/Pink Blossom Resources; one [shared entity scene](ENTITIES/Shared/README.md), common hit/health/death/optional chase, test skeleton and production axe hit registration | No full A-Life, loot/resource harvesting economy, creature populations, Avalonia import/catalog |
 | **Environment/feedback** | Shared clock/wind, projected sun/contact and LL0–LL1 native torch shadows, clouds, colour, snow, 3-layer GPU rain and wet leaves, adjustable overcast shadow reduction, pond/wading, fire FIRE1/FIRE2, tree occlusion | Seasons/climate scheduling, lightning-to-tree ignition, wildfire spread, LL2–LL3 reusable light framework |
 
@@ -39,7 +41,7 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 
 **Run/controls:** F6 runs `SCENES/World/World.tscn` (**streaming ON by default**); **F7** opens macro biome/reservation/chunk statistics; **F9** toggles removable environment controls (including rain, wet foliage, overcast shadows, torch shadows); removable Fire controls ignite/reset trees. **F5** launches the independent DEBUG/TopDownTest scene from `project.godot`. The 1920×1080 viewport is unchanged. New scene loads choose a fresh random seed unless fixed-seed replay is configured.
 
-**P4/P5/P6 remain planned:** P4 = separate player-profile/run/private-world durable saves and recovery; P5 = actual terrain features/landmarks/paths/cave links; P6 = lightweight offscreen A-Life. Future Avalonia authoring and climate/season systems are also **not implemented**. [WORLD/Generation_Implementation.md](WORLD/Generation_Implementation.md) is the current phase handoff; [SCENES/World/scene organize.md](SCENES/World/scene%20organize.md) is a **plan only**, not an already-applied scene tree refactor.
+**P4 implementation awaits local validation; P5/P6 remain planned:** P4 = separate player-profile/run/private-world durable saves and recovery; P5 = actual terrain features/landmarks/paths/cave links; P6 = lightweight offscreen A-Life. Future Avalonia authoring and climate/season systems are also **not implemented**. [WORLD/Generation_Implementation.md](WORLD/Generation_Implementation.md) is the current phase handoff; [SCENES/World/scene organize.md](SCENES/World/scene%20organize.md) is a **plan only**, not an already-applied scene tree refactor.
 
 **Four distinct feature statuses:**
 - **Implemented in production:** Runs in World.tscn or its production dependencies; check module docs/tests.
@@ -247,7 +249,7 @@ These folders combine implemented production foundations and remaining scaffoldi
 - [ITEMS/](ITEMS/README.md): central item/content definitions, tools, food, clothing and materials.
 - [SYSTEMS/](SYSTEMS/README.md): reusable interaction, harvesting, crafting, farming, building, skills/effects and [WorldInteractions/Fire](SYSTEMS/WorldInteractions/Fire/README.md).
 - [COMBAT/](COMBAT/README.md): common combat/damage resolution, distinct from player controls.
-- [SAVE/](SAVE/README.md): **P4 planned** private profile/run/world identity, durable serialization and migrations; P3 session deltas are in WORLD/Runtime, not saved files.
+- [SAVE/](SAVE/README.md): **P4 awaiting validation:** private profile/run/world checkpoints, recovery and explicit compatibility rejection; world deltas remain owned by WORLD/Runtime.
 - [UI/](UI/README.md): player-facing screens/HUD planning; [FEEDBACK/](FEEDBACK/README.md): production occlusion fade and future shared screen feedback.
 - [AUDIO/](AUDIO/README.md): ambience, music and shared sound effects.
 - [DEBUG/](DEBUG/README.md): temporary experiments, plus retired/historical visual tests.
@@ -272,7 +274,7 @@ These folders combine implemented production foundations and remaining scaffoldi
 **Immediate need:** Verify P3 fixes on the user's actual Windows renderer before declaring streaming smooth or proceeding to the next larger phase. Do not create another streamer, ignore the compatibility preview, or treat headless checks as graphical FPS evidence. **These are suggested priorities, not automatic Codex work.**
 
 1. **P3 visual/performance check:** test trees/rocks near protected spawn, absence of giant flashing tree silhouettes, idle and crossing-chunk FPS/CPU/GPU/memory, 25% zoom, biome transitions and weather/snow/fire. Profile synchronous startup, generation, binding and local navigation if lag continues; don't blindly raise load radii.
-2. **P4 only when approved:** implement **separate profile → run → private world** durable saves, touched chunk deltas, player/time state, versioning, atomic recovery and identical-seed profile isolation. Confirm permadeath, inactive-clock, autosave and slot policies first.
+2. **P4 trial now implemented, pending local acceptance:** follow SAVE/P4_Copilot_Handoff.md for build, separate-process restore, profile isolation, recovery and target-machine checks. Default one active campaign, 120-second autosave, inactive worlds paused; no permadeath cleanup.
 3. **P5 only when approved:** use P2 reservations for actual major terrain, landmark scenes, roads, caves and entrances; preserve P3 streaming and data-driven placement.
 4. **P6 only when approved:** begin with a focused shared-Entity wildlife/population test, then lightweight offscreen state; **not** thousands of distant AI/physics nodes.
 5. **Future survival/content work:** item/resource harvest drops, inventory, building/shelter, needs, and a gradual Avalonia authoring pipeline for canonical tree/entity/biome Resources.

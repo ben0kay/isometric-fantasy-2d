@@ -1,6 +1,8 @@
 # Large Finite World Generation — Codex Implementation Planning
 
-> **Status (22 October 2026):** P0–P2 implemented; P3 implemented with a rendering/performance fix, **graphical acceptance still pending**. P4–P6 remain planned. This document does not authorize executing further phases automatically.
+> **P4 trial update (22 October 2026): implementation complete, local validation pending.** User authorized P4 with VS Code Copilot performing compilation/runtime/performance tests. SAVE/P4_Copilot_Handoff.md is the exact validation handoff; no tests were executed by Codex. Reuses M0 menus/ProfileStore, independent profile/run/world IDs, frozen map/features, per-chunk edits, player surface location/clock/test actor, F8/Esc/autosave, integrity/atomic backup recovery. Default one active campaign; old runs retained, inactive clocks paused, autosave 120 seconds (0 disables), no permadeath cleanup. Inventory/caves/A-Life/weather progression remain unimplemented. Unsupported schema/content changes fail without regenerating saves. Earlier P4-planned/M0-only statements below are historical. P3 graphical acceptance remains open, and P4 is not accepted until local checks pass.
+
+> **Status (22 October 2026):** P0–P3 implemented, P3 graphical acceptance pending. P4 trial implemented with local validation delegated to VS Code Copilot; P5/P6 remain planned. This document does not authorize executing further phases automatically.
 > **Created:** 2026-10-22
 > **Scope:** Production fantasy top-down Godot/C# world; preserve current working production and DEBUG prototypes while designing.
 > **Purpose:** Discuss this document with Codex, improve/refine it, then implement in small verifiable passes. The author can edit this plan before approving each phase.
@@ -14,7 +16,7 @@ Read this handoff before the original design brief below. Historical snapshots a
 | P0/P1 | Macro map, arbitrary eligible biome collection, weights/target diameters, full land coverage, deterministic hash and blueprint contract implemented. Climate affinity remains deferred. | Generation/World/README.md and P0_P1_Audit.md |
 | P2 | Resource-driven feature reservations, priority/permissions, required/preferred outcomes and starting anchor implemented. Reservations do not create geological terrain or POI scenes. | Generation/World/Features/README.md |
 | P3 | Finite local streaming, density-based scenery, local navigation, environment lifecycle and session deltas implemented. Rendering fixes pushed; target-machine visual/performance acceptance is open. | Runtime/Streaming/README.md |
-| P4 | **Menu/profile identity foundation exists (M0);** durable run/world saves, restart restoration, recovery and migration are **not implemented**. | UI/Menus/, SAVE/Profiles/, SAVE/WorldState/ and Runtime/Persistence/ |
+| P4 | Private campaign checkpoint implementation and local tests added; **awaiting local validation**. Migration gate rejects unsupported versions; conversions remain future work. | SAVE/README.md and SAVE/P4_Copilot_Handoff.md |
 | P5 | Planned: actual priority POIs, paths and cave connections. | Original scope below |
 | P6 | Planned: abstract off-screen A-Life. | Original scope below |
 

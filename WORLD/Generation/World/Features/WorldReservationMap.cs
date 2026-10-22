@@ -28,6 +28,17 @@ public sealed class WorldFeatureReservation
         Kind = request.Kind; AllowedPlacements = request.AllowedPlacements; Colour = request.OverviewColour;
         _polygon = (Vector2[])polygon.Clone(); Bounds = FeatureGeometry.Bounds(_polygon);
     }
+    // Rehydrate frozen values without a mutable authoring Resource or new placement decisions.
+    // =========================================================
+    internal WorldFeatureReservation(WorldFeatureSnapshot f)
+    {
+        Id = f.Id; Name = f.Id; Required = f.Required; Priority = f.Priority; IsStartingArea = f.IsStartingArea;
+        Anchor = new(f.AnchorX,f.AnchorY); Clearance = f.Clearance; Kind = (WorldPlacementKind)f.Kind;
+        AllowedPlacements = (WorldPlacementKind)f.AllowedPlacements; Colour = new Color(1,0.75f,0.15f);
+        _polygon = new Vector2[f.PolygonXY.Length/2];
+        for (int i = 0; i < _polygon.Length; i++) _polygon[i] = new(f.PolygonXY[i*2],f.PolygonXY[i*2+1]);
+        Bounds = FeatureGeometry.Bounds(_polygon);
+    }
     public Vector2[] CopyPolygon() => (Vector2[])_polygon.Clone();
 
     // Cheap bounding rejection precedes precise concave-polygon and edge-distance checks.

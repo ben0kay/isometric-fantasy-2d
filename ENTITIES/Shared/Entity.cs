@@ -47,6 +47,14 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     }
     #endregion
 
+    // Restore validated living state without replaying damage effects or death transitions.
+    // =========================================================
+    public void RestoreHealth(int health)
+    {
+        if (health < 1 || health > Mathf.Max(1,Config.MaxHealth)) throw new System.IO.InvalidDataException("Invalid saved entity health.");
+        Health = health;
+    }
+
     #region Health and common tool hit contract
     public Vector2 HitAnchor => GlobalPosition;
     // =========================================================

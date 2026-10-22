@@ -1,7 +1,7 @@
-# Menu foundation — M0 implemented
+# Menus — P4 integration awaiting local validation
 
-Startup F5: `Boot/BootScreen.tscn` → local profile selection/creation (`SAVE/Profiles/ProfileStore.cs`) → `Main/MainMenu.tscn` → **New Campaign** opens production `SCENES/World/World.tscn`. Menu routes do not depend on world node paths, so SO0–SO3 may proceed separately. F6 directly runs a selected `World.tscn` for development.
+F5: BootScreen → existing local GUID/name ProfileStore → MainMenu. New Campaign now passes independent profile/run/world/seed identity to production World, whose first successful checkpoint activates the campaign. If a campaign exists, replacement requires explicit confirmation; prior run files remain archived. Continue is enabled only after the selected profile's durable transaction and current content are verified. Invalid saves show an error; recovered backups show a notice. Menu IO runs off-thread with selection locked, and menu routing remains independent of World child paths.
 
-**Not implemented:** P4 world saves/Continue (button intentionally disabled), persistent campaigns, profile-specific world restore, Options and Pause. Starting New Campaign currently creates a fresh session world and does *not* save it. No automatic deletion/replacement of any world files or permadeath policy. The presentation is deliberately fantasy-themed with static lightweight styling; future artwork belongs here.
+Campaign F8/Esc/save-before-close UI is owned by SAVE's coordinator under one CanvasLayer. Options, multiple-slot/archive browser, inventory and permadeath deletion remain unimplemented. Shared main-menu buttons still use UI/Shared/Buttons/UIButtonFactory.cs. F6 direct World remains disposable; existing DEBUG prototypes are preserved.
 
-Shared buttons: `UI/Shared/Buttons/UIButtonFactory.cs` and editable `DefaultButtonStyle.tres`; apply these for inventory/HUD too. Menu scenes are independent `Control` roots. No changes to production World.tscn or DEBUG test scene.
+See SAVE/README.md and SAVE/P4_Copilot_Handoff.md for policies and deferred local validation.
