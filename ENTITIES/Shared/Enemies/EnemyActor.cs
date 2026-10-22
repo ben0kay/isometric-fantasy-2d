@@ -1,11 +1,11 @@
-// Production Skeleton Basic: static sprite, detection, obstacle-aware chase and damage/death.
+// Shared Resource-driven enemy: sprite, pursuit, tool hits, health, flash and death.
 // Does not attack or deal player damage. No references to the DEBUG prototype.
 using Godot;
 using System;
 
-public partial class SkeletonBasic : CharacterBody2D, IWorldNavigationAgent
+public partial class EnemyActor : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget
 {
-    [Export] public SkeletonBasicConfig Config { get; set; }
+    [Export] public EnemyDefinition Config { get; set; }
     public int Health { get; private set; }
 
     private CharacterBody2D _target;
@@ -18,14 +18,26 @@ public partial class SkeletonBasic : CharacterBody2D, IWorldNavigationAgent
     private bool _dead;
 
     #region Setup
+    // Apply a new Resource before entering the scene tree; shared scene owns all common functionality.
+    // =========================================================
+    public void Configure(EnemyDefinition definition)
+    {
+        if (IsInsideTree()) { GD.PushError("Configure an enemy before AddChild."); return; }
+        Config = definition;
+    }
+
     // Keep this actor inert if placed in an editor/test scene without world services.
     // =========================================================
     public override void _Ready()
     {
-        Config ??= new SkeletonBasicConfig();
+        Config ??= new EnemyDefinition();
+        if (Config.Sprite != null) _sprite = GetNode<Sprite2D>("Sprite");
         Health = Mathf.Max(1, Config.MaxHealth);
         _sprite = GetNode<Sprite2D>("Sprite");
         _collision = GetNode<CollisionShape2D>("Collision");
+        if (Config.Sprite != null) { _sprite.Texture = Config.Sprite; _sprite.Offset = Config.SpriteOffset; _sprite.Scale = Config.SpriteScale; }
+        if (_collision.Shape is CircleShape2D circle) { var shape = (CircleShape2D)circle.Duplicate(); shape.Radius = Mathf.Max(3f, Config.CollisionRadius); _collision.Shape = shape; }
+        AddToGroup("world_tool_targets");
         MotionMode = MotionModeEnum.Floating;
         SetProcess(false);
     }
@@ -40,8 +52,19 @@ public partial class SkeletonBasic : CharacterBody2D, IWorldNavigationAgent
     }
     #endregion
 
-    #region Health
-    // Later COMBAT wiring can invoke this; production player has no axe yet.
+    #region Health and common tool hit contract
+    public Vector2 HitAnchor => GlobalPosition;
+    // =========================================================
+    public Vector2 ClosestHitPoint(Vector2 origin)
+    {
+        Vector2 direction = origin - GlobalPosition;
+        float radius = Mathf.Max(3f, Config.HitRadius);
+        return direction.LengthSquared() <= radius * radius ? origin : GlobalPosition + direction.Normalized() * radius;
+    }
+    // =========================================================
+    public void ReceiveHit(Vector2 direction) => TakeDamage(1);
+
+    // All valid tool strikes call ReceiveHit; damage/death is shared by every definition.
     // =========================================================
     public void TakeDamage(int damage)
     {
@@ -51,6 +74,7 @@ public partial class SkeletonBasic : CharacterBody2D, IWorldNavigationAgent
         SetProcess(true);
         if (Health > 0) return;
         _dead = true;
+        RemoveFromGroup("world_tool_targets");
         Velocity = Vector2.Zero;
         SetPhysicsProcess(false);
         _collision.SetDeferred("disabled", true);
