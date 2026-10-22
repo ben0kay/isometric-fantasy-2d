@@ -1,6 +1,6 @@
 # World Scene Organization — Codex Design / Refactor Plan
 
-> **Status:** PLAN ONLY. No scene reparenting or gameplay changes are authorized by this note.
+> **Status (2026-10-22):** SO0 audit and SO1 grouping implemented; SO2–SO4 remain proposed. Additional GL0–GL3 location/session architecture is proposed below, not authorized code changes. See SO1 implementation notes near the end.
 > **Date:** 2026-10-22
 > **Location:** This document intentionally lives beside `SCENES/World/World.tscn`.
 > **Goal:** Make Godot's **Remote Scene Tree** understandable at a glance, give spawned objects clear ownership/lifecycle, and prepare for entities, effects, large-world chunk streaming, profile saves and future A-Life **without breaking existing production gameplay or performance**.
@@ -42,7 +42,7 @@ World (Node2D, WorldScene.cs)
 
 **Current design problem:** `Actors` is simultaneously (1) a Y-sorted draw/physics container, (2) the legacy scenery generator because `WorldSceneryPlacement.cs` is attached to it, (3) the parent of player/skeleton/torches, and (4) the parent of streamed scenery chunks. Many scripts explicitly depend on this shape. A simple editor drag-and-drop of these nodes will break the scene.
 
-**Current status:** Macro geography, priority reservations and active streaming are in place. Player-profile disk persistence, off-screen A-Life and general entity populations remain later phases. Do not claim those are built.
+**Current status (2026-10-22):** P0–P3 generation/streaming exist and **P4 private campaign checkpoints/Continue have been implemented and automated-tested** (manual in-editor/performance acceptance open; see `SAVE/README.md`). Off-screen A-Life and general populations are future phases. The tree above is a **historical SO0 snapshot**; inspect actual HEAD before moving nodes.
 
 ## 3. Proposed target tree — ORGANIZATIONAL DESIGN, not a direct immediate rename
 
@@ -100,7 +100,7 @@ World (WorldScene.cs)
 3. **Godot Y sorting:** `WorldActorsRoot`, child containers and chunks must be reviewed together; nested `YSortEnabled`, `ZIndex`, CanvasItem hierarchy and sibling order can alter how the player draws in front of/behind nearby trunks, buildings, props and NPCs, including **across chunk seams**. Do not assume moving the tree under `SceneryRoot` leaves sorting identical. Validate at actual intersecting sprites and the chunk boundary.
 4. **Godot drawing order:** Terrain ground and water, sun silhouettes/contact shadows, atmospheric overlays, ColourGrade CanvasLayer and particle renderers have intentional Z/layer behavior. Moving their CanvasItem ancestors can affect draw order, local coordinates or modulate inheritance. Test instead of blindly moving every visual node.
 5. **The current preview / streaming switch must keep working.** `PreviewSceneryRoot` can be omitted or folded into an existing destination if it complicates the refactor; it should not spawn twice or leak props across modes.
-6. **A named node is not a save system.** `WorldId`, streamed chunk ownership and session deltas already exist, but durable per-profile saves are an independent follow-up. Never serialize all live Node objects just because they belong to EntitiesRoot.
+6. **A named node is not a save system.** P4 already persists per-profile/run/world campaigns and supported surface edits. Never serialize all live Nodes just because they belong to EntitiesRoot or create a second save coordinator. Future cave/layer persistence needs an explicit versioned P4 extension.
 
 ## 4. CRITICAL code dependencies that must be updated together
 
@@ -224,3 +224,59 @@ Fixed-seed, paused-noon headless A/B sample at settled spawn: 49 loaded chunks; 
 Runtime binding is now staged while hidden, and cancellation cleans partial adapters. Static chunk/ground/contact shadows disable interpolation; contact shadows also start hidden. Shared artwork/camera bounds and off-screen scheduling live in WORLD/Runtime/Visibility; existing environmental systems retain their ownership. Native local lights, active fire effects, worker-thread generation and hard real-time budgets remain outside this pass. Do not mark the user's flicker or target-machine lag resolved until verified visually.
 
 Validation caveat: one repeated Godot 4.5.1 Mono fixture run logged `Handle is not initialized` from ScriptManagerBridge/DisposablesTracker during process shutdown after all 160 assertions passed. An immediate repeat completed with no errors. This is recorded rather than treated as a proven production fix or ignored; check shutdown on the project's target Godot runtime if it recurs.
+
+
+## 10. Updated SO1–SO4 handoff and future locations — 22 October 2026
+
+**Read this section before acting on the earlier historical proposals.** SO0/SO1 are implemented as documented above. P4 disk saves, New Campaign, Continue and save/quit have also been implemented and passed automated checks; **P4 manual UI/graphical/profiler acceptance and P3 visual/performance acceptance remain open**. Do not interpret older “P4 future” wording or the original raw node tree as current. Work in small, separately approved commits.
+
+### SO1 — COMPLETE: safe grouping; validate, don't redo
+
+- Existing `TerrainRoot`, `SystemsRoot` and `DebugUIRoot` paths are recorded in the SO1 implementation section. Original `Actors` and its responsibilities were deliberately retained at this stage.
+- Codex should **inspect actual HEAD/Remote tree and compare against that record**; only fix an observed missing path, Y-sort issue, or regression. Do **not** repeat SO1 reparenting or add duplicate managers for cleaner names.
+- Keep F5 profile → campaign New/Continue and F6 direct disposable World separate. Include save/restore and old preview in SO1 regression checks.
+
+### SO2 — NEXT CONDITIONAL PASS: explicit ownership and destination APIs
+
+- Audit `WorldSceneryPlacement` (generator/controller mixed with `Actors`), `WorldChunkStream`, `WorldEntityPlacement`, navigation/collision source roots, F7/F9/fire/debug paths and all environment/scenery adapter subscriptions **at current HEAD**.
+- Prefer **typed explicit destinations** for `PersistentEntitiesRoot`, `PersistentPropsRoot`, `ChunkActorsRoot`, optional `PreviewSceneryRoot` and `StreamedGroundRoot`, rather than hardcoded parent walking; add only roots that eliminate a real ownership ambiguity. Preserve shared Y-sort space, global/local transforms, physics, occlusion, shadows and chunk seam draw order.
+- Separate the legacy scenery placer from live actor parenting only when tests justify it. Keep **one** streamer, one existing player, one environment clock and one P4 save coordinator. Chunk-owned scenery/entities die with chunks; player and persistent authored actors must not be accidentally unloaded.
+- P4 integration: continue after real save/reload must restore unchanged chunks and altered/burnt/removed props, test actor and player. Switching campaigns must clean runtime subscriptions, pending stream work and any refs; world IDs must never leak across profiles.
+- **Pass gate:** source dependency/old→new paths recorded, build and headless regression suites green, F5/F6/F7/F9, fire/torch/pond/player, stable frame timings and manual Y-sort/stream seam checks. Keep SO2 independent of GameSession or cave implementation.
+
+### SO3 — OPTIONAL: lightweight registration, not mandatory managers
+
+- If needed, add **one location-scoped active-entity registry** with explicit registration on spawn/materialize and unregister-before-free; stable keys should include location/layer and world identity where necessary. Do not enumerate `GetNodesInGroup` or descendants each frame.
+- Chunk-owned living entities and persistent players/unique actors should use the same lookup contract but retain their correct owning parents. The registry indexes **currently materialized** actors; later P6 A-Life owns detached offscreen records, not permanent Nodes.
+- Optional event-maintained counts for chunk actors, entities and transient FX; test unload, despawn, save/quit and profile switch cleanup before adding UI. No species-specific registries, extra F-key panels or new `_Process` loops just to label nodes.
+- **Pass gate:** zero stale refs/duplicate registrations after repeated chunk load/unload, menu transition and test-skeleton death. Codex may recommend **skipping SO3** if Godot groups and existing event hooks suffice.
+
+### SO4 — Shared-location compatibility contract (DESIGN FIRST)
+
+- The proposed **GameSession** coordinates an *active* campaign, existing P4 coordinator, global game time and transitions. An **active location** (surface/cave/interior) owns detailed terrain, streaming, local actors/effects and environment-specific presentation. Only nearby parts of one playable location should be materialized by default; inactive overworld/cave cosmetic/physics loops must sleep.
+- Prefer **composition and small contracts** over inherited `Simulation.tscn` containing all surface weather/sun/vegetation. Shared movement, combat, fire, local torches and interactions should work in either environment; surface rain/snow/sun remain optional, cave darkness/tunnels/biomes separate. Do not create duplicate clocks, save coordinators, fire managers or full parallel streamers.
+- Define `LocationId`, location type, logical depth/layer, local/world coordinates, entry/return portal IDs and deterministic destination; support **multiple entrances to one cave network**. Cave resource rules must consider the underground biome AND the **surface biome above each underground coordinate**, never just the entry biome (see `Notes/Ideas/Underground_Biome_Influence_And_Cave_Connections.md`).
+- P4 currently supports only the `surface` layer and rejects unknown layers: design a **versioned schema/compatibility extension** for active location, return destination, cave modifications and layer state; never silently modify existing saves or introduce a second profile registry. Address what happens to an in-flight checkpoint during transitions and how re-entry restores correct chunks/actors.
+- Existing `World.tscn` should remain canonical for F6 and current P3/P4 tests until any wrapper is demonstrably equivalent. Examine whether `GameSession.tscn` should own `ActiveLocationRoot` or whether a lighter session node suffices; **do not assume a new global autoload or scene inheritance is required**. Keep menu worlds out of memory while on menus.
+- SO4 output is a design/risks/test brief, **not** a full cave generator, P5 landmark placer or P6 A-Life implementation.
+
+### Proposed follow-on GL0–GL3 (SEPARATE APPROVAL from SO phases)
+
+1. **GL0 — Contract and migration audit, no runtime changes:** map `WorldScene`, `MenuNavigation`, `CampaignSession`, `CampaignSnapshot`, `CampaignStore`, save coordinator and streaming callbacks; decide session/active-location ownership, clock source, portal identity, coordinate transform and versioning. Provide alternatives/tradeoffs and risks.
+2. **GL1 — Minimal session wrapper:** introduce `GameSession`/location host *only if it meaningfully simplifies transitions*, wrap existing surface location with near-zero behavioural changes, maintain F5 New/Continue, F6 direct tests, P4 recovery and direct preview. No duplicated world node, clock or save controller.
+3. **GL2 — Small cave test location:** a separate lightweight `Cave.tscn` sharing player/torch/fire/interaction building blocks; cave-specific darkness and simple static geometry only. Prove clean entry/exit lifecycle and transform/Y-sort behaviour before procedural underground generation.
+4. **GL3 — Two-way portal and versioned save proof:** two surface entrances can refer to the same cave ID; exiting B returns to B, not A. Save/quit while inside, continue into the correct cave/depth, restore changes and return to the surface; guard content/version mismatches, stale async tasks and corrupt-save recovery.
+
+**GL work belongs in a separate approved implementation handoff**, e.g. `SCENES/GameSession/LOCATION_IMPLEMENTATION.md`, when ready. P5 can meanwhile reserve deterministic cave entrance sites/portal IDs; do not imply that a reserved entrance already loads playable caves.
+
+### Codex review requests: improve the design before coding
+
+1. **Critique the wrapper:** Would a persistent `GameSession` scene, a plain coordinator, or another small host integrate best with Godot 4.7.2 scene changes and the existing P4 one-shot `CampaignSession`? Show the smallest migration preserving current startup/direct tests.
+2. **Avoid expensive abstraction:** Which actual systems support a shared interface today? Which are tied to overworld `WorldScene`, `EnvironmentRuntime`, chunk ground/nav or CanvasLayers? Prefer adapters/configuration over a giant abstract base scene.
+3. **Streaming strategy:** Can the existing `WorldChunkStream` contract support distinct location providers without fragile rewrites, or should cave streaming be a later specialised implementation sharing core chunk services? Provide a measured comparison before selecting.
+4. **Save compatibility:** Propose safe layer/location keys, portal return state and checkpoint transaction boundaries. Clearly identify content fingerprint/schema migration and recovery tests; never silently corrupt/delete user campaigns.
+5. **Coordinates and biomes:** Propose stable horizontal mapping between cave and surface, multiple entrances, and surface-biome lookup without loading the overworld. Document alternatives for non-1:1 cave distances.
+6. **Performance/lifecycle:** Inventory callbacks, GPU effects, background generation tasks, collision/navigation caches, input and subscriptions that must stop at exit. Require one active location, bounded loads, dormant inactive systems, and no per-frame full-scene scans.
+7. **Validation and scope:** Give an SO2 then GL0–GL3 implementation order with exact rollback steps, real Windows renderer visual/perf checks and automated cross-profile/reload tests. Identify any SO3 features that should be postponed entirely.
+
+**Decision gate:** Codex should return a concise architecture review and proposed diffs first. No GL0–GL3 or broad save schema change is automatically authorized by this note. One small tested commit per approved implementation job.
