@@ -14,3 +14,6 @@ AvoidBiomeTransition is content data: trees/grass reserve the full blend plus sp
 ## Resource-driven trees
 
 TreeDefinition populations use VisualVariants and the one Shared/Tree.tscn. Seeded selection precedes fit checks; selected variant bounds and conservative trunk radius drive exclusion/occupancy. Configuration, mirrored root anchoring and collision reflection happen before AddChild, so downstream caches discover final sprites and components. Non-tree SceneryDefinition populations still use their existing PackedScene Variants.
+
+## P3 streamed placement
+ChunkSceneryData now supplies coordinate-keyed, density-based local candidate data with cross-chunk priority thinning. The stream materializes canonical tree/scenery templates and applies P2/water exclusions. This original WorldSceneryPlacement startup scatter is retained only for compatibility preview mode. See WORLD/Runtime/Streaming/README.md for density semantics and limits.

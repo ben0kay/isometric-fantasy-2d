@@ -11,6 +11,8 @@ func check(ok,message):
         assert(ok,message)
 func run():
     var world=load("res://SCENES/World/World.tscn").instantiate()
+    world.set("Config",world.get("Config").duplicate())
+    world.get("Config").set("Streaming",null) # Preserve the authored preview fixture; P3 has its own traversal suite.
     world.get("Config").set("RandomSeedOnLoad",false)
     root.add_child(world)
     var burns=get_nodes_in_group("world_burnables")

@@ -24,6 +24,8 @@ func luminance(image,p):
     return total/max(n,1)
 func run():
     var world=load("res://SCENES/World/World.tscn").instantiate()
+    world.set("Config",world.get("Config").duplicate())
+    world.get("Config").set("Streaming",null) # Preserve the authored preview fixture; P3 has its own traversal suite.
     world.get("Config").set("RandomSeedOnLoad",false)
     root.add_child(world)
     var env=world.get_node("Environment")

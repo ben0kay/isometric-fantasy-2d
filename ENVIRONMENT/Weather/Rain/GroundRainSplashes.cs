@@ -23,6 +23,14 @@ public partial class GroundRainSplashes : Node2D
     {
         // Match rain visibility at night without a separate light for every splash.
         Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded };
+        RefreshActors();
+    }
+
+    // Refresh bounded local artwork exclusions when chunks change.
+    // =========================================================
+    public void RefreshActors()
+    {
+        _blocked.Clear();
         Node2D actors = Actors;
         _world = WorldBounds;
         foreach (Node child in actors.GetChildren())

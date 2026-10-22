@@ -10,3 +10,5 @@ Environment: WorldBiomeDefinition.Environment optionally references BiomeEnviron
 Layouts/OakAndMeadow.tres selects the two definitions and the curved boundary. Biome art/content remain in canonical WORLD folders. World bounds remain in WorldMasterConfig.
 
 P1 macro generation: each definition now includes enabled/weight/target-diameter/overview-colour settings. `WorldMasterConfig.Generation.Biomes` is the arbitrary-size source collection for the new finite map. The old Layout remains only for the playable preview. See [macro generation](../Generation/World/README.md).
+
+P3: streamed populations use explicit InstancesPerMillionUnits; Count/cluster settings retain preview-only semantics. Scale/mirror/variant settings remain shared. All enabled biome definitions supply palettes, textures and local scenery to arbitrary regions. Automatic regional environment-profile blending remains future work; see WORLD/Runtime/Streaming/README.md.

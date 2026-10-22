@@ -3,7 +3,7 @@ using Godot;
 using System.Collections.Generic;
 public partial class SunShadowRenderer : Node2D
 {
-    private sealed class Caster { public Node2D Body; public Sprite2D Source, Shadow; }
+    private sealed class Caster { public Node2D Body; public Sprite2D Source, Shadow; public Polygon2D Contact; }
     private readonly List<Caster> _casters = new();
     private readonly List<ShaderMaterial> _windMaterials = new();
     private readonly HashSet<ShaderMaterial> _shadowMaterials = new();
@@ -44,16 +44,17 @@ public partial class SunShadowRenderer : Node2D
             };
             shadows.AddChild(shadow);
 
-            _casters.Add(new Caster { Body = body, Source = source, Shadow = shadow });
+            var caster = new Caster { Body = body, Source = source, Shadow = shadow }; _casters.Add(caster);
             // The player already has a contact shadow; trees and rocks get matching grounding.
             if (body.GetNodeOrNull<Polygon2D>("Shadow") == null)
-                AddContactShadow(body, shadows);
+                caster.Contact = AddContactShadow(body, shadows);
         }
     }
     // Refresh one changed sprite without rebuilding shared shadow materials or unrelated casters.
     // =========================================================
     public void RefreshAppearance(Node2D body)
     {
+        foreach (Node child in GetChildren()) if (child is SunShadowRenderer chunk) chunk.RefreshAppearance(body);
         foreach (Caster caster in _casters)
         {
             if (caster.Body != body) continue;
@@ -65,32 +66,40 @@ public partial class SunShadowRenderer : Node2D
     }
     // Add a low-cost, stationary oval under a static tree or rock.
     // =========================================================
-    private void AddContactShadow(Node2D body, Node2D shadows)
+    private Polygon2D AddContactShadow(Node2D body, Node2D shadows)
     {
         var points = new Vector2[16];
         // Root scaling is used for variations, so also scale the generated contact oval.
         Vector2 radius = body.HasMeta("environment_contact") ? body.GetMeta("environment_contact").AsVector2() * body.Scale.Abs() : Vector2.Zero;
-        if (radius == Vector2.Zero) return;
+        if (radius == Vector2.Zero) return null;
         for (int i = 0; i < points.Length; i++)
         {
             float angle = Mathf.Tau * i / points.Length;
             points[i] = new Vector2(Mathf.Cos(angle) * radius.X, Mathf.Sin(angle) * radius.Y);
         }
-        shadows.AddChild(new Polygon2D
+        var contact = new Polygon2D
         {
             Name = body.Name + "Contact", Position = body.Position + new Vector2(0, -3),
             Polygon = points, Color = new Color(0.055f, 0.075f, 0.06f, 0.23f)
-        });
+        };
+        shadows.AddChild(contact); return contact;
     }
 
     // Use the original flat-ground projection and preserve actual root/sprite transforms.
     // =========================================================
     public void UpdateProjection(float angle, float length, float opacity, float softness)
     {
+        foreach (Node child in GetChildren()) if (child is SunShadowRenderer chunk) chunk.UpdateProjection(angle,length,opacity,softness);
         Vector2 direction = Vector2.FromAngle(angle);
         var projection = new Transform2D(Vector2.Right, -direction * Mathf.Max(0.01f, length), Vector2.Zero);
-        foreach (Caster caster in _casters)
+        for (int i = _casters.Count-1; i >= 0; i--)
         {
+            var caster = _casters[i];
+            if (!GodotObject.IsInstanceValid(caster.Body) || !GodotObject.IsInstanceValid(caster.Source))
+            {
+                caster.Shadow.QueueFree(); if (GodotObject.IsInstanceValid(caster.Contact)) caster.Contact.QueueFree();
+                _casters.RemoveAt(i); continue;
+            }
             // Preserve the static body's local scale/rotation so size-varied trees and rocks
             // project silhouettes matching their actual sprite and collision footprints.
             Transform2D bodyBasis = caster.Body.Transform;

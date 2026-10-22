@@ -18,6 +18,8 @@ func signature(trees):
     return result
 func make_world(override_species=null):
     var world=load("res://SCENES/World/World.tscn").instantiate()
+    world.set("Config",world.get("Config").duplicate())
+    world.get("Config").set("Streaming",null) # Preserve the authored preview fixture; P3 has its own traversal suite.
     if override_species!=null:
         world.set("Config",world.get("Config").duplicate(true))
         world.get("Config").get("Biomes").get("Primary").get("Populations")[0].set("Content",override_species)

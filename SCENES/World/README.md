@@ -39,3 +39,6 @@ F7 toggles the generated finite biome blueprint. This larger map is not yet stre
 
 
 LL0–LL1 local lighting: three preview torches now stand near spawn. Set midnight in F9 and expand Lighting and clouds to compare Local torch shadows, energy, radius and softness. Clear TorchProfile.AdditionalOffsets and reload to keep only the original torch.
+
+## P3 streamed world (current default)
+F6 now starts the finite generated map with a local chunk ring. F7 shows live counts. Set WorldMasterConfig.Streaming.Enabled=false to use the earlier small preview described above. The pond, torches, environment and skeleton remain; edits persist across chunks for this session only. See WORLD/Runtime/Streaming/README.md for settings, limits, controls and validation.

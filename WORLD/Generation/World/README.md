@@ -1,6 +1,8 @@
-# Finite macro generation — P0–P2
+# Finite macro generation — P0–P3
 
-Implemented: a complete finite coarse biome map, independently queryable without scenery. `WorldMasterConfig.Generation` references `DefaultWorldGeneration.tres`. The playable 3840×1728 preview still uses its original adjacent layout; F7 shows the new blueprint. P2 now adds required/preferred polygon reservation directives via the referenced Layout Resource; see [features](Features/README.md). Streaming, terrain application and durable saves remain later passes.
+P3 now makes this map playable through nearby streaming; see [streaming guide](../../Runtime/Streaming/README.md). The remaining P0–P2 descriptions below document the original macro foundation; preview-only statements are superseded by this update. Biome regions remain separate from chunk size. Population density now controls streamed placement; Count/clusters remain for the explicit compatibility preview.
+
+Implemented: a complete finite coarse biome map, independently queryable without scenery. `WorldMasterConfig.Generation` references `DefaultWorldGeneration.tres`. The default production world now streams this map; the original adjacent layout is retained in explicit preview mode. F7 shows the map. P2 now adds required/preferred polygon reservation directives via the referenced Layout Resource; see [features](Features/README.md). Local streamed ground/scenery is implemented in P3; durable saves and major terrain remain later passes.
 
 ## Authoring
 

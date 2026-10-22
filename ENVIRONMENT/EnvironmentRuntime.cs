@@ -51,5 +51,28 @@ public partial class EnvironmentRuntime : Node2D
         Snow = new WorldSnow { Name = "Snow", Config = Settings.Snow, Weather = Weather, Actors = actors, WorldBounds = world.Bounds }; AddChild(Snow);
         Initialized = true;
     }
+    // Per-chunk adapters share the one world clock/wind/weather and release their exact caches on unload.
+    // =========================================================
+    public void RegisterChunk(Node2D chunk)
+    {
+        var wind = new VegetationWind { Name = "ChunkWind", Wind = Wind }; AddChild(wind); wind.Attach(chunk);
+        var wetness = new VegetationWetness { Weather = Weather }; AddChild(wetness); wetness.Attach(chunk);
+        wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
+        chunk.SetMeta("chunk_wetness",wetness.GetInstanceId());
+        var shadow = new SunShadowRenderer { Wind = Wind }; DayNight.Shadows.AddChild(shadow); shadow.Attach(chunk);
+        chunk.SetMeta("chunk_wind",wind.GetInstanceId()); chunk.SetMeta("chunk_shadow",shadow.GetInstanceId());
+        Snow.RegisterChunk(chunk); RefreshLocalActors();
+    }
+    public void UnregisterChunk(Node2D chunk)
+    {
+        Snow.UnregisterChunk(chunk);
+        foreach (string key in new[] { "chunk_shadow","chunk_wetness","chunk_wind" })
+            if (chunk.HasMeta(key) && GodotObject.InstanceFromId(chunk.GetMeta(key).AsUInt64()) is Node node) node.Free();
+    }
+    public void RefreshLocalActors()
+    {
+        GetNode<WorldAtmosphere>("Atmosphere").RefreshTrees();
+        Weather.GetNode<GroundRainSplashes>("GroundSplashes").RefreshActors();
+    }
     #endregion
 }

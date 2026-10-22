@@ -7,6 +7,7 @@ func run():
         var before = Time.get_ticks_msec()
         var world = load("res://SCENES/World/World.tscn").instantiate()
         world.Config = world.Config.duplicate()
+        world.Config.Streaming = null # Explicit compatibility-preview baseline.
         world.Config.RandomSeedOnLoad = false
         world.Config.FixedSeed = 213876
         if not enabled: world.Config.Generation = null

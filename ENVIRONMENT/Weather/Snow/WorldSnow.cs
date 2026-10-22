@@ -6,6 +6,7 @@ public partial class WorldSnow : Node2D
     [Export] public SnowProfile Config { get; set; }
     private readonly VegetationSnowAdapter _trees = new();
     private readonly WorldRockSnowAdapter _rocks = new();
+    private readonly System.Collections.Generic.Dictionary<Node2D,(VegetationSnowAdapter Trees, WorldRockSnowAdapter Rocks)> _chunks = new();
     private ShaderMaterial _ground;
     private MeshInstance2D _cover;
     public WorldWeather Weather { get; set; }
@@ -34,6 +35,20 @@ public partial class WorldSnow : Node2D
         PlayerSnowVisual.Ensure(Actors.GetNode<PlayerMovement>("Player")).Snow = this;
     }
 
+    // Each loaded chunk owns its material adapters; unload restores before actor nodes are released.
+    // =========================================================
+    public void RegisterChunk(Node2D chunk)
+    {
+        var trees = new VegetationSnowAdapter(); var rocks = new WorldRockSnowAdapter();
+        var noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
+        trees.Attach(chunk,noise); rocks.Attach(chunk,noise); _chunks.Add(chunk,(trees,rocks));
+    }
+    public void UnregisterChunk(Node2D chunk)
+    {
+        if (!_chunks.Remove(chunk,out var adapters)) return;
+        adapters.Trees.Restore(); adapters.Rocks.Restore();
+    }
+
     // Scrub directly from tooling while preserving the target for later enable/disable comparisons.
     // =========================================================
     public void SetCoverage(float value)
@@ -50,12 +65,16 @@ public partial class WorldSnow : Node2D
         if (Config.Enabled && Config.AutoAccumulate)
             Config.Coverage = Mathf.MoveToward(Config.Coverage, Config.Snowfall && Config.SnowfallRate > 0 ? 1f : 0f, (float)delta / Mathf.Max(5f, Config.AccumulationSeconds));
         _coverage = Config.Enabled ? Mathf.MoveToward(_coverage, Mathf.Clamp(Config.Coverage, 0f, 1f), (float)delta / Mathf.Max(0.1f, Config.TransitionSeconds)) : 0f;
+        Rect2 local = Weather.VisibleWorldRect().Grow(300).Intersection(WorldBounds);
+        if (local.HasArea()) { ((QuadMesh)_cover.Mesh).Size = local.Size; _cover.Position = local.GetCenter(); }
         _cover.Visible = _coverage > 0f;
         _ground.SetShaderParameter("snow_coverage", _coverage);
         _ground.SetShaderParameter("snow_colour", Config.SnowColour);
         _ground.SetShaderParameter("drift_scale", Config.DriftScale);
         _ground.SetShaderParameter("drift_contrast", Config.DriftContrast);
         // Every snow-compatible surface uses the same settled coverage; no per-kind on/off gates.
+        foreach (var adapters in _chunks.Values)
+        { adapters.Trees.Update(_coverage,Config.SnowColour); adapters.Rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth); }
         _trees.Update(_coverage, Config.SnowColour);
         _rocks.Update(_coverage, Config.SnowColour, Config.RockCapDepth);
     }
@@ -76,6 +95,7 @@ public partial class WorldSnow : Node2D
     // =========================================================
     public override void _ExitTree()
     {
+        foreach (var chunk in new System.Collections.Generic.List<Node2D>(_chunks.Keys)) UnregisterChunk(chunk);
         _rocks.Restore();
         _trees.Restore();
     }

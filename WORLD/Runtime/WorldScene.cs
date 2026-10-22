@@ -1,4 +1,4 @@
-// Composes a bounded adjacent-biome world from reusable production modules; no debug dependencies.
+// Composes a finite streamed world or the compatibility preview from reusable production modules.
 using Godot;
 using FantasyGame.WorldInteractions.Fire;
 
@@ -8,6 +8,7 @@ public partial class WorldScene : Node2D
     public WorldFeaturePlan FeaturePlan { get; private set; }
     public MacroWorldMap MacroMap { get; private set; }
     public WorldBlueprintManifest Blueprint { get; private set; }
+    public WorldChunkStream Stream { get; private set; }
     public int ActiveSeed { get; private set; }
 
     #region Setup
@@ -15,17 +16,17 @@ public partial class WorldScene : Node2D
     // =========================================================
     public override void _Ready()
     {
-        if (Config?.Biome?.Surface?.Texture == null || Config.Biome.Surface.Material == null
-            || (Config.Biomes.Secondary != null && Config.Biomes.Secondary.Surface == null)
-            || Config.Bounds.Size.X <= 0f || Config.Bounds.Size.Y <= 0f
-            || !Config.Bounds.HasPoint(Config.PlayerSpawn))
+        bool wantsStreaming = Config?.Streaming?.Enabled == true;
+        if (Config == null || (wantsStreaming && Config.Generation == null)
+            || (!wantsStreaming && (Config.Biome?.Surface?.Texture == null || Config.Biome.Surface.Material == null
+                || Config.Bounds.Size.X <= 0 || Config.Bounds.Size.Y <= 0 || !Config.Bounds.HasPoint(Config.PlayerSpawn))))
         {
-            GD.PushError("World requires a biome/surface, positive bounds and a spawn inside them."); return;
+            GD.PushError("World requires a generation config for streaming, or valid preview biome/bounds/spawn."); return;
         }
         var seedSource = new RandomNumberGenerator();
         if (Config.RandomSeedOnLoad) seedSource.Randomize();
         ActiveSeed = Config.RandomSeedOnLoad ? (int)(seedSource.Randi() & 0x7fffffff) : Config.FixedSeed;
-        GD.Print($"World seed: {ActiveSeed} | {Config.Biome.Id} | random on load: {Config.RandomSeedOnLoad}");
+        GD.Print($"World seed: {ActiveSeed} | {Config.Biome?.Id ?? "streamed"} | random on load: {Config.RandomSeedOnLoad}");
         if (Config.Generation != null)
         {
             var timer = System.Diagnostics.Stopwatch.StartNew();
@@ -41,7 +42,19 @@ public partial class WorldScene : Node2D
             }
             catch (System.ArgumentException error) { GD.PushError($"Macro generation failed: {error.Message}"); }
         }
-        GetNode<GroundSurface>("Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
+        if (wantsStreaming && MacroMap == null)
+        { GetNode<PlayerMovement>("Actors/Player").ProcessMode = ProcessModeEnum.Disabled; return; }
+        bool streaming = wantsStreaming;
+        if (streaming)
+        {
+            Config = (WorldMasterConfig)Config.Duplicate();
+            Config.Bounds = MacroMap.Bounds; Config.PlayerSpawn = FeaturePlan.StartingArea?.Anchor ?? Config.Bounds.GetCenter();
+            Config.Biomes = Config.Biomes == null ? new AdjacentBiomeLayout() : (AdjacentBiomeLayout)Config.Biomes.Duplicate();
+            string biomeId = MacroMap.BiomeAt(Config.PlayerSpawn).Id;
+            foreach (var biome in Config.Generation.Biomes) if (biome.Id == biomeId) Config.Biomes.Primary = biome;
+            GetNode<GroundSurface>("Ground").Visible = false;
+        }
+        else GetNode<GroundSurface>("Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
         CharacterBody2D player = GetNode<CharacterBody2D>("Actors/Player");
         player.Position = Config.PlayerSpawn;
         Camera2D camera = player.GetNode<Camera2D>("Camera");
@@ -53,9 +66,16 @@ public partial class WorldScene : Node2D
         var pond = GetNodeOrNull<WorldPond>("Liquids");
         var placement = GetNode<WorldSceneryPlacement>("Actors");
         placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
-        placement.Generate(Config, ActiveSeed);
+        if (streaming)
+        {
+            Stream = new WorldChunkStream { Name = "Streaming" }; AddChild(Stream);
+            Stream.Initialize(this,placement,(PlayerMovement)player,Config,placement.ExcludedLiquid);
+            Blueprint = Blueprint with { SchemaVersion = 3, LocalGeneratorVersion = ChunkSceneryData.GeneratorVersion,
+                ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };
+        }
+        else placement.Generate(Config, ActiveSeed);
         // Build entity navigation only after the seeded tree/rock colliders exist.
-        GetNodeOrNull<WorldEntityPlacement>("EntityPlacement")?.Populate(placement, player, Config.Bounds);
+        GetNodeOrNull<WorldEntityPlacement>("EntityPlacement")?.Populate(placement, player, Stream?.LocalBounds ?? Config.Bounds);
         var environment = GetNodeOrNull<EnvironmentRuntime>("Environment");
         environment?.Initialize(Config, GetNode<Node2D>("Actors"));
         if (environment != null) GetNode<FireRuntime>("Fire").Initialize(GetNode<Node2D>("Actors"), environment);
@@ -63,6 +83,7 @@ public partial class WorldScene : Node2D
         var visibility = new OcclusionController { Name = "Occlusion" };
         AddChild(visibility);
         visibility.Initialize(player);
+        Stream?.Bind(environment,GetNode<FireRuntime>("Fire"),visibility);
     }
 
     // Static boundary walls derive from the same bounds as ground and camera.

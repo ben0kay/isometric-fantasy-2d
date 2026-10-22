@@ -1,4 +1,4 @@
-// Shared once-per-world navigation built from static tree/rock collision footprints.
+// Shared bounded-area navigation rebuilt from active tree/rock collision footprints.
 // World population can reuse one grid; agents request paths only when needed.
 using Godot;
 using System;
@@ -41,7 +41,7 @@ public sealed class StaticObstacleNavigation
             _grid.SetPointSolid(new Vector2I(_columns - 1, y));
         }
 
-        foreach (Node node in actors.GetChildren())
+        foreach (Node node in actors.FindChildren("*","",true,false))
         {
             if (node is not StaticBody2D body) continue;
             foreach (Node child in body.GetChildren())

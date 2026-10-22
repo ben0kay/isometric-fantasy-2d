@@ -31,11 +31,20 @@ public partial class FireRuntime : Node
         TreeFireAppearance.AppearanceChangedEventHandler changed = () => shadows.RefreshAppearance((Node2D)receiver.GetParent());
         art.AppearanceChanged += changed; _appearance.Add(art, changed);
     }
+    // Remove subscriptions/effects before an owning chunk releases its live actors.
+    // =========================================================
+    public void Unregister(Burnable receiver)
+    {
+        if (_ignition.Remove(receiver,out var handler)) receiver.Ignited -= handler;
+        var art = receiver.GetParent().GetNodeOrNull<TreeFireAppearance>("FireAppearance");
+        if (art != null && _appearance.Remove(art,out var changed)) art.AppearanceChanged -= changed;
+        if (_active.TryGetValue(receiver,out var effect)) { effect.Cancel(); _active.Remove(receiver); }
+    }
     // Effects are optional and capped; lifecycle still completes when all presentation slots are used.
     // =========================================================
     private void SpawnEffects(Burnable receiver)
     {
-        if (!Config.Enabled || !Config.EnableVisualEffects || _active.ContainsKey(receiver)
+        if (receiver.State != BurnState.Burning || !Config.Enabled || !Config.EnableVisualEffects || _active.ContainsKey(receiver)
             || _active.Count >= Mathf.Clamp(Config.MaxActiveEffects, 1, 16)) return;
         var effect = new BurningEffect { Name = "FireEffects", Tree = receiver, Config = Config, Wind = _wind };
         _active.Add(receiver, effect);

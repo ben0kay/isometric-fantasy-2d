@@ -115,7 +115,7 @@ public partial class WorldSceneryPlacement : Node2D
 
     // Reflect art and actual footprint together without negative physics-body scales.
     // =========================================================
-    private static void Mirror(Node2D prop, SceneryDefinition content)
+    public static void Mirror(Node2D prop, SceneryDefinition content)
     {
         if (prop.GetNodeOrNull<Sprite2D>(content.SpritePath) is Sprite2D sprite) sprite.FlipH = !sprite.FlipH;
         if (content.FootprintPath.IsEmpty || prop.GetNodeOrNull<CollisionPolygon2D>(content.FootprintPath) is not CollisionPolygon2D collision) return;

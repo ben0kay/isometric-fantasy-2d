@@ -5,6 +5,7 @@ using System.Text;
 public partial class MacroMapDebugPanel : CanvasLayer
 {
     private PanelContainer _panel;
+    private WorldScene _world; private Label _live;
     #region Overview
     // Bind after world startup; absent/failed generation simply omits this optional panel.
     // =========================================================
@@ -18,7 +19,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
         _panel = new PanelContainer { Visible = false, OffsetLeft = 24, OffsetTop = 80, OffsetRight = 760, OffsetBottom = 780 };
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
-        box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (overview only; playable preview unchanged)" });
+        box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
         {
@@ -55,11 +56,21 @@ public partial class MacroMapDebugPanel : CanvasLayer
             if (features.Reservations.Features.Count > 4) text.AppendLine($"+ {features.Reservations.Features.Count - 4} more (see generation log)");
             foreach (string warning in features.Warnings.Take(2)) text.AppendLine(warning);
         }
+        var live = new Label(); box.AddChild(live);
+        _world = world; _live = live;
         var details = new ScrollContainer { CustomMinimumSize = new Vector2(700, 200),
             SizeFlagsVertical = Control.SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         details.AddChild(new Label { Text = text.ToString(), AutowrapMode = TextServer.AutowrapMode.WordSmart,
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
         box.AddChild(details);
+    }
+    // Update only the small debug status line while the panel is open.
+    // =========================================================
+    public override void _Process(double delta)
+    {
+        if (_panel?.Visible != true || _world?.Stream == null) return;
+        var stream = _world.Stream;
+        _live.Text = $"Player chunk {stream.PlayerChunk} | loaded {stream.LoadedCount} | pending {stream.PendingCount}\nRegion {stream.PlayerRegion?.Id} | {stream.PlayerBiome} | data {stream.LastDataMilliseconds:F1}ms / frame work {stream.LastFrameMilliseconds:F1}ms";
     }
     // Toggle only the overview, keeping input and preview behaviour independent.
     // =========================================================

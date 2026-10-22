@@ -32,6 +32,20 @@ public partial class Burnable : Node
         State = BurnState.Healthy; BurnProgress = 0f; _elapsed = 0f; IgnitionSource = "";
         SetProcess(false); EmitSignal(SignalName.BurnReset);
     }
+    // In-memory chunk restoration resumes the same lifecycle; durable storage belongs to SAVE/P4.
+    // =========================================================
+    public void RestoreProgress(float progress)
+    {
+        if (progress >= 1 && Profile != null)
+        {
+            State = BurnState.Burnt; BurnProgress = 1; SetProcess(false);
+            WorldImpactPosition = ((Node2D)GetParent()).GlobalPosition; IgnitionSource = "ChunkRestore";
+            EmitSignal(SignalName.Ignited,WorldImpactPosition,IgnitionSource); EmitSignal(SignalName.BurnCompleted); return;
+        }
+        if (progress <= 0 || !TryIgnite(((Node2D)GetParent()).GlobalPosition,"ChunkRestore")) return;
+        _elapsed = progress * (Mathf.Max(0f,Profile.IgnitionDelaySeconds) + Mathf.Max(0.1f,Profile.TransitionSeconds));
+        _Process(0);
+    }
     // Advance using real seconds, independent of accelerated calendar time.
     // =========================================================
     public override void _Process(double delta)

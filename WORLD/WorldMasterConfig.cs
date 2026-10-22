@@ -9,8 +9,9 @@ public partial class WorldMasterConfig : Resource
     [Export] public Vector2 PlayerSpawn { get; set; } = new(480, 320);
     [Export] public AdjacentBiomeLayout Biomes { get; set; }
     public WorldBiomeDefinition Biome => Biomes?.Primary;
-    [ExportGroup("Macro generation (P1 overview)")]
+    [ExportGroup("World generation and streaming")]
     [Export] public WorldGenerationMasterConfig Generation { get; set; }
+    [Export] public WorldStreamingConfig Streaming { get; set; }
     [ExportGroup("Seed")]
     [Export] public bool RandomSeedOnLoad { get; set; } = true;
     [Export] public int FixedSeed { get; set; } = 213876;

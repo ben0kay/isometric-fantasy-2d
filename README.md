@@ -1,6 +1,6 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**World generation P0–P2 implemented:** F6 production World, then **F7** for a seeded finite biome-map overview with protected starting space and an irregular required southeast test reservation. Biome collections, weights, target region diameters and required/preferred feature footprints are resource-driven. The larger map is still a blueprint; the playable Oak/Pink preview remains unchanged. Chunk streaming, durable profile saves and A-Life are planned. See [generation guide](WORLD/Generation/World/README.md) and [P2 feature guide](WORLD/Generation/World/Features/README.md).
+**World generation P0–P3 implemented:** F6 production World now streams the finite generated biome map around the player. F7 shows its overview, reservations and live chunk counts. Biome collections, density-based scenery and feature reservations remain Resource-driven. The original small preview is available by disabling WorldMasterConfig.Streaming. Session edits survive chunk reload; durable profile saves and A-Life remain planned. See [streaming guide](WORLD/Runtime/Streaming/README.md).
 
 **Generic production trees:** Oak and Pink Blossom now use one shared tree template, configured entirely by species/variant Resources. Both support axe feedback, wind, snow, shadows and fire; blossoms need no charred artwork to burn. Future species need .tres data/art/biome references only. See [tree authoring guide](WORLD/Content/Vegetation/Trees/README.md).
 
@@ -121,7 +121,7 @@ Before writing code identify (a) **implemented vs debug vs scaffold vs planned**
 | Mechanic area | Status |
 | --- | --- |
 | Production two-biome preview, seeded startup scatter, player/environment/pond, oak FIRE1/FIRE2, early Skeleton Basic | **Implemented preview** |
-| Massive macro world, optional World Creator, finite expansion/infinite choice, real chunk streaming | **P1 coarse finite biome map implemented; streaming/major geography still planned** |
+| Massive macro world, optional World Creator, finite expansion/infinite choice, real chunk streaming | **P3 finite streamed biome ground/scenery implemented; major terrain/Creator/expansion still planned** |
 | Save system, per-chunk deltas, save migrations and old-world updates | **Planned; not built** |
 | A-Life resident populations, roaming ecology, dynamic territories, offscreen simulation tiers | **Desired future feature; not built** |
 | Avalonia authoring/import, content registry/catalog, no-code content packs | **Ultimate end goal; not built** |

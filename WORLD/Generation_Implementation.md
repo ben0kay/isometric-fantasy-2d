@@ -509,3 +509,7 @@ The finite coarse map, arbitrary biome collection, per-biome weights/target diam
 ## P2 implementation update — 22 October 2026
 
 WorldGenerationMasterConfig.Layout now references resource-driven required/preferred feature directives. The default layout demonstrates a protected starting anchor and a mandatory irregular SE-zone footprint. Exact polygon/clearance reservations, category/owner permissions, stable per-feature RNG, priority/conflict errors, bounded preferred skips, F7 overlays and schema-2 feature snapshots are implemented. P1 biome coverage/hash and the current playable preview are preserved. See WORLD/Generation/World/Features/README.md for authoring, tests and limits. These are neutral reservations, not real oceans/volcanoes/POIs or a generated route network. P3 chunk streaming and P4 durable saving remain unimplemented.
+
+## P3 implementation update — 22 October 2026
+
+The production world now streams local chunk ground/scenery from the macro map, with density settings, deterministic global candidates, cross-border spacing, world-scoped IDs, preload/unload hysteresis, scene-application budgets and lifecycle-aware wind/shadow/snow/fire/occlusion caches. Navigation is local. F7 reports chunk status; compatibility preview remains configurable. Removed props and burn progress round-trip during the current session only. See WORLD/Runtime/Streaming/README.md for tests and explicit limits (single-threaded data, startup work, preview-only clustering, starting-biome environment settings). Durable saves and A-Life remain P4/P6.

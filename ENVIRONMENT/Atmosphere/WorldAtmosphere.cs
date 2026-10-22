@@ -42,9 +42,16 @@ public partial class WorldAtmosphere : Node2D
         _worldBounds = WorldBounds;
         _mistMaterial.SetShaderParameter("world_min", _worldBounds.Position);
         _mistMaterial.SetShaderParameter("world_max", _worldBounds.End);
-        foreach (Node child in Actors.GetChildren())
-            if (child is WorldTree tree && tree.Definition.HasFoliage) _trees.Add((tree, tree.GetNode<TreeHitResponse>("HitResponse")));
+        RefreshTrees();
         _haze.Polygon = new[] { _worldBounds.Position, new Vector2(_worldBounds.End.X, _worldBounds.Position.Y), _worldBounds.End, new Vector2(_worldBounds.Position.X, _worldBounds.End.Y) };
+    }
+    // Bounded refresh only on chunk completion/removal, never a per-frame world scan.
+    // =========================================================
+    public void RefreshTrees()
+    {
+        _trees.Clear();
+        foreach (Node child in Actors.FindChildren("*","",true,false))
+            if (child is WorldTree tree && tree.Definition.HasFoliage) _trees.Add((tree,tree.GetNode<TreeHitResponse>("HitResponse")));
     }
     #endregion
 
@@ -54,6 +61,10 @@ public partial class WorldAtmosphere : Node2D
     public override void _Process(double delta)
     {
         _time += delta;
+        // Keep the bounded pollen/haze pool near the camera rather than spreading it over the finite map.
+        _worldBounds = Day.Weather.VisibleWorldRect().Grow(200).Intersection(WorldBounds);
+        _haze.Polygon = new[] { _worldBounds.Position, new Vector2(_worldBounds.End.X,_worldBounds.Position.Y),_worldBounds.End,new Vector2(_worldBounds.Position.X,_worldBounds.End.Y) };
+        _mistMaterial.SetShaderParameter("world_min",_worldBounds.Position); _mistMaterial.SetShaderParameter("world_max",_worldBounds.End);
         _drift = _weather.Displacement;
         // Fade in extra leaves over roughly a second rather than popping on a slider change.
         _leafWindMagnitude = Mathf.MoveToward(_leafWindMagnitude, Mathf.Abs(_weather.Strength), (float)delta * 1.5f);

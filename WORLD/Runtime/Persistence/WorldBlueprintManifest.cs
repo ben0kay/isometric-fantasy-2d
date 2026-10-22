@@ -7,6 +7,9 @@ public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId,
     float CellSize, int Columns, int Rows, string[] BiomeIds, int[] RegionBiomes, int[] RegionCells,
     int FeaturePlanVersion = 0, string FeatureHash = "", WorldFeatureSnapshot[] Features = null)
 {
+    public int LocalGeneratorVersion { get; init; }
+    public int ChunkSize { get; init; }
+    public int CandidateCellSize { get; init; }
     // Production SAVE will supply the selected profile/run; a seed never identifies mutable state.
     // =========================================================
     public static WorldBlueprintManifest Create(string profileId, string runId, MacroWorldMap map, WorldFeaturePlan features = null)

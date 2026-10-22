@@ -8,12 +8,14 @@
 script = ExtResource("population")
 Content = ExtResource("tree")
 Count = 36
+InstancesPerMillionUnits = 26.0
 MinimumScale = 0.93
 MaximumScale = 1.07
 [sub_resource type="Resource" id="rocks"]
 script = ExtResource("population")
 Content = ExtResource("rock")
 Count = 16
+InstancesPerMillionUnits = 11.0
 MinimumScale = 0.85
 MaximumScale = 1.15
 [resource]

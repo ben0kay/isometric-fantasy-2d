@@ -15,13 +15,15 @@ public partial class WorldEntityPlacement : Node
     [Export(PropertyHint.Range, "5,32,1")] public float ColliderClearance { get; set; } = 17f;
     [Export(PropertyHint.Range, "1,16,1")] public int FreeCellSearchRadius { get; set; } = 8;
 
+    private StaticObstacleNavigation _navigation;
+    private Node2D _instance;
     #region Placement
     // Use the existing random forest's actual obstacles, never a separately randomized map.
     // =========================================================
     public void Populate(Node2D actors, CharacterBody2D player, Rect2 bounds)
     {
         if (!Enabled || EntityScene == null) return;
-        var navigation = new StaticObstacleNavigation();
+        var navigation = _navigation = new StaticObstacleNavigation();
         navigation.Build(actors, bounds, GridCellSize, ColliderClearance, FreeCellSearchRadius);
 
         Vector2 wanted = player.GlobalPosition + SpawnOffsetFromPlayer;
@@ -31,7 +33,7 @@ public partial class WorldEntityPlacement : Node
             return;
         }
 
-        Node2D instance = EntityScene.Instantiate<Node2D>();
+        Node2D instance = _instance = EntityScene.Instantiate<Node2D>();
         if (instance is not IWorldNavigationAgent agent)
         {
             GD.PushError("World entity scene must implement IWorldNavigationAgent.");
@@ -48,6 +50,14 @@ public partial class WorldEntityPlacement : Node
         actors.AddChild(instance);
         agent.ConfigureNavigation(player, navigation);
         GD.Print($"World entity: spawned {instance.Name} at {safeSpawn}.");
+    }
+    // Rebuild only the active local grid; the single test agent keeps its identity while far away.
+    // =========================================================
+    public void RefreshNavigation(Node2D actors, CharacterBody2D player, Rect2 bounds)
+    {
+        if (_navigation == null || !GodotObject.IsInstanceValid(_instance)) return;
+        _instance.ProcessMode = bounds.HasPoint(_instance.GlobalPosition) ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+        _navigation.Build(actors,bounds,GridCellSize,ColliderClearance,FreeCellSearchRadius);
     }
     #endregion
 }
