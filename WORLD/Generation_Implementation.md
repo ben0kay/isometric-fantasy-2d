@@ -1,8 +1,8 @@
 # Large Finite World Generation — Codex Implementation Planning
 
-> **P4 trial update (22 October 2026): implementation complete, local validation pending.** User authorized P4 with VS Code Copilot performing compilation/runtime/performance tests. SAVE/P4_Copilot_Handoff.md is the exact validation handoff; no tests were executed by Codex. Reuses M0 menus/ProfileStore, independent profile/run/world IDs, frozen map/features, per-chunk edits, player surface location/clock/test actor, F8/Esc/autosave, integrity/atomic backup recovery. Default one active campaign; old runs retained, inactive clocks paused, autosave 120 seconds (0 disables), no permadeath cleanup. Inventory/caves/A-Life/weather progression remain unimplemented. Unsupported schema/content changes fail without regenerating saves. Earlier P4-planned/M0-only statements below are historical. P3 graphical acceptance remains open, and P4 is not accepted until local checks pass.
+> **P4 completion update (22 October 2026): IMPLEMENTED; automated validation PASSED.** VS Code Copilot tested implementation commit `ce6767d1b37b34210b010b743ea2133d95c2ae15` on Godot 4.7.2 Mono: `dotnet build` (0 warnings/errors), headless import, P4 write (31 checks) and separate-process read (33 checks), plus P1 macro (377085), P2 reservation (175), P3 streaming (4403) and scenery visibility (167) checks—all exit 0. See `SAVE/P4_Copilot_Handoff.md` for exact evidence. **In-editor graphical, real menu save/quit/recovery workflow and target-PC profiler/FPS acceptance remain outstanding.** P4 does not invent inventory, caves, A-Life, weather progression, save migration conversions or permadeath cleanup; unsupported save versions fail safely.
 
-> **Status (22 October 2026):** P0–P3 implemented, P3 graphical acceptance pending. P4 trial implemented with local validation delegated to VS Code Copilot; P5/P6 remain planned. This document does not authorize executing further phases automatically.
+> **Status (22 October 2026):** P0–P4 implemented; P4 automated tests passed, manual/graphical/performance acceptance pending. P3 graphical acceptance remains pending. P5/P6 remain planned. This document does not authorize executing further phases automatically.
 > **Created:** 2026-10-22
 > **Scope:** Production fantasy top-down Godot/C# world; preserve current working production and DEBUG prototypes while designing.
 > **Purpose:** Discuss this document with Codex, improve/refine it, then implement in small verifiable passes. The author can edit this plan before approving each phase.
@@ -16,15 +16,15 @@ Read this handoff before the original design brief below. Historical snapshots a
 | P0/P1 | Macro map, arbitrary eligible biome collection, weights/target diameters, full land coverage, deterministic hash and blueprint contract implemented. Climate affinity remains deferred. | Generation/World/README.md and P0_P1_Audit.md |
 | P2 | Resource-driven feature reservations, priority/permissions, required/preferred outcomes and starting anchor implemented. Reservations do not create geological terrain or POI scenes. | Generation/World/Features/README.md |
 | P3 | Finite local streaming, density-based scenery, local navigation, environment lifecycle and session deltas implemented. Rendering fixes pushed; target-machine visual/performance acceptance is open. | Runtime/Streaming/README.md |
-| P4 | Private campaign checkpoint implementation and local tests added; **awaiting local validation**. Migration gate rejects unsupported versions; conversions remain future work. | SAVE/README.md and SAVE/P4_Copilot_Handoff.md |
+| P4 | **Implementation complete; local automated validation PASSED** (build/import, separate-process P4 save/reload and four regression suites). Manual in-editor save/quit/profile workflow, visual and profiler acceptance still open; unsupported migrations remain future work. | SAVE/README.md and SAVE/P4_Copilot_Handoff.md |
 | P5 | Planned: actual priority POIs, paths and cave connections. | Original scope below |
 | P6 | Planned: abstract off-screen A-Life. | Original scope below |
 
-### P4 integration update — Boot/Main Menu and local profiles exist (M0)
+### Historical M0 menu handoff — superseded by completed P4 implementation
 
-**Implemented at current HEAD:** `project.godot` launches `UI/Menus/Boot/BootScreen.tscn` on F5. Boot lists/creates/selects local profiles through `SAVE/Profiles/ProfileStore.cs` (GUID identity + display name in `user://profiles.cfg`), then opens `UI/Menus/Main/MainMenu.tscn`. **New Campaign** currently calls `UI/Menus/Shared/MenuNavigation.cs` to open the existing production `SCENES/World/World.tscn` as a **new unsaved session**. **Continue is deliberately disabled** until durable saves work. F6 on the selected world scene remains the direct testing route. Shared button presentation is in `UI/Shared/Buttons/UIButtonFactory.cs`; preserve this system rather than constructing another menu or profile registry.
+**Historical pre-P4 snapshot (do not use as current status):** `project.godot` launches `UI/Menus/Boot/BootScreen.tscn` on F5. Boot lists/creates/selects local profiles through `SAVE/Profiles/ProfileStore.cs` (GUID identity + display name in `user://profiles.cfg`), then opens `UI/Menus/Main/MainMenu.tscn`. **New Campaign** currently calls `UI/Menus/Shared/MenuNavigation.cs` to open the existing production `SCENES/World/World.tscn` as a **new unsaved session**. **Continue is deliberately disabled** until durable saves work. F6 on the selected world scene remains the direct testing route. Shared button presentation is in `UI/Shared/Buttons/UIButtonFactory.cs`; preserve this system rather than constructing another menu or profile registry.
 
-**P4 instructions for Codex:**
+**Historical P4 design requirements — already implemented in the P4 trial unless noted elsewhere:**
 
 - **Reuse and extend**, do not replace, the existing Boot/Main menus, `ProfileStore` identities and menu routing. Build durable `ProfileId → RunId/SaveSlotId → WorldId` association in `SAVE/` and world delta ownership in `WORLD/Runtime/Persistence/`, not inside UI scripts. Stable profile GUIDs are not saved-world IDs and a profile being selected does not imply a saved campaign exists.
 - Add a proper **New Campaign** path that creates/chooses an independent run and world identity, fixes seed/generator version and initializes world session state **before** loading the existing `World.tscn`. Do not allow clicking New Campaign to silently overwrite an existing save; obtain an explicit decision/confirmation for replacing or adding runs.
@@ -33,7 +33,7 @@ Read this handoff before the original design brief below. Historical snapshots a
 - Preserve `ProfileStore`'s existing local identity format and user data. Review its file-write/recovery behavior before expanding storage; do not casually rename, reset or delete `user://profiles.cfg`. Introduce migrations for save/schema changes and isolated profile/run/world IDs, not duplicate global singleton stores.
 - Existing `UI/Menus/README.md` and `SAVE/Profiles/README.md` are the M0 integration references. Full P4 QA remains mandatory: test two distinct profiles with **the same seed**, independent edited trees/clock/positions, switch A→B→A, quit/restart, chunk unload/reload and interrupted/corrupt writes. Preserve performance-first and one-commit-per-job rules.
 
-**Scope boundary:** M0 provides navigation and local profile creation, **not** autosaves, world persistence, player inventory saves, Continue, permadeath cleanup or multiple run-slot selection. Update these status claims only after implementation and validation.
+**Historical M0 scope boundary:** At that earlier checkpoint, M0 provided profile creation but no save features. **Current P4 has autosave, Continue and durable campaigns**; inventory, permadeath cleanup and multiple run-slot selection remain unimplemented. See the completion update and SAVE/README.md.
 
 ### What currently runs
 
@@ -56,9 +56,9 @@ Do not assume all lag is resolved: data generation, chunk binding, startup and l
 
 The fix compiled with .NET 8 Roslyn/Godot source generators and ran headlessly with Godot 4.5.1 .NET; the project's SDK declaration was not changed. Latest results: **4425 P3 checks**, **175 P2 checks**, and the existing production fire test passed (including wind/snow/shadows/reset). Traversal reached 49 loaded chunks at each destination, with roughly 3345–4698 nodes. Regression checks cover nearby spawn trees, initially hidden shadows, interpolation settings and shared foliage shader identity, alongside deterministic reloads and session edits.
 
-**Resume with P3 graphical/performance verification before treating P3 as accepted or starting P4.** On the user's actual renderer, inspect spawn, walking/seams, biome transitions, shadow stability and travel/return with weather/snow toggled. Measure startup, steady idle and chunk-crossing CPU/GPU frame time and memory separately. Use profiling to identify any remaining hotspot; avoid raising budgets/radii or removing effects blindly. Headless checks do not establish graphical FPS or prove the reported flashes are gone. Preserve DEBUG prototypes, concurrent layered rain/shared Entity work and the compatibility preview.
+**Historical pre-P4 instruction (superseded):** Continue P3 graphical/performance verification; P4 has since been implemented and automated-tested. Do not treat either phase as graphically accepted without target-PC checks. On the user's actual renderer, inspect spawn, walking/seams, biome transitions, shadow stability and travel/return with weather/snow toggled. Measure startup, steady idle and chunk-crossing CPU/GPU frame time and memory separately. Use profiling to identify any remaining hotspot; avoid raising budgets/radii or removing effects blindly. Headless checks do not establish graphical FPS or prove the reported flashes are gone. Preserve DEBUG prototypes, concurrent layered rain/shared Entity work and the compatibility preview.
 
-After P3 is verified, P4 is the next planned phase, subject to user authorization and the profile/death/clock/save-policy decisions below. Do not implement P4–P6 as part of this documentation handoff. Update this status and owning READMEs when new evidence or fixes arrive; one commit per job.
+**Historical pre-P4 instruction:** P4 has now been implemented and automated-tested; remaining manual/graphical checks are documented in SAVE/P4_Copilot_Handoff.md. Do not implement P4–P6 as part of this documentation handoff. Update this status and owning READMEs when new evidence or fixes arrive; one commit per job.
 
 ## 0. Read these documents and inspect the CURRENT CODE first
 
@@ -463,7 +463,7 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 
 **P4 — Per-profile persistent world saves and deterministic edits**
 
-**Existing starting point:** Boot/Main Menu and GUID-only local profile creation are implemented (see the P4 integration update near the top and `UI/Menus/README.md`). Integrate real New Campaign/Continue and save-slot selection with these existing scenes; do not build a second profile system. The existing New Campaign launches an unsaved world, so no P4 durability milestones have been met yet.
+**Implemented result:** Existing Boot/Main Menu and GUID profiles were reused. New Campaign creates separate run/world IDs and checkpoints; Continue validates and restores the same world, chunk deltas, surface player location, clock and authored test actor. Autosave, F8, Esc and recovery are wired. Automated P4 checks passed; manual graphical/UX/performance acceptance remains pending. A multiple-save-slot UI is not included.
 - Implement the chosen ProfileId → RunId/SaveSlotId → WorldId association through SAVE/Profiles and SAVE/WorldState rather than global singleton save files.
 - Persist world seed/region plan, chosen macro features and chunk deltas for a minimal changed object (e.g. a removed tree/test marker), along with player coordinates, current layer, representative inventory and world clock.
 - Validate save/reload, exit/re-enter chunks, no resurrection of modified props, no duplicate object identities. Use atomic replacement, integrity validation and recovery handling.
@@ -482,7 +482,7 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - Add deterministic catch-up and performance budget counters; only then expand to factions, ecology, settlements and long-term events.
 - **Pass when:** player leaves a region, off-screen state meaningfully changes, returns to a consistent encounter, and no duplicate/deleted NPCs or runaway sim costs occur.
 
-**Current continuation:** P0–P3 code exists. Finish the P3 graphical/performance verification described in the handoff before proposing P4. Do NOT attempt every phase in one massive refactor. Change only the explicitly approved pass; one commit per pass/job.
+**Current continuation:** P0–P4 code exists; P4 automated validation has passed. Finish P3 and P4 target-PC graphical/manual/performance acceptance before declaring them fully accepted. Do NOT attempt every phase in one massive refactor. Change only the explicitly approved pass; one commit per pass/job.
 
 ## 13. Required QA / acceptance checklist
 

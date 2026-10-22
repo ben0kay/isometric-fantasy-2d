@@ -1,6 +1,6 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**P4 trial implemented — awaiting local VS Code Copilot validation:** existing profiles/menus now launch private durable campaigns; Continue restores frozen geography, player surface position, clock, generated-prop edits and the test skeleton. F8 saves; Esc offers save/return/quit; autosave defaults to 120 seconds. No compilation/runtime/performance checks were run here at the user's request. Read [SAVE/README.md](SAVE/README.md) and [Copilot test handoff](SAVE/P4_Copilot_Handoff.md). Older P4-planned statements below are historical; no acceptance is claimed until local checks pass. F5 now starts Boot/Main Menu; F6 direct World remains disposable.
+**P4 implemented — automated validation PASSED; manual acceptance pending:** existing menus and GUID profiles launch durable private campaigns; Continue restores frozen geography, surface player location, clock, chunk edits and test skeleton. F8 saves, Esc offers save/return/quit, autosave defaults to 120 seconds. VS Code Copilot confirmed a clean C# build, Godot 4.7.2 headless import, separate-process P4 write/read (31/33 checks) and P1/P2/P3/scenery regression suites on commit `ce6767d1`. **Real in-editor save/quit/restore interaction, visual stability and target-PC profiling remain open.** See [SAVE/README.md](SAVE/README.md) and [Copilot evidence/handoff](SAVE/P4_Copilot_Handoff.md). F5 starts Boot/Main Menu; F6 direct World remains disposable.
 
 **P2-A/P2-B cosmetic scheduling:** Cached camera envelopes and nearby chunk buckets replace repeated distant-chunk decisions. Occlusion queries nearby artwork and updates only active fades, with exact alpha restoration. All phases in [the performance refactor](Notes/performance_refactor.md) are implemented; target-PC visual/FPS verification remains separate.
 
@@ -41,7 +41,7 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 
 **Run/controls:** F6 runs `SCENES/World/World.tscn` (**streaming ON by default**); **F7** opens macro biome/reservation/chunk statistics; **F9** toggles removable environment controls (including rain, wet foliage, overcast shadows, torch shadows); removable Fire controls ignite/reset trees. **F5** launches the independent DEBUG/TopDownTest scene from `project.godot`. The 1920×1080 viewport is unchanged. New scene loads choose a fresh random seed unless fixed-seed replay is configured.
 
-**P4 implementation awaits local validation; P5/P6 remain planned:** P4 = separate player-profile/run/private-world durable saves and recovery; P5 = actual terrain features/landmarks/paths/cave links; P6 = lightweight offscreen A-Life. Future Avalonia authoring and climate/season systems are also **not implemented**. [WORLD/Generation_Implementation.md](WORLD/Generation_Implementation.md) is the current phase handoff; [SCENES/World/scene organize.md](SCENES/World/scene%20organize.md) is a **plan only**, not an already-applied scene tree refactor.
+**P4 implemented and automated-tested (manual acceptance pending); P5/P6 remain planned:** P4 = implemented private player-profile/run/world saves and recovery (automated-tested; manual acceptance pending); P5 = actual terrain features/landmarks/paths/cave links; P6 = lightweight offscreen A-Life. Future Avalonia authoring and climate/season systems are also **not implemented**. [WORLD/Generation_Implementation.md](WORLD/Generation_Implementation.md) is the current phase handoff; [SCENES/World/scene organize.md](SCENES/World/scene%20organize.md) is a **plan only**, not an already-applied scene tree refactor.
 
 **Four distinct feature statuses:**
 - **Implemented in production:** Runs in World.tscn or its production dependencies; check module docs/tests.
@@ -153,7 +153,7 @@ Separate 2D cave scenes/layers can remain tied to logical surface X/Y and depth.
 | [WORLD/Content](WORLD/Content/README.md) | Canonical scenery, tree, rock, structure, assets and species variants (one definition reused across biomes). |
 | [WORLD/Biomes](WORLD/Biomes/README.md) | Overworld Definitions/ and Shared/ types, content references and profiles. Cave biomes separate. |
 | [WORLD/Generation](WORLD/Generation/README.md) | Generic deterministic generation/placement/landmark algorithms, not species-specific spawners. |
-| [WORLD/Runtime](WORLD/Runtime/README.md), [SAVE](SAVE/README.md) | **P3 built:** chunk stream and memory-only changed-instance state. **P4 planned:** per-profile/run/world durable disk saves, migration and Continue. |
+| [WORLD/Runtime](WORLD/Runtime/README.md), [SAVE](SAVE/README.md) | **P3 built:** chunk stream and memory-only changed-instance state. **P4 implemented:** per-profile/run/world durable checkpoints and Continue (automatic migrations not implemented; manual acceptance pending). |
 | [ENVIRONMENT](ENVIRONMENT/README.md) | **One authoritative wind/clock**; daylight, weather, rain, snow, lightning and atmosphere. Not AI or generic burn state. |
 | [ENTITIES](ENTITIES/README.md) | Production Player plus [shared data-driven Entity scene](ENTITIES/Shared/README.md) and basic optional chase; richer NPC/population/AI remains future. |
 | [SYSTEMS](SYSTEMS/README.md) | Harvesting, crafting, building, farming, cooking, interaction, effects; fire lives under **WorldInteractions/Fire**. |
@@ -177,7 +177,7 @@ Before writing code identify (a) **implemented vs debug vs scaffold vs planned**
 | Old 3840×1728 Oak/Pink world | **Optional fallback, not the default** |
 | Shared Tree and Entity templates, test skeleton and axe hits, FIRE1/FIRE2, player occlusion | **Production foundations implemented** |
 | Shared wind/clock, sun/local shadows (LL0–LL1), layered rain/wet foliage, adjustable overcast, snow/pond | **Production effects implemented** |
-| **P4:** separate profile/run/private-world saves, durable chunk deltas/Continue/migrations | **Not implemented** |
+| **P4:** private profile/run/world saves, durable chunk deltas and Continue | **Implemented; automated tests passed, manual/visual/performance acceptance pending. Automatic migrations not implemented** |
 | **P5:** real terrain features, towns/POIs/routes/cave entrances | **Not implemented** |
 | **P6:** resident wildlife/NPC populations and tiered offscreen A-Life | **Not implemented** |
 | Avalonia toolbox/import and content registry; player inventory/needs/crafting/building | **Future goals/plans** |
@@ -299,7 +299,7 @@ These folders combine implemented production foundations and remaining scaffoldi
 **Immediate need:** Verify P3 fixes on the user's actual Windows renderer before declaring streaming smooth or proceeding to the next larger phase. Do not create another streamer, ignore the compatibility preview, or treat headless checks as graphical FPS evidence. **These are suggested priorities, not automatic Codex work.**
 
 1. **P3 visual/performance check:** test trees/rocks near protected spawn, absence of giant flashing tree silhouettes, idle and crossing-chunk FPS/CPU/GPU/memory, 25% zoom, biome transitions and weather/snow/fire. Profile synchronous startup, generation, binding and local navigation if lag continues; don't blindly raise load radii.
-2. **P4 trial now implemented, pending local acceptance:** follow SAVE/P4_Copilot_Handoff.md for build, separate-process restore, profile isolation, recovery and target-machine checks. Default one active campaign, 120-second autosave, inactive worlds paused; no permadeath cleanup.
+2. **P4 implemented, automated validation passed; manual acceptance remains open:** follow SAVE/P4_Copilot_Handoff.md for build, separate-process restore, profile isolation, recovery and target-machine checks. Default one active campaign, 120-second autosave, inactive worlds paused; no permadeath cleanup.
 3. **P5 only when approved:** use P2 reservations for actual major terrain, landmark scenes, roads, caves and entrances; preserve P3 streaming and data-driven placement.
 4. **P6 only when approved:** begin with a focused shared-Entity wildlife/population test, then lightweight offscreen state; **not** thousands of distant AI/physics nodes.
 5. **Future survival/content work:** item/resource harvest drops, inventory, building/shelter, needs, and a gradual Avalonia authoring pipeline for canonical tree/entity/biome Resources.

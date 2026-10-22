@@ -1,4 +1,4 @@
-# SAVE — P4 implementation awaiting local validation
+# SAVE — P4 implemented; automated validation passed, manual acceptance pending
 
 Existing Boot/Main Menu profiles now select durable private campaigns. `ProfileStore` keeps its original GUID/name `user://profiles.cfg` format; it is not replaced by a second registry.
 
@@ -33,4 +33,4 @@ Only changed props accumulate as world deltas. At a save boundary, the main thre
 
 Archived runs and unreferenced immutable blobs are retained deliberately; automated garbage collection/quota eviction is not implemented. Per-file/count limits fail visibly instead of truncating state. No automatic destructive cleanup runs.
 
-**Validation:** implementation reviewed only; compilation, Godot/runtime, recovery and performance tests are deferred to VS Code Copilot at the user's request. Follow [P4_Copilot_Handoff.md](P4_Copilot_Handoff.md) and [../TESTS/Save/README.md](../TESTS/Save/README.md). P4 is not accepted until local results are recorded.
+**Validation:** VS Code Copilot reports Godot 4.7.2 Mono import and .NET build successful (0 warnings/errors), P4 separate-process write/read 31/33 checks passed, and P1/P2/P3/scenery regression suites passed on commit `ce6767d1b37b34210b010b743ea2133d95c2ae15`. Full commands and warnings are in [P4_Copilot_Handoff.md](P4_Copilot_Handoff.md). **Manual in-editor save/quit/Continue, profile-switching UX and target-PC visual/performance tests are still outstanding**; automated tests do not prove FPS or graphical correctness.
