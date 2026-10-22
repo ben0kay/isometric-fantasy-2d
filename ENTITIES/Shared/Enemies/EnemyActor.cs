@@ -31,7 +31,6 @@ public partial class EnemyActor : CharacterBody2D, IWorldNavigationAgent, IToolH
     public override void _Ready()
     {
         Config ??= new EnemyDefinition();
-        if (Config.Sprite != null) _sprite = GetNode<Sprite2D>("Sprite");
         Health = Mathf.Max(1, Config.MaxHealth);
         _sprite = GetNode<Sprite2D>("Sprite");
         _collision = GetNode<CollisionShape2D>("Collision");
