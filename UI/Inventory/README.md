@@ -1,5 +1,8 @@
-# UI/Inventory
+# UI / Inventory
 
-Inventory grids, item inspection, drag-and-drop and containers as UI only; inventory state lives in ENTITIES/Player/Inventory or future shared systems.
+Reusable inventory **presentation**: player backpack, item inspection, sorting, drag-and-drop and opening world storage containers. Inventory data and authoritative item/transfer rules live outside UI.
 
-> **Status:** Folder planning only — no implementation or gameplay assets have been added.
+- [PLAYER_INVENTORY.md](PLAYER_INVENTORY.md): Detailed design notes for a physical-looking, weight-based backpack with auto-stacked gathered resources, individual equipped gear, soft encumbrance and future Avalonia data authoring.
+- [Containers/](Containers/README.md): Future shared chest/loot/container views using the same inventory components.
+
+**Status:** Documentation/folder planning only. No inventory UI or inventory mechanics have been implemented here.
