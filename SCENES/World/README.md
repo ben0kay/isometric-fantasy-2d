@@ -35,4 +35,4 @@ Skeleton Basic supports 3 HP, a damage flash and death fade via `TakeDamage(int)
 Production FIRE1/FIRE2: build C# and F6 this scene; use the top-centre **Ignite nearest tree** / reset buttons. The optional `FireDebugPanel` can be removed while the `Fire` runtime and tree receivers remain. See [Fire documentation](../../SYSTEMS/WorldInteractions/Fire/README.md).
 
 ## P0/P1 finite map overview
-F8 toggles the generated finite biome blueprint. This larger map is not yet streamed/playable; existing preview art/placement/controls remain unchanged. Configure WorldMasterConfig.Generation via WORLD/Generation/World/DefaultWorldGeneration.tres. Set Generation null to disable only the new macro branch. See the generation README and audit for configuration, identities and validation.
+F7 toggles the generated finite biome blueprint. This larger map is not yet streamed/playable; existing preview art/placement/controls remain unchanged. Configure WorldMasterConfig.Generation via WORLD/Generation/World/DefaultWorldGeneration.tres. Set Generation null to disable only the new macro branch. See the generation README and audit for configuration, identities and validation.

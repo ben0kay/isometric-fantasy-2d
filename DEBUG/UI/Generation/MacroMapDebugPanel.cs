@@ -1,4 +1,4 @@
-// Removable F8 overview of the P1 blueprint; never drives production generation or player movement.
+// Removable F7 overview of the P1 blueprint; never drives production generation or player movement.
 using Godot;
 using System.Linq;
 using System.Text;
@@ -18,7 +18,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
         _panel = new PanelContainer { Visible = false, OffsetLeft = 24, OffsetTop = 80, OffsetRight = 760, OffsetBottom = 780 };
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
-        box.AddChild(new Label { Text = "F8 — FINITE WORLD BLUEPRINT (overview only; playable preview unchanged)" });
+        box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (overview only; playable preview unchanged)" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
         {
@@ -42,7 +42,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
     // =========================================================
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.F8 } && _panel != null)
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.F7 } && _panel != null)
         { _panel.Visible = !_panel.Visible; GetViewport().SetInputAsHandled(); }
     }
     #endregion
