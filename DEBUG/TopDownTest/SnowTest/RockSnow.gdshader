@@ -22,10 +22,8 @@ void vertex() {
 // =========================================================
 void fragment() {
     vec4 rock = texture(TEXTURE, UV);
-    if (snow_coverage <= 0.0001) {
-        COLOR = rock * sprite_tint;
-        return;
-    }
+    // At zero coverage the final mix weight is already zero; no early return
+    // is needed (Godot shader fragment functions do not support return).
     vec2 seed_offset = vec2(fract(placement_phase), fract(placement_phase * 0.613));
     float broad = texture(snow_noise, UV * vec2(2.6, 1.9) + seed_offset).r;
     float fine = texture(snow_noise, UV * vec2(8.3, 5.4) + seed_offset * 1.3).r;
