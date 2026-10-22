@@ -12,6 +12,7 @@
 - WORLD/placement_priority.md — required features reserve first, paths, caves, then large scenery, then small decorations. **Treat as authoritative priority guidance.**
 - Notes/Ideas/Underground_Biome_Influence_And_Cave_Connections.md — cave layers geographically aligned with surface; multiple entrances and biome-dependent underground resources.
 - Notes/Ideas/World_Hostility_Wildlife_Exploration.md — living ecosystem, danger by day and night, resident/roaming/event populations, lightweight off-screen state.
+- SAVE/README.md, SAVE/Profiles/README.md, SAVE/WorldState/README.md, SAVE/Serialization/README.md, SAVE/Migrations/README.md, SAVE/SaveMasterConfig.cs and WORLD/Runtime/Persistence/README.md — **profile-specific save ownership; currently scaffolding only**.
 - WORLD/README.md, WORLD/Biomes/README.md, WORLD/Generation/README.md, WORLD/Runtime/README.md and their subfolder READMEs.
 - SCENES/World/World.tscn and README, WORLD/Runtime/WorldScene.cs, WORLD/WorldMasterConfig.cs, WORLD/DefaultWorldConfig.tres, WORLD/Generation/Placement/WorldSceneryPlacement.cs.
 - WORLD/Biomes/Shared/WorldBiomeDefinition.cs, BiomePopulation.cs, AdjacentBiomeLayout.cs, WORLD/Biomes/Layouts/OakAndMeadow.tres and both current biome resources.
@@ -200,6 +201,106 @@ A world should have a persistent **WorldRecord**:
 
 **RandomOnNewWorld**, not "random every scene enter." Fresh world chooses seed once; reloading that save uses the recorded seed. If generator algorithms change, do not silently reshape saved regions/entrances/landmarks. New biome definitions can appear in brand-new worlds; existing saves require explicit migration, untouched ungenerated expansion, or an opt-in upgrade policy. Stable IDs for region, chunk, feature and key entities.
 
+## 8A. Player profiles, unique worlds and isolated save persistence — IMPORTANT
+
+> **User requirement (2026-10-22):** Players will have **profiles with their own unique saving**. The world-generation implementation MUST be designed for that from the beginning. Do not save all players into one global world, and do not accidentally cross-load one profile's objects, world, clock or NPCs into another profile. SAVE currently contains **only scaffolding**; this section specifies the intended integration, not an existing system.
+
+### Ownership model: Profile → Run/Save Slot → World
+
+Distinguish three identities; don't use the character's display name or just the seed as a save-file key:
+
+| Identity | Owns | Important rule |
+| --- | --- | --- |
+| **ProfileId** (stable unique ID) | Profile display name, settings/metadata, owned save slots/runs, list of characters | Renameable name is **not** the identifier; profile A cannot overwrite profile B |
+| **RunId / SaveSlotId** (stable unique ID) | One character/playthrough, its status, last played time, reference to one WorldId; one active save initially is fine | Make the model extensible even if only a single slot per profile is exposed at first |
+| **WorldId** (stable unique instance ID) | **That run's** finite map, world seed, generator version, required geographical features, biome map, player changes, chunks, caves, creatures and A-Life state | Two different profiles using the **same seed** still have **independent world instances and edits** |
+
+**Safe default for first implementation:** **One profile → one active run → one private world**. This meets the player's intent now and keeps the structure extensible. Multiple characters per profile, several run slots per profile, and intentionally shared worlds are future design choices, **not requirements**. Do not implement cross-profile sharing unless explicitly requested.
+
+**Creation flow:**
+1. Player creates/selects a ProfileId. Creating a profile alone does not need to generate a giant world.
+2. "New world/new run" creates a fresh RunId and WorldId, chooses an initial world seed (random or user-entered), snapshots chosen generation settings/layout version and records these IDs together.
+3. The macro world plan for **that WorldId** is generated/frozen once. Streaming only instantiates nearby detail.
+4. On **Continue**, load the selected run's world manifest and its persisted seed/macro layout BEFORE loading player/chunks; **do not reroll** just because \`RandomSeedOnLoad\` was true for a prior debug session.
+5. Save/quit and load must restore that profile's player position, environment layer/cave location and world edits. Switching profiles must completely discard in-memory world/chunk/entity/A-Life caches from the previous run before loading the next.
+
+### Proposed file organization — conceptual, NOT a required format
+
+~~~text
+user://saves/
+  profiles/
+    <ProfileId>/
+      profile.meta                         # Display name, profile settings, owned RunIds
+      runs/
+        <RunId>/
+          run.meta                         # Slot metadata, alive/dead, active WorldId
+          player.state                     # Stats, inventory, position, equipment, needs
+          world/
+            manifest.state                 # WorldId, seed, generator/schema version, bounds,
+                                           # layout/guided features, clock, creation settings
+            regions.state                  # Frozen/coarse macro plan if necessary
+            chunks/
+              <LayerId>_<ChunkX>_<ChunkY>.delta
+            entities.state                 # Persistent named agents / groups / deaths
+            lifecycles.state               # Distant populations, territories, event queue
+            caves/
+              <CaveNetworkId>.state        # Network identity, entrances, changes
+~~~
+
+Extensions/filenames/serializer are **illustrative** (JSON, binary or other versioned format may be chosen). Godot \`user://\` is per local installation, and profile folders here are **game save profiles**, not user authentication/security boundaries. Sanitize file names and map IDs to safe canonical paths; no player-entered name should become an unchecked filesystem path.
+
+### The right split between SAVE and WORLD
+
+- **SAVE/Profiles/** — profile index/metadata, profile selection and optional slot/run selection; links ProfileId → RunId(s) → WorldId(s); character/run status and eventual permadeath policy.
+- **SAVE/WorldState/** — orchestrates combined saving/loading of the chosen player's world plus state; checks that stored IDs match selected run and profile.
+- **SAVE/Serialization/** — formats, schema version, integrity, atomic writes (write temp then replace), backup/recovery and corruption handling.
+- **SAVE/Migrations/** — forward compatibility when definitions/generator/schema evolve; never silently reshape an established world.
+- **WORLD/Runtime/Persistence/** — owns **world-domain data and deltas**: immutable macro-plan snapshots, chunk edits, cave modifications, entity/world state and correct chunk load/unload restoration. It should not decide which profile is active.
+- **ENTITIES/Player/** — produces/restores player-owned stats, inventory, equipment, needs, current world-space position and environment/depth. SAVE coordinates the operation; don't put ad-hoc save files into each gameplay system.
+- A central save coordinator identifies the **selected ProfileId + RunId + WorldId** at every save/load boundary. An unloaded chunk's delta is part of that world, never part of a global biome cache.
+
+**Keep generation data separate from mutable save state:** World seed/generator settings + immutable macro layout reconstruct untouched base terrain; each run's modifications, structures, removed props, opened caves, resources, NPCs and A-Life deltas overlay it. Cache keys for persistent state must include WorldId (and layer/chunk/feature ID); **world seed alone is not a unique save identity**.
+
+### Exact state to preserve for each profile/run
+
+- **Player:** Character identity and run ID, health/needs/injuries, equipment/inventory/item instances, progression, current coordinates, heading (if used), active world/cave/floor/layer, survival/time state.
+- **World blueprint:** WorldId, fixed chosen seed, generator version, immutable or snapshotted biome-region map, guaranteed ocean/volcano directives, reservations, terrain bounds and origin, placed POI IDs, caves/entrance links. Do not regenerate conflicting features after a reload.
+- **Chunk modifications:** Chopped trees, mined rocks/deposits, dropped/removed items, containers and contents, built structures, destroyed/altered terrain, object health/fire state where relevant; save stable object IDs, not fragile scene instance IDs.
+- **World simulation:** Game clock, weather/season phase if owned by the world, significant residents/group populations, NPC persistence, migration, deaths, event queue, off-screen tick timestamps. Each profile world has an **independent clock and event history**.
+- **Player's location on load:** Preload the correct chunk(s) or cave map and validate a safe arrival point before activating input/physics; don't spawn at default Oak Forest coordinates by mistake. Restore the correct environment/biome.
+
+When a chunk unloads, serialize meaningful current changes to its world's delta state **before freeing live nodes**. When it reloads, generate the same baseline using its fixed keys, overlay saved changes, then materialize eligible entities exactly once. Save an active world as a **consistent snapshot**, coordinating in-flight chunk generation/unload and A-Life so files do not capture conflicting times or duplicate agents.
+
+### Permadeath — explicitly unresolved policy
+
+The game's overall vision mentions permadeath, **but the world-after-death rule has not been chosen**. Keep profile identity separate from character/run identity and from WorldId so later you can choose between:
+- Character/run ends but the profile remains; player starts a **new world**.
+- Character/run ends but the profile can create a **new character in the same persistent world**.
+- A fully locked/archive-only hardcore slot, optional restart modes, etc.
+
+**Do NOT automatically delete an entire profile or its world because a character dies.** Choose and document the rule with the user before implementing permadeath cleanup. Archive/backup policy should respect that choice.
+
+### Safe saving, loading and scaling — required design constraints
+
+- Do not dump every generated scene/node of the giant finite world into one save file. Persist small immutable metadata, chunk-level deltas and coarse simulation records separately; cache frequently used macro layout safely.
+- Writes must be scoped to a resolved profile/run/world triple; validate IDs on disk and reject mismatches, corrupt manifests and cross-profile references instead of guessing.
+- Atomic writes and recoverable previous snapshots are preferable to partially written saves. Specify save timing (explicit, autosave, sleep, quit, chunk unload) and snapshot consistency.
+- Save schema version **and** generator version are different. Keep schema migrations separate from generation-content migrations and the author's intentional layout edits.
+- Switching profiles while another world is running must flush or cancel pending saves, streaming jobs, queued spawns and A-Life events (or safely isolate them by world ID) **before** activating the other run. No stale deferred job may write into the wrong world.
+- **A-Life while unloaded ≠ permanent simulation of all profiles at the same real-world time.** Initially, only the active run/world advances its in-game simulation clock. Offline catch-up for *inactive profiles* is an optional policy (suggest default OFF), explicitly configured and bounded; save/load timestamps must not make inactive worlds advance by accident.
+- Storage/quota, maximum profiles/slots and manual/automatic backups can be configurable in the owning SAVE master config when implemented. WORLD generation master config owns map/stream settings, **not** profile storage policies.
+
+### Acceptance tests to add to Codex's implementation
+
+1. Profile **A** creates Run A / World A at seed 123, chops a tree, builds a test marker, moves to a new chunk, saves.
+2. Profile **B** creates Run B / World B at the **same seed 123**, does not chop that tree, has different inventory and world time, saves.
+3. Reload A: tree remains gone; marker, position, clock, deterministic macro layout and slot ID match A. Reload B: tree still exists; B's position/inventory/clock and own edits remain untouched.
+4. Switch A→B→A repeatedly, including while streamed chunks/AI are active; no A objects, cached A-Life records or delayed writes appear in B.
+5. Save while a chunk is unloading and retry after simulated interrupted write; world state remains coherent or a backup restores it, never merges slots.
+6. Profile renaming does not rename/reseed/delete its world; world ID mismatch is rejected. Future permadeath behavior remains unimplemented until approved.
+
+**Milestone:** P0 should establish these ownership boundaries on paper, P1 should record a world ID/seed in a test run manifest (or prepare the interface), P3 should honor world-scoped chunk identities, **P4 must test two isolated profiles before being declared complete**, and P6 should restore each world's independent abstract population state.
+
 ## 9. A-Life-style off-screen simulation (future staged subsystem)
 
 **Goal:** Nearby AI feels physical/continuous, but important populations in unloaded areas still advance meaningfully and can change world conditions.
@@ -277,7 +378,8 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 ## 12. Recommended Codex passes — IMPLEMENT SMALL, TEST EACH
 
 **P0 — Architecture audit + frozen baseline**
-- Read all referenced docs/code and confirm current two biomes, content/pond/environment/skeleton dependencies.
+- Read all referenced docs/code and confirm current two biomes, content/pond/environment/skeleton dependencies, plus the existing SAVE/Profiles and SAVE/WorldState scaffolding.
+- Define ProfileId / RunId / WorldId ownership before new persistent runtime data exists; write down default one-profile/one-run/one-world rule and unresolved permadeath decision.
 - Make a concrete data-flow diagram and identify changes required to shaders, scenery placement, world startup, navigation and caches.
 - Measure current startup time, peak nodes, active scenery, frame time and memory. Make a reversible test scene/profile.
 - **Pass when:** Existing Oak + Pink Meadow world still runs identically.
@@ -286,6 +388,7 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - Add biome min/max region size, weight and optional climate affinity to the existing definitions; add world generation master resource.
 - Create a seeded **finite coarse macro biome map** with fully covered land and repeating organic regions. Only Oak Forest + Pink Meadow exist; no placeholders or mystery biomes.
 - Add an optional simple top-down biome-color overview/debug print (regions, counts, min/max size, % land assigned, deterministic hash).
+- Give each newly generated world a stable WorldId separate from its seed, scoped to the initiating profile/run; design a minimal saved manifest contract for later persistence.
 - Do not move entire production scene to streaming yet if the existing look would break.
 - **Pass when:** 10+ seeds have 100% valid land biome coverage and no invalid IDs; same seed/settings yield same map hash; different seeds vary region shapes; new weight/size values affect the macro map; world edges valid; two actual biome definitions referenced.
 
@@ -297,16 +400,18 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 
 **P3 — Chunk data and nearby streaming**
 - Add chunk coordinate/state and active ring; generate local details from frozen macro map and existing scenery/biome resources.
+- Ensure chunk state/cache identity includes WorldId and layer so profile-switching or identical-seed worlds cannot share mutable chunks.
 - Ensure continuous biome border and no seams or duplicated/missing props at chunk boundaries; migrate ground/shaders with minimal visual regression.
 - Chunk unload/reload without memory/node leaks, with the same props and colliders returning at identical locations.
 - Fix environment actor caches and pathfinding lifecycle when chunks stream.
 - **Pass when:** traverse several biome regions and return, no pop-in inside visible bounds, no full-world node explosion, controls/weather/pond/snow remain sound.
 
-**P4 — Deterministic saved edits**
-- Persist world seed/region plan and chunk deltas for a minimal changed object (e.g. a removed tree/test marker).
-- Validate save/reload, exit/re-enter chunks, no resurrection of modified props, no duplicate object identities.
-- Lock generator version and ID strategy before expanding feature count.
-- **Pass when:** save → quit → reload reproduces same geography/biomes and edited state; changing random new-world setting cannot replace a saved seed.
+**P4 — Per-profile persistent world saves and deterministic edits**
+- Implement the chosen ProfileId → RunId/SaveSlotId → WorldId association through SAVE/Profiles and SAVE/WorldState rather than global singleton save files.
+- Persist world seed/region plan, chosen macro features and chunk deltas for a minimal changed object (e.g. a removed tree/test marker), along with player coordinates, current layer, representative inventory and world clock.
+- Validate save/reload, exit/re-enter chunks, no resurrection of modified props, no duplicate object identities. Use atomic replacement, integrity validation and recovery handling.
+- Lock generator version and stable ID strategy before expanding feature count; existing saves do not silently regenerate terrain.
+- **Pass when:** profile A and B can have **the same seed but distinct world IDs and distinct edits, positions and clocks**; A→B→A switching cannot mix chunks/data; quit/reload preserves the correct run; changing random-new-world settings never replaces a saved world seed. Include interrupted-save recovery testing.
 
 **P5 — Priority content placement + POI/paths/caves scaffolding**
 - Expand macro reservation and local placement passes to real large obstacles, required POIs, cave-entrance locations and roads, as those assets arrive.
@@ -315,6 +420,7 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 
 **P6 — Abstract off-screen A-Life (separate substantial feature)**
 - Regional records + clock/tick queue, a simple migrating animal group or wandering patrol off-screen.
+- Scope all abstract entities, groups, event queues and clocks to the active WorldId/RunId; inactive player profiles should not advance automatically unless the user explicitly enables bounded offline simulation.
 - Spawn/dissolve concrete actors at chunk activation, carry health/position/group identity through unload/load.
 - Add deterministic catch-up and performance budget counters; only then expand to factions, ecology, settlements and long-term events.
 - **Pass when:** player leaves a region, off-screen state meaningfully changes, returns to a consistent encounter, and no duplicate/deleted NPCs or runaway sim costs occur.
@@ -341,6 +447,15 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - [ ] Existing production Oak/Pink art, lighting, wind, weather, rain, snow, pond and player/skeleton stay functional.
 - [ ] Avoid loading all chunks to compute a world overview; no giant all-world Sprite2D or full-world AStarGrid2D.
 - [ ] Log/visualize seed, chunk coordinates, region ID, biome ID, active chunk count, generation queue and time spent per pass.
+
+### Per-profile save isolation (P4 is NOT complete without these)
+- [ ] Each player profile has a stable ProfileId, its own save slot/run, and a separate WorldId; display names and identical seeds cannot merge saves.
+- [ ] World manifest, macro biomes, placed required features and persisted chunk modifications are loaded using the selected profile/run/world IDs.
+- [ ] Player stats/inventory/equipment, position, cave/layer, game time and meaningful world changes round-trip after quit/reload.
+- [ ] Profile A and B with **the same seed** preserve different tree removals/buildings and independent A-Life/world clocks.
+- [ ] Switching active profiles clears or segregates pending chunk loads, cached nodes, delayed saves and simulation jobs.
+- [ ] Interrupted/corrupt saves are detected/recoverable; slot IDs are validated, file paths safe, and writes atomic.
+- [ ] Permadeath world-retention/deletion policy is confirmed before any cleanup rule is implemented.
 
 ### Persistence and A-Life (when their passes begin)
 - [ ] Saved world identity, seed, generator version and required layout are persistent.
@@ -370,6 +485,14 @@ I'm updating this. My response: small = 3 min. med = 5 min. huge = 8 min (regula
 8. **Gameplay time and A-Life:** What tick size/region resolution and major events matter initially? Which entities remain named/persistent? Avoid designing a universe-wide detailed simulator before a small proof. -- what
 9. **Authoring:** Which Resource(s) should define major geographical directives? Can a future Avalonia World Creator edit them without duplicating the canonical data? --- what
 10. **Backward compatibility:** How will the existing two-biome authored boundary and current saved/test seeds behave during migration? Have an explicit rollback/test mode. --- migration? what u mean. they are already in the production folders?
+
+### Profile persistence decisions (please resolve before implementing SAVE/P4)
+
+- **Default assumed:** Separate private world per active profile/run; no shared world state between profiles. Confirm whether each profile should eventually contain multiple selectable save slots/characters.
+- **Permadeath:** Decide whether character death preserves the world's terrain/buildings, creates a brand-new world, or archives the run. Keep this switchable by design; don't wipe anything yet.
+- **Clock behavior:** Should an inactive profile's A-Life/weather/season clock remain paused (recommended initially) or progress while not being played? If offline progression is enabled later, bound the catch-up.
+- **Autosave:** Choose manual/autosave interval and recovery/backup policy. Avoid adding a save every frame or per object change.
+- **Loading:** Verify that each selected profile resumes in its saved overworld/cave layer and coordinates, without regenerating a different world seed.
 
 ## 15. Recommended first instruction to Codex
 
