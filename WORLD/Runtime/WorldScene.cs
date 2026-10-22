@@ -30,8 +30,13 @@ public partial class WorldScene : Node2D
         camera.LimitRight = Mathf.CeilToInt(Config.Bounds.End.X);
         camera.LimitBottom = Mathf.CeilToInt(Config.Bounds.End.Y);
         AddBounds();
-        GetNode<WorldSceneryPlacement>("Actors").Generate(Config, ActiveSeed);
-        GetNodeOrNull<EnvironmentRuntime>("Environment")?.Initialize(Config, GetNode<Node2D>("Actors"));
+        var pond = GetNodeOrNull<WorldPond>("Liquids");
+        var placement = GetNode<WorldSceneryPlacement>("Actors");
+        placement.ExcludedLiquid = pond?.GetNodeOrNull<LiquidRegion>("Pond");
+        placement.Generate(Config, ActiveSeed);
+        var environment = GetNodeOrNull<EnvironmentRuntime>("Environment");
+        environment?.Initialize(Config, GetNode<Node2D>("Actors"));
+        if (pond != null && environment?.Weather != null) pond.Initialize(GetNode<PlayerMovement>("Actors/Player"), environment.Weather);
     }
 
     // Static boundary walls derive from the same bounds as ground and camera.

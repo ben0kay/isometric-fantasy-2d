@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public partial class WorldSceneryPlacement : Node2D
 {
     private readonly List<(Vector2 Point, float Radius)> _occupied = new();
+    public LiquidRegion ExcludedLiquid { get; set; }
 
     #region Generation
     // Called once by world composition after config validation; order of populations is significant.
@@ -78,6 +79,7 @@ public partial class WorldSceneryPlacement : Node2D
                 blocked = true; break;
             }
             if (blocked) continue;
+            if (ExcludedLiquid != null && ExcludedLiquid.Contains(candidate, radius + (content.GrassLike ? 30f : 15f))) continue;
             point = candidate; return true;
         }
         return false;

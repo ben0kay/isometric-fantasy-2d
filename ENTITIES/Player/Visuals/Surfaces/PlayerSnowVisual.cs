@@ -4,6 +4,7 @@ using Godot;
 public partial class PlayerSnowVisual : Node
 {
     public WorldSnow Snow { get; set; }
+    public LiquidWading Liquid { get; set; }
     private Sprite2D _sprite;
     private Polygon2D _contact;
     private Vector2 _original;
@@ -41,14 +42,15 @@ public partial class PlayerSnowVisual : Node
             _sprite.Material = _material; _attached = true;
         }
         var player = (PlayerMovement)GetParent();
-        float target = GodotObject.IsInstanceValid(Snow) ? Snow.PlayerDepthAt(player.GlobalPosition) : 0f;
+        bool wet = GodotObject.IsInstanceValid(Liquid) && Liquid.Region.Active && Liquid.Immersion > 0.001f;
+        float target = !wet && GodotObject.IsInstanceValid(Snow) ? Snow.PlayerDepthAt(player.GlobalPosition) : 0f;
         _snowPixels = Mathf.MoveToward(_snowPixels, target, (float)delta * 12f);
-        float pixels = _snowPixels;
+        float pixels = wet ? Liquid.Immersion * Liquid.Region.Definition.MaximumSubmergePixels : _snowPixels;
         _sprite.Position = _original + new Vector2(0, pixels);
         _material.SetShaderParameter("burial", pixels > 0.01f ? 1f : 0f);
         _material.SetShaderParameter("groundline_y", player.GlobalPosition.Y - 1f);
         _contact.Visible = _contactVisible && pixels < 0.1f;
-        if (!GodotObject.IsInstanceValid(Snow)) QueueFree();
+        if (!GodotObject.IsInstanceValid(Snow) && !GodotObject.IsInstanceValid(Liquid)) QueueFree();
     }
 
     // Optional helpers can be removed at runtime without leaving altered player artwork.

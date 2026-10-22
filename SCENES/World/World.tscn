@@ -7,12 +7,14 @@
 [ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentRuntime.cs" id="environment"]
 [ext_resource type="Resource" path="res://ENVIRONMENT/DefaultEnvironmentConfig.tres" id="environment_config"]
 [ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
+[ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
 [node name="Ground" type="Sprite2D" parent="."]
 z_index = -10
 script = ExtResource("ground")
+[node name="Liquids" parent="." instance=ExtResource("pond")]
 [node name="Actors" type="Node2D" parent="."]
 y_sort_enabled = true
 script = ExtResource("placement")
