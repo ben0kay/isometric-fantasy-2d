@@ -7,6 +7,9 @@ public partial class WorldWeather : Node2D
     public WindController Wind { get; set; }
     public Node2D Actors { get; set; }
     public Rect2 WorldBounds { get; set; }
+    public SceneryArtworkIndex GroundQueries { get; set; } = new();
+    public bool RainActive => Config.RainIntensity > 0f;
+    public event System.Action RainStateChanged;
     public float WindStrength => Wind.Strength;
     public float Rain { get; private set; }
     public float CloudCover => Config.Overcast ? Rain : 0f;
@@ -20,14 +23,33 @@ public partial class WorldWeather : Node2D
     {
         Config ??= new WeatherProfile();
         ProcessPriority = -10;
-        _rainLayers = new RainVisualLayers { Name = "RainLayers", Config = Config };
-        AddChild(_rainLayers);
+        GroundQueries.Initialize(Actors,WorldBounds);
         _splashes = new GroundRainSplashes { Name = "GroundSplashes", ZIndex = -4, Weather = this, Actors = Actors, WorldBounds = WorldBounds };
         AddChild(_splashes);
         Lightning = new WorldLightning { Name = "Lightning", Weather = this, ZIndex = 7 };
         AddChild(Lightning);
+        Config.Changed += ApplyRainState; ApplyRainState();
     }
 
+    // Resource changes wake a sleeping controller; future scheduling can set the same intensity property.
+    // =========================================================
+    private void ApplyRainState()
+    {
+        if (RainActive)
+        {
+            if (_rainLayers == null)
+            { _rainLayers = new RainVisualLayers { Name="RainLayers", Config=Config }; AddChild(_rainLayers); }
+            SetProcess(true);
+        }
+        else
+        {
+            Rain = 0; SetProcess(false);
+            if (_rainLayers != null) { _rainLayers.Free(); _rainLayers = null; }
+        }
+        _splashes.SetRainActive(RainActive);
+        Lightning.RefreshProcessing(); RainStateChanged?.Invoke();
+    }
+    public override void _ExitTree() { Config.Changed -= ApplyRainState; GroundQueries.Clear(); }
     #endregion
 
     #region Simulation

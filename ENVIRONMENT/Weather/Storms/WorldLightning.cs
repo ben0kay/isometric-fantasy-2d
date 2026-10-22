@@ -8,12 +8,13 @@ public partial class WorldLightning : Node2D
     public float Flash { get; private set; }
     private readonly RandomNumberGenerator _random = new();
     private readonly List<Vector2[]> _branches = new();
-    private GroundRainSplashes _ground;
     private PointLight2D _impactLight;
     private Vector2[] _bolt = System.Array.Empty<Vector2>();
     private Vector2 _impact;
     private float _age = 1f, _strength, _remaining;
-    private bool _visibleStrike, _storm;
+    private bool _visibleStrike, _storm, _processing=true;
+    private float _lastFlash=float.NaN;
+    private Color _lastTint;
 
     #region Setup and triggering
     // Create one reusable impact light; bolt geometry is generated only when a strike occurs.
@@ -22,7 +23,6 @@ public partial class WorldLightning : Node2D
     {
         ProcessPriority = -9;
         _random.Randomize();
-        _ground = GetNode<GroundRainSplashes>("../GroundSplashes");
         Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded };
         var gradient = new Gradient
         {
@@ -57,15 +57,23 @@ public partial class WorldLightning : Node2D
             Rect2 view = Weather.VisibleWorldRect();
             Rect2 target = new(view.Position + view.Size * new Vector2(0.25f, 0.45f), view.Size * new Vector2(0.5f, 0.35f));
             // If the view is completely covered with props, fall back to a nearby flash.
-            _visibleStrike = _ground.TryGroundPoint(target, _random, out _impact);
+            _visibleStrike = Weather.GroundQueries.TryGroundPoint(target, _random, out _impact);
             if (_visibleStrike) BuildBolt(view);
         }
         _strength = Mathf.Clamp(_visibleStrike ? Weather.Config.StrikeFlashStrength : Weather.Config.NearbyFlashStrength, 0f, 1f);
-        _age = 0f;
+        _age = 0f; _processing=true; SetProcess(true);
         UpdateFlash();
         ScheduleNext();
     }
 
+    // No storm clock or redraw loop while dry/idle; manual flashes wake themselves.
+    // =========================================================
+    public void RefreshProcessing()
+    {
+        if (!Weather.Config.Lightning) { _age = 1f; _storm = false; UpdateFlash(); }
+        bool active = Weather.Config.Lightning && (Weather.RainActive || _age < 0.8f);
+        if (active != _processing) { _processing=active; SetProcess(active); }
+    }
     // Keep automatic nearby flashes irregular; visible strikes default to only four percent of events.
     // =========================================================
     private void ScheduleNext()
@@ -121,7 +129,7 @@ public partial class WorldLightning : Node2D
             _remaining -= (float)delta;
             if (_remaining <= 0f) Trigger(_random.Randf() < Mathf.Clamp(Weather.Config.VisibleStrikeChance, 0f, 1f));
         }
-        UpdateFlash();
+        UpdateFlash(); RefreshProcessing();
     }
 
     // One sharp pulse, a weaker return stroke, then a soft tail; always returns exactly to zero.
@@ -136,6 +144,8 @@ public partial class WorldLightning : Node2D
             pulse *= Mathf.Clamp((0.65f - _age) / 0.15f, 0f, 1f);
         }
         Flash = pulse * _strength;
+        if (Flash == _lastFlash && Weather.Config.LightningTint == _lastTint) return;
+        _lastFlash = Flash; _lastTint=Weather.Config.LightningTint;
         _impactLight.Enabled = _visibleStrike && Flash > 0.002f;
         _impactLight.Color = Weather.Config.LightningTint;
         _impactLight.Energy = Flash * 1.7f;

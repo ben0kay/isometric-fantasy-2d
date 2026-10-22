@@ -90,10 +90,13 @@ public partial class WorldAtmosphere : Node2D
         _mistMaterial.SetShaderParameter("world_min",_worldBounds.Position); _mistMaterial.SetShaderParameter("world_max",_worldBounds.End);
         _drift = _weather.Displacement;
         // Fade in extra leaves over roughly a second rather than popping on a slider change.
-        _leafWindMagnitude = Mathf.MoveToward(_leafWindMagnitude, Mathf.Abs(_weather.Strength), (float)delta * 1.5f);
-        IntegrateParticleWind(_leafDrift, _leafAge, 14f, 5.37f, Mathf.Clamp(Config.LeafWindDrift, 0f, 6f), (float)delta);
-        IntegrateParticleWind(_smokeDrift, _smokeAge, 6f, 0.43f, 0.7f, (float)delta);
-        IntegrateParticleWind(_emberDrift, _emberAge, 2.2f, 0.31f, 0.3f, (float)delta);
+        if (Config.Leaves && Config.LeafCount > 0 && _trees.Count > 0)
+        {
+            _leafWindMagnitude = Mathf.MoveToward(_leafWindMagnitude, Mathf.Abs(_weather.Strength), (float)delta * 1.5f);
+            IntegrateParticleWind(_leafDrift, _leafAge, 14f, 5.37f, Mathf.Clamp(Config.LeafWindDrift, 0f, 6f), (float)delta);
+        }
+        if (Config.Smoke && Config.SmokeCount > 0 && SmokeTexture != null) IntegrateParticleWind(_smokeDrift, _smokeAge, 6f, 0.43f, 0.7f, (float)delta);
+        if (Config.Embers && Config.EmberCount > 0) IntegrateParticleWind(_emberDrift, _emberAge, 2.2f, 0.31f, 0.3f, (float)delta);
         _haze.Visible = Config.Haze && Config.HazeDensity > 0;
         _mistMaterial.SetShaderParameter("density", Config.HazeDensity);
         _mistMaterial.SetShaderParameter("patch_size", Config.PatchSize);

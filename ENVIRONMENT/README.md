@@ -19,7 +19,7 @@ Oak Forest references `WORLD/Biomes/Definitions/OakForest/Environment.tres`, wit
 Selected profiles are explicitly cloned per component on startup. Developer controls edit private runtime copies; they do not save or mutate authored assets. Restart restores authored defaults. The two-biome preview resolves the primary biome profile once for the shared environment on load, matching DEBUG. Per-region environment sampling/blending, climates, calendars and seasons are future work.
 
 ## Defaults and limits
-Preserves the debug settings: 30 real seconds per day, 08:00 start, wind +1, rain target 55%, snow off, coverage target 60%. Mixed rain/snow is permitted; set rain to zero for pure snow. Existing effects are visual approximations, not snow physics or fire/heat simulation. The torch's authored collision remains while its presentation is disabled, matching the original test.
+Preserves the debug settings: 30 real seconds per day, 08:00 start, wind +1, rain target 0% (off), snow off, coverage target 60%. Mixed rain/snow is permitted; set rain to zero for pure snow. Existing effects are visual approximations, not snow physics or fire/heat simulation. The torch's authored collision remains while its presentation is disabled, matching the original test.
 
 Generation seed semantics and F5 debug launch are unchanged. No lake/wading, axe, enemies, burning, saves or chunk streaming are extracted. Content/lighting caches assume the current startup-generated world; dynamic spawn/despawn/streaming registration is not implemented.
 
@@ -33,3 +33,5 @@ P3 streaming: chunks own bounded wind/shadow/snow adapters; atmosphere and rain 
 P3 stability: EnvironmentMasterConfig now owns shared cosmetic culling and preparation/retention margins. Chunk wind/wetness/snow updates suspend outside artwork bounds plus margins; re-entry synchronizes shared weather/wind/coverage. Sun shadows use their own conservative projection reach. Registration yields between adapters during streaming; no per-species update managers are added. See WORLD/Runtime/Visibility/README.md and the F7 culling comparison/timing counters. This is not suspension of gameplay or a native light-budget implementation.
 
 Incremental scenery sources: chunk binding registers each prop with rain/atmosphere once, and explicit removal/unload/cancellation unregisters it. Full loaded-world source rescans on lifecycle changes have been removed after target-machine traces measured them as the dominant hitch. Static appearance changes refresh only the changed prop; new scenery reuses the same lifecycle. See the streaming README for the measured evidence and validation limits.
+
+Production rain intensity zero is now a hard off state with signal-driven wakeup; dry wetness sleeps after drying. Shared ground queries and wind remain independent. Leaves use a bounded 40-slot pool; disabled leaf simulation/drawing is skipped. See module READMEs for exact limits.

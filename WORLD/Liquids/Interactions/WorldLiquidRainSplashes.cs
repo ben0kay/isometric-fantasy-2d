@@ -15,6 +15,15 @@ public partial class WorldLiquidRainSplashes : Node2D
     private int _next;
     private bool _drewLastFrame;
 
+    // Intensity changes wake this pool; dry weather never polls the lake each frame.
+    // =========================================================
+    public override void _Ready() { Weather.RainStateChanged += ApplyRainState; ApplyRainState(); }
+    private void ApplyRainState()
+    {
+        bool active = Weather.RainActive; SetProcess(active); Visible = active;
+        if (!active) { System.Array.Clear(_pool); _budget=0; _next=0; _drewLastFrame=false; QueueRedraw(); }
+    }
+    public override void _ExitTree() { Weather.RainStateChanged -= ApplyRainState; }
     #region Impact simulation
     // Only the small lake rectangle is sampled; polygon distance rejects land and the shore.
     // =========================================================

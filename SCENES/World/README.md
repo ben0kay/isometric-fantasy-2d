@@ -12,7 +12,7 @@ The scene composes production world and environment modules. The optional Enviro
 C# built successfully against the repository's Godot.NET.Sdk 4.7.2 / .NET 8 configuration. Runtime checks in Godot 4.5.1 .NET verified same-seed replay, different seeds, fresh random loads and replay from a logged random seed; movement, four boundary walls, collision and both camera zoom limits passed. The actual 1920×1080 scene was rendered and inspected with software OpenGL Compatibility. The unchanged DEBUG main scene also loaded. Windows D3D12 and target-machine performance still require local checking.
 
 ## Environment profiles
-See ENVIRONMENT/README.md for ownership and validation. WORLD/Biomes/Definitions/OakForest/Environment.tres supplies optional local components (currently Atmosphere.tres); unspecified components inherit ENVIRONMENT/Profiles/DefaultEnvironmentProfile.tres. One clock is shared. Rain defaults to 55%, snow starts off. Runtime previews reset on restart.
+See ENVIRONMENT/README.md for ownership and validation. WORLD/Biomes/Definitions/OakForest/Environment.tres supplies optional local components (currently Atmosphere.tres); unspecified components inherit ENVIRONMENT/Profiles/DefaultEnvironmentProfile.tres. One clock is shared. Rain defaults to 0% (off), snow starts off. Runtime previews reset on restart.
 
 ## Second biome — 22 October 2026
 Walk east from the normal spawn to find Pink Meadow beyond the curved boundary around x=1760. Bounds are (-800,-544) -> (3040,1184). Height and spawn are unchanged; camera, ground, walls and environment all derive the enlarged dimensions from the same world config.

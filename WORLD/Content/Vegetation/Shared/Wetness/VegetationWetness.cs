@@ -11,11 +11,27 @@ public partial class VegetationWetness : Node
     private readonly Dictionary<Sprite2D, Material> _original = new();
     private readonly Dictionary<Sprite2D, ShaderMaterial> _owned = new();
     private readonly List<ShaderMaterial> _materials = new();
-    private readonly Dictionary<ShaderMaterial,ShaderMaterial> _sources = new();
+    private bool _visualActive = true, _processing;
     public float Coverage => _coverage;
     // New chunks start at the shared world wetness instead of appearing dry during an ongoing storm.
     // =========================================================
-    public void StartAt(float value) { _coverage = Mathf.Clamp(value,0,1); _lastCoverage = -1; _Process(0); }
+    public void StartAt(float value)
+    {
+        float previous = _coverage; _coverage = Mathf.Clamp(value,0,1); _lastCoverage = -1;
+        if (_coverage > 0 || previous > 0) _Process(0);
+        RefreshProcessing();
+    }
+    public override void _Ready()
+    {
+        Weather.Config.Changed += RefreshProcessing; Weather.RainStateChanged += RefreshProcessing; SetProcess(false);
+    }
+    public void SetVisualActive(bool active) { _visualActive = active; RefreshProcessing(); }
+    private void RefreshProcessing()
+    {
+        bool active = _visualActive && (_coverage > 0 || (Weather.RainActive && Weather.Config.WetFoliage));
+        if (active == _processing) return;
+        _processing = active; SetProcess(active);
+    }
     private float _coverage, _lastCoverage = -1f, _lastDarkening = -1f;
 
     #region Attach
@@ -51,13 +67,13 @@ public partial class VegetationWetness : Node
                 material.SetShaderParameter("wet_foliage_profile", (float)profile);
                 material.SetShaderParameter("wet_coverage", 0f);
                 variants.Add((source, profile), material);
-                _materials.Add(material); _sources.Add(material,source);
+                _materials.Add(material); Weather.Wind.RegisterMaterial(material);
             }
             _original.Add(sprite, source);
             _owned.Add(sprite, material);
             sprite.Material = material;
         }
-        ProcessPriority = -5;
+        ProcessPriority = -5; RefreshProcessing();
     }
     #endregion
 
@@ -68,7 +84,6 @@ public partial class VegetationWetness : Node
     {
         using var frameTrace = RuntimeFrameTrace.Measure("VegetationWetness.Process");
         if (Weather?.Config == null) return;
-        foreach (var pair in _sources) pair.Key.SetShaderParameter("wind_multiplier",pair.Value.GetShaderParameter("wind_multiplier"));
         WeatherProfile settings = Weather.Config;
         float target = settings.WetFoliage ? Weather.Rain : 0f;
         float seconds = target > _coverage
@@ -76,7 +91,8 @@ public partial class VegetationWetness : Node
             : Mathf.Max(0.1f, settings.WetnessDrySeconds);
         _coverage = Mathf.MoveToward(_coverage, Mathf.Clamp(target, 0f, 1f), (float)delta / seconds);
         float darkening = Mathf.Clamp(settings.WetFoliageDarkening, 0f, 0.35f);
-        if (Mathf.Abs(_coverage - _lastCoverage) < 0.001f
+        RefreshProcessing();
+        if ((_coverage > 0 || _lastCoverage == 0) && Mathf.Abs(_coverage - _lastCoverage) < 0.001f
             && Mathf.IsEqualApprox(darkening, _lastDarkening)) return;
         _lastCoverage = _coverage; _lastDarkening = darkening;
         foreach (ShaderMaterial material in _materials)
@@ -92,10 +108,12 @@ public partial class VegetationWetness : Node
     // =========================================================
     public override void _ExitTree()
     {
+        Weather.Config.Changed -= RefreshProcessing; Weather.RainStateChanged -= RefreshProcessing;
+        foreach (var material in _materials) Weather.Wind.UnregisterMaterial(material);
         foreach (var pair in _original)
             if (GodotObject.IsInstanceValid(pair.Key) && pair.Key.Material == _owned[pair.Key])
                 pair.Key.Material = pair.Value;
-        _original.Clear(); _owned.Clear(); _materials.Clear(); _sources.Clear();
+        _original.Clear(); _owned.Clear(); _materials.Clear();
     }
     #endregion
 }

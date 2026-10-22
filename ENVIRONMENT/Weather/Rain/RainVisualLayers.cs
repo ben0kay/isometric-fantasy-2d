@@ -7,12 +7,15 @@ public partial class RainVisualLayers : Node2D
 {
     public WeatherProfile Config { get; set; }
     private readonly List<Layer> _layers = new();
+    private float _lastRain=float.NaN, _lastWind, _lastForeground, _lastSpeed, _lastSlant, _lastVariation;
+    private Rect2 _lastView;
+    public int AppliedUpdates { get; private set; }
     private sealed class Layer
     {
         public GpuParticles2D Emitter;
         public ParticleProcessMaterial Motion;
         public float Speed;
-        public bool Foreground;
+        public bool Foreground, Initialized;
     }
 
     #region Initialization
@@ -112,6 +115,13 @@ public partial class RainVisualLayers : Node2D
     public void UpdateRain(float rain, float windStrength, Rect2 view)
     {
         float intensity = Mathf.Clamp(rain, 0f, 1f);
+        bool intensityChanged = intensity != _lastRain || Config.ForegroundRainStrength != _lastForeground;
+        bool motionChanged = windStrength != _lastWind || Config.FallSpeed != _lastSpeed || Config.SlantPerStrength != _lastSlant || Config.DropVariation != _lastVariation;
+        bool viewChanged = view != _lastView;
+        if (!intensityChanged && !motionChanged && !viewChanged) return;
+        _lastRain=intensity; _lastForeground=Config.ForegroundRainStrength; _lastWind=windStrength;
+        _lastSpeed=Config.FallSpeed; _lastSlant=Config.SlantPerStrength; _lastVariation=Config.DropVariation; _lastView=view;
+        AppliedUpdates++;
         if (intensity <= 0.001f)
         {
             foreach (Layer layer in _layers) layer.Emitter.Emitting = false;
@@ -125,19 +135,27 @@ public partial class RainVisualLayers : Node2D
             GpuParticles2D emitter = layer.Emitter;
             float contribution = layer.Foreground ? Mathf.Clamp(Config.ForegroundRainStrength, 0f, 1f) : 1f;
             float ratio = intensity * contribution;
-            emitter.AmountRatio = Mathf.Max(0.001f, ratio);
-            emitter.Emitting = ratio > 0.001f;
-            if (!emitter.Emitting) continue;
+            bool emitting = ratio > 0.001f;
+            if (intensityChanged)
+            { emitter.AmountRatio = Mathf.Max(0.001f,ratio); emitter.Emitting = emitting; }
+            if (!emitting) continue;
 
             float maxSpeed = windFall.Length() * layer.Speed * (1f + variation * 0.19f);
             float margin = 160f + maxSpeed * (float)emitter.Lifetime;
             Vector2 half = view.Size / 2f + Vector2.One * margin;
-            emitter.GlobalPosition = view.GetCenter();
-            emitter.VisibilityRect = new Rect2(-half * 2f, half * 4f);
-            layer.Motion.EmissionBoxExtents = new Vector3(half.X, half.Y, 1f);
-            layer.Motion.Direction = new Vector3(windFall.X, windFall.Y, 0f).Normalized();
-            layer.Motion.InitialVelocityMin = maxSpeed * (1f - variation * 0.30f);
-            layer.Motion.InitialVelocityMax = maxSpeed;
+            if (viewChanged || motionChanged || !layer.Initialized)
+            {
+                emitter.GlobalPosition = view.GetCenter();
+                emitter.VisibilityRect = new Rect2(-half*2f,half*4f);
+                layer.Motion.EmissionBoxExtents = new Vector3(half.X,half.Y,1f);
+            }
+            if (motionChanged || !layer.Initialized)
+            {
+                layer.Motion.Direction = new Vector3(windFall.X,windFall.Y,0f).Normalized();
+                layer.Motion.InitialVelocityMin = maxSpeed*(1f-variation*0.30f);
+                layer.Motion.InitialVelocityMax = maxSpeed;
+            }
+            layer.Initialized = true;
         }
     }
     #endregion

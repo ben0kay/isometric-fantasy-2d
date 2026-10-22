@@ -29,7 +29,7 @@ public partial class ValidateSceneryVisibility : Node
             GD.Print($"SO0 runtime /World/{section.Name}: {section.GetChildCount()} direct children");
         await Settle(220);
         Check(stream.PendingCount == 0,"Prefetch did not settle");
-        var rain = env.Weather.GetNode<GroundRainSplashes>("GroundSplashes");
+        var rain = env.GroundQueries;
         var atmosphere = env.GetNode<WorldAtmosphere>("Atmosphere");
         int rainRegistrations = rain.RegistrationCount, treeRegistrations = atmosphere.RegistrationCount;
         await Settle(30);
@@ -93,9 +93,7 @@ public partial class ValidateSceneryVisibility : Node
         Check(GetTree().GetNodesInGroup("world_trees").Count == 0,"World exit leaked registrations");
         // A negative-coordinate prop crossing spatial cells blocks rain until explicitly removed.
         var rainActors = new Node2D(); AddChild(rainActors);
-        var testWeather = new WorldWeather { Config = new WeatherProfile { Splashes=false } };
-        var isolatedRain = new GroundRainSplashes { Weather = testWeather, Actors = rainActors, WorldBounds = new Rect2(-2048,-2048,4096,4096) };
-        AddChild(isolatedRain); isolatedRain.SetProcess(false);
+        var isolatedRain = new SceneryArtworkIndex(); isolatedRain.Initialize(rainActors,new Rect2(-2048,-2048,4096,4096));
         var blocker = new Node2D { Position = new Vector2(-256,-256) }; rainActors.AddChild(blocker);
         blocker.AddChild(new Sprite2D { Name = "Sprite", Texture = new GradientTexture2D { Width=64,Height=64 } });
         isolatedRain.RegisterSource(blocker); isolatedRain.RegisterSource(blocker);
@@ -105,7 +103,7 @@ public partial class ValidateSceneryVisibility : Node
         isolatedRain.UnregisterSource(blocker);
         Check(isolatedRain.SourceCount == 0 && isolatedRain.SpatialCellCount == 0,"Removal leaves ghost rain exclusions");
         Check(isolatedRain.TryGroundPoint(new Rect2(-260,-260,8,8),random,out _),"Removed scenery still blocks rain");
-        isolatedRain.QueueFree(); rainActors.QueueFree(); await Settle(3); testWeather.Free();
+        isolatedRain.Clear(); rainActors.QueueFree(); await Settle(3);
         // A synthetic caster outside the view must stay active when its long shadow can reach the view.
         var actors = new Node2D(); AddChild(actors);
         var body = new StaticBody2D { Position = new Vector2(-100,100) }; actors.AddChild(body);

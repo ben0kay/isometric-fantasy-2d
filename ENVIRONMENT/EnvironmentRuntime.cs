@@ -12,7 +12,7 @@ public partial class EnvironmentRuntime : Node2D
     public WorldSnow Snow { get; private set; }
     public bool Initialized { get; private set; }
 
-    private GroundRainSplashes _rainSources;
+    public SceneryArtworkIndex GroundQueries { get; } = new();
     private WorldAtmosphere _atmosphere;
     private readonly System.Collections.Generic.Dictionary<Shader, Shader> _wetnessShaders = new();
     private sealed class ChunkVisuals
@@ -54,8 +54,7 @@ public partial class EnvironmentRuntime : Node2D
             extra.Name = "PreviewTorch" + previewIndex; extra.Position = position; actors.AddChild(extra);
             AddChild(new TorchLight { Name = "PreviewTorchLight" + previewIndex, Torch = extra, Config = Settings.Torch });
         }
-        Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds }; AddChild(Weather);
-        _rainSources = Weather.GetNode<GroundRainSplashes>("GroundSplashes");
+        Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds, GroundQueries = GroundQueries }; AddChild(Weather);
         // Wind is already attached; register leaf wetness before snow clones tree materials.
         var wetness = new VegetationWetness { Name = "VegetationWetness", Weather = Weather }; AddChild(wetness); wetness.Attach(actors, _wetnessShaders);
         var shadows = new SunShadowRenderer { Name = "SunShadows", ZIndex = -5, Wind = Wind }; AddChild(shadows); shadows.Attach(actors);
@@ -100,12 +99,12 @@ public partial class EnvironmentRuntime : Node2D
     // =========================================================
     public void RegisterScenery(Node2D source)
     {
-        _rainSources.RegisterSource(source);
+        GroundQueries.RegisterSource(source);
         _atmosphere.RegisterSource(source);
     }
     public void UnregisterScenery(Node2D source)
     {
-        _rainSources.UnregisterSource(source);
+        GroundQueries.UnregisterSource(source);
         _atmosphere.UnregisterSource(source);
     }
     public void RefreshScenery(Node2D source) { UnregisterScenery(source); RegisterScenery(source); }
@@ -125,13 +124,12 @@ public partial class EnvironmentRuntime : Node2D
             bool active = !Config.CullOffscreenSceneryEffects || state.Bounds.Intersects(state.Active ? view.Grow(Mathf.Max(0,Config.SceneryRetentionMargin)) : view);
             if (active != state.Active)
             {
-                state.Active = active; state.Wind.SetProcess(active); state.Wetness.SetProcess(active);
+                state.Active = active; state.Wind.SetProcess(active); state.Wetness.SetVisualActive(active);
                 Snow.SetChunkVisualActive(pair.Key,active);
                 if (active)
                 {
                     state.Wind._Process(0);
                     state.Wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
-                    state.Wetness._Process(0);
                 }
             }
             if (active) CosmeticChunkCount++;

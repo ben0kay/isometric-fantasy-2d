@@ -141,3 +141,9 @@ A refactor is complete only when: (1) the OFF/idle state demonstrably avoids nee
 5. At each handoff report: activation trigger; shutdown condition; idle callbacks/material writes; scaling approach; measured before/after if obtainable; known unverified behavior.
 
 **Do not claim a refactor succeeded solely because `SetProcess(false)` appears in code.** A sleeping component must still reliably wake when the user changes an F9 setting, a gameplay event fires, a chunk reappears or a world service transitions state.
+
+## Rain / falling-leaf pass completed separately
+
+Rain intensity now defaults to zero. Zero immediately removes GPU rain, clears ground/liquid splash pools and sleeps their callbacks; positive intensity wakes them through profile-change notifications. Shared scenery ground-query data remains independent so manual lightning still works while dry. Lightning sleeps without rain or an active flash (addresses P0-C); foliage wetness sleeps after drying and shared wind updates its cached material followers on changes (addresses the wetness-forwarding portion of P1-E). The separate VegetationWind adapter audit remains pending.
+
+Falling leaves retain one shared renderer with at most 40 reused slots; disabled/zero-count leaves skip integration. This does not disable other atmosphere effects. Validation: 22 rain lifecycle checks, 167 scenery visibility checks, P3 generation checks and tree/fire/debug smoke checks passed under local Godot 4.5.1; target 4.7.2 and graphical FPS remain unverified. See subsystem READMEs for details and the isolated Mono shutdown caveat.
