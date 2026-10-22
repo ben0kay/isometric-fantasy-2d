@@ -122,3 +122,105 @@ The exact names of some future production scripts/resources may be adjusted to a
 - [x] Production files do not depend on `DEBUG/TopDownTest/` paths/classes/resources.
 - [x] All existing debug experiments stay intact and runnable.
 - [x] Updated READMEs clearly distinguish newly implemented production code from remaining design scaffolding.
+
+---
+
+# Phase 2 — Production Environment and Debug UI Controls
+
+> **Status: planned — instruction set for Codex, not implemented by this documentation update.** Phase 1 production world is already implemented; see `SCENES/World/README.md`. This phase **copies and adapts** working environmental effects from `DEBUG/TopDownTest/` into production without moving or deleting anything from the original debug test.
+>
+> **Important UI decision:** All developer-only environment sliders, checkboxes, test buttons and comparison panels must live under **`DEBUG/UI/`**, not inside `ENVIRONMENT/` or the player-facing `UI/`. Production systems must run even if every debug panel is removed.
+
+## Phase 2 goal
+
+Add the environmental visual effects already proven in the DEBUG forest to `SCENES/World/World.tscn`, preserving their existing appearance and interactions wherever feasible. Provide optional production-world testing panels in `DEBUG/UI/` to adjust and toggle those effects. Reuse existing modules instead of designing new weather or lighting simulation features.
+
+Maintain the existing world/player/ground/scenery generation and the first production pass's data ownership. Keep the original `DEBUG/TopDownTest/` scene operational and unchanged.
+
+## Production destinations
+
+| Existing source in `DEBUG/TopDownTest/` | Production system owner | Developer controls |
+| --- | --- | --- |
+| `DayNight/`: cycle, illumination, projected sun shadows | `ENVIRONMENT/Time/` for authoritative time/clock and `ENVIRONMENT/Lighting/DayNight/`, `Lighting/Sun/`, `Lighting/Shadows/` for rendering | `DEBUG/UI/` day/night panel |
+| `Polish/`: colour grade, cloud shade, torch light | `ENVIRONMENT/Lighting/` for colour/light and local torch; atmospheric cloud visuals under `ENVIRONMENT/Atmosphere/` as appropriate | `DEBUG/UI/` lighting/polish panel |
+| Shared wind currently controlled from `Weather/` | `ENVIRONMENT/Wind/` authoritative shared wind state and visual integration | `DEBUG/UI/` wind panel |
+| `Atmosphere/`: haze, fog-like overlays, pollen, drifting leaves, smoke and embers | `ENVIRONMENT/Atmosphere/` with relevant effects/profile subfolders | `DEBUG/UI/` atmosphere panel |
+| `Weather/`: rain, overcast, lightning, ground impact effects | `ENVIRONMENT/Weather/` (`Rain/`, `Storms/` and related components) | `DEBUG/UI/` weather panel |
+| `SnowTest/`: flakes, settled snow and accumulation/melting comparisons | `ENVIRONMENT/Weather/Snow/` for precipitation/coverage control and shared effects; world-object/ground-specific material adapters remain near their owning systems where appropriate | `DEBUG/UI/` snow panel |
+| `Trees/TreeSway.gdshader`, grass wind materials and snow adapters | Reusable adapters/effect shaders controlled by `ENVIRONMENT/`; canonical Oak/grass artwork and object identities stay in `WORLD/Content/` | Use shared environment controls; no duplicate controls per tree |
+| Shared `Surfaces/PlayerSurfaceVisual.cs` for snow/lake interactions | Integrate a reusable player visual adapter under `ENTITIES/Player/Visuals/` **only if needed** for in-scope snow appearance; avoid copying lake/wading dependencies | No player-specific debug panel unless necessary |
+
+**Do not copy an entire DEBUG subsystem to one monolithic production folder.** Distribute its responsibilities by ownership while retaining tested calculations/materials and minimizing rewriting. Inspect existing production folder READMEs and config files before assigning final filenames.
+
+## Developer UI layout
+
+```text
+DEBUG/
+└── UI/
+    ├── README.md
+    └── Environment/
+        ├── EnvironmentDebugPanel.tscn     # optional panel composition
+        ├── EnvironmentDebugPanel.cs       # controls only; not the simulation
+        ├── DayNight/                       # optional subpanels if needed
+        ├── Lighting/
+        ├── Wind/
+        ├── Atmosphere/
+        ├── Weather/
+        └── Snow/
+```
+
+The exact subpanel files are up to the implementation; **avoid generating empty folders just for appearance**. Prefer a reasonably sized, organized and collapsible UI over crowding the gameplay viewport. Preserve useful live sliders, toggles, manual lightning testing, time scrub/pause and weather/snow comparison controls from DEBUG where the corresponding production effect exists.
+
+`SCENES/World/World.tscn` should instantiate production environment nodes independently of `DEBUG/UI/`. Developer panels may optionally be instantiated by the world scene for testing and removed or disabled without altering environment simulation, materials or saved configs.
+
+**Do not use `UI/HUD/` or `UI/Menus/` for these controls.** Those belong to actual player-facing interfaces; `DEBUG/UI/` is strictly developer tooling.
+
+## Shared dependency rules
+
+1. **One game clock:** Day/night visuals consume `ENVIRONMENT/Time/`; do not create a separate clock for every effect. Only implement the clock behaviour necessary to reproduce the working test.
+2. **One wind source:** Wind feeds tree sway, grass sway, particle drift, rain slant and cloud movement. The DEBUG signed-wind behaviour can be carried across initially; expanding to sophisticated multidirectional wind is **not** required in this copy pass.
+3. **Canonical world assets stay in WORLD:** Tree sprites, grass artwork, rocks and ground-surface definitions remain in `WORLD/`. Use existing production tree/rock/grass scenes created in Phase 1; adapt effects to those instances instead of reintroducing DEBUG prop scenes.
+4. **Biome properties are data:** Oak Forest may provide optional local appearance/environment settings via its definition or referenced profiles, not a separate copy of all renderers. Other biomes can reuse these effect systems later.
+5. **Snow effects cross modules:** Snowfall belongs to WEATHER; a grounded rock cap, tree canopy deposition or ground surface snow must target the corresponding production WORLD materials/objects cleanly. Preserve snow toggles and material restoration; don't assume original DEBUG node paths remain valid.
+6. **Avoid conflicting sprite owners:** If snow affects the player's sprite, follow the existing shared surface-visual principle so environment effects don't compete to change transforms/materials. Water immersion/lake functionality remains **out of scope** for this phase.
+7. **Environment is independent of debug UI:** DEBUG panels send configuration commands/values to existing production controllers; all effects function with panels removed.
+
+## Suggested Codex extraction sequence
+
+1. Read root `README.md`, `CodePreferences.md`, the original DEBUG subsystem READMEs, `ENVIRONMENT/` READMEs, and Phase 1's `SCENES/World/` scene/scripts. Map actual dependencies and current classes/resources first.
+2. Copy/adapt **DayNight + Lighting**, including projected tree/rock/player shadows as compatible with the production content. Keep render wiring modular.
+3. Copy/adapt shared **Wind**, then reconnect tree and decorative grass sway without per-instance expensive update loops.
+4. Copy/adapt **Atmosphere** effects and their resource/particle configurations.
+5. Copy/adapt **Weather** (rain, overcast, lightning and impact effects).
+6. Copy/adapt **Snow** after wind, tree materials and ground materials are stable.
+7. Copy/adapt **Polish** colour-grading/cloud/torch controls to the correct production owners (or integrate the relevant portions during Lighting/Atmosphere steps without duplication).
+8. Create `DEBUG/UI/` controls **for implemented effects only**, wiring directly to production controllers; optionally compose them in one developer panel for `World.tscn`.
+9. Validate independently with `World.tscn` and with debug panels removed; update owning folder READMEs and mark Phase 2 status accurately.
+
+If a subsystem can be migrated independently, prefer verifying it before migrating the next. This ordered sequence is **one requested Phase 2 extraction job**, not permission to add unrelated mechanics.
+
+## Phase 2 out of scope
+
+- No new biome, cave, macro world generation, chunk streaming or save system.
+- No lake/wading, water-physics gameplay, fire spread/tree destruction or survival/combat additions.
+- No new seasons simulation or full meteorological/climate engine.
+- No mandatory player-facing options screen for environment controls.
+- No rewriting the DEBUG scene or removing its existing controls.
+- No broad shader redesign solely for visual novelty; aim to match current working DEBUG appearance.
+
+## Phase 2 acceptance checklist
+
+- [ ] Existing production `SCENES/World/World.tscn` still runs with player movement, camera, ground and procedurally scattered Oak Forest scenery.
+- [ ] Day/night, illumination and projected shadows work on the **production** scene.
+- [ ] Shared wind drives production tree/grass visuals and applicable particles/weather.
+- [ ] Atmosphere and colour/polish effects visually work without debug resource references.
+- [ ] Rain, overcast, ground impacts and lightning are testable.
+- [ ] Snowfall and settled snow can be enabled/disabled and affect production ground, Oak trees, rocks and grass without breaking base materials.
+- [ ] Controls are located under `DEBUG/UI/`, work against production environment controllers, and can be removed without disabling those controllers.
+- [ ] Production environment scripts/scenes/resources contain no dependencies on `DEBUG/TopDownTest/`.
+- [ ] Original `DEBUG/TopDownTest/` remains intact and runnable.
+- [ ] Runtime C# build, scene/resource loading and visible rendering are checked; any untested target backend/performance limitations are documented.
+- [ ] Folder READMEs identify implemented systems and their MasterConfigs/settings.
+- [ ] **One GitHub commit per implementation job**, consistent with `CodePreferences.md`.
+
+**Phase separation:** The earlier Phase 1 `Keep out of scope` paragraph applies to **Phase 1 only**. This Phase 2 section explicitly authorizes extraction of the listed environment systems and creation of developer UI controls under `DEBUG/UI/`, but does not imply that Phase 2 is already implemented.
