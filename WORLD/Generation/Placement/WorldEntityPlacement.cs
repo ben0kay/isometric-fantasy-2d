@@ -7,7 +7,7 @@ public partial class WorldEntityPlacement : Node
     [ExportGroup("Entity")]
     [Export] public bool Enabled { get; set; } = true;
     [Export] public PackedScene EntityScene { get; set; }
-    [Export] public EnemyDefinition EnemyDefinition { get; set; }
+    [Export] public EntityDefinition EntityDefinition { get; set; }
     [Export] public Vector2 SpawnOffsetFromPlayer { get; set; } = new(0, -210);
 
     [ExportGroup("Static navigation")]
@@ -39,10 +39,10 @@ public partial class WorldEntityPlacement : Node
             return;
         }
 
-        if (instance is EnemyActor enemy)
+        if (instance is Entity entity)
         {
-            if (EnemyDefinition == null) { GD.PushError("Shared enemy scene requires EnemyDefinition."); instance.Free(); return; }
-            enemy.Configure(EnemyDefinition);
+            if (EntityDefinition == null) { GD.PushError("Shared entity scene requires EntityDefinition."); instance.Free(); return; }
+            entity.Configure(EntityDefinition);
         }
         instance.Position = safeSpawn;
         actors.AddChild(instance);

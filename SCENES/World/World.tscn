@@ -9,7 +9,7 @@
 [ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
 [ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
 [ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldEntityPlacement.cs" id="entity_placement"]
-[ext_resource type="PackedScene" path="res://ENTITIES/Shared/Enemies/Enemy.tscn" id="skeleton_basic"]
+[ext_resource type="PackedScene" path="res://ENTITIES/Shared/Entity.tscn" id="skeleton_basic"]
 [ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres" id="basic_definition"]
 [ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs" id="fire_runtime"]
 [ext_resource type="Resource" path="res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres" id="fire_config"]
@@ -30,7 +30,7 @@ script = ExtResource("placement")
 [node name="EntityPlacement" type="Node" parent="."]
 script = ExtResource("entity_placement")
 EntityScene = ExtResource("skeleton_basic")
-EnemyDefinition = ExtResource("basic_definition")
+EntityDefinition = ExtResource("basic_definition")
 
 [node name="Environment" type="Node2D" parent="."]
 script = ExtResource("environment")

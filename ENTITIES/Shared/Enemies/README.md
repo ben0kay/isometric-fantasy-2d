@@ -1,3 +1,3 @@
-# Shared enemies
+# Legacy enemy path
 
-`Enemy.tscn` + `EnemyActor.cs` implement common navigation, axe/tool hit reception, health, damage flash and death fade. `EnemyDefinition.cs` owns data-driven visual, collision, hit radius and baseline pursuit parameters. Author species/variants as Resources and artwork, not individual scenes. This first shared actor implements ground pursuit; later flying, ranged or unusual locomotion should be pluggable behaviour modules rather than an enormous if/switch or duplicated enemy scene.
+Superseded by `ENTITIES/Shared/Entity.tscn`, `Entity.cs`, `EntityDefinition.cs` and optional `AI/GroundChase.cs`. All production creatures should use the generic entity foundation and Resource-driven behaviour settings. Kept as a pointer only.

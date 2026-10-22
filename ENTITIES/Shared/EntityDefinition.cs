@@ -1,7 +1,7 @@
-// Resource authored enemy data shared across species; suitable for future Avalonia authoring.
+// Resource authored entity data shared across species; suitable for future Avalonia authoring.
 using Godot;
 [GlobalClass]
-public partial class EnemyDefinition : Resource
+public partial class EntityDefinition : Resource
 {
     [Export] public string Id { get; set; } = "";
     [Export] public Texture2D Sprite { get; set; }
@@ -9,6 +9,8 @@ public partial class EnemyDefinition : Resource
     [Export] public Vector2 SpriteScale { get; set; } = Vector2.One;
     [Export(PropertyHint.Range, "3,60,1")] public float CollisionRadius { get; set; } = 9f;
     [Export(PropertyHint.Range, "3,60,1")] public float HitRadius { get; set; } = 12f;
+    [ExportGroup("Ground pursuit (optional)")]
+    [Export] public bool ChasePlayer { get; set; } = false;
     [ExportGroup("Detection and chase")]
     [Export(PropertyHint.Range, "50,600,5")] public float DetectionRadius { get; set; } = 300f;
     [Export(PropertyHint.Range, "10,250,5")] public float MoveSpeed { get; set; } = 65f;

@@ -1,16 +1,7 @@
-# Shared entity mechanics
+# Shared Entities
 
-Reusable *actor-owned* components live here. Examples: senses, state-driven AI, navigation interfaces, movement modes, health state and species/variant definition schema. Every species opts into the components it needs; an ambient-only particle bird needs none.
+`Entity.tscn` and `Entity.cs` are the universal starting point for damageable creatures (undead, wildlife, NPCs). `EntityDefinition.cs` configures identity, sprite, collision, health, damage feedback and optional behaviours. The default optional `AI/GroundChase.cs` module runs only when `ChasePlayer` is true, so neutral animals do not chase the player merely because they use the same scene.
 
-| Folder | Intended ownership |
-| --- | --- |
-| [AI/](AI/README.md) | Behaviour/state decisions; flee, patrol, chase, idle and group decisions |
-| [Navigation/](Navigation/README.md) | Shared path requests, obstacle handling and route-following |
-| [Perception/](Perception/README.md) | Vision, hearing, detection radii and target awareness |
-| [Movement/](Movement/README.md) | Reusable land/swim/fly movement capability modules |
-| [Health/](Health/README.md) | Actor-owned health state, death notification and damage response |
-| [Definitions/](Definitions/README.md) | Future data contracts for species, variants, dispositions |
+`Entity` implements `IToolHitTarget` for the production axe and the existing `IWorldNavigationAgent` contract for world placement; hit registration/death handling is never duplicated per species. Species/variant data lives in Resources (e.g. `ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres`), not per-species scenes. More advanced AI, ground wander, flying and other locomotion should be separate optional modules, **not hardcoded in Entity.cs**.
 
-Cross-cutting **damage calculation**, equipment/item definitions, general gameplay services and biome spawning should stay in `COMBAT/`, `ITEMS/`, `SYSTEMS/` and `WORLD/` respectively.
-
-**Status:** Folder documentation only; build concrete modules when gameplay needs them, not as speculative frameworks.
+Player scene remains independent for now, while shared health/damage can be reused later. No DEBUG files modified.
