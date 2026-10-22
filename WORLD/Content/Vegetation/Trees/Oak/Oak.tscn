@@ -16,3 +16,9 @@ centered = false
 
 [node name="TrunkFootprint" type="CollisionPolygon2D" parent="."]
 polygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -17, 1)
+
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs" id="hit"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/DefaultTreeHitConfig.tres" id="hitconfig"]
+[node name="HitResponse" type="Node2D" parent="."]
+script = ExtResource("hit")
+Config = ExtResource("hitconfig")

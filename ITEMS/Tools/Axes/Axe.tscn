@@ -1,0 +1,15 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://ENTITIES/Player/Equipment/EquippedTool.cs" id="tool"]
+[ext_resource type="Script" path="res://ENTITIES/Player/Interaction/ToolHitQuery.cs" id="hits"]
+[ext_resource type="Resource" path="res://ITEMS/Tools/Axes/DefaultAxeConfig.tres" id="config"]
+[ext_resource type="Texture2D" path="res://ITEMS/Tools/Axes/Sprites/axe.svg" id="axe"]
+[node name="EquippedAxe" type="Node2D"]
+script = ExtResource("tool")
+Config = ExtResource("config")
+[node name="ToolSprite" type="Sprite2D" parent="."]
+texture = ExtResource("axe")
+texture_filter = 1
+centered = false
+offset = Vector2(-2, -12)
+[node name="HitQuery" type="Node" parent="."]
+script = ExtResource("hits")

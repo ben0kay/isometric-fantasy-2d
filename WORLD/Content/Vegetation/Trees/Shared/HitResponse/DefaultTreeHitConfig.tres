@@ -1,0 +1,4 @@
+[gd_resource type="Resource" script_class="TreeHitConfig" format=3]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitConfig.cs" id="script"]
+[resource]
+script = ExtResource("script")

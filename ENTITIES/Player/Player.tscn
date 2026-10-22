@@ -7,6 +7,7 @@
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
 
+[ext_resource type="PackedScene" path="res://ITEMS/Tools/Axes/Axe.tscn" id="axe_tool"]
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("movement")
 Config = ExtResource("config")
@@ -37,3 +38,5 @@ limit_top = -544
 limit_right = 1760
 limit_bottom = 1184
 position_smoothing_enabled = false
+
+[node name="EquippedAxe" parent="." instance=ExtResource("axe_tool")]
