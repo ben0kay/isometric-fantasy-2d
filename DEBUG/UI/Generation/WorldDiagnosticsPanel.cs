@@ -71,7 +71,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
         using var frameTrace = RuntimeFrameTrace.Measure("WorldDiagnosticsPanel.Process");
         if (!Visible || _live == null) return;
         _statusTimer += delta; if (_statusTimer < 0.25) return; _statusTimer = 0;
-        int fps = Engine.GetFramesPerSecond();
+        double fps = Engine.GetFramesPerSecond();
         _fps.Text = $"{fps} FPS";
         _fps.AddThemeColorOverride("font_color", FpsColour(fps));
         _trace.Text = RuntimeFrameTrace.Report();
@@ -88,7 +88,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
     }
     // Smooth warning colours: green at 60+, yellow at 45, orange at 30, red at 15 or below.
     // =========================================================
-    private static Color FpsColour(int fps)
+    private static Color FpsColour(double fps)
     {
         Color green = new(0.30f, 0.90f, 0.40f), yellow = new(1f, 0.88f, 0.20f);
         Color orange = new(1f, 0.50f, 0.12f), red = new(1f, 0.23f, 0.23f);
