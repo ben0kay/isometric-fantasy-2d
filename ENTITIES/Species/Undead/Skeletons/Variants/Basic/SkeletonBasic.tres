@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="SkeletonBasicConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ENTITIES/Species/Undead/Skeletons/Variants/Basic/SkeletonBasicConfig.cs" id="config"]
+
+[resource]
+script = ExtResource("config")

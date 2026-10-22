@@ -35,6 +35,8 @@ public partial class WorldScene : Node2D
         var placement = GetNode<WorldSceneryPlacement>("Actors");
         placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
         placement.Generate(Config, ActiveSeed);
+        // Build entity navigation only after the seeded tree/rock colliders exist.
+        GetNodeOrNull<WorldEntityPlacement>("EntityPlacement")?.Populate(placement, player, Config.Bounds);
         var environment = GetNodeOrNull<EnvironmentRuntime>("Environment");
         environment?.Initialize(Config, GetNode<Node2D>("Actors"));
         if (pond != null && environment?.Weather != null) pond.Initialize(GetNode<PlayerMovement>("Actors/Player"), environment.Weather);

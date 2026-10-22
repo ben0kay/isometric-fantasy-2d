@@ -8,6 +8,8 @@
 [ext_resource type="Resource" path="res://ENVIRONMENT/DefaultEnvironmentConfig.tres" id="environment_config"]
 [ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
 [ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
+[ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldEntityPlacement.cs" id="entity_placement"]
+[ext_resource type="PackedScene" path="res://ENTITIES/Species/Undead/Skeletons/Variants/Basic/SkeletonBasic.tscn" id="skeleton_basic"]
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
@@ -19,6 +21,10 @@ script = ExtResource("ground")
 y_sort_enabled = true
 script = ExtResource("placement")
 [node name="Player" parent="Actors" instance=ExtResource("player")]
+
+[node name="EntityPlacement" type="Node" parent="."]
+script = ExtResource("entity_placement")
+EntityScene = ExtResource("skeleton_basic")
 
 [node name="Environment" type="Node2D" parent="."]
 script = ExtResource("environment")

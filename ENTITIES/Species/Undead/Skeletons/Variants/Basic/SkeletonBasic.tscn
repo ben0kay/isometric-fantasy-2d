@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ENTITIES/Species/Undead/Skeletons/Variants/Basic/SkeletonBasic.cs" id="actor"]
+[ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Variants/Basic/SkeletonBasic.tres" id="config"]
+[ext_resource type="Texture2D" path="res://ENTITIES/Species/Undead/Skeletons/Visuals/Sprites/skeleton_basic.svg" id="sprite"]
+
+[sub_resource type="CircleShape2D" id="feet"]
+radius = 9.0
+
+[node name="SkeletonBasic" type="CharacterBody2D"]
+script = ExtResource("actor")
+Config = ExtResource("config")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("sprite")
+texture_filter = 1
+offset = Vector2(0, -24)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -5)
+shape = SubResource("feet")
