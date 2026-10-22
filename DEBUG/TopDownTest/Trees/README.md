@@ -44,3 +44,8 @@ One flat image cannot separate leaves and branches at the same height: upper bra
 ## Validation
 
 Checked the existing root anchor, reusable sprite references, polygon reflection logic and separation rules in the generator. Godot shader compilation, rendering and collision play-testing remain pending; no Godot executable is installed here. The imported PNG remains unchanged. The new C# generator and enlarged debug scene still require Godot compilation/play-testing.
+
+
+## Axe impact feedback
+
+Tree01 now opts into [HitFeedback](HitFeedback/README.md). Close aimed axe swings wobble only the struck tree artwork and emit a bounded burst of leaves. Collider, GPU wind and snow remain separate. No tree destruction or health is implemented.

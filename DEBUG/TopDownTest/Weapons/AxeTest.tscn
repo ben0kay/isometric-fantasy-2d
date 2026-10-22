@@ -1,0 +1,16 @@
+[gd_scene load_steps=5 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Weapons/DebugMeleeWeapon.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Weapons/DefaultWeaponConfig.tres" id="config"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Weapons/Artwork/axe.svg" id="axe"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Weapons/WeaponHitQuery.cs" id="hits"]
+[node name="EquippedAxe" type="Node2D"]
+script = ExtResource("script")
+Config = ExtResource("config")
+[node name="Weapon" type="Sprite2D" parent="."]
+texture = ExtResource("axe")
+texture_filter = 1
+centered = false
+offset = Vector2(-2, -12)
+
+[node name="HitQuery" type="Node" parent="."]
+script = ExtResource("hits")

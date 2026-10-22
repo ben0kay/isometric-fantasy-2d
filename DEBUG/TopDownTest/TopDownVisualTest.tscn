@@ -32,7 +32,7 @@
 
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Biomes/DefaultBiomeConfig.tres" id="biomes"]
 
-[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weapons/SwordTest.tscn" id="sword_test"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weapons/AxeTest.tscn" id="axe_test"]
 
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
@@ -462,7 +462,7 @@ limit_right = 3040
 limit_bottom = 1184
 position_smoothing_enabled = false
 
-[node name="EquippedSword" parent="Actors/Player" instance=ExtResource("sword_test")]
+[node name="EquippedAxe" parent="Actors/Player" instance=ExtResource("axe_test")]
 
 [node name="GrassPatches" parent="." instance=ExtResource("grasspatches")]
 

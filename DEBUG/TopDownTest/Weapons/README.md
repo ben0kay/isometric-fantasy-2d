@@ -1,11 +1,19 @@
-# Equipped sword visual test
+# Equipped axe / tree-hit prototype
 
-Move the cursor to orbit/aim an equipped sword around the player. Left-click outside the comparison panels for a single clockwise 360° attack. Movement works during attacks; repeated clicks during an attack are ignored. The sword stays equipped and resumes cursor aiming after each swing. No enemies, hitboxes, damage, inventory or combat rules are added.
+The sword test is replaced by an equipped axe. Aim with the cursor and left-click outside debug panels for one full-circle swing. Walk close to a trunk and aim toward it: one nearby tree wobbles and sheds ten extra leaves. Movement remains available during attacks. No chopping damage, health, harvesting, falling trees or fire are implemented.
 
-`SwordTest.tscn` is one optional instance under Actors/Player. `DebugSword.cs` owns cursor input and presentation; `WeaponMasterConfig.cs` / `DefaultWeaponConfig.tres` expose Enabled, HandAnchor, OrbitRadius, AttackSeconds and AimSpeed. The tiny pixel-style SVG is contained in Artwork/sword.svg here. Edit/replace that asset independently.
+## Modules for later extraction
 
-Cursor coordinates use the active camera's world transform. The weapon follows the player's snow/water visual offset after Surfaces updates; it stays visible above water/snow in this first equipped-item test. It draws behind the player for upward aim and in front for downward aim, while the actor root retains scenery Y sorting. Regular canvas lighting applies; no separate projected weapon shadow or animation frames. Cost is one sprite and a small per-frame transform calculation, without per-swing allocations, physics queries or generated textures.
+- `DebugMeleeWeapon.cs`: cursor aiming, swing timing, equipped-art transform. No tree-specific code.
+- `WeaponMasterConfig.cs` / `DefaultWeaponConfig.tres`: anchor, radius, attack duration, reach (52 world pixels from player feet to trunk edge), forward-sector half angle (65°), and contact progress (85% through the spin). These are visual-test tuning values.
+- `WeaponHitQuery.cs`: once per swing, selects the nearest eligible `IWeaponHitTarget` in reach and the aimed sector. Targets register under `debug_weapon_hit_targets`; adding another response doesn't require teaching the axe about that object type.
+- `AxeTest.tscn` / `Artwork/axe.svg`: replaceable equipped scene and contained pixel-style SVG.
+- `../Trees/HitFeedback/`: separate tree receiver, wobble and local leaf pool/config.
 
-Disable Config.Enabled to hide it or delete the EquippedSword instance and its ext_resource from TopDownVisualTest.tscn, then remove this folder. No other script depends on Weapons. Everything remains disposable DEBUG content.
+Hit testing happens at the contact moment, using the current player position and aim captured on click. It checks the transformed physical trunk polygon, including scale/mirroring, not the leafy sprite rectangle. Misses and out-of-range swings do nothing; one swing hits at most one target. This prototype has no obstacle line-of-sight rule or continuous swept blade collider. Holding the button doesn't repeat; clicks while attacking are ignored.
 
-Validation: all debug C# compiled against GodotSharp 4.7.2 / .NET 8 and the native Godot 4.5.1 source generators. Full-scene software OpenGL rendering was inspected. Runtime input checks passed for cursor aiming, active/completed spin, movement during attack, UI click filtering, up/down draw order, disabling, snow/water visual offsets and removing the sword instance. Rendering used reduced decorative grass counts locally only. Windows D3D12/hardware performance remains unverified.
+Cost: one sprite; one group traversal and short polygon-edge checks per swing, no per-frame target searches or physics objects. UI input, scene sorting and snow/water offsets retain the prior equipped-weapon behaviour. Remove EquippedAxe from the player and the tree HitFeedback children to undo, then remove these debug folders and their references. The only coupling between weapon and receiver is the hit interface/group; production folders are untouched.
+
+## Validation
+
+All debug C# compiled against GodotSharp 4.7.2 / .NET 8 and native Godot 4.5.1 source generators. Full-scene software OpenGL rendering was inspected. Actual injected mouse input hit exactly one of two eligible nearby trees; distant and opposite-aim queries missed, repeated hits remained bounded, the trunk polygon stayed unchanged, snow/wind materials remained present, and feedback returned to idle/original transform after expiry and removal. Render checks reduced decorative grass density locally only. Windows D3D12 and hardware performance remain unverified.
