@@ -10,6 +10,16 @@ public partial class WeatherProfile : Resource
     [Export(PropertyHint.Range, "100,4000,100")] public int MaxDrops { get; set; } = 1800;
     [Export(PropertyHint.Range, "100,800,10")] public float FallSpeed { get; set; } = 420f;
     [Export(PropertyHint.Range, "0,250,5")] public float SlantPerStrength { get; set; } = 100f;
+    [ExportGroup("Rain visual layers")]
+    [Export] public bool LayeredRain { get; set; } = true;
+    [Export(PropertyHint.Range, "0,1,0.05")] public float DropSoftness { get; set; } = 0.40f;
+    [Export(PropertyHint.Range, "0,1,0.05")] public float DropVariation { get; set; } = 0.35f;
+    [Export(PropertyHint.Range, "0,1,0.05")] public float ForegroundRainStrength { get; set; } = 0.45f;
+    [ExportGroup("Wet foliage")]
+    [Export] public bool WetFoliage { get; set; } = true;
+    [Export(PropertyHint.Range, "0,0.35,0.01")] public float WetFoliageDarkening { get; set; } = 0.15f;
+    [Export(PropertyHint.Range, "0.1,20,0.1")] public float WetnessBuildSeconds { get; set; } = 3f;
+    [Export(PropertyHint.Range, "0.1,60,0.1")] public float WetnessDrySeconds { get; set; } = 8f;
     [ExportGroup("Ground splashes")]
     [Export] public bool Splashes { get; set; } = true;
     [Export(PropertyHint.Range, "0,200,1")] public float SplashesPerSecond { get; set; } = 95f;

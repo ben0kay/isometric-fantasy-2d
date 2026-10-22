@@ -60,6 +60,9 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         var weather = Section(controls, "Rain and lightning", true);
         Slider(weather, "Rain", 0, 1, 0.01, () => s.Weather.RainIntensity, v => s.Weather.RainIntensity = (float)v);
         Toggle(weather, "Ground splashes", () => s.Weather.Splashes, v => s.Weather.Splashes = v);
+        Toggle(weather, "Wet tree foliage", () => s.Weather.WetFoliage, v => s.Weather.WetFoliage = v);
+        Slider(weather, "Leaf darkening", 0, 0.35, 0.01, () => s.Weather.WetFoliageDarkening,
+            v => s.Weather.WetFoliageDarkening = (float)v);
         Toggle(weather, "Overcast lighting", () => s.Weather.Overcast, v => s.Weather.Overcast = v);
         Toggle(weather, "Storm lightning", () => s.Weather.Lightning, v => s.Weather.Lightning = v);
         Button(weather, "Test nearby flash", () => _environment.Weather.Lightning.Trigger(false));

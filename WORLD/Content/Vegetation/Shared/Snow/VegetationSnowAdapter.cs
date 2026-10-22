@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public sealed class VegetationSnowAdapter
 {
     private readonly Dictionary<Sprite2D, Material> _original = new();
-    private readonly List<(ShaderMaterial Source, ShaderMaterial Snow)> _materials = new();
+    private readonly List<(ShaderMaterial Source, ShaderMaterial Snow, bool Wet)> _materials = new();
     private readonly Dictionary<Sprite2D, Material> _adapted = new();
     private bool _applied;
 
@@ -43,7 +43,8 @@ public sealed class VegetationSnowAdapter
                 snow.SetShaderParameter("snow_noise", noise);
                 snow.SetShaderParameter("snow_foliage_profile", (float)foliage);
                 snow.SetShaderParameter("snow_crown_range", grass ? new Vector2(0.82f, 1f) : new Vector2(0.60f, 0.77f));
-                variants.Add(key, snow); _materials.Add((material, snow));
+                variants.Add(key, snow); _materials.Add((material, snow,
+                    original.Code.Contains("VegetationWetness.gdshaderinc")));
             }
             _original.Add(sprite, material);
             _adapted.Add(sprite, snow);
@@ -64,6 +65,13 @@ public sealed class VegetationSnowAdapter
         foreach (var pair in _materials)
         {
             pair.Snow.SetShaderParameter("wind_multiplier", pair.Source.GetShaderParameter("wind_multiplier"));
+            if (pair.Wet)
+            {
+                // This snow material was cloned from the production wet/wind variant.
+                // Preserve the ongoing rain/dry changes beneath its snow colour overlay.
+                pair.Snow.SetShaderParameter("wet_coverage", pair.Source.GetShaderParameter("wet_coverage"));
+                pair.Snow.SetShaderParameter("wet_darkening", pair.Source.GetShaderParameter("wet_darkening"));
+            }
             pair.Snow.SetShaderParameter("snow_coverage", coverage);
             pair.Snow.SetShaderParameter("snow_colour", colour);
         }

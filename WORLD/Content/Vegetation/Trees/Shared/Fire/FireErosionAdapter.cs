@@ -13,7 +13,7 @@ public sealed class FireErosionAdapter
     private Sprite2D _sprite;
     private Texture2D _noise;
     private ShaderMaterial _source, _burning;
-    private bool _hasSnow;
+    private bool _hasSnow, _hasWetness;
 
     public bool IsActive => _burning != null;
 
@@ -50,6 +50,7 @@ public sealed class FireErosionAdapter
         }
         _source = source;
         _hasSnow = shader.Code.Contains("VegetationSnow.gdshaderinc");
+        _hasWetness = shader.Code.Contains("VegetationWetness.gdshaderinc");
         _burning = (ShaderMaterial)source.Duplicate();
         _burning.Shader = extended;
         _burning.SetShaderParameter("fire_burn_noise", _noise);
@@ -69,6 +70,12 @@ public sealed class FireErosionAdapter
         _burning.SetShaderParameter("fire_burn_progress", Mathf.Clamp(progress, 0f, 1f));
         _burning.SetShaderParameter("fire_char_colour", charColour);
         _burning.SetShaderParameter("wind_multiplier", wind);
+        if (_hasWetness)
+        {
+            // Mirror rain-soaked leaf parameters on the temporary burning material.
+            _burning.SetShaderParameter("wet_coverage", _source.GetShaderParameter("wet_coverage"));
+            _burning.SetShaderParameter("wet_darkening", _source.GetShaderParameter("wet_darkening"));
+        }
         if (_hasSnow)
         {
             _burning.SetShaderParameter("snow_coverage", _source.GetShaderParameter("snow_coverage"));
