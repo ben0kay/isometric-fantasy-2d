@@ -4,10 +4,10 @@
 [ext_resource type="Script" path="res://CAMERA/PlayerCamera.cs" id="camera_zoom"]
 [ext_resource type="Resource" path="res://ENTITIES/Player/DefaultPlayerConfig.tres" id="config"]
 [ext_resource type="Texture2D" path="res://ENTITIES/Player/Visuals/Sprites/player.svg" id="player"]
+[ext_resource type="PackedScene" path="res://ITEMS/Tools/Axes/Axe.tscn" id="axe_tool"]
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
 
-[ext_resource type="PackedScene" path="res://ITEMS/Tools/Axes/Axe.tscn" id="axe_tool"]
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("movement")
 Config = ExtResource("config")
