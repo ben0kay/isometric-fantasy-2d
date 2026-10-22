@@ -57,3 +57,11 @@ The adapter is **not bound to tree_01.png or an oak texture filename**. It is al
 Grass support adds no per-tuft frame loop. The same adapter builds shared orientation variants, copies cached wind, preserves sprite alpha and restores original tree/grass materials on removal. `GrassSnow` in SnowMasterConfig and the UI checkbox control decorative grass independently. Existing on/off and single-folder removal still apply.
 
 Validation for this pass includes C# compilation, GPU atlas setup, rendered snow-level comparisons and grass material adaptation in the current debug scene. Software Compatibility validation still uses reduced decorative-grass density as described above; Windows D3D12 and hardware performance remain local checks.
+
+## Distributed ground accumulation and vegetation layering correction
+
+Ground coverage now uses overlapping small world-space patches (roughly 16–32 world pixels), distributed throughout the terrain. The slider grows and joins these deposits; it no longer leaves large regional green islands. Surface shading remains independent. Coverage is monotonic, with exact zero at 0% and opaque ground coverage at 100%; it is an artistic progress control rather than an exact percentage of world area.
+
+GrassPatches now draws at Z=-6, above the ground snow at -7 and gravel at -8, while shadows remain at -5 and actors at 0. This fixes snow obscuring grass blades at full ground coverage. Snow on the grass artwork remains controlled by its own vegetation shader/toggle; turning that toggle off still leaves green blades visible above white terrain. Changing the grass layer is independent of the removable snow component and has no dependency on its files.
+
+Correction validation: rendered 0%, 25%, 70% and 100% in Godot 4.5.1 software OpenGL with no shader errors. Inspected the distributed deposits and visible grass blades at 100%, and asserted that grass draws above ground snow. Existing coverage, off and material-restoration checks passed. As with prior checks, decorative grass density was reduced locally for software rendering; committed counts remain unchanged.

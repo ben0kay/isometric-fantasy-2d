@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass_small_04.png" id="grass4"]
 
 [node name="GrassPatches" type="Node2D"]
-z_index = -9
+z_index = -6
 script = ExtResource("script")
 Config = ExtResource("config")
 WindMaterial = ExtResource("wind")
