@@ -1,7 +1,8 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Camera/TestCameraZoom.cs" id="camera_zoom"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/Generation/DebugWorldScatter.cs" id="scatter"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/Generation/DefaultScatterConfig.tres" id="scatter_config"]
 [ext_resource type="Resource" path="res://DEBUG/TopDownTest/DefaultTopDownTestConfig.tres" id="config"]
@@ -454,6 +455,8 @@ shape = SubResource("Feet")
 script = ExtResource("input")
 
 [node name="Camera" type="Camera2D" parent="Actors/Player"]
+script = ExtResource("camera_zoom")
+Config = ExtResource("config")
 position = Vector2(0, -16)
 zoom = Vector2(2, 2)
 limit_left = -800

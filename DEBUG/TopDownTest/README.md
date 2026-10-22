@@ -13,8 +13,8 @@
 
 ## Controls and configuration
 
-- Arrow keys move the small test explorer; camera follows at zoom 2 by default with bounds clamped to the expanded map. The CharacterBody2D foot collider blocks trees, rocks, torch and map borders. Static actors are Y-sorted by root.
-- `DefaultTopDownTestConfig.tres`: walk speed (150 pixels/sec) and camera zoom.
+- Arrow keys move the small test explorer; camera follows at zoom 2 by default with bounds clamped to the expanded map. **Mouse wheel down** zooms out to show up to 25% more world width/height (zoom 1.6); **mouse wheel up** zooms back in but never past the original 2.0 framing. Both limits are controlled by `TopDownTestConfig.cs`; see [Camera/README.md](Camera/README.md). The CharacterBody2D foot collider blocks trees, rocks, torch and map borders. Static actors are Y-sorted by root.
+- `DefaultTopDownTestConfig.tres`: walk speed (150 pixels/sec), camera default zoom and its 25%-wider view limit/scroll increment.
 - `Generation/DefaultScatterConfig.tres`: world sampling bounds, seed, counts, spacing, root scale ranges and mirror chance. These are **startup parameters**; restart the test after editing.
 - `DayNight/DefaultDayNightConfig.tres`: 30-second daylight cycle by default, sun-shadow length and strength and sun settings (shared wind now lives in Weather). Scrub/pause via the top-left UI.
 - `Polish/DefaultPolishConfig.tres`: colour grading, soft shadows, cloud shade, flickering torch and related UI switches.

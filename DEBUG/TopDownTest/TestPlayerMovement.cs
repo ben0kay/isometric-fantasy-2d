@@ -9,13 +9,12 @@ public partial class TestPlayerMovement : CharacterBody2D
     private TestPlayerInput _input;
 
     #region Lifecycle
-    // Cache the input component and apply framing once; no animation or rotation.
+    // Cache movement input only; the Camera2D child owns its framing and wheel zoom.
     // =========================================================
     public override void _Ready()
     {
         Config ??= new TopDownTestConfig();
         _input = GetNode<TestPlayerInput>("Input");
-        GetNode<Camera2D>("Camera").Zoom = Vector2.One * Config.CameraZoom;
         MotionMode = MotionModeEnum.Floating;
     }
 
