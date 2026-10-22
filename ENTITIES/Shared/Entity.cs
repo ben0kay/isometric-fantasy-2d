@@ -2,16 +2,18 @@
 // Behaviour modules handle locomotion/AI; no DEBUG dependencies.
 using Godot;
 
-public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget
+public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatant
 {
     [Export] public EntityDefinition Config { get; set; }
-    public int Health { get; private set; }
+    public ActorHealth HealthState { get; private set; }
+    public ActorStats Stats { get; private set; }
+    public int Health => HealthState.Current;
 
     private Sprite2D _sprite;
     private CollisionShape2D _collision;
     private GroundChase _chase;
     private float _flashTimer, _deathTimer;
-    private bool _dead;
+
 
     #region Setup
     // Apply a new Resource before entering the scene tree; shared scene owns all common functionality.
@@ -27,7 +29,9 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     public override void _Ready()
     {
         Config ??= new EntityDefinition();
-        Health = Mathf.Max(1, Config.MaxHealth);
+        HealthState = new ActorHealth(Config.MaxHealth);
+        Stats = new ActorStats(Config.CombatStats);
+        HealthState.Changed += OnHealthChanged;
         _sprite = GetNode<Sprite2D>("Sprite");
         _collision = GetNode<CollisionShape2D>("Collision");
         if (Config.Sprite != null) { _sprite.Texture = Config.Sprite; _sprite.Offset = Config.SpriteOffset; _sprite.Scale = Config.SpriteScale; }
@@ -52,7 +56,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     public void RestoreHealth(int health)
     {
         if (health < 1 || health > Mathf.Max(1,Config.MaxHealth)) throw new System.IO.InvalidDataException("Invalid saved entity health.");
-        Health = health;
+        HealthState.Restore(health);
     }
 
     #region Health and common tool hit contract
@@ -71,12 +75,21 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     // =========================================================
     public void TakeDamage(int damage)
     {
-        if (_dead || damage <= 0) return;
-        Health = Mathf.Max(0, Health - damage);
+        if (damage > 0) ReceiveDamage(new DamageRequest(damage),EffectiveStats.Neutral);
+    }
+    // Shared resolution keeps defense, rounding and actual applied damage consistent across actors.
+    // =========================================================
+    public DamageResult ReceiveDamage(DamageRequest request, EffectiveStats attacker)
+        => DamageResolver.Apply(HealthState,request,attacker,Stats.Values);
+
+    // Wake feedback only after actual damage; restored state never replays hit effects.
+    // =========================================================
+    private void OnHealthChanged(HealthChange change)
+    {
+        if (change.Restored || change.After >= change.Before) return;
         _flashTimer = Mathf.Max(0.05f, Config.HitFlashSeconds);
         SetProcess(true);
-        if (Health > 0) return;
-        _dead = true;
+        if (HealthState.IsAlive) return;
         RemoveFromGroup("world_tool_targets");
         Velocity = Vector2.Zero;
         _chase?.Stop();
@@ -94,14 +107,18 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
         _flashTimer = Mathf.Max(0f, _flashTimer - dt);
         float red = Mathf.Clamp(_flashTimer / Mathf.Max(0.05f, Config.HitFlashSeconds), 0f, 1f);
         float alpha = 1f;
-        if (_dead)
+        if (!HealthState.IsAlive)
         {
             _deathTimer += dt;
             alpha = 1f - Mathf.Clamp(_deathTimer / Mathf.Max(0.1f, Config.DeathFadeSeconds), 0f, 1f);
         }
         _sprite.Modulate = new Color(1f, 1f - red * 0.7f, 1f - red * 0.7f, alpha);
-        if (_dead && alpha <= 0f) { QueueFree(); return; }
-        if (!_dead && _flashTimer <= 0f) SetProcess(false);
+        if (!HealthState.IsAlive && alpha <= 0f) { QueueFree(); return; }
+        if (HealthState.IsAlive && _flashTimer <= 0f) SetProcess(false);
     }
     #endregion
+    // Release Resource subscriptions when the actor unloads.
+    // =========================================================
+    public override void _ExitTree()
+    { if (HealthState != null) HealthState.Changed -= OnHealthChanged; Stats?.Dispose(); }
 }

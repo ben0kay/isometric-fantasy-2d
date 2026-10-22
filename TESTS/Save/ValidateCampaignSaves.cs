@@ -37,6 +37,7 @@ public partial class ValidateCampaignSaves : Node
         string burnt = trees[1].GetMeta("world_instance_id").AsString();
         trees[1].GetNode<Burnable>("Burnable").RestoreProgress(1); trees[0].QueueFree(); await Frames(2);
         foreach (var entity in a.EntitiesRoot.GetChildren().OfType<Entity>()) entity.TakeDamage(entity.Health);
+        player.ReceiveDamage(new DamageRequest(13),EffectiveStats.Neutral);
         string aWorld = a.Blueprint.WorldId;
         Check(await a.Saves.SaveAsync(),"A save failed");
         var originalPosition = player.Position;
@@ -58,16 +59,20 @@ public partial class ValidateCampaignSaves : Node
         Check(Props(b).Any(p => Id(p)==removed),"A removal leaked into B");
         Check(Props(b).First(p => Id(p)==burnt).GetNode<Burnable>("Burnable").State == BurnState.Healthy,"A fire leaked into B");
         foreach (var entity in b.EntitiesRoot.GetChildren().OfType<Entity>()) entity.TakeDamage(1);
+        b.Player.ReceiveDamage(new DamageRequest(1000000),EffectiveStats.Neutral);
         Check(await b.Saves.SaveAsync(),"B save failed"); await Remove(b);
         var store = CampaignSession.Store();
         Check(store.Load(A).Snapshot.Clock.Hour == 3 && store.Load(B).Snapshot.Clock.Hour == 17,"Clock isolation failed");
         CheckpointFiles.Write(Path.Combine(_root,"expectations.json"),new[] { removed,burnt,aWorld },1024*1024);
         StorageCases(checkpointA);
         // An SO1 campaign must restore unchanged after the layout-only SO2 refactor.
-        var legacy = checkpointA with { ContentFingerprint = CampaignSession.LegacySO1ContentFingerprint() };
+        var legacy = checkpointA with { SchemaVersion=1,Player=checkpointA.Player with { Health=null }, ContentFingerprint = CampaignSession.LegacySO1ContentFingerprint() };
         CampaignSession.RequireContent(legacy);
         CampaignSession.Continue(legacy);
         var migrated = await Spawn();
+        Check(migrated.Player.HealthState.Current==migrated.Player.HealthState.Maximum,"Schema-1 HP default");
+        Check(migrated.Saves.Capture().SchemaVersion==2 && migrated.Saves.Capture().Player.Health!=null,"Schema-2 capture missing HP");
+        migrated.Player.ReceiveDamage(new DamageRequest(13),EffectiveStats.Neutral);
         Check(migrated.Blueprint.WorldId == legacy.WorldId && migrated.MacroMap.Hash == legacy.Blueprint.MapHash,"SO1 compatibility bridge changed world identity");
         Check(!Props(migrated).Any(p => Id(p)==removed),"SO1 compatibility bridge resurrected an edit");
         Check(migrated.Saves.Capture().ContentFingerprint == CampaignSession.ContentFingerprint(),"SO2 checkpoint did not adopt verified current fingerprint");
@@ -91,6 +96,8 @@ public partial class ValidateCampaignSaves : Node
             Check(world.Blueprint.WorldId == loaded.Snapshot.WorldId,"Wrong world after restart/profile switch");
             Check(world.MacroMap.Hash == loaded.Snapshot.Blueprint.MapHash && world.FeaturePlan.Hash == loaded.Snapshot.Blueprint.FeatureHash,"Frozen geography changed");
             var pos = world.Player.Position;
+            Check(world.Player.HealthState.Current == (loaded.Snapshot.Player.Health ?? world.Player.HealthState.Maximum),"Player HP changed after restart");
+            Check(world.Player.IsPhysicsProcessing() == world.Player.HealthState.IsAlive,"Restored player movement state");
             Check(pos == new Vector2(loaded.Snapshot.Player.X,loaded.Snapshot.Player.Y),"Player location changed");
             Check(world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Clock.Hour == (profile==A ? 3 : 17),"Inactive clock advanced");
             Check(Props(world).Any(p => Id(p)==expected[0]) == (profile==B),"Wrong per-profile removed state");
@@ -116,6 +123,8 @@ public partial class ValidateCampaignSaves : Node
         store.Save(recovered.Snapshot); File.WriteAllText(path,"corrupt again");
         Check(store.Load(source.ProfileId).Recovered,"Recovery followed by another save destroyed the backup");
         Reject(() => store.Save(source with { WorldId = Guid.NewGuid().ToString("N") }),"Ownership mismatch accepted");
+        Reject(() => store.Save(source with { Player=source.Player with { Health=null } }),"Schema-2 missing HP accepted");
+        Reject(() => store.Save(source with { Player=source.Player with { Health=-1 } }),"Negative player HP accepted");
         Reject(() => store.Save(source with { SchemaVersion = 999 }),"Unsupported schema accepted");
         Reject(() => store.Save(source with { Player = source.Player with { Layer = "unimplemented-cave" } }),"Unsupported layer accepted");
         Reject(() => store.Save(source with { Player = source.Player with { X = float.NaN } }),"Nonfinite position accepted");

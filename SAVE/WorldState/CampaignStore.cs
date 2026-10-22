@@ -113,6 +113,8 @@ public sealed class CampaignStore
             || s.Player.Layer != "surface" || !float.IsFinite(s.Player.X) || !float.IsFinite(s.Player.Y)
             || !float.IsFinite(s.Clock.Hour) || s.Clock.Hour < 0 || s.Clock.Hour >= 24 || !float.IsFinite(s.Clock.CycleSeconds) || s.Clock.CycleSeconds < 1)
             throw new InvalidDataException("Invalid player, layer, clock or chunks.");
+        if ((s.SchemaVersion >= 2 && s.Player.Health == null) || s.Player.Health is < 0 or > 1000000)
+            throw new InvalidDataException("Invalid saved player health.");
         if (s.TestEntity.Exists && (!float.IsFinite(s.TestEntity.X) || !float.IsFinite(s.TestEntity.Y) || s.TestEntity.Health < 1)) throw new InvalidDataException("Invalid test actor.");
         var map = WorldBlueprintRestore.Map(b); WorldBlueprintRestore.Features(b);
         if (s.TestEntity.Exists && !map.Bounds.HasPoint(new Godot.Vector2(s.TestEntity.X,s.TestEntity.Y))) throw new InvalidDataException("Test actor outside world bounds.");

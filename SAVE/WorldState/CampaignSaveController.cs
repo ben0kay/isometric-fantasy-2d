@@ -41,7 +41,7 @@ public partial class CampaignSaveController : Node
         _ready = true;
         if (isNew) await SaveAsync();
         if (!Alive) return;
-        player.SetPhysicsProcess(true);
+        player.SetPhysicsProcess(player.HealthState.IsAlive);
         if (CampaignSession.Settings().AutosaveSeconds > 0) _autosave.Start();
     }
     // A fixed snapshot is captured synchronously; gameplay may continue while only detached data is written.
@@ -53,7 +53,7 @@ public partial class CampaignSaveController : Node
         var clock = _world.Environment.Clock;
         var b = _world.Blueprint;
         return new(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,_fingerprint,DateTime.UtcNow.ToString("O"),b,
-            new SavedPlayer(player.GlobalPosition.X,player.GlobalPosition.Y),new SavedClock(clock.Hour,clock.Config.CycleSeconds,clock.Config.Paused),
+            new SavedPlayer(player.GlobalPosition.X,player.GlobalPosition.Y,Health:player.HealthState.Current),new SavedClock(clock.Hour,clock.Config.CycleSeconds,clock.Config.Paused),
             _world.EntityPlacement.Capture(),_world.Stream.CaptureChanges());
     }
     // Only one write runs at a time; repeated requests coalesce, while Leave takes a fresh final snapshot.

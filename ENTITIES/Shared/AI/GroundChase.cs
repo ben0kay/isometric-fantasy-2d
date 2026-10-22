@@ -65,7 +65,7 @@ public partial class GroundChase : Node
         if (_index == _path.Length - 1 && goal.DistanceSquaredTo(_target.GlobalPosition) < 30f * 30f)
             goal = _target.GlobalPosition;
         Vector2 heading = goal - _actor.GlobalPosition;
-        _actor.Velocity = heading.LengthSquared() <= 1f ? Vector2.Zero : heading.Normalized() * config.MoveSpeed;
+        _actor.Velocity = heading.LengthSquared() <= 1f ? Vector2.Zero : heading.Normalized() * config.MoveSpeed * _actor.Stats.Values.MovementSpeedMultiplier;
         _actor.MoveAndSlide();
     }
     #endregion

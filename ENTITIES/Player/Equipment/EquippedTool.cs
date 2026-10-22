@@ -9,12 +9,16 @@ public partial class EquippedTool : Node2D
     private bool _hitChecked;
     private ToolHitQuery _hits;
     private PlayerInput _input;
+    private PlayerMovement _owner;
+    private float _attackSeconds;
     #region Input contract
     // Subscribe to centralized input and keep all mouse events out of tool code.
     // =========================================================
     public override void _Ready()
     {
         Config ??= new AxeConfig();
+        _owner = GetParent<PlayerMovement>();
+        _owner.HealthState.Changed += OnHealthChanged;
         _playerSprite = GetParent().GetNode<Sprite2D>("Sprite");
         _toolSprite = GetNode<Sprite2D>("ToolSprite");
         _hits = GetNode<ToolHitQuery>("HitQuery");
@@ -25,7 +29,8 @@ public partial class EquippedTool : Node2D
     // =========================================================
     private void BeginSwing(Vector2 requestedAim)
     {
-        if (!Config.Enabled || IsAttacking) return;
+        if (!_owner.HealthState.IsAlive || !Config.Enabled || IsAttacking) return;
+        _attackSeconds = Mathf.Max(0.1f,Config.AttackSeconds) / _owner.Stats.Values.AttackSpeedMultiplier;
         IsAttacking = true; _elapsed = 0f; _hitChecked = false;
         _attackStart = requestedAim.LengthSquared() > 4f ? requestedAim.Angle() : _angle;
     }
@@ -44,7 +49,7 @@ public partial class EquippedTool : Node2D
         if (IsAttacking)
         {
             _elapsed += dt;
-            float progress = Mathf.Clamp(_elapsed / Mathf.Max(0.1f, Config.AttackSeconds), 0f, 1f);
+            float progress = Mathf.Clamp(_elapsed / _attackSeconds, 0f, 1f);
             if (!_hitChecked && progress >= Mathf.Clamp(Config.ContactProgress, 0.05f, 0.95f))
             {
                 _hitChecked = true;
@@ -62,9 +67,18 @@ public partial class EquippedTool : Node2D
         _toolSprite.Position = new Vector2(Mathf.Max(4f, Config.OrbitRadius), 0f);
         ZIndex = Mathf.Sin(_angle) < -0.15f ? -1 : 1;
     }
+    // Suspend equipment immediately on death; explicit restoration wakes existing presentation.
+    // =========================================================
+    private void OnHealthChanged(HealthChange change)
+    {
+        if (!_owner.HealthState.IsAlive) { IsAttacking = false; Hide(); }
+        SetProcess(_owner.HealthState.IsAlive);
+    }
+    // Release actor and input listeners on unload.
     // =========================================================
     public override void _ExitTree()
     {
+        _owner.HealthState.Changed -= OnHealthChanged;
         if (GodotObject.IsInstanceValid(_input)) _input.ToolUseRequested -= BeginSwing;
     }
     #endregion

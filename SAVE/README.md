@@ -5,7 +5,7 @@ Existing Boot/Main Menu profiles now select durable private campaigns. `ProfileS
 - **Profiles/**: local identity, registry backup/recovery. Each profile selects one active run; starting another requires confirmation and retains the previous run's files.
 - **WorldState/**: detached checkpoint records, campaign store, one-shot scene launch and shared save coordinator.
 - **Serialization/**: checksummed JSON envelopes, immutable content-addressed blobs, flushed temp files and atomic index replacement with a previous checkpoint backup.
-- **Migrations/**: explicit schema/generator compatibility gate. No old durable schema previously shipped; unsupported versions are refused and retained, not silently converted.
+- **Migrations/**: explicit schema/generator compatibility gate. C1 schema 2 adds player HP; schema 1 still loads with configured full player HP when the old field is absent. Unsupported versions are refused and retained.
 
 `SaveMasterConfig` / `DefaultSaveConfig.tres` configure autosave interval (120 seconds; 0 disables), per-file limit (32 MB), and changed-chunk count limit (32768). No world generation knobs belong here.
 
@@ -19,9 +19,9 @@ F6 direct World remains disposable and does not write campaign files. The compat
 
 ## Saved state and boundaries
 
-Each checkpoint preserves ProfileId → RunId → WorldId, fixed seed, exact macro cells/regions and feature reservations, generator/schema versions, player surface coordinates/layer, hour/cycle/pause, removed generated scenery, tree burn progress, and the one authored test skeleton's existence/health/position. Detailed scenery remains generated locally; it is not serialized as Nodes. Fire stays paused while unloaded, as in P3. Inactive profiles do not advance by elapsed wall time.
+Each checkpoint preserves ProfileId → RunId → WorldId, fixed seed, exact macro cells/regions and feature reservations, generator/schema versions, player surface coordinates/layer and HP (schema 2), hour/cycle/pause, removed generated scenery, tree burn progress, and the one authored test skeleton's existence/health/position. Detailed scenery remains generated locally; it is not serialized as Nodes. Fire stays paused while unloaded, as in P3. Inactive profiles do not advance by elapsed wall time.
 
-Inventory, player health/needs, equipment, caves, seasons/weather progression and A-Life do not exist as finished gameplay systems; this pass does not fabricate them. Future owners must supply/restore their real state through the coordinator. Current supported layer is `surface`; unknown layers fail clearly. Weather/debug effect sliders reset; the world clock persists. No permadeath deletion, shared worlds, multiple-slot UI or archive browser is implemented.
+Inventory, survival needs, equipment, caves, seasons/weather progression and A-Life do not exist as finished gameplay systems; this pass does not fabricate them. Future owners must supply/restore their real state through the coordinator. Current supported layer is `surface`; unknown layers fail clearly. Weather/debug effect sliders reset; the world clock persists. No permadeath deletion, shared worlds, multiple-slot UI or archive browser is implemented.
 
 A strict text-resource/scene dependency fingerprint protects local deterministic scenery when authored definitions/settings change; random-new-world seed policy is excluded. Continue refuses incompatible content rather than shifting trees or resurrecting removed objects. Algorithms require explicit generator-version changes. Automatic content migration and exported-build resource fingerprinting require a later pass; this trial targets the source Godot project.
 
@@ -39,3 +39,7 @@ Archived runs and unreferenced immutable blobs are retained deliberately; automa
 Player/environment/entity references now come from the world's typed ownership API. A narrowly gated source-layout compatibility bridge permits existing SO1/P4 campaigns to Continue without reseeding or losing edits; the next checkpoint uses the verified SO2 fingerprint. Unsupported content/schema still rejects. The user confirmed prior P4 functional tests passed; these SO2 changes require new local tests. See SCENES/World/SO2_Copilot_Handoff.md for the exact internal-test and save-compatibility handoff.
 
 SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.
+
+## C1 health checkpoint compatibility
+
+New snapshots use schema 2 with required player HP (zero is a retained dead player). Schema-1 checkpoints lacked this field and restore configured full HP; the next explicit/automatic checkpoint writes schema 2 with the ordinary previous-checkpoint backup. Entity HP/death, frozen geography, edit blobs and content fingerprints remain unchanged. Invalid HP rejects, including values above the runtime actor maximum; there is no silent clamping. Runtime stat modifiers are not persisted before equipment/buff ownership exists. See COMBAT/C1_Validation.md.

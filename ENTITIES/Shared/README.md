@@ -4,4 +4,4 @@
 
 `Entity` implements `IToolHitTarget` for the production axe and the existing `IWorldNavigationAgent` contract for world placement; hit registration/death handling is never duplicated per species. Species/variant data lives in Resources (e.g. `ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres`), not per-species scenes. More advanced AI, ground wander, flying and other locomotion should be separate optional modules, **not hardcoded in Entity.cs**.
 
-Player scene remains independent for now, while shared health/damage can be reused later. No DEBUG files modified.
+Player scene stays independent while both actors implement `ICombatant`, owning one `ActorHealth` and one lazy `ActorStats`. `Entity.Health` is a read-only compatibility view. Optional `CombatStatProfile` supplies shared authored values; modifiers remain per actor. Health/stat objects introduce no frame callbacks. See [health](Health/README.md), [stats](Stats/README.md) and [C1 validation](../../COMBAT/C1_Validation.md). No DEBUG files modified.

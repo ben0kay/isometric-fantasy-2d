@@ -150,6 +150,7 @@ public partial class WorldScene : Node2D
         {
             if (restore != null)
             {
+                Player.HealthState.Restore(restore.Player.Health ?? Player.HealthState.Maximum);
                 environment.Clock.Config.CycleSeconds = restore.Clock.CycleSeconds;
                 environment.Clock.Config.Paused = restore.Clock.Paused; environment.Clock.SetHour(restore.Clock.Hour);
             }

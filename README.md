@@ -1,6 +1,6 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**Combat development track (C0–C5, planned):** [COMBAT implementation plan](COMBAT/COMBAT_IMPLEMENTATION.md) coordinates shared player/enemy attacks, damage/health/stats, hit detection, feedback, movement feel and a skeleton encounter. It builds on the existing production axe/Entity foundations; no C phase is yet claimed implemented. This is independent of world P phases and SO/GL scene work.
+**Combat development track (C0/C1 implemented; C2–C5 planned):** [COMBAT implementation plan](COMBAT/COMBAT_IMPLEMENTATION.md) coordinates shared player/enemy attacks, damage/health/stats, hit detection, feedback, movement feel and a skeleton encounter. It builds on the existing production axe/Entity foundations; C0/C1 now provide shared health, cached effective stats and damage results; enemy attacks and shared execution remain future phases. This is independent of world P phases and SO/GL scene work.
 
 **SO2 implemented — automated validation PASSED:** actor ownership is split into persistent entities, persistent props, streamed chunks and preview scenery beneath a shared Y-sort root. Controllers receive explicit destinations; existing P4 campaigns have a narrow layout-only compatibility bridge. Codex confirmed a clean build, Godot 4.7.2 import, SO2 ownership (60), P1–P3/environment/tree/fire/light regressions, P4 write/read (39/33), and actual SO1-to-SO2 disk-save restoration. Visual seam/Y-sort and Windows performance checks remain open. See [validation evidence](SCENES/World/SO2_Validation.md) and [SO2 testing handoff](SCENES/World/SO2_Copilot_Handoff.md) and [scene plan](SCENES/World/scene%20organize.md).
 
@@ -324,3 +324,7 @@ Follow the [current P0–P6 handoff](WORLD/Generation_Implementation.md) for pha
 The repository name still contains **`isometric`** for historical reasons, but **the active direction is a fully 2D top-down game**. The former 3D/isometric architecture is no longer the game's main path. Some legacy resources/scenes/`.uid` remnants may reference removed scripts; they are not evidence of implemented modern systems. Retired material under `DEBUG/VisualTests/` and older notes should be checked carefully before reuse.
 
 **General rule for future sessions:** Distinguish **game vision**, **current debug proof-of-concepts**, and **approved production code** at every step. Do not infer a mechanic is finished because its folder, README, art asset or config exists.
+
+## Combat C0/C1 foundation
+
+C0/C1 is implemented: shared player/entity HP, lazy four-stat cache, deterministic damage results and schema-2 player HP saves with schema-1 compatibility. No new per-frame combat nodes. Existing axe/tree hits and skeleton chase remain. Enemy attacks, shared execution and combat feel are C2 onward. See [combat plan](COMBAT/COMBAT_IMPLEMENTATION.md), [audit](COMBAT/C0_Audit.md) and [validation](COMBAT/C1_Validation.md).

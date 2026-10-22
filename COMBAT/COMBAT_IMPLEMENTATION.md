@@ -1,6 +1,6 @@
 # Combat implementation — C0–C5 Codex plan
 
-> **Status (2026-10-22): PROPOSED / NOT IMPLEMENTED AS A COMBAT PHASE.** Existing production axe, shared Entity health/hit flash/death, skeleton chase and player walking are real code; the architecture below is a proposal, not a claim that these components already exist.
+> **Status (2026-10-22): C0 + C1 implemented and headless validated.** Shared player/entity health, lazy effective stats and deterministic damage results are live. See [C0 audit](C0_Audit.md) and [C1 validation](C1_Validation.md). C2–C5 remain proposed; enemy attacks and encounter polish are not implemented.
 > **Purpose:** Make one player-versus-skeleton encounter responsive and satisfying while establishing reusable player/enemy/wildlife combat and clean integration with future caves/interiors.
 > **Authorization:** Codex should review the plan and suggest improvements before structural changes. Implement only the phase explicitly requested by the user; one commit per approved job. Never auto-implement C0–C5 as one pass.
 
@@ -16,7 +16,7 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 - `DEBUG/TopDownTest/Weapons/README.md`: older axe and tree-hit contact tests; DEBUG stays independent.
 - `FEEDBACK/README.md`, `COMBAT/*/README.md`, `ENTITIES/Player/Combat/README.md`, `ENTITIES/Player/Survival/Health/README.md`: present organizational intentions.
 
-**Existing, not yet polished:** player can swing an axe and hit registered tree/entity targets; skeleton can chase, lose health, flash and fade on death. There is no reusable attack controller for both actors, enemy attacks, full player health, knockback, damage text/health bars, particles, sprint/dodge or effective-stat pipeline. The original combat folders/config are placeholders. Confirm live behavior and current sources before modifying.
+**Existing, not yet polished:** player can swing an axe and hit registered tree/entity targets; skeleton can chase, lose health, flash and fade on death. C1 now supplies shared actor/player HP and cached effective stats. There is no reusable attack controller for both actors, enemy attacks, knockback, damage text/health bars, particles or sprint/dodge. CombatMasterConfig remains a placeholder. Confirm live behavior and current sources before modifying.
 
 ## Architecture contract: responsibilities, not one enormous combat node
 

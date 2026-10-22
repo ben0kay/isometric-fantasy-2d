@@ -1,12 +1,12 @@
 # COMBAT
 
-> **Status:** Shared combat modules are planned; the production axe and shared Entity implement limited tool-hit/health behavior outside this folder. See [COMBAT_IMPLEMENTATION.md](COMBAT_IMPLEMENTATION.md) for the proposed C0–C5 Codex roadmap (not yet implemented).
+> **Status:** C0/C1 implemented: shared actor health, cached stats and damage results. [Validation](C1_Validation.md) records checks and remaining manual work. [C2–C5](COMBAT_IMPLEMENTATION.md) remain planned.
 
 Shared combat resolution for player, creatures, enemies and NPCs: damage, hit testing, projectiles, weapons and defense. Player input/weapon usage stays in ENTITIES/Player/Combat. Timed generic conditions belong in SYSTEMS/Effects.
 
 ## Folder map
 
-- [Damage/](Damage/README.md): Future damage categories, damage calculation, resistances and incoming modifiers; health ownership should have one source of truth per actor..
+- [Damage/](Damage/README.md): Implemented shared damage request/result/resolver; damage categories and resistances remain future work.
 - [HitDetection/](HitDetection/README.md): Reusable melee hitboxes, collision/hurtbox detection, impact validation and range checks..
 - [Projectiles/](Projectiles/README.md): Common arrows, spells, thrown objects and collision/lifetime helpers; weapon item definitions belong in ITEMS/Weapons..
 - [Weapons/](Weapons/README.md): Shared combat attack profiles, cooldowns, swing rules and hit handling.

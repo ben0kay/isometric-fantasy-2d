@@ -17,6 +17,7 @@ public partial class EntityDefinition : Resource
     [Export(PropertyHint.Range, "12,70,1")] public float StopDistance { get; set; } = 26f;
     [Export(PropertyHint.Range, "0.15,2,0.05")] public float RepathSeconds { get; set; } = 0.45f;
 
+    [Export] public CombatStatProfile CombatStats { get; set; }
     [ExportGroup("Health and feedback")]
     [Export(PropertyHint.Range, "1,30,1")] public int MaxHealth { get; set; } = 3;
     [Export(PropertyHint.Range, "0.1,1,0.05")] public float HitFlashSeconds { get; set; } = 0.18f;

@@ -6,6 +6,9 @@ public partial class PlayerMasterConfig : Resource
 {
     [ExportGroup("Movement")]
     [Export(PropertyHint.Range, "20,400,5")] public float WalkSpeed { get; set; } = 150f;
+    [ExportGroup("Combat foundation")]
+    [Export] public int MaxHealth { get; set; } = 100;
+    [Export] public CombatStatProfile CombatStats { get; set; }
     [ExportGroup("Camera")]
     [Export(PropertyHint.Range, "1,5,0.25")] public float CameraZoom { get; set; } = 2f;
     [Export(PropertyHint.Range, "1,2,0.05")] public float CameraMaxViewMultiplier { get; set; } = 1.25f;
