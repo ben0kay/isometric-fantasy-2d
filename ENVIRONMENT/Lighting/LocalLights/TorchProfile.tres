@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TorchProfile" format=3]
+
+[ext_resource type="Script" path="res://ENVIRONMENT/Lighting/LocalLights/TorchProfile.cs" id="script"]
+[resource]
+script = ExtResource("script")
+CastShadows = true
+AdditionalOffsets = PackedVector2Array(-90, -40, 10, 110)

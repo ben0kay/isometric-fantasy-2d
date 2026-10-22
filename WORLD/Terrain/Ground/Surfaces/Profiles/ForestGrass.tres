@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="GroundSurfaceProfile" format=3]
+[ext_resource type="Texture2D" path="res://WORLD/Terrain/Ground/grass.svg" id="texture"]
+[ext_resource type="Material" path="res://WORLD/Terrain/Ground/Surfaces/GrassMaterial.tres" id="material"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/GroundSurfaceProfile.cs" id="script"]
+[resource]
+script = ExtResource("script")
+Texture = ExtResource("texture")
+Material = ExtResource("material")

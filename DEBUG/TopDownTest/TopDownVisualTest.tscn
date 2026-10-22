@@ -1,0 +1,508 @@
+[gd_scene load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Camera/TestCameraZoom.cs" id="camera_zoom"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Generation/DebugWorldScatter.cs" id="scatter"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Generation/DefaultScatterConfig.tres" id="scatter_config"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/DefaultTopDownTestConfig.tres" id="config"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/grass.svg" id="grass"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Trees/Tree01.tscn" id="tree"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Rocks/Rock01.tscn" id="rock"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/player.svg" id="player"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/DayNight/DayNightDemo.tscn" id="daynight"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/PolishDemo.tscn" id="polish"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Polish/Torch.tscn" id="torch"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereDemo.tscn" id="atmosphere"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weather/WeatherDemo.tscn" id="weather"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Grass/GrassPatches.tscn" id="grasspatches"]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Ground/DebugGroundSurface.cs" id="ground_script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Ground/DefaultGroundConfig.tres" id="ground_config"]
+[ext_resource type="Material" path="res://DEBUG/TopDownTest/Ground/GrassMaterial.tres" id="grass_material"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Ground/RockPatches/RockPatches.tscn" id="rock_ground"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/SnowTest/SnowTest.tscn" id="snowtest"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Liquids/LiquidTest.tscn" id="liquids"]
+
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Biomes/DefaultBiomeConfig.tres" id="biomes"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Weapons/AxeTest.tscn" id="axe_test"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Enemies/EnemyTest.tscn" id="enemy_test"]
+
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Fire/FireTest.tscn" id="fire_test"]
+
+[sub_resource type="RectangleShape2D" id="Feet"]
+size = Vector2(14, 10)
+
+[sub_resource type="RectangleShape2D" id="HorizontalBound"]
+size = Vector2(3840, 16)
+
+[sub_resource type="RectangleShape2D" id="VerticalBound"]
+size = Vector2(16, 1728)
+
+[node name="TopDownVisualTest" type="Node2D"]
+texture_filter = 1
+
+[node name="Ground" type="Node2D" parent="."]
+z_index = -10
+script = ExtResource("ground_script")
+Config = ExtResource("ground_config")
+Biomes = ExtResource("biomes")
+
+[node name="Grass" type="Sprite2D" parent="Ground"]
+material = ExtResource("grass_material")
+position = Vector2(-800, -544)
+texture_repeat = 2
+texture = ExtResource("grass")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 3840, 1728)
+
+[node name="Path" type="Polygon2D" parent="Ground"]
+polygon = PackedVector2Array(418, -544, 488, -544, 488, 0, 500, 160, 472, 270, 500, 355, 650, 410, 960, 420, 1760, 443, 1760, 495, 960, 473, 624, 460, 450, 395, 424, 302, 448, 150, 418, 0)
+color = Color(0.38, 0.33, 0.23, 1)
+
+[node name="Clearing" type="Polygon2D" parent="Ground"]
+polygon = PackedVector2Array(366, 256, 433, 220, 544, 230, 590, 280, 584, 352, 510, 394, 414, 376, 364, 324)
+color = Color(0.36, 0.32, 0.235, 1)
+
+[node name="GroundDetail0" type="Polygon2D" parent="Ground"]
+position = Vector2(20, 20)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail1" type="Polygon2D" parent="Ground"]
+position = Vector2(157, 103)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail2" type="Polygon2D" parent="Ground"]
+position = Vector2(294, 186)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail3" type="Polygon2D" parent="Ground"]
+position = Vector2(431, 269)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail4" type="Polygon2D" parent="Ground"]
+position = Vector2(568, 352)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail5" type="Polygon2D" parent="Ground"]
+position = Vector2(705, 435)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail6" type="Polygon2D" parent="Ground"]
+position = Vector2(842, 518)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail7" type="Polygon2D" parent="Ground"]
+position = Vector2(59, 601)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail8" type="Polygon2D" parent="Ground"]
+position = Vector2(196, 84)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail9" type="Polygon2D" parent="Ground"]
+position = Vector2(333, 167)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail10" type="Polygon2D" parent="Ground"]
+position = Vector2(470, 250)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail11" type="Polygon2D" parent="Ground"]
+position = Vector2(607, 333)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail12" type="Polygon2D" parent="Ground"]
+position = Vector2(744, 416)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail13" type="Polygon2D" parent="Ground"]
+position = Vector2(881, 499)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail14" type="Polygon2D" parent="Ground"]
+position = Vector2(98, 582)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail15" type="Polygon2D" parent="Ground"]
+position = Vector2(235, 65)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail16" type="Polygon2D" parent="Ground"]
+position = Vector2(372, 148)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail17" type="Polygon2D" parent="Ground"]
+position = Vector2(509, 231)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail18" type="Polygon2D" parent="Ground"]
+position = Vector2(646, 314)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail19" type="Polygon2D" parent="Ground"]
+position = Vector2(783, 397)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail20" type="Polygon2D" parent="Ground"]
+position = Vector2(920, 480)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail21" type="Polygon2D" parent="Ground"]
+position = Vector2(137, 563)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail22" type="Polygon2D" parent="Ground"]
+position = Vector2(274, 46)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail23" type="Polygon2D" parent="Ground"]
+position = Vector2(411, 129)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail24" type="Polygon2D" parent="Ground"]
+position = Vector2(548, 212)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail25" type="Polygon2D" parent="Ground"]
+position = Vector2(685, 295)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail26" type="Polygon2D" parent="Ground"]
+position = Vector2(822, 378)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail27" type="Polygon2D" parent="Ground"]
+position = Vector2(39, 461)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail28" type="Polygon2D" parent="Ground"]
+position = Vector2(176, 544)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail29" type="Polygon2D" parent="Ground"]
+position = Vector2(313, 27)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail30" type="Polygon2D" parent="Ground"]
+position = Vector2(450, 110)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail31" type="Polygon2D" parent="Ground"]
+position = Vector2(587, 193)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail32" type="Polygon2D" parent="Ground"]
+position = Vector2(724, 276)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail33" type="Polygon2D" parent="Ground"]
+position = Vector2(861, 359)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail34" type="Polygon2D" parent="Ground"]
+position = Vector2(78, 442)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail35" type="Polygon2D" parent="Ground"]
+position = Vector2(215, 525)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail36" type="Polygon2D" parent="Ground"]
+position = Vector2(352, 608)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail37" type="Polygon2D" parent="Ground"]
+position = Vector2(489, 91)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail38" type="Polygon2D" parent="Ground"]
+position = Vector2(626, 174)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail39" type="Polygon2D" parent="Ground"]
+position = Vector2(763, 257)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail40" type="Polygon2D" parent="Ground"]
+position = Vector2(900, 340)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail41" type="Polygon2D" parent="Ground"]
+position = Vector2(117, 423)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail42" type="Polygon2D" parent="Ground"]
+position = Vector2(254, 506)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail43" type="Polygon2D" parent="Ground"]
+position = Vector2(391, 589)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail44" type="Polygon2D" parent="Ground"]
+position = Vector2(528, 72)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail45" type="Polygon2D" parent="Ground"]
+position = Vector2(665, 155)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail46" type="Polygon2D" parent="Ground"]
+position = Vector2(802, 238)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail47" type="Polygon2D" parent="Ground"]
+position = Vector2(939, 321)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail48" type="Polygon2D" parent="Ground"]
+position = Vector2(156, 404)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail49" type="Polygon2D" parent="Ground"]
+position = Vector2(293, 487)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail50" type="Polygon2D" parent="Ground"]
+position = Vector2(430, 570)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail51" type="Polygon2D" parent="Ground"]
+position = Vector2(567, 53)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail52" type="Polygon2D" parent="Ground"]
+position = Vector2(704, 136)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail53" type="Polygon2D" parent="Ground"]
+position = Vector2(841, 219)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail54" type="Polygon2D" parent="Ground"]
+position = Vector2(58, 302)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail55" type="Polygon2D" parent="Ground"]
+position = Vector2(195, 385)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail56" type="Polygon2D" parent="Ground"]
+position = Vector2(332, 468)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail57" type="Polygon2D" parent="Ground"]
+position = Vector2(469, 551)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail58" type="Polygon2D" parent="Ground"]
+position = Vector2(606, 34)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail59" type="Polygon2D" parent="Ground"]
+position = Vector2(743, 117)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail60" type="Polygon2D" parent="Ground"]
+position = Vector2(880, 200)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail61" type="Polygon2D" parent="Ground"]
+position = Vector2(97, 283)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail62" type="Polygon2D" parent="Ground"]
+position = Vector2(234, 366)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail63" type="Polygon2D" parent="Ground"]
+position = Vector2(371, 449)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail64" type="Polygon2D" parent="Ground"]
+position = Vector2(508, 532)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail65" type="Polygon2D" parent="Ground"]
+position = Vector2(645, 615)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail66" type="Polygon2D" parent="Ground"]
+position = Vector2(782, 98)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail67" type="Polygon2D" parent="Ground"]
+position = Vector2(919, 181)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail68" type="Polygon2D" parent="Ground"]
+position = Vector2(136, 264)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="GroundDetail69" type="Polygon2D" parent="Ground"]
+position = Vector2(273, 347)
+polygon = PackedVector2Array(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3)
+color = Color(0.43, 0.45, 0.29, 0.65)
+
+[node name="Liquids" parent="." instance=ExtResource("liquids")]
+
+[node name="Actors" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("scatter")
+Config = ExtResource("scatter_config")
+Biomes = ExtResource("biomes")
+TreeScene = ExtResource("tree")
+RockScene = ExtResource("rock")
+
+[node name="Torch" parent="Actors" instance=ExtResource("torch")]
+position = Vector2(540, 345)
+
+[node name="Player" type="CharacterBody2D" parent="Actors"]
+position = Vector2(480, 320)
+script = ExtResource("movement")
+Config = ExtResource("config")
+
+[node name="Shadow" type="Polygon2D" parent="Actors/Player"]
+polygon = PackedVector2Array(-10, -2, -6, -5, 6, -5, 10, -2, 10, 1, 6, 3, -6, 3, -10, 1)
+color = Color(0.08, 0.12, 0.10, 0.5)
+
+[node name="Sprite" type="Sprite2D" parent="Actors/Player"]
+texture = ExtResource("player")
+scale = Vector2(0.8, 0.8)
+offset = Vector2(0, -24)
+
+[node name="Collision" type="CollisionShape2D" parent="Actors/Player"]
+position = Vector2(0, -5)
+shape = SubResource("Feet")
+
+[node name="Input" type="Node" parent="Actors/Player"]
+script = ExtResource("input")
+
+[node name="Camera" type="Camera2D" parent="Actors/Player"]
+script = ExtResource("camera_zoom")
+Config = ExtResource("config")
+position = Vector2(0, -16)
+zoom = Vector2(2, 2)
+limit_left = -800
+limit_top = -544
+limit_right = 3040
+limit_bottom = 1184
+position_smoothing_enabled = false
+
+[node name="EquippedAxe" parent="Actors/Player" instance=ExtResource("axe_test")]
+
+[node name="GrassPatches" parent="." instance=ExtResource("grasspatches")]
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+
+[node name="North" type="CollisionShape2D" parent="Bounds"]
+position = Vector2(1120, -552)
+shape = SubResource("HorizontalBound")
+
+[node name="South" type="CollisionShape2D" parent="Bounds"]
+position = Vector2(1120, 1192)
+shape = SubResource("HorizontalBound")
+
+[node name="West" type="CollisionShape2D" parent="Bounds"]
+position = Vector2(-808, 320)
+shape = SubResource("VerticalBound")
+
+[node name="East" type="CollisionShape2D" parent="Bounds"]
+position = Vector2(3048, 320)
+shape = SubResource("VerticalBound")
+
+[node name="RockGround" parent="." instance=ExtResource("rock_ground")]
+
+[node name="Weather" parent="." instance=ExtResource("weather")]
+
+[node name="DayNight" parent="." instance=ExtResource("daynight")]
+
+[node name="Polish" parent="." instance=ExtResource("polish")]
+
+[node name="Atmosphere" parent="." instance=ExtResource("atmosphere")]
+
+[node name="SnowTest" parent="." instance=ExtResource("snowtest")]
+
+[node name="EnemyTest" parent="." instance=ExtResource("enemy_test")]
+
+[node name="FireTest" parent="." instance=ExtResource("fire_test")]

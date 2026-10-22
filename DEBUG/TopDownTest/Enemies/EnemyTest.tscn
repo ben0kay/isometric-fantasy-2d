@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Enemies/DebugEnemyTest.cs" id="controller"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Enemies/DefaultEnemyConfig.tres" id="config"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Enemies/SkeletonTest.tscn" id="skeleton"]
+
+[node name="EnemyTest" type="Node2D"]
+script = ExtResource("controller")
+Config = ExtResource("config")
+SkeletonScene = ExtResource("skeleton")

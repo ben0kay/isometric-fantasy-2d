@@ -1,0 +1,4 @@
+[gd_resource type="Resource" script_class="WorldLiquidMasterConfig" format=3]
+[ext_resource type="Script" path="res://WORLD/Liquids/Shared/WorldLiquidMasterConfig.cs" id="script"]
+[resource]
+script = ExtResource("script")

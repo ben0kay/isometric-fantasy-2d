@@ -1,0 +1,146 @@
+// Composes a finite streamed world or the compatibility preview from reusable production modules.
+using Godot;
+using System;
+using System.Linq;
+using FantasyGame.WorldInteractions.Fire;
+
+public partial class WorldScene : Node2D
+{
+    [Export] public WorldMasterConfig Config { get; set; }
+    public WorldFeaturePlan FeaturePlan { get; private set; }
+    public MacroWorldMap MacroMap { get; private set; }
+    public WorldBlueprintManifest Blueprint { get; private set; }
+    public WorldChunkStream Stream { get; private set; }
+    public int ActiveSeed { get; private set; }
+
+    public CampaignSaveController Saves { get; private set; }
+    public string StartupError { get; private set; }
+
+    #region Setup
+    // Choose a fresh seed once per load, then pass only that seed into deterministic generation.
+    // =========================================================
+    public override void _Ready()
+    {
+        var launch = CampaignSession.Consume();
+        try { InitializeWorld(launch); }
+        catch (Exception error)
+        {
+            StartupError = error.Message; GD.PushError(error.ToString());
+            GetNode<PlayerMovement>("Actors/Player").ProcessMode = ProcessModeEnum.Disabled;
+            if (launch != null)
+            {
+                var failure = new AcceptDialog { DialogText = "Campaign could not start: " + error.Message };
+                failure.Confirmed += () => MenuNavigation.Open(this,MenuNavigation.Main);
+                failure.Canceled += () => MenuNavigation.Open(this,MenuNavigation.Main);
+                AddChild(failure); failure.PopupCentered();
+            }
+        }
+    }
+    // Freeze identity before streaming; saved macro outcomes are restored, never regenerated.
+    // =========================================================
+    private void InitializeWorld(CampaignLaunch launch)
+    {
+        bool wantsStreaming = Config?.Streaming?.Enabled == true;
+        if (Config == null || (wantsStreaming && Config.Generation == null)
+            || (!wantsStreaming && (Config.Biome?.Surface?.Texture == null || Config.Biome.Surface.Material == null
+                || Config.Bounds.Size.X <= 0 || Config.Bounds.Size.Y <= 0 || !Config.Bounds.HasPoint(Config.PlayerSpawn))))
+        {
+            GD.PushError("World requires a generation config for streaming, or valid preview biome/bounds/spawn."); return;
+        }
+        var restore = launch?.Restore;
+        if (launch != null && !wantsStreaming) throw new InvalidOperationException("Campaign saves require streamed production mode.");
+        if (restore != null) { CampaignSession.Store().Validate(restore); CampaignSession.RequireContent(restore); }
+        var seedSource = new RandomNumberGenerator();
+        if (Config.RandomSeedOnLoad) seedSource.Randomize();
+        ActiveSeed = launch?.Seed ?? (Config.RandomSeedOnLoad ? (int)(seedSource.Randi() & 0x7fffffff) : Config.FixedSeed);
+        GD.Print($"World seed: {ActiveSeed} | {Config.Biome?.Id ?? "streamed"} | random on load: {Config.RandomSeedOnLoad}");
+        if (Config.Generation != null)
+        {
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                var features = restore == null ? WorldFeaturePlanner.Build(Config.Generation, ActiveSeed) : WorldBlueprintRestore.Features(restore.Blueprint);
+                var map = restore == null ? MacroWorldBuilder.Build(Config.Generation, ActiveSeed) : WorldBlueprintRestore.Map(restore.Blueprint);
+                FeaturePlan = features; MacroMap = map;
+                Blueprint = restore?.Blueprint ?? (launch == null ? WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan)
+                    : WorldBlueprintManifest.Create(launch.ProfileId,launch.RunId,MacroMap,FeaturePlan) with { WorldId = launch.WorldId });
+                foreach (string warning in features.Warnings) GD.PushWarning(warning);
+                GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
+                GD.Print($"Macro map | {MacroMap.Columns}x{MacroMap.Rows} | {MacroMap.Regions.Count} regions | 100% land | {timer.ElapsedMilliseconds}ms | hash {MacroMap.Hash}");
+            }
+            catch (System.ArgumentException error) { throw new InvalidOperationException("Macro generation failed: " + error.Message,error); }
+        }
+        if (wantsStreaming && MacroMap == null)
+        { GetNode<PlayerMovement>("Actors/Player").ProcessMode = ProcessModeEnum.Disabled; return; }
+        bool streaming = wantsStreaming;
+        if (streaming)
+        {
+            Config = (WorldMasterConfig)Config.Duplicate();
+            Config.Bounds = MacroMap.Bounds; Config.PlayerSpawn = FeaturePlan.StartingArea?.Anchor ?? Config.Bounds.GetCenter();
+            Config.Biomes = Config.Biomes == null ? new AdjacentBiomeLayout() : (AdjacentBiomeLayout)Config.Biomes.Duplicate();
+            string biomeId = MacroMap.BiomeAt(restore == null ? Config.PlayerSpawn : new Vector2(restore.Player.X,restore.Player.Y)).Id;
+            foreach (var biome in Config.Generation.Biomes) if (biome.Id == biomeId) Config.Biomes.Primary = biome;
+            GetNode<GroundSurface>("TerrainRoot/Ground").Visible = false;
+        }
+        else GetNode<GroundSurface>("TerrainRoot/Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
+        CharacterBody2D player = GetNode<CharacterBody2D>("Actors/Player");
+        player.Position = restore == null ? Config.PlayerSpawn : new Vector2(restore.Player.X,restore.Player.Y);
+        Camera2D camera = player.GetNode<Camera2D>("Camera");
+        camera.LimitLeft = Mathf.FloorToInt(Config.Bounds.Position.X);
+        camera.LimitTop = Mathf.FloorToInt(Config.Bounds.Position.Y);
+        camera.LimitRight = Mathf.CeilToInt(Config.Bounds.End.X);
+        camera.LimitBottom = Mathf.CeilToInt(Config.Bounds.End.Y);
+        AddBounds();
+        var pond = GetNodeOrNull<WorldPond>("TerrainRoot/Liquids");
+        var placement = GetNode<WorldSceneryPlacement>("Actors");
+        placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
+        if (streaming)
+        {
+            Stream = new WorldChunkStream { Name = "Streaming" }; GetNode("SystemsRoot").AddChild(Stream);
+            Stream.Initialize(this,placement,(PlayerMovement)player,Config,placement.ExcludedLiquid,restore?.Chunks);
+            Blueprint = Blueprint with { SchemaVersion = 4,
+                MacroRegions = MacroMap.Regions.Select(r => new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray(),
+                MacroBiomes = MacroMap.Biomes.Select(b => new SavedMacroBiome(b.Id,b.Name,b.Colour.R,b.Colour.G,b.Colour.B,b.Colour.A)).ToArray(), LocalGeneratorVersion = ChunkSceneryData.GeneratorVersion,
+                ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };
+        }
+        else placement.Generate(Config, ActiveSeed);
+        // Build entity navigation only after the seeded tree/rock colliders exist.
+        GetNodeOrNull<WorldEntityPlacement>("SystemsRoot/EntityPlacement")?.Populate(placement, player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity);
+        var environment = GetNodeOrNull<EnvironmentRuntime>("SystemsRoot/Environment");
+        environment?.Initialize(Config, GetNode<Node2D>("Actors"));
+        if (environment != null) GetNode<FireRuntime>("SystemsRoot/Fire").Initialize(GetNode<Node2D>("Actors"), environment);
+        if (pond != null && environment?.Weather != null) pond.Initialize(GetNode<PlayerMovement>("Actors/Player"), environment.Weather);
+        var visibility = new OcclusionController { Name = "Occlusion" };
+        GetNode("SystemsRoot").AddChild(visibility);
+        visibility.Initialize(player);
+        Stream?.Bind(environment,GetNode<FireRuntime>("SystemsRoot/Fire"),visibility);
+        if (launch != null)
+        {
+            if (restore != null)
+            {
+                environment.Clock.Config.CycleSeconds = restore.Clock.CycleSeconds;
+                environment.Clock.Config.Paused = restore.Clock.Paused; environment.Clock.SetHour(restore.Clock.Hour);
+            }
+            Saves = new CampaignSaveController { Name = "CampaignSave" }; GetNode("SystemsRoot").AddChild(Saves);
+            Saves.Initialize(this,restore == null,restore?.ContentFingerprint ?? CampaignSession.ContentFingerprint());
+        }
+    }
+
+    // Static boundary walls derive from the same bounds as ground and camera.
+    // =========================================================
+    private void AddBounds()
+    {
+        Rect2 b = Config.Bounds;
+        var walls = new StaticBody2D { Name = "Bounds" }; GetNode("TerrainRoot").AddChild(walls);
+        AddWall(walls, new(b.GetCenter().X, b.Position.Y - 16), new(b.Size.X + 64, 32));
+        AddWall(walls, new(b.GetCenter().X, b.End.Y + 16), new(b.Size.X + 64, 32));
+        AddWall(walls, new(b.Position.X - 16, b.GetCenter().Y), new(32, b.Size.Y + 64));
+        AddWall(walls, new(b.End.X + 16, b.GetCenter().Y), new(32, b.Size.Y + 64));
+    }
+
+    // Group the four simple shapes under one body to keep world composition readable.
+    // =========================================================
+    private static void AddWall(StaticBody2D parent, Vector2 position, Vector2 size) =>
+        parent.AddChild(new CollisionShape2D { Position = position, Shape = new RectangleShape2D { Size = size } });
+    #endregion
+}

@@ -1,0 +1,52 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://WORLD/Runtime/WorldScene.cs" id="world"]
+[ext_resource type="Resource" path="res://WORLD/DefaultWorldConfig.tres" id="config"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/GroundSurface.cs" id="ground"]
+[ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldSceneryPlacement.cs" id="placement"]
+[ext_resource type="PackedScene" path="res://ENTITIES/Player/Player.tscn" id="player"]
+[ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentRuntime.cs" id="environment"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/DefaultEnvironmentConfig.tres" id="environment_config"]
+[ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
+[ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
+[ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldEntityPlacement.cs" id="entity_placement"]
+[ext_resource type="PackedScene" path="res://ENTITIES/Shared/Entity.tscn" id="skeleton_basic"]
+[ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres" id="basic_definition"]
+[ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs" id="fire_runtime"]
+[ext_resource type="Resource" path="res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres" id="fire_config"]
+[ext_resource type="Script" path="res://DEBUG/UI/Fire/WorldFireDebugPanel.cs" id="fire_debug"]
+[ext_resource type="Script" path="res://DEBUG/UI/Generation/MacroMapDebugPanel.cs" id="macro_debug"]
+[node name="World" type="Node2D"]
+script = ExtResource("world")
+Config = ExtResource("config")
+[node name="TerrainRoot" type="Node2D" parent="."]
+[node name="StreamedGroundRoot" type="Node2D" parent="TerrainRoot"]
+[node name="SystemsRoot" type="Node" parent="."]
+[node name="DebugUIRoot" type="Node" parent="."]
+[node name="Ground" type="Sprite2D" parent="TerrainRoot"]
+z_index = -10
+script = ExtResource("ground")
+[node name="Liquids" parent="TerrainRoot" instance=ExtResource("pond")]
+[node name="Actors" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("placement")
+[node name="Player" parent="Actors" instance=ExtResource("player")]
+
+[node name="EntityPlacement" type="Node" parent="SystemsRoot"]
+script = ExtResource("entity_placement")
+EntityScene = ExtResource("skeleton_basic")
+EntityDefinition = ExtResource("basic_definition")
+
+[node name="Environment" type="Node2D" parent="SystemsRoot"]
+script = ExtResource("environment")
+Config = ExtResource("environment_config")
+[node name="EnvironmentDebugPanel" parent="DebugUIRoot" instance=ExtResource("debug_ui")]
+EnvironmentPath = NodePath("../../SystemsRoot/Environment")
+
+[node name="Fire" type="Node" parent="SystemsRoot"]
+script = ExtResource("fire_runtime")
+Config = ExtResource("fire_config")
+[node name="FireDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
+script = ExtResource("fire_debug")
+
+[node name="MacroMapDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
+script = ExtResource("macro_debug")

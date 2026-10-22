@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/DayNight/DebugDayNight.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/DayNight/DefaultDayNightConfig.tres" id="config"]
+
+[node name="DayNight" type="Node2D"]
+script = ExtResource("script")
+Config = ExtResource("config")
+
+[node name="Shadows" type="Node2D" parent="."]
+z_index = -5
+
+[node name="Ambient" type="CanvasModulate" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 336.0
+offset_bottom = 136.0
+
+[node name="Controls" type="VBoxContainer" parent="UI/Panel"]
+layout_mode = 2
+
+[node name="Clock" type="Label" parent="UI/Panel/Controls"]
+layout_mode = 2
+text = "Day / night preview"
+
+[node name="Time" type="HSlider" parent="UI/Panel/Controls"]
+layout_mode = 2
+max_value = 23.999
+step = 0.01
+value = 8.0
+
+[node name="Pause" type="CheckButton" parent="UI/Panel/Controls"]
+layout_mode = 2
+text = "Pause cycle / scrub time"

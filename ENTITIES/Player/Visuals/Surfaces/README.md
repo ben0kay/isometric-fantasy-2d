@@ -1,0 +1,2 @@
+# Player snow appearance
+PlayerSnowVisual owns the sprite-only offset and ground-level clip during shallow snow burial, preserving physics/camera and projected sun shadows. One helper is ensured per player; removing snow restores position/material/contact visibility and removes the helper. Future surface effects should extend this single owner instead of competing to change the sprite. Water/wading is not included.

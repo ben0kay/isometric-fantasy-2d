@@ -1,0 +1,4 @@
+[gd_resource type="Resource" format=3]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Fire/TreeFireProfile.cs" id="script"]
+[resource]
+script = ExtResource("script")

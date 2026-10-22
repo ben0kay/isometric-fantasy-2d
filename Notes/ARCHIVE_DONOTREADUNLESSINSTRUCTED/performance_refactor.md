@@ -1,0 +1,225 @@
+# Production World — Performance Refactor Handoff
+
+**Date:** 2026-10-22  
+**Status:** Original source audit plus completed implementation handoffs below. Original observations are historical where a completed pass supersedes them.
+**Current implementation status:** All P0/P1/P2 items listed here are implemented; see dated handoffs below. Target-PC visual/FPS verification and any newly measured bottlenecks remain follow-up work.
+**Target:** `SCENES/World/World.tscn` and production environment/runtime systems (Godot C#).  
+**Authoring rules:** Read root `README.md`, `CodePreferences.md`, **[`SCENES/World/scene organize.md`](../SCENES/World/scene%20organize.md)**, `SCENES/World/README.md`, and the README beside each system before editing. Follow the new *Performance-first rules for every new mechanic*. Preserve data-driven Resource profiles, F9 live controls, streaming, and all DEBUG scenes.
+
+## Related world-scene organization plan (mandatory reading)
+
+Before changing world scene composition, runtime node ownership, effect containers, registration, or chunk lifecycle, read **[`SCENES/World/scene organize.md`](../SCENES/World/scene%20organize.md)** at current HEAD. It explains the existing World/Actors/Environment hierarchy, the enabled P3 chunk streamer, Y-sorting, object ownership, runtime containers, and dependencies that must not be broken by a casual reparent.
+
+**Coordination rule:** This performance plan and the scene-organization document are **two separate plans**. Do not silently implement scene reparenting or an unapproved organization phase while optimizing environmental systems. If an optimization relies on changing node paths or ownership, first cross-check the scene-organization plan and explicitly identify its affected phase; preserve both streaming and legacy compatibility mode. Node containers organize ownership but do not automatically improve performance. Inspect both plans and current source before beginning each phase.
+
+## Scope and ownership
+
+This audit is based on reading production source, **not benchmark measurements**. Priorities are candidate impact, not proven CPU cost. Work in small validated passes, comparing frame traces on the target PC with and without the proposed change.
+
+**Do not modify rain or falling-leaf systems in this pass:** they are being worked on separately. This includes `WorldWeather`, `RainVisualLayers`, `GroundRainSplashes`, liquid rain splashes, hit leaves and atmospheric falling-leaf code. Coordinate interfaces with those changes rather than overwriting parallel work. Vegetation wetness is rain-dependent: assess it in a separate coordinated pass.
+
+## Baseline and acceptance criteria
+
+Before changing code, capture a comparable idle scene and an active scene with F9/runtime trace diagnostics: 1920x1080, current zoom and widest zoom, steady camera and moving camera, same world seed/nearby scenery density. Record per-system elapsed ms, worst spikes, callback counts, allocation and GPU/frame observations where available. Be explicit when a result is unavailable; don't invent a percentage improvement.
+
+A refactor is complete only when: (1) the OFF/idle state demonstrably avoids needless callbacks, redraws and material updates; (2) activation and reactivation still work from Inspector/F9 signals or explicit methods, without sleeping controllers permanently; (3) transitions and existing visible effects remain intact; (4) streamed chunks load/unload/reappear correctly; (5) profiles remain data-driven and generic. When truly continuous effects run, justify their cadence.
+
+## P0 — Dormant effects should sleep
+
+### P0-0 — Atmospheric pollen/dust: reported large FPS regression (investigate first)
+
+**Files:** `ENVIRONMENT/Atmosphere/WorldAtmosphere.cs`, `ENVIRONMENT/Atmosphere/AtmosphereProfiles/AtmosphereProfile.cs`; inspect atmosphere scene, shader and F9 toggle wiring.
+
+**User observation (not yet benchmark-verified):** Disabling the atmospheric pollen/dust option produces approximately **+30 FPS on average** on the user's machine. This is the highest-priority reported A/B performance symptom. Record before/after **frame times in milliseconds**, not FPS alone, alongside CPU `WorldAtmosphere.Process` / `WorldAtmosphere.Draw` trace costs and Godot rendering profiler data. Check identical camera/seed/zoom and multiple repetitions. Do not assume `DrawCircle` itself is the root cause before isolating CPU and GPU work.
+
+**Observed source:** `WorldAtmosphere._Process` calls `QueueRedraw()` every frame regardless of whether pollen, smoke, embers, haze or other custom-drawn effects need it. Its `_Draw` path loops over up to `PollenCount` (default 35; maximum 100) and calls `DrawPollen` / `DrawCircle` with per-speck trigonometry; shared atmospheric shader bounds and uniforms are also written each frame. `Config.Pollen=false` skips the pollen drawing loop, **but not the other atmosphere updates or redraw request**. Confirm what exactly the F9 switch disables before attributing the 30 FPS to pollen alone.
+
+**Refactor:** Preserve the subtle drifting look while making pollen work bounded and independently controlled. When pollen is disabled or count is zero, do no pollen calculations or drawing and do not request redraws **for pollen**. Other atmosphere effects may still legitimately need redraws; evaluate separately rather than disabling the entire atmosphere node. While pollen is enabled, benchmark a single batched GPU/instanced particle approach versus existing immediate-mode `DrawCircle` rendering (or a modest controlled drawing cadence if visually acceptable). Avoid per-speck nodes, per-frame allocations, duplicate shader writes and camera-region work where unchanged. Keep `AtmosphereProfile`, F9 toggle and reactivation live; do not modify atmospheric **falling leaves**, which are owned by concurrent work.
+
+**Acceptance:** Document repeatable baseline and pollen-off FPS/frame-ms, `Process`/`Draw` and GPU measurements; pollen OFF does no pollen simulation/drawing; switching it back ON restores the previous appearance without requiring a restart; haze, torch smoke/embers, wind, camera zoom and leaf effects remain correct. Update atmosphere README with verified findings.
+
+
+### P0-A — Snow coverage and snow materials
+
+**File:** `ENVIRONMENT/Weather/Snow/WorldSnow.cs`
+
+**Observed:** `_Process` runs continuously, even with `Config.Enabled=false` or stable zero coverage. It updates camera-local cover geometry, cover visibility, multiple ground shader parameters and iterates `_chunks` to call tree/rock adapters, plus calls persistent adapters every frame.
+
+**Refactor:** Separate coverage transition/accumulation from material application. Cache applied coverage, tint and relevant settings; update dependent adapters only when actual values change (with a suitable small threshold for animated transitions) or a new chunk registers/returns to view. When disabled or at a stable endpoint, stop the unnecessary snow callback until an explicit state change. If settled nonzero coverage remains visible, keep its shader rendering but stop redundant C# material writes. Watch `SetCoverage`, auto-accumulate, on/off, chunk registration and F9 slider changes.
+
+**Acceptance:** Stable zero snow makes no repeated tree/rock shader writes or chunk walks; stable accumulated snow preserves appearance; slider changes, enabled toggles, accumulating/melting, and re-entry apply correctly.
+
+### P0-B — Snowfall particle emission
+
+**File:** `ENVIRONMENT/Weather/Snow/WorldSnowfall.cs`
+
+**Observed:** Every frame sets `Visible`, `Emitting`, `AmountRatio`, visible-camera bounds, emitter position, wind direction and velocity, even when snowfall disabled/rate zero. Configured particle budget currently 1,300 GPU flakes.
+
+**Refactor:** When snowfall is OFF, stop emission **and** idle callback; define explicit wake-up for F9/Resource updates. While active, update wind material only when changing, and camera coverage only when view position/size materially changes. Preserve wide-zoom edge coverage, transitions, and world-coordinate GPU motion.
+
+**Acceptance:** No particle-property writes per idle frame; re-enable and zoom/camera movement don't produce gaps.
+
+### P0-C — Lightning out of storm
+
+**File:** `ENVIRONMENT/Weather/Storms/WorldLightning.cs`
+
+**Observed:** `_Process` always checks storm threshold and calls `UpdateFlash()`; that unconditionally updates impact light properties and calls `QueueRedraw()` even with `Flash=0` and no storm.
+
+**Refactor:** Wake storm cadence on threshold crossing / explicit manual `Trigger`. During active flash/tail update continuously as needed; when no storm and the flash is fully gone, turn off processing and redraw once to clear stale bolt geometry. Maintain rare-strike timing and F9 manual lightning, and avoid coupling to automatic weather scheduling not yet implemented.
+
+**Acceptance:** Dry/no-strike state has no repeated lightning draws or light property updates; storm onset, strike, cooldown, storm end and manual triggering still work.
+
+### P0-D — Disabled cloud shade
+
+**File:** `ENVIRONMENT/Atmosphere/AmbientEffects/CloudShade.cs`
+
+**Observed:** Every frame writes `Visible` and four shader uniforms regardless of `Config.Enabled`.
+
+**Refactor:** Apply enable/disable as state change and skip disabled updates. During active drift, keep continuous animation if genuinely needed; skip uniform writes that have not changed. Ensure live F9 changes can reactivate without relying on a disabled node's own `_Process`.
+
+**Acceptance:** Disabled clouds perform no recurring material writes; re-enabled clouds resume at current daylight/wind without jumping.
+
+## P1 — Reduce repeated updates without freezing active visuals
+
+### P1-A — Shared vegetation wind shader synchronization
+
+**File:** `ENVIRONMENT/Wind/Visuals/VegetationWind.cs`
+
+**Observed:** One shared adapter per chunk/group (good), but `UpdateWind()` rewrites `wind_multiplier` on each cached material every frame irrespective of unchanged `Wind.Strength`.
+
+**Refactor:** Cache last-applied wind strength; update only on meaningful change or initial attach/reactivation. Keep consistent wind across material clones; don't add per-tree processes. A continuously varying signal may still require updates while active.
+
+### P1-B — Colour grade settings
+
+**File:** `ENVIRONMENT/Lighting/Colour/WorldColourGrade.cs`
+
+**Observed:** Rewrites `contrast`, `saturation`, `vignette`, and `Visible` every frame, even if settings never change or grade disabled.
+
+**Refactor:** Apply once and only on F9/profile changes; while disabled no shader updates. Ensure F9 changes propagate explicitly.
+
+### P1-C — Torch light static settings versus animation
+
+**File:** `ENVIRONMENT/Lighting/LocalLights/TorchLight.cs`
+
+**Observed:** `ApplySettings()` continuously writes visibility, light toggles, texture scale, colour, shadow configuration/filter; actual flicker energy does need changing while lit. Current setup may include multiple preview torches from `EnvironmentRuntime`.
+
+**Refactor:** Apply static settings on initialization/config changes only; active lit flicker can keep a small animation callback. When torch off, stop flicker callback until toggled back on. Do not change gameplay fire or the current shadow appearance.
+
+### P1-D — Sunlight and shared shadows (profile first)
+
+**Files:** `ENVIRONMENT/Lighting/DayNight/WorldDayNight.cs`, `ENVIRONMENT/Lighting/Shadows/SunShadowRenderer.cs`, `ENVIRONMENT/Time/Clock/GameClock.cs`
+
+**Observed:** Day/night updates ambient and calls `Shadows.UpdateProjection` every frame, walking cached shadow casters. The clock is intentionally continuous.
+
+**Refactor:** Profile before touching: cache stable shadow parameters; consider a measured capped cadence or thresholds for expensive caster projections while preserving smooth solar transition, camera movement, culling and lightning responsiveness. Avoid replacing smooth lighting with visibly stepped updates or disabling the clock.
+
+### P1-E — Coordinated only: wetness/wind forwarding
+
+**File:** `WORLD/Content/Vegetation/Shared/Wetness/VegetationWetness.cs`
+
+**Observed:** `_Process` loops over `_sources` to forward wind shader params before its wetness change guard, including fully dry steady state. The wetness material update is partly cached already.
+
+**Refactor later (coordinate with rain Codex):** Avoid needless wind synchronization when values unchanged. Sleep settled wetness work only after ensuring it wakes for rainfall onset, drying, changing wind and streamed chunk reloads. Do not edit during concurrent rain implementation.
+
+## P2 — Streaming and spatial relevance
+
+### P2-A — Cosmetic chunk activation checks
+
+**File:** `ENVIRONMENT/EnvironmentRuntime.cs`
+
+**Observed:** `_Process` computes camera view and walks all registered `_chunkVisuals` every frame to choose active status. It already turns chunk cosmetic wind/wetness off when outside view: keep that capability.
+
+**Refactor:** Reuse camera/streamer movement or zoom change notifications, or throttle comparisons to bounded intervals when appropriate; evaluate on chunk register/unregister and sufficiently changed view. Preserve hysteresis/retention margin and avoid blank or stale cosmetics when the camera jumps. Coordinate with `WORLD/Runtime/Streaming/WorldChunkStream.cs` rather than adding a competing full scan.
+
+### P2-B — Per-tree occlusion candidate selection
+
+**File:** `FEEDBACK/Visibility/OcclusionController.cs`
+
+**Observed:** Every ~0.1s tests every registered visual for player overlap and every frame loops over every registered visual to animate alpha, even when none are fading. This is shared (not per-tree processing), but scales with registered scenery count.
+
+**Refactor:** Use chunk/spatial nearby candidates for obstruction and a small active-fade collection for per-frame opacity changes. Re-evaluate on player movement/registered changes and preserve fade restore/unregister. Do not break species-generic visibility profiles or chunk stream cleanup.
+
+## Existing patterns worth preserving
+
+- `SYSTEMS/WorldInteractions/Fire/Simulation/Burnable.cs`: `_Ready` registers and calls `SetProcess(false)`; `TryIgnite` wakes only the selected tree; completed burn disables processing.
+- `SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs`: one-time signal registration, no frame-loop scan of all burnables; burning effect instances are temporary and capped.
+- `WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs`: activation/deactivation pattern for hit feedback (being refactored elsewhere; avoid conflicts).
+- Spatial/cached actor-source registration from the existing P3 streaming work: **don't restore full per-frame or load-triggered forest rescans**.
+
+## Codex execution guidance
+
+1. Start by **profiling P0-0 pollen/dust** because the user reports approximately +30 FPS when disabled. Then tackle **P0-A and P0-B**, followed by P0-C/D; use measured results to reprioritize. Inspect the latest files and adjacent READMEs before editing, because concurrent development may already have changed them.
+2. Make a small scoped change, compile and test in Godot when available, inspect frame traces, and update the relevant subsystem README with what actually changed.
+3. Continue P1 then P2 based on measured cost, not blind preference for eliminating every `_Process`.
+4. Use **one GitHub commit per requested job**, preserve unrelated changes and leave DEBUG untouched.
+5. At each handoff report: activation trigger; shutdown condition; idle callbacks/material writes; scaling approach; measured before/after if obtainable; known unverified behavior.
+
+**Do not claim a refactor succeeded solely because `SetProcess(false)` appears in code.** A sleeping component must still reliably wake when the user changes an F9 setting, a gameplay event fires, a chunk reappears or a world service transitions state.
+
+## Rain / falling-leaf pass completed separately
+
+Rain intensity now defaults to zero. Zero immediately removes GPU rain, clears ground/liquid splash pools and sleeps their callbacks; positive intensity wakes them through profile-change notifications. Shared scenery ground-query data remains independent so manual lightning still works while dry. Lightning sleeps without rain or an active flash (addresses P0-C); foliage wetness sleeps after drying and shared wind updates its cached material followers on changes (addresses the wetness-forwarding portion of P1-E). The separate VegetationWind adapter audit remains pending.
+
+Falling leaves retain one shared renderer with at most 40 reused slots; disabled/zero-count leaves skip integration. This does not disable other atmosphere effects. Validation: 22 rain lifecycle checks, 167 scenery visibility checks, P3 generation checks and tree/fire/debug smoke checks passed under local Godot 4.5.1; target 4.7.2 and graphical FPS remain unverified. See subsystem READMEs for details and the isolated Mono shutdown caveat.
+
+## Snow master-switch pass completed — P0-A / P0-B
+
+P0-A and P0-B are implemented in the separately authorized snow pass. Enabled=false immediately clears/restores all snow surfaces and removes GPU snowfall. Coverage sleeps at settled endpoints; Resource Changed events, SetCoverage and explicit chunk registration/re-entry apply changes/wake transitions. Rate zero/Snowfall=false removes flakes independently of settled coverage. Active snowfall only rewrites changed view/wind inputs. The cover is now one static world-bounded quad (world-space shader, viewport clipping), avoiding camera-driven coverage callbacks. Shared wind and source-keyed wetness links preserve snow-overlay composition without polling; they unregister at zero snow/unload. No scene reparenting or weather probability scheduler was added.
+
+Remaining idle work: streamed adapter setup/caches and shared player surface/water helper; settled visible snow still renders. Active snowfall checks camera/wind each frame; continuous coverage transitions update active chunk adapters. P0-D and remaining P1/P2 work are unchanged and pending. Tests and limitations are recorded in ENVIRONMENT/Weather/Snow/README.md. Local Godot 4.5.1 checks verify lifecycle/appearance parameters, not target 4.7.2 graphical FPS or particle continuity; target-PC trace comparison is still required.
+
+## P0-0 pollen/dust pass implemented — target-PC A/B still required
+
+The old per-speck DrawPollen/DrawCircle path is removed. PollenDust now owns one MultiMesh GPU-drawn quad batch (default 35, cap 100), with seeded shader trajectories, shared wind displacement and daylight response. OFF or zero count frees the helper. No per-speck C# updates, node processes, instance-buffer rebuilds or redraw requests are used during animation. Atmosphere profile setters now emit Changed; F9/Inspector updates wake it directly. Shared atmosphere redraws remain only for leaves/visible torch smoke/embers and one clear when they stop; all-off sleeps. Haze settings/bounds are cached, and disabled haze skips shader writes. No leaf trajectory/source algorithm or rain/snow behavior was changed.
+
+Wake triggers: profile changes, first/last foliage registration and torch visibility. Active work: shared view/daylight/wind checks, changed GPU inputs, and existing enabled non-pollen effects. Off cost: no pollen batch/work; if all atmosphere effects are off, no atmosphere callback. Scaling: one capped batch globally, no per-tree/species polling. Source registration avoids repeated state refresh except zero/nonzero transitions.
+
+ValidatePollenBatch exercises lifecycle/count limits, no pollen-only redraws, unchanged GPU input caching, synthetic canvas bounds, wind/daylight, independent effects and torch visibility. Rain/snow/visibility regressions accompany it. BenchmarkPollen records reproducible CPU-only callback samples; see atmosphere README for numbers. In isolated headless samples, 35-speck Draw mean went from 0.05282ms to no Draw callbacks; shared Process mean from 0.01907ms to 0.00540ms. All-off no longer processed/redrew. This local CPU reduction is too limited to attribute the full reported 30–40 FPS delta: real GPU/driver timings, appearance and target Godot 4.7.2/D3D12 remain unverified. Do not mark the user's machine-level symptom resolved without their repeat A/B capture.
+
+Concurrent FPS diagnostics fixes were preserved without changing DEBUG behavior in this pass. P0-D and remaining P1/P2 phases are still pending; completed rain/snow handoffs remain valid.
+
+## P0-D / P1-A implemented — cloud dormancy and vegetation wind caching
+
+P0-D: cloud Enabled=false or Opacity<=0 hides/sleeps immediately; Resource Changed signals preserve direct F9/Inspector wake. Disabled profiles perform no shader writes after one-time setup. Re-enable applies current opacity/wind/daylight; active frames upload only changed inputs. Continuous active wind/daylight retains a justified callback.
+
+P1-A: shared chunk/group VegetationWind adapters cache last applied strength and skip the full material loop when unchanged. Attach invalidates the cache; current off-screen suspension and explicit re-entry update remain intact. Shader TIME keeps visual sway moving without repeated strength uploads. Remaining idle-active cost is one strength read/comparison per active adapter; this pass does not introduce new per-tree loops or change snow/wetness forwarding.
+
+Validation: ValidateCloudWindCaching covers 20 checks (stable writes, off/zero, never-enabled startup, disabled edits, wake/current wind/daylight, chunk re-entry, new materials and restore/unsubscribe). Snow lifecycle and scenery visibility regressions accompany it. One concurrent visibility run passed all 167 assertions then logged the previously recorded Godot 4.5.1 Mono shutdown handle error; the isolated rerun passed all 167 checks without errors. This is not a claimed shutdown fix. Target 4.7.2 graphical appearance, actual FPS and before/after frame traces remain unverified. No benchmark gain is claimed. Remaining implementation items: P1-B colour grade, P1-C torch settings/flicker, P1-D sunlight/shadows profiling, P2-A chunk visibility checks, P2-B occlusion candidate/fade selection. Previous rain/snow/pollen handoffs remain valid.
+
+## P1-B / P1-C implemented — colour grade and torch settings
+
+P1-B: grading has no frame callback in either enabled or disabled state. Resource Changed events apply only changed contrast/saturation/vignette uniforms, with disabled uploads deferred until re-enable; the grade rect still renders its existing shader when enabled. F9/Inspector controls remain live; removal unsubscribes.
+
+P1-C: torch static settings update only on profile edits and only for changed properties. Only lit positive-energy torches process the existing flicker; disabled or zero-energy lights stop the callback/native light. Master off also hides artwork, retaining existing physics ownership/collision behavior. Shared preview profiles still update every lamp, including deferred edits on re-enable. No LL2/LL3 framework, scene reparent, sun change or shadow algorithm change is included.
+
+Validation: ValidateGradeTorchSleeping passed 21 checks covering stable/no writes, changed fields, disabled edits, re-enable, active flicker, zero energy, all shared lamps, never-active startup and unsubscribe/removal. Existing headless local-light checks reported 0 failures. Local Godot 4.5.1/.NET 8 compile/runtime verification does not establish target 4.7.2/D3D12 FPS or rendered appearance. Remaining active costs are the enabled grade shader, native lights/shadows and per-lit-torch energy animation; no FPS improvement is invented.
+
+**Remaining implementation work in this plan:** P1-D sunlight/shadows profiling and measured update policy; P2-A chunk visibility checks; P2-B nearby occlusion candidates/active fades. Earlier rain/snow/pollen/cloud/wind handoffs remain implemented, with target-PC graphical/performance verification still outstanding.
+
+## P1-D implemented — cached solar state plus pixel-bounded projections
+
+Step 1 caches unchanged solar curves/ambient writes, static chunk caster walks, wind/softness uploads and renderer children. Camera/view, opacity, source visibility/appearance/lifetime and new chunks still refresh; dynamic actors and active hit wobble remain independent. TreeHitResponse emits active transform/restoration events without idle processing. All source/chunk subscriptions disconnect on unload. Relevant-caster diagnostics are now separate from actual projection writes.
+
+Step 2 reuses static projections only within a conservative screen error budget, data-driven ShadowProjectionTolerancePixels default 0.25 (0 exact). No fixed update frequency/day duration is hardcoded. Explicit SetHour scrubs, profile edits and pause/resume bypass the budget. Wind shader animation, weather and lightning remain live. F9 exposes tolerance and extends the existing day-length range to 3600 seconds, including the requested 1440-second full day; default fast 30-second testing stays unchanged.
+
+ValidateSunCaching passed 20 checks, visibility/cancellation 167, P3 streaming 4386, and generic trees reported 0 failures; F9/F7 smoke checks also run. BenchmarkSunShadows recorded a fixed-seed, still-camera, 367-caster CPU-only noon probe: paused mean 1.37191ms -> 0.01395ms; simulated 1440-second cycle mean 0.90570ms -> 0.01997ms at 0.25px; fast 30-second cycle 0.97989ms -> 0.36362ms. Exact slow-cycle after mean 0.54775ms demonstrates step-1 savings independently of tolerance. See shadow README for p95, allocation, methodology and limitations. These local Godot 4.5.1/.NET 8 figures do not establish target 4.7.2/D3D12 graphical smoothness, walking/GPU cost or FPS gains. Target-PC verification remains outstanding.
+
+**Remaining implementation phases:** P2-A cosmetic chunk activation checks and P2-B nearby occlusion candidate/active-fade selection. Existing culling remains in place; this pass does not silently implement those phases or reorganize scenes. Previous rain/snow/pollen/cloud/wind/grade/torch handoffs remain valid.
+
+## Screen dust follow-up implemented — independent screen overlay
+
+The user reported camera-attached world pollen and chose a subtle presentation-only screen overlay. PollenDust now owns a separate CanvasLayer and one capped GPU batch. Shader TIME controls independent drift/sparse fades; camera movement/zoom, scenery, wind and daylight do not affect it. No per-frame dust CPU work or redraws remain; viewport SizeChanged and profile changes update only changed bounds/count. Dust alone no longer keeps WorldAtmosphere processing. OFF/zero frees the layer and resize subscription. Existing serialized Pollen/PollenCount fields remain compatible; F9 labels are Screen dust and Screen dust budget. Future world pollen remains separate/unimplemented rather than coupling this overlay back to scenery.
+
+ValidatePollenBatch updated to 26 checks for independent camera/wind/daylight behavior, lifecycle/counts/no polling, viewport resizing and cleanup. UI/visibility regressions accompany it. Local headless verification does not certify target 4.7.2/D3D12 appearance/FPS. Original P0-0 CPU measurements are historical; no new FPS gain is claimed. P2-A/P2-B remain pending.
+
+## P2-A / P2-B implemented — spatial chunk decisions and active occlusion fades
+
+P2-A: spatially query prepared chunk artwork bounds plus currently active chunks instead of walking every registered chunk. Static views/settings skip decisions. A conservative cached window uses SceneryVisibilitySlack=32 world units (0 exact) so tiny camera motion can reuse results; it prepares early and never postpones entry into the actual prepared view. New/refreshed chunks use the same envelope. Camera jumps, zoom/resizing, margins and culling toggles invalidate appropriately; OFF wakes all once and skips further view decisions. Existing prepare/retention hysteresis and authoritative wind/wetness/snow re-entry remain. Shared wetness is cached directly; source changes refresh only their chunk bounds.
+
+P2-B: cached padded artwork buckets select nearby blockers plus previously obstructing entries, while only actively fading entries interpolate/write alpha. Stationary player/source state skips detection. Source/profile/hit/lifetime events refresh bounds/targets; non-static opt-in props reindex at the shared interval. Teleports restore prior blockers, hidden parent chunks do not obstruct, exact base alpha is restored on completion/unregister/exit, and empty controllers sleep. No per-tree idle processors, species branches, physical collision changes or scene reparenting were introduced.
+
+Related measured improvement: the first exact-per-motion spatial lookup added overhead at the small default 49-chunk scale. The cached safe window removed that overhead in the final sample, rather than assuming spatial hashing was always faster. Reusable buffers, managed chunk-state keys, early huge-art/query fallbacks and explicit cleanup bound common work and prevent enormous bucket allocation. The spill/fallback cases still scale with registered cached data; this is not a universal constant-time guarantee.
+
+Validation: ValidateSpatialScheduling passed 32 checks; scenery visibility/cancellation passed 167, P3 streaming passed 4425, and sun/UI regression suites passed. BenchmarkSpatialScheduling fixed-seed/49-chunk CPU-only samples: stationary visibility 0.00350 -> 0.00150ms and occlusion 0.01915 -> 0.00011ms; simulated moving visibility 0.00329 -> 0.00183ms and occlusion 0.01797 -> 0.00024ms. Allocation windows after measured 0 bytes. See visibility README for methodology/p95. These tiny local Godot 4.5.1/.NET 8 costs do not imply a large FPS gain or certify target 4.7.2/D3D12 behavior. Normal moving/walking/zoom/transparency and graphical seam checks on the target PC remain necessary.
+
+**All implementation phases in this performance plan are now implemented.** Next optimization work should follow new target-PC CPU/GPU traces. Potential separate areas include native local-light/shadow budgets (LL3), shader/overdraw cost, and remaining synchronous streaming/navigation work; do not silently implement these unrelated systems or promise gains without measurements.

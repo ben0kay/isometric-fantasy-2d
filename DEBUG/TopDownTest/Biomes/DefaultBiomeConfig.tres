@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="BiomeMasterConfig" load_steps=4 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Biomes/BiomeMasterConfig.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Biomes/OakForest.tres" id="oak"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Biomes/PinkMeadow.tres" id="pink"]
+[resource]
+script = ExtResource("script")
+West = ExtResource("oak")
+East = ExtResource("pink")

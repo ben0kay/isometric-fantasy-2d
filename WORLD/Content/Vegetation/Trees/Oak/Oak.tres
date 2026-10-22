@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="TreeDefinition" format=3]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeDefinition.cs" id="script"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeVisualVariant.cs" id="variant_script"]
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01.png" id="art"]
+[ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/Oak/OakWind.tres" id="wind"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Oak/OakFireProfile.tres" id="fire"]
+[sub_resource type="Resource" id="variant"]
+script = ExtResource("variant_script")
+Id = "01"
+Texture = ExtResource("art")
+SourceAnchor = Vector2(548, 1290)
+SpriteScale = Vector2(0.115, 0.115)
+TrunkPolygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -17, 1)
+VisualMinimum = Vector2(-80, -150)
+VisualMaximum = Vector2(80, 10)
+[resource]
+script = ExtResource("script")
+Id = "tree.oak"
+DisplayName = "Oak"
+VisualVariants = Array[ExtResource("variant_script")]([SubResource("variant")])
+SpacingRadius = 40.0
+VisualMinimum = Vector2(-80, -150)
+VisualMaximum = Vector2(80, 10)
+FootprintPath = NodePath("TrunkFootprint")
+SnowResponse = 1
+SnowFoliageProfile = 0
+ContactShadowRadius = Vector2(25, 9)
+AvoidBiomeTransition = true
+WindMaterial = ExtResource("wind")
+CanBurn = true
+FireProfile = ExtResource("fire")
+FoliageColour = Color(0.58, 0.57, 0.24, 1)

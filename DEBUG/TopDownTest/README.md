@@ -1,0 +1,95 @@
+# Top-down visual test
+
+> Disposable **fully 2D** forest map for the new fantasy game direction. Open `TopDownVisualTest.tscn` and press **F6** (or **F5** for the project's main scene). Requires a Godot .NET project build.
+
+## Larger, seeded procedural scenery
+
+- The playable grass area is now **2560 × 1728 world pixels**, 1.8 times the previous map area, bounded from **(-800,-544)** to **(1760,1184)**. The original central clearing, player spawn and torch are retained. The path continues to the northern and eastern map borders.
+- All trees and rocks are now **generated at runtime once** from `Actors._Ready()`. The old hand-placed props are no longer in the scene. You will see grass/clearing/path in the editor and **trees/rocks when you run the scene**.
+- The default seed generates up to **80 trees and 34 rocks**, with per-object scale and mirroring and spacing around obstacles, the player clearing and the main path. Alter `Generation/DefaultScatterConfig.tres` for different arrangements, quantities and size ranges. The seed is repeatable; change it to get a new pattern.
+- **Tree and rock collisions follow the visual changes.** The generator scales each StaticBody2D root (rather than only its Sprite) and flips CollisionPolygon2D ground footprints alongside mirrored artwork. Rock bases remain collidable without blocking the entire sprite silhouette.
+- **All effects still work:** day/night and moving projected shadows, tree-canopy wind, torchlight, smooth cloud shade, haze, pollen, leaves, smoke and embers. DayNight and Atmosphere cache generated objects *after* scattering completes.
+- See the [generation guide](Generation/README.md), [tree guide](Trees/README.md) and [rock guide](Rocks/README.md).
+
+## Controls and configuration
+
+- Arrow keys move the small test explorer; camera follows at zoom 2 by default with bounds clamped to the expanded map. **Mouse wheel down** zooms out to show up to 25% more world width/height (zoom 1.6); **mouse wheel up** zooms back in but never past the original 2.0 framing. Both limits are controlled by `TopDownTestConfig.cs`; see [Camera/README.md](Camera/README.md). The CharacterBody2D foot collider blocks trees, rocks, torch and map borders. Static actors are Y-sorted by root.
+- `DefaultTopDownTestConfig.tres`: walk speed (150 pixels/sec), camera default zoom and its 25%-wider view limit/scroll increment.
+- `Generation/DefaultScatterConfig.tres`: world sampling bounds, seed, counts, spacing, root scale ranges and mirror chance. These are **startup parameters**; restart the test after editing.
+- `DayNight/DefaultDayNightConfig.tres`: 30-second daylight cycle by default, sun-shadow length and strength and sun settings (shared wind now lives in Weather). Scrub/pause via the top-left UI.
+- `Polish/DefaultPolishConfig.tres`: colour grading, soft shadows, cloud shade, flickering torch and related UI switches.
+- `Weather/DefaultWeatherConfig.tres`: shared signed wind, GPU rain, ground splashes and overcast. Live sliders appear below the atmosphere panel. See [weather guide](Weather/README.md).
+- `Atmosphere/DefaultAtmosphereConfig.tres`: ground haze, pollen, leaves, smoke and embers. Its comparison controls are at the top right.
+- `Trees/Tree01.tscn` and `Rocks/Rock01.tscn`: edit shared artwork anchor and physically grounded collision polygons. The test rock uses `Artwork/rock_01.webp`; the tree uses `Artwork/tree_01.png`. These are **debug-only**, not production content.
+
+The world grass/path and bounds are still **authored directly in the scene**, not procedurally meshed terrain. If changing the **world size**, update the camera, collisions, grass region, haze and cloud polygons as described in the generation guide; merely changing the `WorldBounds` config doesn't rebuild the map.
+
+## Validation and scope
+
+The update stays inside `DEBUG/TopDownTest/`, with no new production world, environment, items or survival systems. Procedural props are instantiated only at scene startup and never scattered each frame. Rock/tree spacing is approximate; no complete pathfinding or world streaming is included.
+
+Scene resource paths, node order, prop counts, overlay dimensions and generated collider-transform logic were inspected statically. Current build/render/physics checks are detailed in Liquids/README.md; Windows D3D12 and target hardware still need local checking. Use **Debug → Visible Collision Shapes** and watch Godot's output for generated totals.
+
+## Rain and unified wind prototype
+
+Weather/ is another disposable comparison, not a production system. Rain starts at 55%, builds over two seconds, and can be changed from 0–100%. The signed wind slider runs -3 (left), 0 (calm), +3 (right) and drives rain slant, tree/shadow sway, haze, cloud shade, pollen, leaves, smoke and embers. Ground splashes render below actors and avoid conservative prop artwork bounds. Rain/overcast do not pause with the demo clock. Previous separate wind/drift settings were removed; Weather owns the shared values.
+
+Lightning comparisons are also available in the Weather panel: automatic nearby flashes during rain, rare visible ground strikes, a master toggle and manual test buttons. All remain disposable; see Weather/README.md.
+
+## Decorative wind-swaying grass clumps
+
+The four replacement `grass_small_01.png`–`grass_small_04.png` sprites are scattered as individual tufts and natural-looking clusters by the separate Grass/ debug module. They use the existing tree wind shader, driven by the shared Weather wind slider, with no collisions or per-clump sunlight shadow. Counts and placement are editable in Grass/DefaultGrassPatchConfig.tres; see [Grass/README.md](Grass/README.md).
+
+## Organic grass comparison
+
+Ground/ contains the separate grass palette, fine surface-detail and sampled-noise modules, their material/config and a small C# comparison controller. The left-side controls below Polish toggle the original grass, colour patches and fine detail, and adjust variation. See [ground guide](Ground/README.md). Paths/clearing and the weather/lighting systems remain independently owned.
+
+## Removable snow test
+
+SnowTest/ implements the snow-accumulation note as an independent scene instance, initially off. Its left-side panel controls coverage, falling snow/intensity and automatic accumulation/melting. Tree canopies and all flat ground (including path/clearing) receive snow while wind/shadows remain independent. Toggle off to compare, or remove the SnowTest scene instance and folder to discard it. See [snow guide](SnowTest/README.md) for exact cleanup, settings and limitations.
+
+## Lake, wading and enlarged world
+
+[Liquids/](Liquids/README.md) adds one organic lake southeast of the clearing, with independent liquid-type data, depth colours, shared-wind ripples, a wet bank and walk-in sprite submersion. The right-side panel includes a Go to lake bank button. Its footprint excludes trees, rocks and grass at startup; ground snow stays beneath the water. The player body/camera remain stable while its sprite dips and lower part is clipped. Disabling the test restores normal traversal.
+
+The larger world, camera, walls, grass and atmosphere bounds now agree at 2560×1728. Scattering still runs once. Gravel edges also use a wider smooth fade with restrained pebble contrast, avoiding the old broken/blotchy outer coverage. See the liquid guide for tests, limits and removal hooks.
+
+## Rain impacts on the lake
+
+The `Liquids/` test now creates bounded expanding ripple rings when the existing Weather rain slider is above zero. Use the new **Rain surface splashes** checkbox in the liquid panel; the original **Ground splashes** checkbox still controls dry-ground effects independently. See [Liquids/README.md](Liquids/README.md) for settings and performance limits. No production mechanics were changed.
+
+
+## Adjacent biome prototype
+
+See [Biomes](Biomes/README.md) for the Oak Forest / Pink Meadow test. The current map is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with **80 trees / 50 rocks**. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.
+
+
+## Equipped axe prototype
+
+[Weapons/](Weapons/README.md) adds a permanently equipped cursor-aimed axe. Left-click outside the debug panels for a full-circle swing; arrow-key movement remains available. Close, aimed swings now produce a tree-local wobble and extra leaf burst; this is feedback only, without tree health/loot. DefaultWeaponConfig.tres controls reach, anchor, swing duration and aim response; remove the one player child instance to undo.
+
+## Pink Blossom and Shader Wind and Snow
+
+The eastern Pink Meadow generates 36 pink blossom trees via `Trees/PinkBlossom01.tscn`, while Oak Forest retains its 80 oaks. Both use the same procedural scatter, grounded collisions, wind shader, projected sun shadow and removable snow system. The snow shader now supports a reusable pink-blossom foliage profile; the existing axe hit helper also works on pink trees and produces pink petals. The SnowTest controls include a **Shader Wind and Snow** heading. See [Biomes/README.md](Biomes/README.md), [Trees/README.md](Trees/README.md) and [SnowTest/README.md](SnowTest/README.md). This remains entirely debug-only.
+
+## Shared snow caps on rocks
+
+The removable `SnowTest/` now shades the upper surfaces of generated boulders using the same accumulation level and snow colour as trees, grass and ground. Rocks opt in via `Rocks/Rock01.tscn` group `debug_snow_rocks`; the `RockSnowAdapter` caches them and shares one `RockSnow.gdshader` material. The existing **Snow test** switch and **Settled snow** slider now cover rocks automatically alongside trees, grass and ground, with no per-object snow checkboxes. Tune `RockCapDepth` in `SnowMasterConfig.cs` only if the cap shape needs adjustment. Rock collisions, sun shadows, gravel and original materials are preserved. [More details](SnowTest/README.md).
+
+
+## Passive skeleton enemy test
+
+[Enemies/](Enemies/README.md) adds one basic unanimated SVG skeleton along the north trail. When approached it chases the player, following a lightweight precomputed grid around existing tree/rock colliders and the torch. The current equipped axe can hit it using the same shared IWeaponHitTarget contract used for tree wobble. Three close, aimed hits kill it; it briefly flashes red and fades out. No enemy attacks, player damage, loot, respawning or production systems are added. To disable/remove the experiment, remove the EnemyTest instance near the end of this scene and then delete Enemies/.
+
+
+## FIRE1 oak art lifecycle
+
+[Fire/](Fire/README.md) adds a top-centre **Ignite nearest oak** / **Reset all debug oaks** panel. One real nearby oak crossfades into the uploaded leafless charred art while retaining its collision; final/reset shadow appearance refreshes in place. State/events and handoff are documented there. FIRE1 has no flames or lightning ignition; FIRE2–FIRE4 remain planned.
+
+## FIRE2 — GPU tree fire and foliage erosion
+
+[Fire/](Fire/README.md) now extends Codex's FIRE1 oak burn with **GPU orange/yellow flames, grey smoke, drifting embers, one temporary flickering orange light and a per-pixel foliage erosion shader** that reveals the charred leafless oak beneath the healthy artwork. FIRE1's **Ignite nearest oak** and **Reset all debug oaks** buttons remain the trigger; no lightning-to-tree ignition yet (FIRE3). The original tree object/ground collision and snow/wind ownership are unchanged. Fire intensity, wind response, particle counts, light and temporary effects cap are Inspector options under `Fire/DefaultFireConfig.tres`. Rebuild the C# project and inspect GPU visuals locally; see the [FIRE2 validation steps](Fire/README.md).
+
+## FIRE2 fire distributed across each tree canopy
+
+Flames, smoke and embers now use a reusable alpha-silhouette emission mask from the tree's healthy sprite instead of a small fixed centre rectangle. The mask is built/cached once per distinct tree shape and orientation and drives the existing GPU emitters. Flames are slightly rounder and fuller via a shared rounded procedural sprite and the `FlamePuffiness` Inspector setting (default 1.10). `FireMasterConfig` controls canopy height band/opacity for future tree species. [Fire/README.md](Fire/README.md) covers the details and local Godot test checklist.

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AdjacentBiomeLayout" format=3]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Biome.tres" id="oak"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres" id="meadow"]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/AdjacentBiomeLayout.cs" id="script"]
+[resource]
+script = ExtResource("script")
+Primary = ExtResource("oak")
+Secondary = ExtResource("meadow")
+BoundaryX = 1760.0
+CurveAmplitude = 70.0
+CurveScale = 340.0
+BlendWidth = 240.0

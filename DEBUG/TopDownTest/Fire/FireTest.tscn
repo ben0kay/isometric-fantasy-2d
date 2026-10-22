@@ -1,0 +1,6 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Fire/Debug/FireTestController.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Fire/DefaultFireConfig.tres" id="config"]
+[node name="FireTest" type="Node"]
+script = ExtResource("script")
+Config = ExtResource("config")

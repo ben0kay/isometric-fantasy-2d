@@ -1,0 +1,11 @@
+# Shared scenery definitions
+SceneryDefinition owns a stable ID, display name, reusable scene variants, conservative spacing/artwork extents and scene-local sprite/footprint paths. All variants of a definition must satisfy these paths and extents. Use a separate definition when footprints/extents differ substantially. Variants are selected with equal probability using the world RNG.
+
+Scene roots must be Node2D (StaticBody2D for collidable props); artwork and collisions use a foot/root anchor. Existing oak/rock collisions are copied from proven debug scenes. Placement mirrors the polygon and Sprite2D together without negative body scaling. Spacing is conservative circular clearance, not an arbitrary geometry-overlap solver.
+
+Environment fields: SnowResponse opts content into vegetation or rock-cap adapters; GrassLike selects blade snow and the decorative ground layer; CastSunShadow and ContactShadowRadius select shadow helpers. Placement copies these settings to per-instance metadata once. Canonical scenes retain species-specific wind material parameters; environment controllers own the shared changing wind.
+
+Placement: AvoidBiomeTransition reserves the layout blend and artwork extents for trees/tufts. Shared rocks leave this off. The generic placer uses this data without species-name conditions.
+
+
+LocalLightOccluder.cs is a shared object-owned native LightOccluder2D helper: configure an optional separate Outline or let it read its FootprintPath once at readiness. It follows the owning object transform/lifetime and has no processor or world registry. Trees configure it through their generic template; Rock01 uses the same helper.

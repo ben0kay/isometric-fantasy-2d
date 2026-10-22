@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BiomeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Biomes/BiomeDefinition.cs" id="script"]
+[ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Trees/Tree01.tscn" id="tree"]
+
+[resource]
+script = ExtResource("script")
+TreeScene = ExtResource("tree")
+TreeCount = 80

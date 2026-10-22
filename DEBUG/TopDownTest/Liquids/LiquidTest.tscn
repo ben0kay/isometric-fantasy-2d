@@ -1,0 +1,12 @@
+[gd_scene load_steps=5 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Liquids/LiquidTestController.cs" id="controller"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Liquids/LiquidRegion.cs" id="region"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Liquids/DefaultLiquidConfig.tres" id="config"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Liquids/Definitions/Water.tres" id="water"]
+[node name="Liquids" type="Node2D"]
+script = ExtResource("controller")
+Config = ExtResource("config")
+[node name="Lake" type="Node2D" parent="."]
+script = ExtResource("region")
+Config = ExtResource("config")
+Definition = ExtResource("water")

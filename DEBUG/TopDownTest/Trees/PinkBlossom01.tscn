@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/tree_pink_blossom_01.png" id="art"]
+[ext_resource type="Material" path="res://DEBUG/TopDownTest/Trees/PinkBlossomWind.tres" id="wind"]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Trees/HitFeedback/TreeHitFeedback.cs" id="hit"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Trees/HitFeedback/PinkBlossomHitConfig.tres" id="hit_config"]
+
+[node name="PinkBlossom01" type="StaticBody2D"]
+
+[node name="Sprite" type="Sprite2D" parent="."]
+position = Vector2(-68, -188)
+scale = Vector2(0.85, 0.90)
+texture_filter = 2
+material = ExtResource("wind")
+texture = ExtResource("art")
+centered = false
+metadata/snow_foliage_profile = 1
+
+[node name="TrunkFootprint" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-28, -7, -17, -19, 0, -23, 18, -17, 28, -6, 20, 4, 0, 8, -19, 3)
+
+[node name="HitFeedback" type="Node2D" parent="."]
+script = ExtResource("hit")
+Config = ExtResource("hit_config")

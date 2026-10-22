@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="FireMasterConfig" load_steps=4 format=3]
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Fire/FireMasterConfig.cs" id="script"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Artwork/tree_01.png" id="healthy"]
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Fire/Artwork/oak_charred_source.png" id="dead"]
+[resource]
+script = ExtResource("script")
+HealthyTexture = ExtResource("healthy")
+BurntTexture = ExtResource("dead")

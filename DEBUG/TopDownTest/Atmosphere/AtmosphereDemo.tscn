@@ -1,0 +1,57 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://DEBUG/TopDownTest/Atmosphere/DebugAtmosphere.cs" id="script"]
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Atmosphere/DefaultAtmosphereConfig.tres" id="config"]
+[ext_resource type="Shader" path="res://DEBUG/TopDownTest/Atmosphere/GroundHaze.gdshader" id="haze"]
+
+[ext_resource type="Texture2D" path="res://DEBUG/TopDownTest/Atmosphere/AtmosphereNoise.tres" id="atmosphere_noise"]
+
+[sub_resource type="ShaderMaterial" id="HazeMaterial"]
+shader = ExtResource("haze")
+shader_parameter/atmosphere_noise_texture = ExtResource("atmosphere_noise")
+
+[sub_resource type="CanvasItemMaterial" id="ParticleMaterial"]
+light_mode = 1
+
+[sub_resource type="Gradient" id="SmokeGradient"]
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.45, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="SmokeTexture"]
+gradient = SubResource("SmokeGradient")
+width = 32
+height = 32
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="Atmosphere" type="Node2D"]
+z_index = 3
+texture_filter = 2
+material = SubResource("ParticleMaterial")
+script = ExtResource("script")
+Config = ExtResource("config")
+SmokeTexture = SubResource("SmokeTexture")
+
+[node name="Haze" type="Polygon2D" parent="."]
+z_index = -6
+material = SubResource("HazeMaterial")
+polygon = PackedVector2Array(-800, -544, 3040, -544, 3040, 1184, -800, 1184)
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -296.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 246.0
+
+[node name="Controls" type="VBoxContainer" parent="UI/Panel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/Panel/Controls"]
+layout_mode = 2
+text = "Atmosphere comparison"
