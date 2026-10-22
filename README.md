@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**World generation P0/P1 implemented:** F6 production World, then **F8** for a seeded finite biome-map overview. Generation uses an editable collection of biome Resources with relative weights and target region diameters; new biome definitions require no generator branches. The larger map is a coarse blueprint; the playable Oak/Pink preview remains unchanged. Chunk streaming, durable profile saves and A-Life are still planned. See [generation guide](WORLD/Generation/World/README.md) and [audit](WORLD/Generation/World/P0_P1_Audit.md).
+
 **Generic production trees:** Oak and Pink Blossom now use one shared tree template, configured entirely by species/variant Resources. Both support axe feedback, wind, snow, shadows and fire; blossoms need no charred artwork to burn. Future species need .tres data/art/biome references only. See [tree authoring guide](WORLD/Content/Vegetation/Trees/README.md).
 
 **Production fire (FIRE1/FIRE2):** Oaks in World.tscn now support manual ignition, charred transformation, canopy-shaped GPU flames/smoke/embers and shared-wind firelight. Top-centre controls in `DEBUG/UI/Fire/` are removable. See [production fire](SYSTEMS/WorldInteractions/Fire/README.md). Spread, damage and lightning ignition remain future work.
@@ -119,7 +121,7 @@ Before writing code identify (a) **implemented vs debug vs scaffold vs planned**
 | Mechanic area | Status |
 | --- | --- |
 | Production two-biome preview, seeded startup scatter, player/environment/pond, oak FIRE1/FIRE2, early Skeleton Basic | **Implemented preview** |
-| Massive macro world, optional World Creator, finite expansion/infinite choice, real chunk streaming | **Provisional/planned; not built** |
+| Massive macro world, optional World Creator, finite expansion/infinite choice, real chunk streaming | **P1 coarse finite biome map implemented; streaming/major geography still planned** |
 | Save system, per-chunk deltas, save migrations and old-world updates | **Planned; not built** |
 | A-Life resident populations, roaming ecology, dynamic territories, offscreen simulation tiers | **Desired future feature; not built** |
 | Avalonia authoring/import, content registry/catalog, no-code content packs | **Ultimate end goal; not built** |

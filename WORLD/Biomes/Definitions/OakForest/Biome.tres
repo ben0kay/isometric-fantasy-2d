@@ -33,3 +33,7 @@ Id = "biome.oak_forest"
 DisplayName = "Oak Forest"
 Surface = ExtResource("surface")
 Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks"), SubResource("tufts")])
+GenerationWeight = 60.0
+MinimumRegionDiameter = 4000.0
+MaximumRegionDiameter = 8000.0
+OverviewColour = Color(0.22, 0.49, 0.25, 1)

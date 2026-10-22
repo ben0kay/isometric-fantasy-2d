@@ -8,3 +8,5 @@ Future Avalonia tooling can edit stable IDs and these Resource references/settin
 Environment: WorldBiomeDefinition.Environment optionally references BiomeEnvironmentProfile. Null components inherit global defaults; selected components are cloned at runtime. OakForest/Environment.tres references a local atmosphere profile; lighting/wind/weather/snow/grade/cloud/torch can also be overridden through the same data contract. The current shared world environment resolves the primary biome profile at startup; per-region environment switching/blending is not yet implemented.
 
 Layouts/OakAndMeadow.tres selects the two definitions and the curved boundary. Biome art/content remain in canonical WORLD folders. World bounds remain in WorldMasterConfig.
+
+P1 macro generation: each definition now includes enabled/weight/target-diameter/overview-colour settings. `WorldMasterConfig.Generation.Biomes` is the arbitrary-size source collection for the new finite map. The old Layout remains only for the playable preview. See [macro generation](../Generation/World/README.md).

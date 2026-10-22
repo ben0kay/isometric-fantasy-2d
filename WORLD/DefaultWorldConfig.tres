@@ -1,7 +1,9 @@
 [gd_resource type="Resource" script_class="WorldMasterConfig" format=3]
 [ext_resource type="Resource" path="res://WORLD/Biomes/Layouts/OakAndMeadow.tres" id="layout"]
 [ext_resource type="Script" path="res://WORLD/WorldMasterConfig.cs" id="script"]
+[ext_resource type="Resource" path="res://WORLD/Generation/World/DefaultWorldGeneration.tres" id="generation"]
 [resource]
 script = ExtResource("script")
 Biomes = ExtResource("layout")
+Generation = ExtResource("generation")
 Bounds = Rect2(-800, -544, 3840, 1728)

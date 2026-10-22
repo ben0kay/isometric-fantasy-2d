@@ -501,3 +501,7 @@ I'm updating this. My response: small = 3 min. med = 5 min. huge = 8 min (regula
 ---
 
 **Key invariant to remember:** With only Oak Forest and Pink Meadow enabled, **all available land is covered by those two biome types in randomly sized, organically shaped regions**. Required oceans/volcanoes/major destinations get first claim when such features are configured, and nearby chunks are the only places with fully active scenery and detailed AI. Distant regions retain a persistent abstract state for a later A-Life system.
+
+## P0/P1 implementation update — 22 October 2026
+
+The finite coarse map, arbitrary biome collection, per-biome weights/target diameters, connected full coverage, deterministic hash, F8 overview and detached profile/run/world blueprint contract are implemented. The existing playable preview is retained independently. Read WORLD/Generation/World/README.md and P0_P1_Audit.md for exact semantics and baseline. Target diameters are approximate; climate preferences remain deferred. P2–P6, streamed playable terrain and durable profile saves remain unimplemented. This update supersedes earlier statements that no macro generator exists.

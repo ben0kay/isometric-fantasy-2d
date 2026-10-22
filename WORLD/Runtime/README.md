@@ -1,4 +1,5 @@
 # World runtime
-WorldScene composes the configured single-biome map: selects/logs one seed, configures ground, spawn/camera bounds, creates four static boundary walls, then calls startup placement. No persistence, chunks or environment simulation yet.
 
-After seeded placement, WorldScene initializes the optional EnvironmentRuntime node so its caches see complete production scenery. Optional developer UI binds later; neither world generation nor the environment reads panel state.
+WorldScene composes the existing adjacent-biome playable preview: seed, ground, player/camera/bounds, pond-aware startup placement, skeleton, environment and fire. P1 additionally builds an independent coarse finite MacroMap and disposable Blueprint manifest from WorldMasterConfig.Generation; the optional F8 panel observes it. Actual gameplay still uses the preview layout.
+
+Environment caches still initialize after all preview actors exist. Chunk streaming, registration lifecycles, durable save selection and deltas remain future passes. See WORLD/Generation/World/P0_P1_Audit.md for migration points.

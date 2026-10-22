@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs" id="fire_runtime"]
 [ext_resource type="Resource" path="res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres" id="fire_config"]
 [ext_resource type="Script" path="res://DEBUG/UI/Fire/WorldFireDebugPanel.cs" id="fire_debug"]
+[ext_resource type="Script" path="res://DEBUG/UI/Generation/MacroMapDebugPanel.cs" id="macro_debug"]
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
@@ -39,3 +40,6 @@ script = ExtResource("fire_runtime")
 Config = ExtResource("fire_config")
 [node name="FireDebugPanel" type="CanvasLayer" parent="."]
 script = ExtResource("fire_debug")
+
+[node name="MacroMapDebugPanel" type="CanvasLayer" parent="."]
+script = ExtResource("macro_debug")

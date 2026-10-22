@@ -5,6 +5,8 @@ using FantasyGame.WorldInteractions.Fire;
 public partial class WorldScene : Node2D
 {
     [Export] public WorldMasterConfig Config { get; set; }
+    public MacroWorldMap MacroMap { get; private set; }
+    public WorldBlueprintManifest Blueprint { get; private set; }
     public int ActiveSeed { get; private set; }
 
     #region Setup
@@ -23,6 +25,17 @@ public partial class WorldScene : Node2D
         if (Config.RandomSeedOnLoad) seedSource.Randomize();
         ActiveSeed = Config.RandomSeedOnLoad ? (int)(seedSource.Randi() & 0x7fffffff) : Config.FixedSeed;
         GD.Print($"World seed: {ActiveSeed} | {Config.Biome.Id} | random on load: {Config.RandomSeedOnLoad}");
+        if (Config.Generation != null)
+        {
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                MacroMap = MacroWorldBuilder.Build(Config.Generation, ActiveSeed);
+                Blueprint = WorldBlueprintManifest.CreatePreview(MacroMap);
+                GD.Print($"Macro map | {MacroMap.Columns}x{MacroMap.Rows} | {MacroMap.Regions.Count} regions | 100% land | {timer.ElapsedMilliseconds}ms | hash {MacroMap.Hash}");
+            }
+            catch (System.ArgumentException error) { GD.PushError($"Macro generation failed: {error.Message}"); }
+        }
         GetNode<GroundSurface>("Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes);
         CharacterBody2D player = GetNode<CharacterBody2D>("Actors/Player");
         player.Position = Config.PlayerSpawn;

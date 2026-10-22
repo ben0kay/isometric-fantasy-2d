@@ -22,3 +22,7 @@ Id = "biome.pink_meadow"
 DisplayName = "Pink Meadow"
 Surface = ExtResource("surface")
 Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks")])
+GenerationWeight = 40.0
+MinimumRegionDiameter = 4000.0
+MaximumRegionDiameter = 8000.0
+OverviewColour = Color(0.85, 0.48, 0.66, 1)
