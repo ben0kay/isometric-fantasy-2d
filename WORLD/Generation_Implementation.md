@@ -1,9 +1,47 @@
 # Large Finite World Generation — Codex Implementation Planning
 
-> **Status:** Detailed DESIGN BRIEF / proposed staged implementation plan; **NOT implemented or permission to execute all passes automatically**.
+> **Status (22 October 2026):** P0–P2 implemented; P3 implemented with a rendering/performance fix, **graphical acceptance still pending**. P4–P6 remain planned. This document does not authorize executing further phases automatically.
 > **Created:** 2026-10-22
 > **Scope:** Production fantasy top-down Godot/C# world; preserve current working production and DEBUG prototypes while designing.
 > **Purpose:** Discuss this document with Codex, improve/refine it, then implement in small verifiable passes. The author can edit this plan before approving each phase.
+
+## Current phase status and next-Codex handoff — 22 October 2026
+
+Read this handoff before the original design brief below. Historical snapshots and proposed APIs below are not the current implementation; inspect HEAD and the owning READMEs.
+
+| Phase | Actual status | Main reference |
+| --- | --- | --- |
+| P0/P1 | Macro map, arbitrary eligible biome collection, weights/target diameters, full land coverage, deterministic hash and blueprint contract implemented. Climate affinity remains deferred. | Generation/World/README.md and P0_P1_Audit.md |
+| P2 | Resource-driven feature reservations, priority/permissions, required/preferred outcomes and starting anchor implemented. Reservations do not create geological terrain or POI scenes. | Generation/World/Features/README.md |
+| P3 | Finite local streaming, density-based scenery, local navigation, environment lifecycle and session deltas implemented. Rendering fixes pushed; target-machine visual/performance acceptance is open. | Runtime/Streaming/README.md |
+| P4 | Not implemented: durable profile/run/world saves, restart restoration, recovery and migration. | SAVE/ and Runtime/Persistence/ |
+| P5 | Planned: actual priority POIs, paths and cave connections. | Original scope below |
+| P6 | Planned: abstract off-screen A-Life. | Original scope below |
+
+### What currently runs
+
+F6 production World uses a 45000×33750 finite macro world with the two configured biome Resources. Every new scene session currently chooses a fresh random seed unless fixed-seed replay is configured. F7 shows overview/reservations/chunk stats; F9 holds environment controls. Set Streaming.Enabled=false (or Streaming=null) for the original small preview. Adding eligible biome Resources should fill land from that collection without species/biome-name branches; keep this data-driven for eventual Avalonia authoring.
+
+Default chunks are 512 units: active radius 2 (25 chunks at startup), prefetch radius 3 (49 at rest), unload radius 4 (retention bounded by an 81-chunk square). Only local detailed scene nodes/collision and navigation are created; the full coarse map is inexpensive data. Session-only removals and burn progress survive unload/reload, but disappear when restarting. No distant detailed AI, saved worlds or A-Life are implemented.
+
+### User-reported P3 regression and fix
+
+After P3, the user reported a grass-only spawn, severe lag and giant trees flashing briefly. Streaming commit: `cd2f5ba`. Follow-up fix: `96d6017`.
+
+- The protected-start reservation excluded solids over a 1600×1600 footprint plus 160 clearance. DefaultWorldLayout.tres now uses **320×320 plus 64 clearance** so trees/rocks can appear nearby. This changes newly generated feature outcomes; biome generation identity is unchanged.
+- New sun-shadow sprites were visible at default identity/full-texture transforms before their first projection and inherited physics interpolation despite render-process updates. They now start hidden and disable interpolation; complete actor chunks reset interpolation before publication. These code defects are consistent with the flashes; graphical confirmation remains required.
+- Wetness/snow generated separate Shader resources per chunk. World-owned caches now share generated shaders while adapters retain their own mutable materials/cleanup. Disabled snow skips unused foliage uniform updates.
+- Environment source scans coalesce once per frame; nearest-first prefetch ordering is cached until the player changes chunk.
+
+Do not assume all lag is resolved: data generation, chunk binding, startup and local navigation rebuilds remain synchronous. The 3 ms budget is a soft scenery-application budget, not a cap on all frame work. Streaming bounds memory; it does not make loaded rendering/effects free.
+
+### Evidence and next action
+
+The fix compiled with .NET 8 Roslyn/Godot source generators and ran headlessly with Godot 4.5.1 .NET; the project's SDK declaration was not changed. Latest results: **4425 P3 checks**, **175 P2 checks**, and the existing production fire test passed (including wind/snow/shadows/reset). Traversal reached 49 loaded chunks at each destination, with roughly 3345–4698 nodes. Regression checks cover nearby spawn trees, initially hidden shadows, interpolation settings and shared foliage shader identity, alongside deterministic reloads and session edits.
+
+**Resume with P3 graphical/performance verification before treating P3 as accepted or starting P4.** On the user's actual renderer, inspect spawn, walking/seams, biome transitions, shadow stability and travel/return with weather/snow toggled. Measure startup, steady idle and chunk-crossing CPU/GPU frame time and memory separately. Use profiling to identify any remaining hotspot; avoid raising budgets/radii or removing effects blindly. Headless checks do not establish graphical FPS or prove the reported flashes are gone. Preserve DEBUG prototypes, concurrent layered rain/shared Entity work and the compatibility preview.
+
+After P3 is verified, P4 is the next planned phase, subject to user authorization and the profile/death/clock/save-policy decisions below. Do not implement P4–P6 as part of this documentation handoff. Update this status and owning READMEs when new evidence or fixes arrive; one commit per job.
 
 ## 0. Read these documents and inspect the CURRENT CODE first
 
@@ -398,7 +436,7 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - Implement permission-aware priority reservations and deterministic feature IDs.
 - **Pass when:** a required large region always appears inside its permitted quadrant for multiple seeds and requested size; collisions/conflicts warn/fail predictably; lower-priority candidates cannot overwrite it.
 
-**P3 — Chunk data and nearby streaming**
+**P3 — Chunk data and nearby streaming (implemented; graphical acceptance pending)**
 - Add chunk coordinate/state and active ring; generate local details from frozen macro map and existing scenery/biome resources.
 - Ensure chunk state/cache identity includes WorldId and layer so profile-switching or identical-seed worlds cannot share mutable chunks.
 - Ensure continuous biome border and no seams or duplicated/missing props at chunk boundaries; migrate ground/shaders with minimal visual regression.
@@ -425,7 +463,7 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - Add deterministic catch-up and performance budget counters; only then expand to factions, ecology, settlements and long-term events.
 - **Pass when:** player leaves a region, off-screen state meaningfully changes, returns to a consistent encounter, and no duplicate/deleted NPCs or runaway sim costs occur.
 
-**Strong suggestion:** Codex implement **P0–P1 first**, review results with the user, then P2–P3. Do NOT attempt every phase in one massive refactor. Change only the explicitly approved pass; one commit per pass/job.
+**Current continuation:** P0–P3 code exists. Finish the P3 graphical/performance verification described in the handoff before proposing P4. Do NOT attempt every phase in one massive refactor. Change only the explicitly approved pass; one commit per pass/job.
 
 ## 13. Required QA / acceptance checklist
 
@@ -494,7 +532,7 @@ I'm updating this. My response: small = 3 min. med = 5 min. huge = 8 min (regula
 - **Autosave:** Choose manual/autosave interval and recovery/backup policy. Avoid adding a save every frame or per object change.
 - **Loading:** Verify that each selected profile resumes in its saved overworld/cave layer and coordinates, without regenerating a different world seed.
 
-## 15. Recommended first instruction to Codex
+## 15. Original first instruction to Codex (historical; superseded by current handoff)
 
 > Read WORLD/Generation_Implementation.md, WORLD/placement_priority.md, Notes/World_Generation_Direction.md, relevant WORLD/ and biome READMEs, CodePreferences.md, and inspect the latest production scene and scripts. **Plan only P0/P1 first:** introduce a configurable large finite world macro layout with organic, fully covering, repeated Oak Forest/Pink Meadow regions. Extend their existing biome Resources with min/max region size and selection weight. Preserve all art/biome definition ownership and do NOT build the full A-Life, ocean, volcano or massive streamed world in one unreviewed pass. Propose the precise schema, algorithm, performance budget, migration points and tests; flag better approaches or conflicting requirements before implementation.
 
@@ -504,11 +542,11 @@ I'm updating this. My response: small = 3 min. med = 5 min. huge = 8 min (regula
 
 ## P0/P1 implementation update — 22 October 2026
 
-The finite coarse map, arbitrary biome collection, per-biome weights/target diameters, connected full coverage, deterministic hash, F8 overview and detached profile/run/world blueprint contract are implemented. The existing playable preview is retained independently. Read WORLD/Generation/World/README.md and P0_P1_Audit.md for exact semantics and baseline. Target diameters are approximate; climate preferences remain deferred. P2–P6, streamed playable terrain and durable profile saves remain unimplemented. This update supersedes earlier statements that no macro generator exists.
+The finite coarse map, arbitrary biome collection, per-biome weights/target diameters, connected full coverage, deterministic hash, overview (currently F7) and detached profile/run/world blueprint contract are implemented. The existing playable preview is retained independently. Read WORLD/Generation/World/README.md and P0_P1_Audit.md for exact semantics and baseline. Target diameters are approximate; climate preferences remain deferred. At that checkpoint P2–P6 were unimplemented; see later updates and the current status above. This update supersedes earlier statements that no macro generator exists.
 
 ## P2 implementation update — 22 October 2026
 
-WorldGenerationMasterConfig.Layout now references resource-driven required/preferred feature directives. The default layout demonstrates a protected starting anchor and a mandatory irregular SE-zone footprint. Exact polygon/clearance reservations, category/owner permissions, stable per-feature RNG, priority/conflict errors, bounded preferred skips, F7 overlays and schema-2 feature snapshots are implemented. P1 biome coverage/hash and the current playable preview are preserved. See WORLD/Generation/World/Features/README.md for authoring, tests and limits. These are neutral reservations, not real oceans/volcanoes/POIs or a generated route network. P3 chunk streaming and P4 durable saving remain unimplemented.
+WorldGenerationMasterConfig.Layout now references resource-driven required/preferred feature directives. The default layout demonstrates a protected starting anchor and a mandatory irregular SE-zone footprint. Exact polygon/clearance reservations, category/owner permissions, stable per-feature RNG, priority/conflict errors, bounded preferred skips, F7 overlays and schema-2 feature snapshots are implemented. P1 biome coverage/hash and the current playable preview are preserved. See WORLD/Generation/World/Features/README.md for authoring, tests and limits. These are neutral reservations, not real oceans/volcanoes/POIs or a generated route network. At that checkpoint P3/P4 were unimplemented; P3 has since shipped as described above. P4 remains planned.
 
 ## P3 implementation update — 22 October 2026
 
