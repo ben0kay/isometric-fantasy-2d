@@ -7,6 +7,9 @@ public partial class SnowMasterConfig : Resource
     [Export] public bool Enabled { get; set; } = false;
     [Export(PropertyHint.Range, "0,1,0.01")] public float Coverage { get; set; } = 0.6f;
     [Export] public bool GrassSnow { get; set; } = true;
+    [ExportGroup("Snow on rocks")]
+    [Export] public bool RockSnow { get; set; } = true;
+    [Export(PropertyHint.Range, "0.25,0.85,0.01")] public float RockCapDepth { get; set; } = 0.58f;
     [Export] public bool Snowfall { get; set; } = true;
     [Export(PropertyHint.Range, "0,1,0.01")] public float SnowfallRate { get; set; } = 0.65f;
     [Export] public bool AutoAccumulate { get; set; } = false;

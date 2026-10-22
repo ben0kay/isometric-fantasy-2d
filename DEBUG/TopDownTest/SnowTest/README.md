@@ -8,6 +8,7 @@ Implements `Notes/Snow_Accumulation_Codex_Test.txt` as a disposable comparison. 
 - **Settled snow slider:** 0–100% tree-canopy, decorative grass and ground coverage. Dragging scrubs immediately. Enabling or changing the Inspector target blends over TransitionSeconds (3 seconds default).
 - **Falling snow / Snowfall intensity:** separate controls for slow, varied GPU flakes. Shared Weather wind drives their left/calm/right drift and existing tree sway.
 - **Snow on grass sprites:** independently adds snow to existing grass tufts, using a blade-specific coverage profile.
+- **Snow on rocks:** independently adds irregular snow caps to opted-in rocks (default on when SnowTest is on), leaving their lower faces exposed. `RockCapDepth` in the Inspector tunes where the cap tapers.
 - **Auto accumulate / melt:** grows coverage toward 100% while snowfall/rate is active, and melts toward zero when snowfall stops. Default full-range duration is 30 real seconds, independent of the accelerated day clock.
 
 Rain and lightning settings are not changed by this test. For a pure snowstorm, set the existing rain slider to zero; mixed precipitation is possible for comparisons. Restart restores saved config defaults. Inspector settings also include snow colour and transition/accumulation duration. UI checkbox states only follow their UI; the coverage slider follows Inspector/automatic changes.
@@ -24,6 +25,7 @@ Deleting the SnowTest node during play restores original tree material identitie
 - `DebugSnowTest.cs`: comparison UI, automatic progression, ground-cover material and cleanup.
 - `DebugSnowfall.cs`: C# **GpuParticles2D** emitter with a generated four-frame crisp pixel flake atlas, varied size/speed, and camera/travel margins. World coordinates keep existing flakes from sticking to the camera. No per-flake nodes or CPU collision queries.
 - `TreeSnowAdapter.cs`: temporary shared normal/mirrored material variants for trees and grass, retaining the existing wind shader composition and UV warp. Original materials/shaders remain unchanged; cached source wind values are copied per shared variant rather than per tree. Projected shadow materials are never replaced.
+- `RockSnowAdapter.cs` / `RockSnow.gdshader`: opt-in rock snow caps using the **same** settled coverage, colour and terrain noise, with one material for all rocks and no additional rock textures. The adapter skips the rock's unshaded sun silhouette and restores the original Sprite2D material when disabled or removed.
 - `TreeSnow.gdshaderinc`: approximate foliage detection and uneven deposits using existing colour/brightness and sampled noise. Snow uses the already-swayed artwork UVs, preserves alpha, and uses a configurable lower cutoff (tree crown or grass-blade profile). No hand-painted masks or new tree sprites.
 - `GroundSnow.gdshader`: irregular world-space coverage over grass, brown paths, clearing and gravel, at Z=-7 below actors and their shadows. Surface grain remains visible; patches do not move with camera or wind.
 - `SnowTest.tscn`: the one removable scene instance.
@@ -32,7 +34,7 @@ The adapter validates a known composition anchor in the current debug tree shade
 
 ## Visual limits and cost
 
-This is a visual approximation of snow caught in a leafy canopy. It preserves brown trunks/roots but colour-based detection may miss yellow/brown leaves or dust an unusual green branch; it does not reconstruct hidden winter branches. Rock sprites do not receive their own snow caps; decorative grass now receives the same vegetation snow treatment with its own blade profile. No snow depth, physics, footprints, persistence, season calendar or weather simulation is included.
+This is a visual approximation of snow caught in a leafy canopy. It preserves brown trunks/roots but colour-based detection may miss yellow/brown leaves or dust an unusual green branch; it does not reconstruct hidden winter branches. Rock sprites now receive optional noisy snow caps, concentrated on the upper-facing portion of their artwork. Decorative grass receives the vegetation snow treatment with its own blade profile. No snow depth, physics, footprints, persistence, season calendar or weather simulation is included.
 
 At full coverage the ground can obscure the path; this is intentional coverage, not path deletion. The torch can still illuminate snow and there is no local heat-melt simulation. Disabling restores the pre-snow materials visually.
 
@@ -80,3 +82,13 @@ Validation: all debug C# compiled against GodotSharp 4.7.2 / .NET 8 and native G
 The same SnowTest adapter now handles both green oak foliage and pink blossom foliage. Sprites can optionally set the integer metadata `snow_foliage_profile`: 0 (default) finds green leaves, 1 finds pink blossoms using red/blue colour separation from brown bark. The profile is chosen per sprite when shared snow material variants are built and does **not** change the shared TreeSway animation, GPU draw count or contact collider. The original green/grass mode remains the default for existing artwork.
 
 `Trees/PinkBlossom01.tscn` sets mode 1; any future non-green species can opt into the same profile without adding species-name conditions. The panel now has a **Shader Wind and Snow** heading, as requested. Colour heuristics are approximate: unusual bark/blossom colours may need a future configurable mask or custom foliage-channel texture. Snow remains initially off as before.
+
+## Rock snow cap pass — shared shader response
+
+`Rock01.tscn` now opts into snow via a reusable `debug_snow_rocks` group. The new `RockSnowAdapter` caches generated rock sprites **once** after DayNight builds shadows. When **Snow test** and **Snow on rocks** are enabled, a single shared `RockSnow.gdshader` material appears on the rocks. The shader samples the same `GroundNoise.tres` as vegetation; it estimates upper-facing rock surfaces using local sprite UV height, brightness and two noise scales, rather than tinting the entire image white. The bottom/front portion stays rocky at full accumulation, while small caps build progressively with the normal 0–100% snow coverage.
+
+`SnowMasterConfig.cs` now exposes `RockSnow` (default true) and `RockCapDepth` (0.25–0.85, default 0.58). The UI has a **Snow on rocks** checkbox. No extra rock artwork was necessary. The same implementation supports rocks in Oak Forest and Pink Meadow and future new rock sprites if their root joins the opt-in group. Different image proportions might need a different cap-depth parameter or a custom mask; no species-specific snow controllers were introduced.
+
+**Performance and removal:** One shared shader material for all opted-in boulders, only a few uniform updates per frame, no per-rock update loop except on toggle transitions, no new scene nodes/collision and no texture uploads. With snow off, original rock materials are active and the extra shader is not drawn. Removing SnowTest restores all cached rock and vegetation materials without modifying the day/night shadow cache, mirrored colliders, gravel or generation.
+
+**Test checklist:** Toggle Snow test 0/25/60/100%; confirm caps gradually grow on both biomes' rocks and the lower faces remain darker. Untick Snow on rocks, verify exposed original rock sprites while ground/tree/grass snow stays. Toggle master snow off and back on; then optionally remove the SnowTest instance to verify cleanup. Check flipped/scaled rocks, projected sun shadows, rain and lightning. The implementation has been statically reviewed, but Godot rendering and .NET compilation still need local verification.

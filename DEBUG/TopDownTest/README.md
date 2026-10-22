@@ -71,3 +71,7 @@ See [Biomes](Biomes/README.md) for the Oak Forest / Pink Meadow test. The curren
 ## Pink Blossom and Shader Wind and Snow
 
 The eastern Pink Meadow generates 36 pink blossom trees via `Trees/PinkBlossom01.tscn`, while Oak Forest retains its 80 oaks. Both use the same procedural scatter, grounded collisions, wind shader, projected sun shadow and removable snow system. The snow shader now supports a reusable pink-blossom foliage profile; the existing axe hit helper also works on pink trees and produces pink petals. The SnowTest controls include a **Shader Wind and Snow** heading. See [Biomes/README.md](Biomes/README.md), [Trees/README.md](Trees/README.md) and [SnowTest/README.md](SnowTest/README.md). This remains entirely debug-only.
+
+## Shared snow caps on rocks
+
+The removable `SnowTest/` now shades the upper surfaces of generated boulders using the same accumulation level and snow colour as trees, grass and ground. Rocks opt in via `Rocks/Rock01.tscn` group `debug_snow_rocks`; the `RockSnowAdapter` caches them and shares one `RockSnow.gdshader` material. Enable **Snow on rocks** in the snow panel and tune `RockCapDepth` in `SnowMasterConfig.cs` if needed. Rock collisions, sun shadows, gravel and original materials are preserved. [More details](SnowTest/README.md).

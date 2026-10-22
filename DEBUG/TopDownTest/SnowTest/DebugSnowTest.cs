@@ -5,6 +5,7 @@ public partial class DebugSnowTest : Node2D
 {
     [Export] public SnowMasterConfig Config { get; set; }
     private readonly TreeSnowAdapter _trees = new();
+    private readonly RockSnowAdapter _rocks = new();
     private ShaderMaterial _ground;
     private MeshInstance2D _cover;
     private HSlider _slider;
@@ -23,6 +24,7 @@ public partial class DebugSnowTest : Node2D
         _trees.Attach(GetNode<Node2D>("../Actors"), noise);
         Node2D grass = GetNodeOrNull<Node2D>("../GrassPatches");
         if (grass != null) _trees.Attach(grass, noise, true);
+        _rocks.Attach(GetNode<Node2D>("../Actors"), noise);
         _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://DEBUG/TopDownTest/SnowTest/GroundSnow.gdshader") };
         _ground.SetShaderParameter("snow_noise", GD.Load<Texture2D>("res://DEBUG/TopDownTest/SnowTest/SnowCoverageNoise.tres"));
         _ground.SetShaderParameter("snow_detail", noise);
@@ -39,7 +41,7 @@ public partial class DebugSnowTest : Node2D
     private void BuildControls()
     {
         var ui = new CanvasLayer { Name = "UI", Layer = 20 }; AddChild(ui);
-        var panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 745, OffsetRight = 336, OffsetBottom = 1025 };
+        var panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 745, OffsetRight = 336, OffsetBottom = 1060 };
         ui.AddChild(panel);
         var controls = new VBoxContainer(); panel.AddChild(controls);
         controls.AddChild(new Label { Text = "Shader Wind and Snow" });
@@ -52,6 +54,7 @@ public partial class DebugSnowTest : Node2D
         HSlider rate = AddSlider(controls, Config.SnowfallRate);
         rate.ValueChanged += value => Config.SnowfallRate = (float)value;
         AddSwitch(controls, "Snow on grass sprites", Config.GrassSnow, value => Config.GrassSnow = value);
+        AddSwitch(controls, "Snow on rocks", Config.RockSnow, value => Config.RockSnow = value);
         AddSwitch(controls, "Auto accumulate / melt", Config.AutoAccumulate, value => Config.AutoAccumulate = value);
     }
 
@@ -86,6 +89,7 @@ public partial class DebugSnowTest : Node2D
         _ground.SetShaderParameter("drift_scale", Config.DriftScale);
         _ground.SetShaderParameter("drift_contrast", Config.DriftContrast);
         _trees.Update(_coverage, Config.SnowColour, Config.GrassSnow);
+        _rocks.Update(_coverage, Config.SnowColour, Config.RockSnow, Config.RockCapDepth);
         _syncing = true; _slider.Value = Config.Coverage; _syncing = false;
         _label.Text = $"Settled snow: {_coverage:P0}";
     }
@@ -102,8 +106,12 @@ public partial class DebugSnowTest : Node2D
         return Mathf.Max(0f, Config.MaximumSinkPixels) * depth * Mathf.SmoothStep(0f, 1f, Mathf.Clamp((_coverage - 0.25f) / 0.75f, 0f, 1f));
     }
 
-    // Deleting this node during play restores the original tree shaders as well as removing helpers.
+    // Removing SnowTest restores original rock and vegetation sprite materials.
     // =========================================================
-    public override void _ExitTree() => _trees.Restore();
+    public override void _ExitTree()
+    {
+        _rocks.Restore();
+        _trees.Restore();
+    }
     #endregion
 }
