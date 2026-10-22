@@ -75,3 +75,8 @@ The eastern Pink Meadow generates 36 pink blossom trees via `Trees/PinkBlossom01
 ## Shared snow caps on rocks
 
 The removable `SnowTest/` now shades the upper surfaces of generated boulders using the same accumulation level and snow colour as trees, grass and ground. Rocks opt in via `Rocks/Rock01.tscn` group `debug_snow_rocks`; the `RockSnowAdapter` caches them and shares one `RockSnow.gdshader` material. The existing **Snow test** switch and **Settled snow** slider now cover rocks automatically alongside trees, grass and ground, with no per-object snow checkboxes. Tune `RockCapDepth` in `SnowMasterConfig.cs` only if the cap shape needs adjustment. Rock collisions, sun shadows, gravel and original materials are preserved. [More details](SnowTest/README.md).
+
+
+## Passive skeleton enemy test
+
+[Enemies/](Enemies/README.md) adds one basic unanimated SVG skeleton along the north trail. When approached it chases the player, following a lightweight precomputed grid around existing tree/rock colliders and the torch. The current equipped axe can hit it using the same shared IWeaponHitTarget contract used for tree wobble. Three close, aimed hits kill it; it briefly flashes red and fades out. No enemy attacks, player damage, loot, respawning or production systems are added. To disable/remove the experiment, remove the EnemyTest instance near the end of this scene and then delete Enemies/.
