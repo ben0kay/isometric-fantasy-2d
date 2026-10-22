@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public sealed class TreeSnowAdapter
 {
     private readonly Dictionary<Sprite2D, Material> _original = new();
-    private readonly List<(ShaderMaterial Source, ShaderMaterial Snow, bool Grass)> _materials = new();
+    private readonly List<(ShaderMaterial Source, ShaderMaterial Snow)> _materials = new();
 
     // Shared normal/mirrored variants work for tree roots or direct grass sprites using the sway shader.
     // =========================================================
@@ -40,7 +40,7 @@ public sealed class TreeSnowAdapter
                 snow.SetShaderParameter("snow_noise", noise);
                 snow.SetShaderParameter("snow_foliage_profile", (float)foliage);
                 snow.SetShaderParameter("snow_crown_range", grass ? new Vector2(0.82f, 1f) : new Vector2(0.60f, 0.77f));
-                variants.Add(key, snow); _materials.Add((material, snow, grass));
+                variants.Add(key, snow); _materials.Add((material, snow));
             }
             _original.Add(sprite, material);
             sprite.SetInstanceShaderParameter("wind_orientation", default);
@@ -50,12 +50,12 @@ public sealed class TreeSnowAdapter
 
     // Copy the existing wind cache to shared snow variants, never update every individual tree.
     // =========================================================
-    public void Update(float coverage, Color colour, bool grassSnow = true)
+    public void Update(float coverage, Color colour)
     {
         foreach (var pair in _materials)
         {
             pair.Snow.SetShaderParameter("wind_multiplier", pair.Source.GetShaderParameter("wind_multiplier"));
-            pair.Snow.SetShaderParameter("snow_coverage", pair.Grass && !grassSnow ? 0f : coverage);
+            pair.Snow.SetShaderParameter("snow_coverage", coverage);
             pair.Snow.SetShaderParameter("snow_colour", colour);
         }
     }

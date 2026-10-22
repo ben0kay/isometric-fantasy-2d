@@ -1,5 +1,5 @@
 // Shares one GPU snow-cap material across opted-in rock scenes in this debug test.
-// Original sprite materials are restored on toggle-off or when SnowTest is removed.
+// Original sprite materials are restored when master snow stops or SnowTest is removed.
 using Godot;
 using System.Collections.Generic;
 
@@ -31,12 +31,12 @@ public sealed class RockSnowAdapter
     #endregion
 
     #region Snow response
-    // Switch materials only at coverage/toggle transitions; update one shared uniform set.
+    // Switch materials only as settled coverage starts or ends; update shared uniforms.
     // =========================================================
-    public void Update(float coverage, Color colour, bool enabled, float capDepth)
+    public void Update(float coverage, Color colour, float capDepth)
     {
         if (_shared == null) return;
-        float amount = enabled ? Mathf.Clamp(coverage, 0f, 1f) : 0f;
+        float amount = Mathf.Clamp(coverage, 0f, 1f);
         bool show = amount > 0.0001f;
         if (show != _applied)
         {

@@ -41,7 +41,7 @@ public partial class DebugSnowTest : Node2D
     private void BuildControls()
     {
         var ui = new CanvasLayer { Name = "UI", Layer = 20 }; AddChild(ui);
-        var panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 745, OffsetRight = 336, OffsetBottom = 1060 };
+        var panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 745, OffsetRight = 336, OffsetBottom = 1010 };
         ui.AddChild(panel);
         var controls = new VBoxContainer(); panel.AddChild(controls);
         controls.AddChild(new Label { Text = "Shader Wind and Snow" });
@@ -53,8 +53,6 @@ public partial class DebugSnowTest : Node2D
         controls.AddChild(new Label { Text = "Snowfall intensity" });
         HSlider rate = AddSlider(controls, Config.SnowfallRate);
         rate.ValueChanged += value => Config.SnowfallRate = (float)value;
-        AddSwitch(controls, "Snow on grass sprites", Config.GrassSnow, value => Config.GrassSnow = value);
-        AddSwitch(controls, "Snow on rocks", Config.RockSnow, value => Config.RockSnow = value);
         AddSwitch(controls, "Auto accumulate / melt", Config.AutoAccumulate, value => Config.AutoAccumulate = value);
     }
 
@@ -88,8 +86,9 @@ public partial class DebugSnowTest : Node2D
         _ground.SetShaderParameter("snow_colour", Config.SnowColour);
         _ground.SetShaderParameter("drift_scale", Config.DriftScale);
         _ground.SetShaderParameter("drift_contrast", Config.DriftContrast);
-        _trees.Update(_coverage, Config.SnowColour, Config.GrassSnow);
-        _rocks.Update(_coverage, Config.SnowColour, Config.RockSnow, Config.RockCapDepth);
+        // Every snow-compatible surface uses the same settled coverage; no per-kind on/off gates.
+        _trees.Update(_coverage, Config.SnowColour);
+        _rocks.Update(_coverage, Config.SnowColour, Config.RockCapDepth);
         _syncing = true; _slider.Value = Config.Coverage; _syncing = false;
         _label.Text = $"Settled snow: {_coverage:P0}";
     }
