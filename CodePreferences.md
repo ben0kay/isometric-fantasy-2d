@@ -39,3 +39,9 @@ Refer to https://github.com/ben0kay/Ben_MonsterExpansion for Grim Dawns spawn me
 **Default design question:** What makes this mechanic run, what makes it stop, and what is its cost while nothing is happening?
 
 These requirements apply alongside the existing modular, data-driven, C# and documentation preferences.
+
+## Optional local testing handoff — when I request it
+
+To conserve Codex usage, I may explicitly ask for compilation and some or all runtime/performance testing to be performed locally by GitHub Copilot in VS Code. When requested, Codex should implement and review the changes, commit/push when authorized, and hand over the deferred checks instead of running them here. This is optional per job; otherwise follow the normal validation requirements above.
+
+Provide the commit SHA, changed files, prerequisites, exact build/test commands, expected results and any manual Godot visual/performance checks. Clearly state which checks were run and which are deferred, and mark the implementation as **awaiting local validation** until results are available. Pushing code does not mean it passed testing. Copilot should initially run the checks without modifying code and return commands, exit codes and relevant failures for follow-up.
