@@ -1,5 +1,2 @@
-# WORLD/Content/Vegetation/Grass
-
-**Visible grass tufts/clumps and tall grass objects**, not the ground tile terrain. Ground tile art and transitions belong under `WORLD/Terrain/Ground/`.
-
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+# Decorative grass
+Grass.tres references four reusable static Tuft scenes and their Sprites. These have no collisions. Biome population data selects counts, scale and clusters; WORLD/Generation/Placement owns the algorithm. Ground surface shading is separate.

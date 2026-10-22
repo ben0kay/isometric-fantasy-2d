@@ -1,5 +1,6 @@
-# WORLD/Biomes
+# Overworld biomes
+Implemented: `Definitions/OakForest/Biome.tres` is the only production biome. All individual biome folders live under Definitions; Shared owns common Resource types. Cave biomes remain separate.
 
-Each future biome will have a clear, central profile (e.g. `TemperateForest/Biome.tres`) that **references** world content and entity species, with relative weights/densities and placement constraints. Keep assets in `WORLD/Content/`, wildlife/enemy definitions in `ENTITIES/`. **Do not create one `.spawn.tres` per item per biome.** An eventual Avalonia toolbox should inspect/edit biome profiles and preview referenced sprites. No biome definitions exist yet.
+WorldBiomeDefinition references a ground surface profile and an ordered array of inline BiomePopulation resources. Each population references canonical content and stores count, scale, mirroring and optional cluster settings. Populate these in the Inspector; no separate spawn file per species per biome is needed.
 
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+Future Avalonia tooling can edit stable IDs and these Resource references/settings. Toolbox integration is not implemented. Never duplicate content assets under a biome or hardcode a species into placement code.

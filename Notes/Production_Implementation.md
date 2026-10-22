@@ -1,6 +1,6 @@
 # Production Implementation — First Playable Oak Forest World
 
-> **Status:** Implementation plan for Codex — **NOT implemented by this note**.
+> **Status:** Production foundation implemented. See SCENES/World/README.md for launch/configuration and validation status. The original scope below is preserved as the implementation reference. RandomSeedOnLoad defaults to true; FixedSeed enables deterministic replay.
 > **Scope:** Extract/copy proven parts of `DEBUG/TopDownTest/` into the actual production folders, then assemble a minimal playable `SCENES/World/World.tscn`. Preserve the entire existing debug test intact.
 > **Read first:** [root README](../README.md), [CodePreferences](../CodePreferences.md), the relevant production-folder READMEs and [DEBUG/TopDownTest/README](../DEBUG/TopDownTest/README.md). Inspect actual scripts, scenes, .tres and shader dependencies before editing.
 
@@ -113,12 +113,12 @@ The exact names of some future production scripts/resources may be adjusted to a
 
 ## Completion checklist for Codex
 
-- [ ] `SCENES/World/World.tscn` opens and runs.
-- [ ] Production player moves with arrow keys, collides and is followed by Camera2D.
-- [ ] Oak Forest ground retains its familiar organic grass colour patches and fine surface detail.
-- [ ] Oak trees, rocks and grass decorations use reusable production assets and correct anchors/footprints.
-- [ ] Deterministic startup scenery placement works without debug paths, hardcoded second biome or lake dependencies.
-- [ ] Oak Forest biome and surface settings are data driven and point to canonical production resources.
-- [ ] Production files do not depend on `DEBUG/TopDownTest/` paths/classes/resources.
-- [ ] All existing debug experiments stay intact and runnable.
-- [ ] Updated READMEs clearly distinguish newly implemented production code from remaining design scaffolding.
+- [x] `SCENES/World/World.tscn` opens and runs.
+- [x] Production player moves with arrow keys, collides and is followed by Camera2D.
+- [x] Oak Forest ground retains its familiar organic grass colour patches and fine surface detail.
+- [x] Oak trees, rocks and grass decorations use reusable production assets and correct anchors/footprints.
+- [x] Deterministic startup scenery placement works without debug paths, hardcoded second biome or lake dependencies.
+- [x] Oak Forest biome and surface settings are data driven and point to canonical production resources.
+- [x] Production files do not depend on `DEBUG/TopDownTest/` paths/classes/resources.
+- [x] All existing debug experiments stay intact and runnable.
+- [x] Updated READMEs clearly distinguish newly implemented production code from remaining design scaffolding.

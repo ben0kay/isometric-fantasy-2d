@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**Production foundation added:** [SCENES/World/World.tscn](SCENES/World/World.tscn) is an independent playable Oak Forest world (F6): player/collision/camera, organic grass ground and data-driven oak/rock/grass placement. A fresh seed is chosen/logged each load; fixed-seed replay is configurable. DEBUG stays intact and remains the F5 default. Environment effects and survival/gameplay systems are not promoted. See [run/configuration guide](SCENES/World/README.md). Earlier scaffolding-only descriptions below are superseded for these specific modules.
+
 > **Project snapshot — 21 October 2026:** An actively expanding, **runnable 2D debug sandbox**, not yet a production survival game. The earlier 3D/isometric approach is retired. The debug forest now demonstrates player movement, procedural scenery placement, two adjacent biomes, environmental visuals, water/snow comparisons and an axe/tree-hit experiment. Most gameplay, survival, simulation, persistence and world-generation ambitions below are **design or scaffolding**, not implemented features.
 
 **Three distinct statuses used in this README:**

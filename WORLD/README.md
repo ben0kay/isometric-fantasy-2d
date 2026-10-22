@@ -1,5 +1,7 @@
 # WORLD — World Content and Generation
 
+**Production foundation implemented:** SCENES/World/World.tscn now composes an independent Oak Forest player/ground/scenery world with random-on-load deterministic placement. WorldMasterConfig and biome/content/surface Resources own its data. Other world systems below remain scaffolding.
+
 > **Status:** Foundational folder layout only. No world generators, biomes, new content objects, or runtime features are implemented by this package.
 
 `WORLD` owns the **physical world**: reusable scenery and structures, biome profiles, terrain, water, caves, discoverable locations, generation rules, and runtime world state. It does **not** own the player, wildlife or enemy implementations (those belong in `ENTITIES/`).

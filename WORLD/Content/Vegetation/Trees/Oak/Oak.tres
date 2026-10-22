@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TreeDefinition" format=3]
+[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Trees/Oak/Oak.tscn" id="v0"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeDefinition.cs" id="script"]
+[resource]
+script = ExtResource("script")
+Id = "tree.oak"
+DisplayName = "Oak"
+Variants = Array[PackedScene]([ExtResource("v0")])
+SpacingRadius = 40.0
+FootprintPath = NodePath("TrunkFootprint")

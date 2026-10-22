@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01.png" id="art"]
+
+
+[node name="Oak" type="StaticBody2D"]
+
+[node name="Sprite" type="Sprite2D" parent="."]
+position = Vector2(-63.02, -148.35)
+scale = Vector2(0.115, 0.115)
+texture_filter = 2
+texture = ExtResource("art")
+centered = false
+
+[node name="TrunkFootprint" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -17, 1)

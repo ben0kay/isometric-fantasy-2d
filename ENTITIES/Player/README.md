@@ -1,6 +1,8 @@
 # ENTITIES / Player
 
-> **Status:** Production player folders and planning documentation only. The playable 2D debug explorer remains under [DEBUG/TopDownTest/](../../DEBUG/TopDownTest/README.md) and is **not** a production Player scene. This folder does not implement the actual player systems yet.
+**Production foundation implemented:** Player.tscn now has normalized arrow input, CharacterBody2D movement, grounded collision, temporary copied SVG art and bounded following Camera2D/wheel zoom. PlayerMasterConfig supplies movement/camera settings. Other systems described below remain plans; earlier scaffolding-only statements are historical.
+
+> **Status:** Production walking/collision/camera foundation implemented. Inventory, survival, combat and other listed components remain planning scaffolding.
 
 The production player stays within `ENTITIES/Player/`. Keep each player-specific concern in its own folder, while extracting mechanisms reused by many actors to appropriate shared modules. No separate root-level `PLAYER/` directory is planned.
 
@@ -49,8 +51,8 @@ You may author/rig in Blender and render sprite directions/frames into `Visuals/
 
 ## Configuration
 
-- `PlayerMasterConfig.cs` and `DefaultPlayerConfig.tres` are **blank, inspector-editable placeholders** for the future production player. The obsolete 3D script reference and `SpritePixelSize` field were cleaned up during this folder pass.
+- `PlayerMasterConfig.cs` and `DefaultPlayerConfig.tres` now configure the production player movement and camera. The obsolete 3D script reference and `SpritePixelSize` field were cleaned up during this folder pass.
 - `DEBUG/TopDownTest/` owns its own temporary movement, camera and visual config. No production Player script is currently wired to the debug scene.
 - When implementing a mechanic, add settings to the owning data/resource class; avoid a large universal master config that duplicates per-feature fields.
 
-**No survival mechanics, player movement code, item behavior, or production scenes are created by this reorganization.**
+**No survival mechanics or item behaviour are implemented yet.**

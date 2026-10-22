@@ -1,5 +1,2 @@
-# WORLD/Runtime
-
-Live generated world state; chunk activation, streaming and persistence. Should not own static content species definitions or artistic assets.
-
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+# World runtime
+WorldScene composes the configured single-biome map: selects/logs one seed, configures ground, spawn/camera bounds, creates four static boundary walls, then calls startup placement. No persistence, chunks or environment simulation yet.

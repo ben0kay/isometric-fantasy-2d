@@ -1,5 +1,7 @@
 # WORLD / Terrain / Ground
 
+**Implemented:** reusable profile-driven surface rendering extracted from DEBUG Oak Forest. See Surfaces/README.md. Other ground systems below remain plans.
+
 > **Status:** Production folder foundation only; no ground-surface renderer or runtime terrain has been promoted from DEBUG.
 
 ## Responsibilities

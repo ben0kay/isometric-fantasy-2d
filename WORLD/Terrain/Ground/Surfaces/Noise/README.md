@@ -1,7 +1,2 @@
-# Surface Noise
-
-> **Status:** Empty production destination; no Resources copied yet.
-
-Future home for shared seeded/sampleable terrain appearance noise and related defaults (not world-generation geography or object placement).
-
-The Oak Forest DEBUG reference is `DEBUG/TopDownTest/Ground/Noise/GroundNoise.tres`. Retain world-space, visually continuous variation across tile boundaries. Reuse a noise Resource when suitable, but allow profile-specific scale/strength and distinct resources if a material genuinely needs them.
+# Ground noise
+GroundNoise.tres preserves the shared seamless 512×512 DEBUG noise settings. This visual noise keeps its own fixed texture seed to retain the established surface appearance; the random world seed drives scenery placement.

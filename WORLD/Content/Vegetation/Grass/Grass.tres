@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SceneryDefinition" format=3]
+[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Grass/Tuft01.tscn" id="v0"]
+[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Grass/Tuft02.tscn" id="v1"]
+[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Grass/Tuft03.tscn" id="v2"]
+[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Grass/Tuft04.tscn" id="v3"]
+[ext_resource type="Script" path="res://WORLD/Content/Shared/SceneryDefinition.cs" id="script"]
+[resource]
+script = ExtResource("script")
+Id = "grass.tuft"
+DisplayName = "Grass tuft"
+Variants = Array[PackedScene]([ExtResource("v0"), ExtResource("v1"), ExtResource("v2"), ExtResource("v3")])
+SpacingRadius = 22.0
+VisualMinimum = Vector2(-64, -116)
+VisualMaximum = Vector2(64, 12)
