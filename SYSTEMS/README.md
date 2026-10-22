@@ -6,6 +6,7 @@ Reusable interactive gameplay mechanics that connect WORLD objects, ENTITIES, IT
 
 ## Folder map
 
+- [WorldInteractions/](WorldInteractions/README.md): World-object interaction mechanics; [Fire/](WorldInteractions/Fire/README.md) is scaffolded here for future extraction from DEBUG. Nothing runs in production yet.
 - [Interaction/](Interaction/README.md): Generic interaction resolution and requests for doors, containers, animals and objects.
 - [Harvesting/](Harvesting/README.md): Shared resource extraction/chopping/mining/foraging rules and loot-plan execution.
 - [Crafting/](Crafting/README.md): Shared recipes, ingredient rules, production, workstations and output item references.
