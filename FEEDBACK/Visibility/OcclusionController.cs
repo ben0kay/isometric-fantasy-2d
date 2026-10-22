@@ -29,7 +29,7 @@ public partial class OcclusionController : Node
     {
         _player = player;
         foreach (Node node in GetTree().GetNodesInGroup("world_trees"))
-            if (node is Tree tree && tree.Definition?.VisibilityProfile is { Enabled: true } profile)
+            if (node is FantasyGame.World.Trees.Tree tree && tree.Definition?.VisibilityProfile is { Enabled: true } profile)
                 Register(tree, tree.GetNodeOrNull<Sprite2D>("Sprite"), profile);
         SetProcess(true);
     }
