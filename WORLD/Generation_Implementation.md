@@ -505,3 +505,7 @@ I'm updating this. My response: small = 3 min. med = 5 min. huge = 8 min (regula
 ## P0/P1 implementation update — 22 October 2026
 
 The finite coarse map, arbitrary biome collection, per-biome weights/target diameters, connected full coverage, deterministic hash, F8 overview and detached profile/run/world blueprint contract are implemented. The existing playable preview is retained independently. Read WORLD/Generation/World/README.md and P0_P1_Audit.md for exact semantics and baseline. Target diameters are approximate; climate preferences remain deferred. P2–P6, streamed playable terrain and durable profile saves remain unimplemented. This update supersedes earlier statements that no macro generator exists.
+
+## P2 implementation update — 22 October 2026
+
+WorldGenerationMasterConfig.Layout now references resource-driven required/preferred feature directives. The default layout demonstrates a protected starting anchor and a mandatory irregular SE-zone footprint. Exact polygon/clearance reservations, category/owner permissions, stable per-feature RNG, priority/conflict errors, bounded preferred skips, F7 overlays and schema-2 feature snapshots are implemented. P1 biome coverage/hash and the current playable preview are preserved. See WORLD/Generation/World/Features/README.md for authoring, tests and limits. These are neutral reservations, not real oceans/volcanoes/POIs or a generated route network. P3 chunk streaming and P4 durable saving remain unimplemented.

@@ -5,6 +5,7 @@ using FantasyGame.WorldInteractions.Fire;
 public partial class WorldScene : Node2D
 {
     [Export] public WorldMasterConfig Config { get; set; }
+    public WorldFeaturePlan FeaturePlan { get; private set; }
     public MacroWorldMap MacroMap { get; private set; }
     public WorldBlueprintManifest Blueprint { get; private set; }
     public int ActiveSeed { get; private set; }
@@ -30,8 +31,12 @@ public partial class WorldScene : Node2D
             var timer = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                MacroMap = MacroWorldBuilder.Build(Config.Generation, ActiveSeed);
-                Blueprint = WorldBlueprintManifest.CreatePreview(MacroMap);
+                var features = WorldFeaturePlanner.Build(Config.Generation, ActiveSeed);
+                var map = MacroWorldBuilder.Build(Config.Generation, ActiveSeed);
+                FeaturePlan = features; MacroMap = map;
+                Blueprint = WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan);
+                foreach (string warning in features.Warnings) GD.PushWarning(warning);
+                GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
                 GD.Print($"Macro map | {MacroMap.Columns}x{MacroMap.Rows} | {MacroMap.Regions.Count} regions | 100% land | {timer.ElapsedMilliseconds}ms | hash {MacroMap.Hash}");
             }
             catch (System.ArgumentException error) { GD.PushError($"Macro generation failed: {error.Message}"); }

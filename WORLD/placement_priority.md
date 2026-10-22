@@ -1,6 +1,6 @@
 # World generation placement priority
 
-Planning guidance; this note does not imply the full pipeline is implemented.
+The complete pipeline below remains staged. **P2 implemented:** WORLD/Generation/World/Features provides required/preferred polygon reservations, priorities and permission-aware queries. Actual terrain/POI/streamed scenery consumers remain later passes; the playable preview keeps its existing spawn/pond exclusions.
 
 Reserve space for important features before filling the world with scenery. Generation order and placement priority are separate: a required location can reserve its footprint early and be built later.
 

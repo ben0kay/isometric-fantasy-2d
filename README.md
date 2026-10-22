@@ -1,6 +1,6 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**World generation P0/P1 implemented:** F6 production World, then **F7** for a seeded finite biome-map overview. Generation uses an editable collection of biome Resources with relative weights and target region diameters; new biome definitions require no generator branches. The larger map is a coarse blueprint; the playable Oak/Pink preview remains unchanged. Chunk streaming, durable profile saves and A-Life are still planned. See [generation guide](WORLD/Generation/World/README.md) and [audit](WORLD/Generation/World/P0_P1_Audit.md).
+**World generation P0–P2 implemented:** F6 production World, then **F7** for a seeded finite biome-map overview with protected starting space and an irregular required southeast test reservation. Biome collections, weights, target region diameters and required/preferred feature footprints are resource-driven. The larger map is still a blueprint; the playable Oak/Pink preview remains unchanged. Chunk streaming, durable profile saves and A-Life are planned. See [generation guide](WORLD/Generation/World/README.md) and [P2 feature guide](WORLD/Generation/World/Features/README.md).
 
 **Generic production trees:** Oak and Pink Blossom now use one shared tree template, configured entirely by species/variant Resources. Both support axe feedback, wind, snow, shadows and fire; blossoms need no charred artwork to burn. Future species need .tres data/art/biome references only. See [tree authoring guide](WORLD/Content/Vegetation/Trees/README.md).
 

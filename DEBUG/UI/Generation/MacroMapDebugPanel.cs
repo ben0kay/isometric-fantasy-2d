@@ -1,4 +1,4 @@
-// Removable F7 overview of the P1 blueprint; never drives production generation or player movement.
+// Removable F7 overview of biome geography and P2 feature reservations; never drives production generation or player movement.
 using Godot;
 using System.Linq;
 using System.Text;
@@ -24,6 +24,17 @@ public partial class MacroMapDebugPanel : CanvasLayer
         {
             int region = map.RegionIdAtCell(x, y); Color colour = map.Biomes[map.Regions[region].BiomeIndex].Colour;
             if ((x > 0 && map.RegionIdAtCell(x - 1, y) != region) || (y > 0 && map.RegionIdAtCell(x, y - 1) != region)) colour = colour.Darkened(0.4f);
+            if (world.FeaturePlan is { } plan)
+            {
+                Vector2 point = map.Bounds.Position + new Vector2((x + 0.5f) * map.CellSize, (y + 0.5f) * map.CellSize);
+                foreach (var feature in plan.Reservations.Features)
+                {
+                    if (feature.OverlapsDisk(point, 0)) colour = colour.Lerp(feature.Colour, 0.75f);
+                    int ax = Mathf.FloorToInt((feature.Anchor.X - map.Bounds.Position.X) / map.CellSize);
+                    int ay = Mathf.FloorToInt((feature.Anchor.Y - map.Bounds.Position.Y) / map.CellSize);
+                    if ((x == ax && Mathf.Abs(y - ay) <= 1) || (y == ay && Mathf.Abs(x - ax) <= 1)) colour = Colors.White;
+                }
+            }
             image.SetPixel(x, y, colour);
         }
         box.AddChild(new TextureRect { Texture = ImageTexture.CreateFromImage(image), CustomMinimumSize = new Vector2(700, 460),
@@ -36,7 +47,19 @@ public partial class MacroMapDebugPanel : CanvasLayer
             int cells = regions.Sum(r => r.CellCount);
             text.AppendLine($"{map.Biomes[b].Name}: {regions.Length} regions, {100.0 * cells / (map.Columns * map.Rows):F1}% cells; actual region cells {(regions.Length == 0 ? 0 : regions.Min(r => r.CellCount))}–{(regions.Length == 0 ? 0 : regions.Max(r => r.CellCount))}");
         }
-        box.AddChild(new Label { Text = text.ToString() });
+        if (world.FeaturePlan is { } features)
+        {
+            text.AppendLine($"Reservations {features.Reservations.Features.Count} | hash {features.Hash[..12]} | tint includes clearance");
+            foreach (var feature in features.Reservations.Features.Take(4))
+                text.AppendLine($"{feature.Name} [{feature.Id}] — {(feature.Required ? "required" : "preferred")}, priority {feature.Priority}");
+            if (features.Reservations.Features.Count > 4) text.AppendLine($"+ {features.Reservations.Features.Count - 4} more (see generation log)");
+            foreach (string warning in features.Warnings.Take(2)) text.AppendLine(warning);
+        }
+        var details = new ScrollContainer { CustomMinimumSize = new Vector2(700, 200),
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        details.AddChild(new Label { Text = text.ToString(), AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        box.AddChild(details);
     }
     // Toggle only the overview, keeping input and preview behaviour independent.
     // =========================================================
