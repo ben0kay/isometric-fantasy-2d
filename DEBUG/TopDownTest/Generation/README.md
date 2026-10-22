@@ -60,3 +60,8 @@ Grass/ runs after tree/rock scattering and uses CanPlaceGrassDecoration to avoid
 ## Liquid footprint reservation
 
 Liquids/Lake registers and builds its boundary before Actors.Ready. The generator caches those regions once and rejects tree/rock positions within the shoreline plus an object/art margin. CanPlaceGrassDecoration uses the same boundary with a bank margin. The footprint stays reserved while the liquid scene exists, even with its display toggled off; remove that scene and restart to fill the clearing normally. World size now matches the 2560×1728 authored ground, path, bounds, camera and overlays. See Liquids/README.md for three-seed placement validation and current Godot build/render checks.
+
+
+## Adjacent biome prototype
+
+See [Biomes](../Biomes/README.md) for the Oak Forest / Pink Meadow test. The current map is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with **80 trees / 50 rocks**. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.

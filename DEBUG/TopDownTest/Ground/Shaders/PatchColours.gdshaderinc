@@ -12,7 +12,8 @@ vec3 grass_patch_colour(vec2 world) {
         texture(ground_noise, uv * 0.63 + vec2(0.71, 0.29)).r) - vec2(0.5);
     float broad = texture(ground_noise, uv + warp * 0.05).r;
     float dry = smoothstep(0.63, 0.84, texture(ground_noise, uv * 1.37 + vec2(0.31, 0.67)).r);
-    vec3 patches = mix(shade_colour.rgb, fresh_colour.rgb, smoothstep(0.18, 0.82, broad));
-    patches = mix(patches, dry_colour.rgb, dry * 0.45);
-    return mix(vec3(0.2196, 0.2745, 0.2078), patches, colour_patches ? clamp(variation, 0.0, 1.0) : 0.0);
+    float biome = biome_weight(world);
+    vec3 patches = mix(mix(shade_colour.rgb, east_shade.rgb, biome), mix(fresh_colour.rgb, east_fresh.rgb, biome), smoothstep(0.18, 0.82, broad));
+    patches = mix(patches, mix(dry_colour.rgb, east_dry.rgb, biome), dry * 0.45);
+    return mix(mix(west_base.rgb, east_base.rgb, biome), patches, colour_patches ? clamp(variation, 0.0, 1.0) : 0.0);
 }

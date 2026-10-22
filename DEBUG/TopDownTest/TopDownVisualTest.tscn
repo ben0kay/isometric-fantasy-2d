@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerMovement.cs" id="movement"]
 [ext_resource type="Script" path="res://DEBUG/TopDownTest/TestPlayerInput.cs" id="input"]
@@ -30,11 +30,13 @@
 
 [ext_resource type="PackedScene" path="res://DEBUG/TopDownTest/Liquids/LiquidTest.tscn" id="liquids"]
 
+[ext_resource type="Resource" path="res://DEBUG/TopDownTest/Biomes/DefaultBiomeConfig.tres" id="biomes"]
+
 [sub_resource type="RectangleShape2D" id="Feet"]
 size = Vector2(14, 10)
 
 [sub_resource type="RectangleShape2D" id="HorizontalBound"]
-size = Vector2(2560, 16)
+size = Vector2(3840, 16)
 
 [sub_resource type="RectangleShape2D" id="VerticalBound"]
 size = Vector2(16, 1728)
@@ -46,6 +48,7 @@ texture_filter = 1
 z_index = -10
 script = ExtResource("ground_script")
 Config = ExtResource("ground_config")
+Biomes = ExtResource("biomes")
 
 [node name="Grass" type="Sprite2D" parent="Ground"]
 material = ExtResource("grass_material")
@@ -54,7 +57,7 @@ texture_repeat = 2
 texture = ExtResource("grass")
 centered = false
 region_enabled = true
-region_rect = Rect2(0, 0, 2560, 1728)
+region_rect = Rect2(0, 0, 3840, 1728)
 
 [node name="Path" type="Polygon2D" parent="Ground"]
 polygon = PackedVector2Array(418, -544, 488, -544, 488, 0, 500, 160, 472, 270, 500, 355, 650, 410, 960, 420, 1760, 443, 1760, 495, 960, 473, 624, 460, 450, 395, 424, 302, 448, 150, 418, 0)
@@ -420,6 +423,7 @@ color = Color(0.43, 0.45, 0.29, 0.65)
 y_sort_enabled = true
 script = ExtResource("scatter")
 Config = ExtResource("scatter_config")
+Biomes = ExtResource("biomes")
 TreeScene = ExtResource("tree")
 RockScene = ExtResource("rock")
 
@@ -452,7 +456,7 @@ position = Vector2(0, -16)
 zoom = Vector2(2, 2)
 limit_left = -800
 limit_top = -544
-limit_right = 1760
+limit_right = 3040
 limit_bottom = 1184
 position_smoothing_enabled = false
 
@@ -461,11 +465,11 @@ position_smoothing_enabled = false
 [node name="Bounds" type="StaticBody2D" parent="."]
 
 [node name="North" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(480, -552)
+position = Vector2(1120, -552)
 shape = SubResource("HorizontalBound")
 
 [node name="South" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(480, 1192)
+position = Vector2(1120, 1192)
 shape = SubResource("HorizontalBound")
 
 [node name="West" type="CollisionShape2D" parent="Bounds"]
@@ -473,7 +477,7 @@ position = Vector2(-808, 320)
 shape = SubResource("VerticalBound")
 
 [node name="East" type="CollisionShape2D" parent="Bounds"]
-position = Vector2(1768, 320)
+position = Vector2(3048, 320)
 shape = SubResource("VerticalBound")
 
 [node name="RockGround" parent="." instance=ExtResource("rock_ground")]

@@ -30,3 +30,8 @@ All debug C# scripts compiled against GodotSharp 4.7.2 / .NET 8 and with Godot 4
 ## Rock-ground transition
 
 RockPatches/ adds separate irregular gravel beneath/around placed rocks. It has its own controller, config, material, shape shader and pebble-detail shader. The grass shader contains no rock-placement logic. See its README for live controls, ordering and limits.
+
+
+## Adjacent biome prototype
+
+See [Biomes](../Biomes/README.md) for the Oak Forest / Pink Meadow test. The current map is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with **80 trees / 50 rocks**. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.

@@ -4,6 +4,7 @@ using Godot;
 public partial class DebugGroundSurface : Node2D
 {
     [Export] public GroundMasterConfig Config { get; set; }
+    [Export] public BiomeMasterConfig Biomes { get; set; }
     private ShaderMaterial _grass;
     private HSlider _variation;
     private Label _label;
@@ -52,10 +53,22 @@ public partial class DebugGroundSurface : Node2D
         _grass.SetShaderParameter("fine_detail", Config.FineDetail);
         _grass.SetShaderParameter("variation", Mathf.Clamp(Config.Variation, 0f, 1f));
         _grass.SetShaderParameter("patch_size", Mathf.Max(80f, Config.PatchSize));
-        _grass.SetShaderParameter("shade_colour", Config.ShadeColour);
-        _grass.SetShaderParameter("fresh_colour", Config.FreshColour);
-        _grass.SetShaderParameter("dry_colour", Config.DryColour);
+        _grass.SetShaderParameter("shade_colour", Biomes?.West?.ShadeColour ?? Config.ShadeColour);
+        _grass.SetShaderParameter("fresh_colour", Biomes?.West?.FreshColour ?? Config.FreshColour);
+        _grass.SetShaderParameter("dry_colour", Biomes?.West?.DryColour ?? Config.DryColour);
         _grass.SetShaderParameter("detail_strength", Config.DetailStrength);
+        if (Biomes?.West != null && Biomes.East != null)
+        {
+            _grass.SetShaderParameter("biome_boundary_x", Biomes.BoundaryX);
+            _grass.SetShaderParameter("biome_curve_amplitude", Biomes.CurveAmplitude);
+            _grass.SetShaderParameter("biome_curve_scale", Biomes.CurveScale);
+            _grass.SetShaderParameter("biome_blend_width", Biomes.BlendWidth);
+            _grass.SetShaderParameter("west_base", Biomes.West.BaseColour);
+            _grass.SetShaderParameter("east_base", Biomes.East.BaseColour);
+            _grass.SetShaderParameter("east_shade", Biomes.East.ShadeColour);
+            _grass.SetShaderParameter("east_fresh", Biomes.East.FreshColour);
+            _grass.SetShaderParameter("east_dry", Biomes.East.DryColour);
+        }
         _syncing = true; _variation.Value = Config.Variation; _syncing = false;
         _label.Text = $"Colour variation: {Config.Variation:P0}";
     }

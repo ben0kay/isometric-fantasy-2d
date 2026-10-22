@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public partial class DebugWorldScatter : Node2D
 {
+    [Export] public BiomeMasterConfig Biomes { get; set; }
     [ExportGroup("Templates")]
     [Export] public PackedScene TreeScene { get; set; }
     [Export] public PackedScene RockScene { get; set; }
@@ -94,6 +95,7 @@ public partial class DebugWorldScatter : Node2D
     {
         if (Config == null || !Config.WorldBounds.HasPoint(point)) return false;
         float extra = Mathf.Max(0f, clearance);
+        if (Biomes != null && !Biomes.Allows(point, false, true, 80f + extra)) return false;
         foreach (LiquidRegion region in _liquids)
             if (region.Contains(point, extra + 32f)) return false;
         float clearing = Config.StartClearingRadius + extra;
@@ -124,6 +126,7 @@ public partial class DebugWorldScatter : Node2D
         for (int attempt = 0; attempt < Mathf.Clamp(Config.AttemptsPerObject, 1, 120); attempt++)
         {
             Vector2 candidate = new(random.RandfRange(minX, maxX), random.RandfRange(minY, maxY));
+            if (Biomes != null && !Biomes.Allows(candidate, tree, false, tree ? 100f : radius)) continue;
             float clearing = Config.StartClearingRadius + radius;
             if (candidate.DistanceSquaredTo(Config.PlayerSpawn) < clearing * clearing) continue;
             if (TooNearPath(candidate, radius + Config.PathHalfWidth)) continue;

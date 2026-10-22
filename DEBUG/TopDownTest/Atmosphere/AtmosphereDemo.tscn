@@ -36,7 +36,7 @@ SmokeTexture = SubResource("SmokeTexture")
 [node name="Haze" type="Polygon2D" parent="."]
 z_index = -6
 material = SubResource("HazeMaterial")
-polygon = PackedVector2Array(-800, -544, 1760, -544, 1760, 1184, -800, 1184)
+polygon = PackedVector2Array(-800, -544, 3040, -544, 3040, 1184, -800, 1184)
 
 [node name="UI" type="CanvasLayer" parent="."]
 layer = 20
