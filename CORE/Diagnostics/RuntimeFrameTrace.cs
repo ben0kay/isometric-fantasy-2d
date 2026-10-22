@@ -98,6 +98,15 @@ public static class RuntimeFrameTrace
         Array.Copy(SelfTicks,WorstTicks,Capacity); Array.Copy(Calls,WorstCalls,Capacity);
     }
 
+    // Read one completed callback sample without formatting or allocating a report.
+    // =========================================================
+    public static bool TryGetLatest(string name, out double milliseconds, out int calls)
+    {
+        milliseconds = 0; calls = 0;
+        if (!Names.TryGetValue(name, out int id)) return false;
+        milliseconds = LastTicks[id] * 1000.0 / Stopwatch.Frequency; calls = LastCalls[id]; return true;
+    }
+
     // Format only on demand at the debug UI's low refresh rate, or when copying a report.
     // =========================================================
     public static string Report()

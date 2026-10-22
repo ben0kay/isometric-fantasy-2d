@@ -22,6 +22,14 @@ public partial class WorldAtmosphere : Node2D
     public int TreeSourceCount => _trees.Count;
     public int RegistrationCount { get; private set; }
     private static readonly Vector2[] LeafShape = { new(-3, 0), new(0, -1.5f), new(3, 0), new(0, 1.5f) };
+    private PollenDust _pollen;
+    private bool _sharedDrawActive, _ready;
+    private Rect2 _hazeBounds;
+    private Vector2 _lastHazeDrift = new(float.NaN,float.NaN);
+    private float _lastDaylight = float.NaN, _lastDensity = float.NaN, _lastPatch = float.NaN;
+    private Color _lastHazeColour;
+    public int RedrawRequests { get; private set; }
+    public int HazeUpdates { get; private set; }
     private double _time;
     private Vector2 _drift;
     private Rect2 _worldBounds;
@@ -46,7 +54,9 @@ public partial class WorldAtmosphere : Node2D
         _mistMaterial.SetShaderParameter("world_min", _worldBounds.Position);
         _mistMaterial.SetShaderParameter("world_max", _worldBounds.End);
         RefreshTrees();
-        _haze.Polygon = new[] { _worldBounds.Position, new Vector2(_worldBounds.End.X, _worldBounds.Position.Y), _worldBounds.End, new Vector2(_worldBounds.Position.X, _worldBounds.End.Y) };
+        _ready = true; Config.Changed += RefreshState;
+        if (GodotObject.IsInstanceValid(_torch)) _torch.VisibilityChanged += RefreshState;
+        RefreshState();
     }
     // Persistent/preview trees register once; streamed trees use the same explicit lifecycle API.
     // =========================================================
@@ -64,6 +74,7 @@ public partial class WorldAtmosphere : Node2D
         _indices.Add(tree,_trees.Count);
         _trees.Add((tree,tree.GetNode<TreeHitResponse>("HitResponse"),tree.GlobalPosition,tree.Definition.FoliageColour));
         RegistrationCount++;
+        if (_ready && _trees.Count == 1) RefreshState();
     }
     // Swap removal retains dense bounded storage and repairs the moved source's index.
     // =========================================================
@@ -73,8 +84,53 @@ public partial class WorldAtmosphere : Node2D
         int last = _trees.Count-1;
         if (index != last) { _trees[index] = _trees[last]; _indices[_trees[index].Tree] = index; }
         _trees.RemoveAt(last);
+        if (_ready && _trees.Count == 0) RefreshState();
     }
-    public override void _ExitTree() { _trees.Clear(); _indices.Clear(); }
+    public override void _ExitTree()
+    {
+        Config.Changed -= RefreshState;
+        if (GodotObject.IsInstanceValid(_torch)) _torch.VisibilityChanged -= RefreshState;
+        _trees.Clear(); _indices.Clear();
+    }
+    // Explicit profile/source/visibility events wake effects; all-off does not poll for changes.
+    // =========================================================
+    private void RefreshState()
+    {
+        bool pollen = Config.Pollen && Config.PollenCount > 0;
+        if (pollen && _pollen == null) { _pollen = new PollenDust { Name = "PollenDust" }; AddChild(_pollen); }
+        else if (!pollen && _pollen != null) { RemoveChild(_pollen); _pollen.Free(); _pollen = null; }
+        bool haze = Config.Haze && Config.HazeDensity > 0;
+        if (_haze.Visible != haze) _haze.Visible = haze;
+        bool torch = GodotObject.IsInstanceValid(_torch) && _torch.IsVisibleInTree();
+        bool shared = (Config.Leaves && Config.LeafCount > 0 && _trees.Count > 0)
+            || (torch && ((Config.Smoke && Config.SmokeCount > 0 && SmokeTexture != null) || (Config.Embers && Config.EmberCount > 0)));
+        if (_sharedDrawActive != shared) RequestRedraw();
+        _sharedDrawActive = shared;
+        SetProcess(pollen || haze || shared);
+        if (pollen || haze) UpdateAmbient();
+    }
+    private void RequestRedraw() { RedrawRequests++; QueueRedraw(); }
+
+    // Cache changed haze geometry/settings and batch inputs; no per-pollen C# calculation.
+    // =========================================================
+    private void UpdateAmbient()
+    {
+        _worldBounds = Day.Weather.VisibleWorldRect().Grow(200).Intersection(WorldBounds);
+        _drift = _weather.Displacement;
+        _pollen?.UpdateState(Config.PollenCount,_worldBounds,_drift,_day.Daylight);
+        if (!Config.Haze || Config.HazeDensity <= 0) return;
+        if (_hazeBounds != _worldBounds)
+        {
+            _hazeBounds = _worldBounds;
+            _haze.Polygon = new[] { _worldBounds.Position,new Vector2(_worldBounds.End.X,_worldBounds.Position.Y),_worldBounds.End,new Vector2(_worldBounds.Position.X,_worldBounds.End.Y) };
+            _mistMaterial.SetShaderParameter("world_min",_worldBounds.Position); _mistMaterial.SetShaderParameter("world_max",_worldBounds.End); HazeUpdates++;
+        }
+        if (_lastDensity != Config.HazeDensity) { _lastDensity=Config.HazeDensity; _mistMaterial.SetShaderParameter("density",_lastDensity); HazeUpdates++; }
+        if (_lastPatch != Config.PatchSize) { _lastPatch=Config.PatchSize; _mistMaterial.SetShaderParameter("patch_size",_lastPatch); HazeUpdates++; }
+        if (_lastHazeColour != Config.HazeColour) { _lastHazeColour=Config.HazeColour; _mistMaterial.SetShaderParameter("haze_colour",_lastHazeColour); HazeUpdates++; }
+        if (_lastDaylight != _day.Daylight) { _lastDaylight=_day.Daylight; _mistMaterial.SetShaderParameter("daylight",_lastDaylight); HazeUpdates++; }
+        if (_lastHazeDrift != _drift) { _lastHazeDrift=_drift; _mistMaterial.SetShaderParameter("drift",-_drift); HazeUpdates++; }
+    }
     #endregion
 
     #region Simulation and drawing
@@ -84,11 +140,7 @@ public partial class WorldAtmosphere : Node2D
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldAtmosphere.Process");
         _time += delta;
-        // Keep the bounded pollen/haze pool near the camera rather than spreading it over the finite map.
-        _worldBounds = Day.Weather.VisibleWorldRect().Grow(200).Intersection(WorldBounds);
-        _haze.Polygon = new[] { _worldBounds.Position, new Vector2(_worldBounds.End.X,_worldBounds.Position.Y),_worldBounds.End,new Vector2(_worldBounds.Position.X,_worldBounds.End.Y) };
-        _mistMaterial.SetShaderParameter("world_min",_worldBounds.Position); _mistMaterial.SetShaderParameter("world_max",_worldBounds.End);
-        _drift = _weather.Displacement;
+        UpdateAmbient();
         // Fade in extra leaves over roughly a second rather than popping on a slider change.
         if (Config.Leaves && Config.LeafCount > 0 && _trees.Count > 0)
         {
@@ -97,13 +149,7 @@ public partial class WorldAtmosphere : Node2D
         }
         if (Config.Smoke && Config.SmokeCount > 0 && SmokeTexture != null) IntegrateParticleWind(_smokeDrift, _smokeAge, 6f, 0.43f, 0.7f, (float)delta);
         if (Config.Embers && Config.EmberCount > 0) IntegrateParticleWind(_emberDrift, _emberAge, 2.2f, 0.31f, 0.3f, (float)delta);
-        _haze.Visible = Config.Haze && Config.HazeDensity > 0;
-        _mistMaterial.SetShaderParameter("density", Config.HazeDensity);
-        _mistMaterial.SetShaderParameter("patch_size", Config.PatchSize);
-        _mistMaterial.SetShaderParameter("haze_colour", Config.HazeColour);
-        _mistMaterial.SetShaderParameter("daylight", _day.Daylight);
-        _mistMaterial.SetShaderParameter("drift", -_drift);
-        QueueRedraw();
+        if (_sharedDrawActive) RequestRedraw();
     }
 
     // Integrate per-cycle drift so wind changes move existing particles without position jumps.
@@ -124,8 +170,6 @@ public partial class WorldAtmosphere : Node2D
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldAtmosphere.Draw");
         if (_day == null) return;
-        if (Config.Pollen)
-            for (int i = 0; i < Mathf.Clamp(Config.PollenCount, 0, 100); i++) DrawPollen(i);
         if (Config.Leaves && _trees.Count > 0)
         {
             // The existing LeafCount is the calm-weather base; stronger wind reveals
@@ -141,18 +185,6 @@ public partial class WorldAtmosphere : Node2D
             if (Config.Embers)
                 for (int i = 0; i < Mathf.Clamp(Config.EmberCount, 0, 40); i++) DrawEmber(i);
         }
-    }
-
-    // Slow dust drifts across the clearing, becoming much less visible at night.
-    // =========================================================
-    private void DrawPollen(int i)
-    {
-        float phase = i * 2.39996f;
-        Vector2 p = new(
-            _worldBounds.Position.X + Mathf.PosMod(i * 137.4f + _drift.X + Mathf.Sin((float)_time * 0.4f + phase) * 6f, _worldBounds.Size.X),
-            _worldBounds.Position.Y + Mathf.PosMod(i * 83.7f + _drift.Y + Mathf.Sin((float)_time * 0.3f + phase) * 4f, _worldBounds.Size.Y));
-        float alpha = (0.10f + 0.35f * _day.Daylight) * (0.6f + 0.4f * Mathf.Sin((float)_time + phase));
-        DrawCircle(p, i % 4 == 0 ? 0.8f : 0.5f, new Color(0.82f, 0.79f, 0.57f, alpha));
     }
 
     // Wind drives direction and flutter while the original tree-origin fall cycle stays intact.

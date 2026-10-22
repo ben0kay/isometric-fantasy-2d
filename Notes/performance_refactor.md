@@ -1,7 +1,7 @@
 # Production World — Performance Refactor Handoff
 
 **Date:** 2026-10-22  
-**Status:** Audit / proposed work only. No runtime refactors have been made by this note.  
+**Status:** Original source audit plus completed implementation handoffs below. Original observations are historical where a completed pass supersedes them.
 **Target:** `SCENES/World/World.tscn` and production environment/runtime systems (Godot C#).  
 **Authoring rules:** Read root `README.md`, `CodePreferences.md`, **[`SCENES/World/scene organize.md`](../SCENES/World/scene%20organize.md)**, `SCENES/World/README.md`, and the README beside each system before editing. Follow the new *Performance-first rules for every new mechanic*. Preserve data-driven Resource profiles, F9 live controls, streaming, and all DEBUG scenes.
 
@@ -166,3 +166,13 @@ Falling leaves retain one shared renderer with at most 40 reused slots; disabled
 P0-A and P0-B are implemented in the separately authorized snow pass. Enabled=false immediately clears/restores all snow surfaces and removes GPU snowfall. Coverage sleeps at settled endpoints; Resource Changed events, SetCoverage and explicit chunk registration/re-entry apply changes/wake transitions. Rate zero/Snowfall=false removes flakes independently of settled coverage. Active snowfall only rewrites changed view/wind inputs. The cover is now one static world-bounded quad (world-space shader, viewport clipping), avoiding camera-driven coverage callbacks. Shared wind and source-keyed wetness links preserve snow-overlay composition without polling; they unregister at zero snow/unload. No scene reparenting or weather probability scheduler was added.
 
 Remaining idle work: streamed adapter setup/caches and shared player surface/water helper; settled visible snow still renders. Active snowfall checks camera/wind each frame; continuous coverage transitions update active chunk adapters. P0-D and remaining P1/P2 work are unchanged and pending. Tests and limitations are recorded in ENVIRONMENT/Weather/Snow/README.md. Local Godot 4.5.1 checks verify lifecycle/appearance parameters, not target 4.7.2 graphical FPS or particle continuity; target-PC trace comparison is still required.
+
+## P0-0 pollen/dust pass implemented — target-PC A/B still required
+
+The old per-speck DrawPollen/DrawCircle path is removed. PollenDust now owns one MultiMesh GPU-drawn quad batch (default 35, cap 100), with seeded shader trajectories, shared wind displacement and daylight response. OFF or zero count frees the helper. No per-speck C# updates, node processes, instance-buffer rebuilds or redraw requests are used during animation. Atmosphere profile setters now emit Changed; F9/Inspector updates wake it directly. Shared atmosphere redraws remain only for leaves/visible torch smoke/embers and one clear when they stop; all-off sleeps. Haze settings/bounds are cached, and disabled haze skips shader writes. No leaf trajectory/source algorithm or rain/snow behavior was changed.
+
+Wake triggers: profile changes, first/last foliage registration and torch visibility. Active work: shared view/daylight/wind checks, changed GPU inputs, and existing enabled non-pollen effects. Off cost: no pollen batch/work; if all atmosphere effects are off, no atmosphere callback. Scaling: one capped batch globally, no per-tree/species polling. Source registration avoids repeated state refresh except zero/nonzero transitions.
+
+ValidatePollenBatch exercises lifecycle/count limits, no pollen-only redraws, unchanged GPU input caching, synthetic canvas bounds, wind/daylight, independent effects and torch visibility. Rain/snow/visibility regressions accompany it. BenchmarkPollen records reproducible CPU-only callback samples; see atmosphere README for numbers. In isolated headless samples, 35-speck Draw mean went from 0.05282ms to no Draw callbacks; shared Process mean from 0.01907ms to 0.00540ms. All-off no longer processed/redrew. This local CPU reduction is too limited to attribute the full reported 30–40 FPS delta: real GPU/driver timings, appearance and target Godot 4.7.2/D3D12 remain unverified. Do not mark the user's machine-level symptom resolved without their repeat A/B capture.
+
+Concurrent FPS diagnostics fixes were preserved without changing DEBUG behavior in this pass. P0-D and remaining P1/P2 phases are still pending; completed rain/snow handoffs remain valid.
