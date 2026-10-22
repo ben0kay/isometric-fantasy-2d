@@ -5,6 +5,7 @@ public partial class TestPlayerMovement : CharacterBody2D
 {
     [ExportGroup("References")]
     [Export] public TopDownTestConfig Config { get; set; }
+    public float SurfaceSpeedMultiplier { get; set; } = 1f;
     private TestPlayerInput _input;
 
     #region Lifecycle
@@ -22,7 +23,7 @@ public partial class TestPlayerMovement : CharacterBody2D
     // =========================================================
     public override void _PhysicsProcess(double delta)
     {
-        Velocity = _input.ReadMovement() * Config.WalkSpeed;
+        Velocity = _input.ReadMovement() * Config.WalkSpeed * Mathf.Clamp(SurfaceSpeedMultiplier, 0.1f, 1f);
         MoveAndSlide();
     }
     #endregion

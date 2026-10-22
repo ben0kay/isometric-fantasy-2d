@@ -9,6 +9,7 @@ public partial class DebugRainSplashes : Node2D
     private readonly Splash[] _pool = new Splash[96];
     private readonly List<Rect2> _blocked = new();
     private readonly RandomNumberGenerator _random = new() { Seed = 71391 };
+    private readonly List<LiquidRegion> _liquids = new();
     private Sprite2D _player;
     private Rect2 _world;
     private float _budget;
@@ -21,6 +22,8 @@ public partial class DebugRainSplashes : Node2D
     {
         // Match rain visibility at night without a separate light for every splash.
         Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded };
+        foreach (Node node in GetTree().GetNodesInGroup("debug_liquid_regions"))
+            if (node is LiquidRegion region) _liquids.Add(region);
         Node2D actors = GetNode<Node2D>("../../Actors");
         _world = ((DebugWorldScatter)actors).Config.WorldBounds;
         foreach (Node child in actors.GetChildren())
@@ -104,6 +107,7 @@ public partial class DebugRainSplashes : Node2D
     // =========================================================
     private bool ClearGround(Vector2 point, Rect2 player)
     {
+        foreach (LiquidRegion region in _liquids) if (GodotObject.IsInstanceValid(region) && region.Active && region.Contains(point, 3f)) return false;
         if (player.HasPoint(point)) return false;
         foreach (Rect2 rect in _blocked) if (rect.HasPoint(point)) return false;
         return true;

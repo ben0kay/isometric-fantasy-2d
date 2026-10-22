@@ -20,7 +20,7 @@ Config = ExtResource("config")
 [node name="Clouds" type="Polygon2D" parent="."]
 z_index = 5
 material = SubResource("CloudMaterial")
-polygon = PackedVector2Array(-480, -320, 1440, -320, 1440, 960, -480, 960)
+polygon = PackedVector2Array(-800, -544, 1760, -544, 1760, 1184, -800, 1184)
 
 [node name="Post" type="CanvasLayer" parent="."]
 layer = 10

@@ -43,8 +43,10 @@ The texture is generated once and shared; there are no per-frame image uploads. 
 
 ## Expanded world
 
-The debug cloud-shade Polygon2D now covers the enlarged 1920×1280 world rectangle, while the UI colour grading remains a viewport overlay. Existing torch near the start clearing and comparisons are unchanged.
+The debug cloud-shade Polygon2D now covers the enlarged 2560×1728 world rectangle, while the UI colour grading remains a viewport overlay. Existing torch near the start clearing and comparisons are unchanged.
 
 ## Shared wind integration
 
 Cloud shade now samples integrated displacement from DebugWeather instead of TIME multiplied by a separate CloudVelocity. Changing or reversing wind does not jump the cloud pattern. The old velocity setting was removed; Weather owns wind. See Weather/README.md for current validation.
+
+The lake expansion updates the overlay polygon to world bounds (-800,-544) → (1760,1184). Existing controls and lighting remain independent; see Liquids/README.md for current validation.

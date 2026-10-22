@@ -4,9 +4,9 @@
 
 ## Larger, seeded procedural scenery
 
-- The playable grass area is now **1920 × 1280 world pixels**, four times the original area, bounded from **(-480,-320)** to **(1440,960)**. The original central clearing, player spawn and torch are retained. The path continues to the northern and eastern map borders.
+- The playable grass area is now **2560 × 1728 world pixels**, 1.8 times the previous map area, bounded from **(-800,-544)** to **(1760,1184)**. The original central clearing, player spawn and torch are retained. The path continues to the northern and eastern map borders.
 - All trees and rocks are now **generated at runtime once** from `Actors._Ready()`. The old hand-placed props are no longer in the scene. You will see grass/clearing/path in the editor and **trees/rocks when you run the scene**.
-- The default seed generates up to **58 trees and 24 rocks**, with per-object scale and mirroring and spacing around obstacles, the player clearing and the main path. Alter `Generation/DefaultScatterConfig.tres` for different arrangements, quantities and size ranges. The seed is repeatable; change it to get a new pattern.
+- The default seed generates up to **80 trees and 34 rocks**, with per-object scale and mirroring and spacing around obstacles, the player clearing and the main path. Alter `Generation/DefaultScatterConfig.tres` for different arrangements, quantities and size ranges. The seed is repeatable; change it to get a new pattern.
 - **Tree and rock collisions follow the visual changes.** The generator scales each StaticBody2D root (rather than only its Sprite) and flips CollisionPolygon2D ground footprints alongside mirrored artwork. Rock bases remain collidable without blocking the entire sprite silhouette.
 - **All effects still work:** day/night and moving projected shadows, tree-canopy wind, torchlight, smooth cloud shade, haze, pollen, leaves, smoke and embers. DayNight and Atmosphere cache generated objects *after* scattering completes.
 - See the [generation guide](Generation/README.md), [tree guide](Trees/README.md) and [rock guide](Rocks/README.md).
@@ -28,7 +28,7 @@ The world grass/path and bounds are still **authored directly in the scene**, no
 
 The update stays inside `DEBUG/TopDownTest/`, with no new production world, environment, items or survival systems. Procedural props are instantiated only at scene startup and never scattered each frame. Rock/tree spacing is approximate; no complete pathfinding or world streaming is included.
 
-Scene resource paths, node order, prop counts, overlay dimensions and generated collider-transform logic were inspected statically. The environment used for this change does **not** include Godot/.NET, so compile/visual/physics tests need to be run locally. Use **Debug → Visible Collision Shapes** and watch Godot's output for generated totals.
+Scene resource paths, node order, prop counts, overlay dimensions and generated collider-transform logic were inspected statically. Current build/render/physics checks are detailed in Liquids/README.md; Windows D3D12 and target hardware still need local checking. Use **Debug → Visible Collision Shapes** and watch Godot's output for generated totals.
 
 ## Rain and unified wind prototype
 
@@ -47,3 +47,9 @@ Ground/ contains the separate grass palette, fine surface-detail and sampled-noi
 ## Removable snow test
 
 SnowTest/ implements the snow-accumulation note as an independent scene instance, initially off. Its left-side panel controls coverage, falling snow/intensity and automatic accumulation/melting. Tree canopies and all flat ground (including path/clearing) receive snow while wind/shadows remain independent. Toggle off to compare, or remove the SnowTest scene instance and folder to discard it. See [snow guide](SnowTest/README.md) for exact cleanup, settings and limitations.
+
+## Lake, wading and enlarged world
+
+[Liquids/](Liquids/README.md) adds one organic lake southeast of the clearing, with independent liquid-type data, depth colours, shared-wind ripples, a wet bank and walk-in sprite submersion. The right-side panel includes a Go to lake bank button. Its footprint excludes trees, rocks and grass at startup; ground snow stays beneath the water. The player body/camera remain stable while its sprite dips and lower part is clipped. Disabling the test restores normal traversal.
+
+The larger world, camera, walls, grass and atmosphere bounds now agree at 2560×1728. Scattering still runs once. Gravel edges also use a wider smooth fade with restrained pebble contrast, avoiding the old broken/blotchy outer coverage. See the liquid guide for tests, limits and removal hooks.

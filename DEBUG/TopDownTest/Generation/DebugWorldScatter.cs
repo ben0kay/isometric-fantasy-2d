@@ -11,13 +11,14 @@ public partial class DebugWorldScatter : Node2D
     [Export] public ScatterMasterConfig Config { get; set; }
 
     private readonly List<(Vector2 Center, float Radius)> _occupied = new();
+    private readonly List<LiquidRegion> _liquids = new();
 
     // Keep the debug trail open from the northern edge through the starting clearing and east.
     // Coordinates align with the authored Polygon2D path in TopDownVisualTest.tscn.
     private static readonly Vector2[] MainPath =
     {
-        new(453f, -320f), new(460f, 120f), new(467f, 280f),
-        new(575f, 395f), new(680f, 441f), new(960f, 446f), new(1440f, 469f)
+        new(453f, -544f), new(460f, 120f), new(467f, 280f),
+        new(575f, 395f), new(680f, 441f), new(960f, 446f), new(1760f, 469f)
     };
 
     #region Setup
@@ -30,6 +31,8 @@ public partial class DebugWorldScatter : Node2D
             GD.PushWarning("Debug scatter needs a config and both packed scenery scenes.");
             return;
         }
+        foreach (Node node in GetTree().GetNodesInGroup("debug_liquid_regions"))
+            if (node is LiquidRegion region) _liquids.Add(region);
         var random = new RandomNumberGenerator { Seed = (ulong)(uint)Config.Seed };
         int trees = SpawnSet(random, TreeScene, true, Mathf.Max(0, Config.TreeCount));
         int rocks = SpawnSet(random, RockScene, false, Mathf.Max(0, Config.RockCount));
@@ -91,6 +94,8 @@ public partial class DebugWorldScatter : Node2D
     {
         if (Config == null || !Config.WorldBounds.HasPoint(point)) return false;
         float extra = Mathf.Max(0f, clearance);
+        foreach (LiquidRegion region in _liquids)
+            if (region.Contains(point, extra + 32f)) return false;
         float clearing = Config.StartClearingRadius + extra;
         if (point.DistanceSquaredTo(Config.PlayerSpawn) < clearing * clearing) return false;
         if (TooNearPath(point, Config.PathHalfWidth + extra)) return false;
@@ -122,6 +127,10 @@ public partial class DebugWorldScatter : Node2D
             float clearing = Config.StartClearingRadius + radius;
             if (candidate.DistanceSquaredTo(Config.PlayerSpawn) < clearing * clearing) continue;
             if (TooNearPath(candidate, radius + Config.PathHalfWidth)) continue;
+            bool nearWater = false;
+            foreach (LiquidRegion region in _liquids)
+                if (region.Contains(candidate, Mathf.Max(radius, visualRadius) + 36f)) { nearWater = true; break; }
+            if (nearWater) continue;
 
             bool blocked = false;
             foreach (var other in _occupied)

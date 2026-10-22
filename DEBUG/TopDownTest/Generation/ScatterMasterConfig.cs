@@ -5,12 +5,12 @@ using Godot;
 public partial class ScatterMasterConfig : Resource
 {
     [ExportGroup("World")]
-    [Export] public Rect2 WorldBounds { get; set; } = new(-480f, -320f, 1920f, 1280f);
+    [Export] public Rect2 WorldBounds { get; set; } = new(-800f, -544f, 2560f, 1728f);
     [Export] public int Seed { get; set; } = 213876;
 
     [ExportGroup("Population")]
-    [Export(PropertyHint.Range, "0,150,1")] public int TreeCount { get; set; } = 58;
-    [Export(PropertyHint.Range, "0,100,1")] public int RockCount { get; set; } = 24;
+    [Export(PropertyHint.Range, "0,150,1")] public int TreeCount { get; set; } = 80;
+    [Export(PropertyHint.Range, "0,100,1")] public int RockCount { get; set; } = 34;
     [Export(PropertyHint.Range, "1,120,1")] public int AttemptsPerObject { get; set; } = 65;
 
     [ExportGroup("Variation")]

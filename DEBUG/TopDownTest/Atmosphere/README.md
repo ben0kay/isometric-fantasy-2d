@@ -54,7 +54,7 @@ The texture is generated once and shared; there are no per-frame image uploads. 
 
 ## Expanded map and generated trees
 
-The new debug world is 1920×1280 (origin -480,-320). Ground haze covers the enlarged polygon and samples its edge fade against the configurable debug scatter bounds instead of the old 960×640 values. Pollen wraps across the full area. Tree crown positions are collected **after runtime generation**, and the leaf sources are distributed across more of the available trees. Smoke/embers remain near the unchanged central torch. These are still capped preview particle counts, not scaled-up particle counts per square metre.
+The new debug world is 2560×1728 (origin -480,-320). Ground haze covers the enlarged polygon and samples its edge fade against the configurable debug scatter bounds instead of the old 960×640 values. Pollen wraps across the full area. Tree crown positions are collected **after runtime generation**, and the leaf sources are distributed across more of the available trees. Smoke/embers remain near the unchanged central torch. These are still capped preview particle counts, not scaled-up particle counts per square metre.
 
 ## Shared wind integration
 
@@ -67,3 +67,5 @@ The leaf effect now reuses the shared Weather wind vector. `LeafCount` is the ca
 **Try it:** Keep Falling leaves enabled. Set the Weather wind slider to 0 and observe sparse mostly vertical falling. Move it to +3 to see more leaves blowing to the right, then −3 to see them drift left. Tweak `LeafWindCountBoost` and `LeafWindDrift` independently if the effect is too busy or too forceful. Counts remain hard-capped at 40 and no particle nodes are spawned.
 
 Only the debug atmosphere renderer/configuration has changed. Wind, rain, tree sway, weather controls and production folders are otherwise untouched. Gameplay testing in the Godot .NET editor is still needed.
+
+The lake expansion updates the overlay polygon to world bounds (-800,-544) → (1760,1184). Existing controls and lighting remain independent; see Liquids/README.md for current validation.

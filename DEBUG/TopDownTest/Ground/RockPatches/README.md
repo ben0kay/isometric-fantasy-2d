@@ -24,6 +24,10 @@ These helpers assume static rocks: moving/removing rocks after setup requires re
 
 ## Cost and validation
 
-Default scene adds 24 small quad draws sharing one mesh and one shader material, plus one generated cellular texture. No full-map shader loop over rocks, per-frame texture uploads or per-pebble scene nodes. The toggle hides the entire decal group. Target hardware profiling is still required before promotion.
+Default scene adds 34 small quad draws sharing one mesh and one shader material, plus one generated cellular texture. No full-map shader loop over rocks, per-frame texture uploads or per-pebble scene nodes. The toggle hides the entire decal group. Target hardware profiling is still required before promotion.
 
 C# compiles with Godot 4.5.1 source generators and against GodotSharp 4.7.2 / .NET 8. Full-scene software OpenGL rendering verified all 24 decals, independent toggle behaviour and the on/off visual comparison. The screenshots were inspected for ground blending and preserved grass/scenery. Windows D3D12 and hardware performance remain local checks.
+
+## Smoother transition pass
+
+OrganicEdge now uses low-frequency two-axis warping and a wide continuous squared alpha falloff. Small stone noise no longer breaks up the coverage mask. Fine pebble contrast is restrained so cell colours read as small gravel rather than large square blotches. The support rectangle retains a fully transparent margin. Shape/material remain separate from the liquid and grass implementations. Lake placement reserves enough space around rocks to keep ordinary gravel out of the water.
