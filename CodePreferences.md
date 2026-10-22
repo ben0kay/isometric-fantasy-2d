@@ -20,3 +20,22 @@ Only do one commit for github per job instead of multiple commits.
 Refer to https://github.com/ben0kay/godot-tower-defense for folder / notes structure
 Refer to https://github.com/ben0kay/isometric-new-2d for similar game mechanics
 Refer to https://github.com/ben0kay/Ben_MonsterExpansion for Grim Dawns spawn mechanics just for ideas
+
+## Performance-first rules for every new mechanic
+
+**Design for low idle cost from the beginning, not just functional correctness.** Before writing a feature, identify what activates it, what work happens while active, and exactly what stops that work afterward. Avoid introducing an always-running `_Process` or `_PhysicsProcess` by default.
+
+- **Inactive means dormant:** If an effect is off, intensity is zero, or its animation has finished, it should not keep simulating, checking objects, redrawing, or rewriting GPU properties. Use `SetProcess(false)`, `SetPhysicsProcess(false)`, emitter shutdown, and explicit activation where suitable. Keep a way for UI/config changes to wake it without idle polling.
+- **Prefer triggers and signals:** A tree should process fire only after `TryIgnite()` triggers ignition; an axe-hit wobble should animate only after a hit and stop afterward. Do not give every idle tree a fire-checking loop.
+- **Rain and snowfall example:** Zero intensity means OFF, not invisible particles still updating. Suspend emission, splash work and unnecessary callbacks; allow intentional fade-out/remaining effects to finish, then sleep. Changing the slider or weather state must reactivate the effect directly.
+- **Use shared systems:** Prefer one manager for many objects, pooled effects, shared GPU particles/materials, and cached data instead of thousands of per-instance idle loops.
+- **Only update changed data:** Don't assign the same shader uniforms, settings, particle bounds or light properties every frame. Apply configuration when changed, and throttle legitimately continuous cosmetic changes if it preserves the appearance.
+- **Respect streaming and visibility:** Limit queries to nearby or active chunks; register/unregister on spawn and unload. Avoid full-world/group scans every frame. Suspend off-screen cosmetic work without breaking persistent simulation.
+- **Keep hot paths allocation-free where practical:** Avoid repeated scene-tree searches, resource loads, temporary lists/arrays, LINQ, material creation, or redundant `QueueRedraw()` in frequent callbacks.
+- **Do not over-optimize away necessary animation:** Clock, sunlight and active wind may be genuinely continuous. Justify their update frequency and avoid duplicate calculations; don't freeze functioning visuals.
+- **Verify idle and active performance:** Test never-active, activation, deactivation, settled zero state, reactivation, many instances, and chunk unload/reload. Use Godot profiler/frame traces to verify idle callbacks/draws and allocations are absent or intentionally minimal. Do not claim measured improvements without measurements.
+- **Include a performance handoff:** When implementing, describe the wake-up trigger, sleep/shutdown condition, any remaining idle per-frame work, scaling strategy, and what was actually tested.
+
+**Default design question:** What makes this mechanic run, what makes it stop, and what is its cost while nothing is happening?
+
+These requirements apply alongside the existing modular, data-driven, C# and documentation preferences.
