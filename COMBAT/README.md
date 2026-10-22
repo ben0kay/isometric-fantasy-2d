@@ -1,6 +1,6 @@
 # COMBAT
 
-> **Status:** Planning/folder foundation only. This pass does not implement systems or content.
+> **Status:** Shared combat modules are planned; the production axe and shared Entity implement limited tool-hit/health behavior outside this folder. See [COMBAT_IMPLEMENTATION.md](COMBAT_IMPLEMENTATION.md) for the proposed C0–C5 Codex roadmap (not yet implemented).
 
 Shared combat resolution for player, creatures, enemies and NPCs: damage, hit testing, projectiles, weapons and defense. Player input/weapon usage stays in ENTITIES/Player/Combat. Timed generic conditions belong in SYSTEMS/Effects.
 
