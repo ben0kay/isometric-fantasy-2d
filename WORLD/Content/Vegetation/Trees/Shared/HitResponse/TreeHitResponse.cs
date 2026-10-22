@@ -8,6 +8,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     public Color FoliageColour { get; set; } = new(0.58f, 0.57f, 0.24f);
     public bool FoliageEnabled { get; set; } = true;
     public bool HealthyLeaves { get; private set; } = true;
+    public event System.Action VisualTransformChanged;
     public int ReceivedHits { get; private set; }
     public Vector2 HitAnchor => ((Node2D)GetParent()).GlobalPosition;
     private Sprite2D _sprite;
@@ -91,6 +92,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
         float progress = Mathf.Clamp(_age / Mathf.Max(0.1f, Config.WobbleSeconds), 0f, 1f);
         float angle = Mathf.Sin(progress * Mathf.Tau * 2f) * (1f - progress) * (1f - progress) * Mathf.DegToRad(Config.WobbleDegrees) * _push;
         _sprite.Transform = new Transform2D(angle, Vector2.Zero) * _original;
+        VisualTransformChanged?.Invoke();
         bool alive = false;
         if (_leaves != null)
             for (int i = 0; i < _leaves.Length; i++)
@@ -103,7 +105,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
                 alive = true;
             }
         QueueRedraw();
-        if (progress >= 1f && !alive) { _sprite.Transform = _original; SetProcess(false); }
+        if (progress >= 1f && !alive) { _sprite.Transform = _original; VisualTransformChanged?.Invoke(); SetProcess(false); }
     }
 
     // Only this tree emits these transient leaves; ambient wind leaves remain independent.
@@ -126,7 +128,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     // =========================================================
     public override void _ExitTree()
     {
-        if (GodotObject.IsInstanceValid(_sprite)) _sprite.Transform = _original;
+        if (GodotObject.IsInstanceValid(_sprite)) { _sprite.Transform = _original; VisualTransformChanged?.Invoke(); }
     }
     #endregion
 }

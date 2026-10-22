@@ -32,3 +32,5 @@ Incremental source cache coverage in ValidateSceneryVisibility: stationary scene
 `ValidateCloudWindCaching.tscn` checks cloud never-active/off/zero/wake and changed shader uploads, stable vegetation wind uploads, inactive chunk/re-entry, fresh material initialization and unload restoration. Counters verify writes rather than inferring dormancy solely from SetProcess flags.
 
 `ValidateGradeTorchSleeping.tscn` checks event-driven grade uniforms, disabled/never-active grade, all shared preview lamps, unchanged static torch settings during flicker, off/zero-energy dormancy, deferred settings/wake and removal/unsubscribe (21 checks).
+
+`ValidateSunCaching.tscn` verifies paused caches, independent wind/actors/hit wobble/lightning, manual/settings invalidation, exact mode and pixel error/camera lifecycle (20 checks). `BenchmarkSunShadows.tscn` compares paused, 30-second and 1440-second cycles at simulated 120Hz on a fixed seed with 367 casters; eight warm-up/240 synchronous samples per case, CPU-only, no FPS/GPU claim.

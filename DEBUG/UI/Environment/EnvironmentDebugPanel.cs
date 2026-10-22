@@ -41,12 +41,13 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         var time = Section(controls, "Time", true);
         Slider(time, "Hour", 0, 23.999, 0.01, () => _environment.Clock.Hour, v => _environment.Clock.SetHour((float)v));
         Toggle(time, "Pause clock", () => _environment.Clock.Config.Paused, v => _environment.Clock.Config.Paused = v);
-        Slider(time, "Seconds per day", 5, 600, 1, () => _environment.Clock.Config.CycleSeconds, v => _environment.Clock.Config.CycleSeconds = (float)v);
+        Slider(time, "Seconds per day", 5, 3600, 1, () => _environment.Clock.Config.CycleSeconds, v => _environment.Clock.Config.CycleSeconds = (float)v);
         var wind = Section(controls, "Shared wind", true);
         Slider(wind, "Left / calm / right", -3, 3, 0.05, () => s.Wind.Strength, v => s.Wind.Strength = (float)v);
         var lighting = Section(controls, "Lighting and clouds", false);
         Toggle(lighting, "Colour grading", () => s.ColourGrade.Enabled, v => s.ColourGrade.Enabled = v);
         Toggle(lighting, "Soft sun shadows", () => s.Lighting.SoftShadows, v => s.Lighting.SoftShadows = v);
+        Slider(lighting, "Sun shadow tolerance (px)", 0, 1, 0.05, () => s.Lighting.ShadowProjectionTolerancePixels, v => s.Lighting.ShadowProjectionTolerancePixels = (float)v);
         Toggle(lighting, "Moving cloud shade", () => s.Clouds.Enabled, v => s.Clouds.Enabled = v);
         Toggle(lighting, "Flickering torch", () => s.Torch.Enabled, v => s.Torch.Enabled = v);
         Slider(lighting, "Contrast", 0.8, 1.5, 0.01, () => s.ColourGrade.Contrast, v => s.ColourGrade.Contrast = (float)v);

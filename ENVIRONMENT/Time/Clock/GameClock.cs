@@ -4,6 +4,7 @@ public partial class GameClock : Node
 {
     public ClockMasterConfig Config { get; set; }
     public float Hour { get; private set; }
+    public ulong ManualRevision { get; private set; }
     // Initialize before consumers; scrubbing is also available while paused.
     // =========================================================
     public override void _Ready() { ProcessPriority = -30; SetHour(Config.StartHour); }
@@ -12,9 +13,9 @@ public partial class GameClock : Node
     public override void _Process(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("GameClock.Process");
-        if (!Config.Paused) SetHour(Hour + (float)delta * 24f / Mathf.Max(1f, Config.CycleSeconds));
+        if (!Config.Paused) Hour = Mathf.PosMod(Hour + (float)delta * 24f / Mathf.Max(1f, Config.CycleSeconds),24f);
     }
     // Public command for developer tools and future time-setting callers.
     // =========================================================
-    public void SetHour(float hour) => Hour = Mathf.PosMod(hour, 24f);
+    public void SetHour(float hour) { Hour = Mathf.PosMod(hour,24f); ManualRevision++; }
 }

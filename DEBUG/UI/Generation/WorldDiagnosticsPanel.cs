@@ -83,7 +83,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
             + $"Engine process monitor (sampled) {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
             + $"Stream last/peak {stream.LastFrameMilliseconds:F2}/{stream.PeakFrameMilliseconds:F2}ms | data last/peak {stream.LastDataMilliseconds:F2}/{stream.PeakDataMilliseconds:F2}ms\n"
             + $"Last item {stream.LastApplyMilliseconds:F2}ms | chunk bind total {stream.LastBindMilliseconds:F2}ms | nav {stream.LastNavigationMilliseconds:F2}ms | unload {stream.LastUnloadMilliseconds:F2}ms\n"
-            + $"Cosmetic chunks {environment.CosmeticChunkCount}/{environment.RegisteredChunkCount} | sun casters updated {shadows.UpdatedCasterCount}/{shadows.TotalCasterCount} | sun {shadows.LastProjectionMilliseconds:F2}ms\n"
+            + $"Cosmetic chunks {environment.CosmeticChunkCount}/{environment.RegisteredChunkCount} | sun casters relevant {shadows.UpdatedCasterCount}/{shadows.TotalCasterCount} | projections {shadows.LastFrameProjectionWrites} | sun {shadows.LastProjectionMilliseconds:F2}ms\n"
             + $"Published {stream.PublishedChunks} / released {stream.ReleasedChunks} | {stream.PlayerBiome}";
     }
     // Smooth warning colours: green at 60+, yellow at 45, orange at 30, red at 15 or below.
