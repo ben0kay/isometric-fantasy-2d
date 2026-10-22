@@ -81,3 +81,26 @@ Player location/surface layer and clock round-trip; finished inventory/needs/equ
 - Manual checks completed, failures and reproduction steps.
 - Performance observations with measured snapshot/frame timings and edited-data size.
 - Any changes Copilot made, if separately authorized; never label this pass accepted solely because it was pushed.
+
+Copilot results:
+P4 handoff results
+Automated checks passed on commit ce6767d1b37b34210b010b743ea2133d95c2ae15 (Implement P4 private campaign checkpoints and local test handoff). I made no source-code changes.
+
+Check	Result
+dotnet --info / dotnet --version	Exit 0; SDK 10.0.402, .NET 8 SDK 8.0.426 also installed
+dotnet build .\isometric-fantasy-2d.csproj	Exit 0; build succeeded, 0 warnings, 0 errors
+Godot --version	Exit 0; 4.7.2.stable.mono.official
+Headless editor import	Exit 0
+P4 write phase	Exit 0; P4 PASS: 31 checks
+P4 read phase, separate process	Exit 0; P4 PASS: 33 checks
+Macro generation regression	Exit 0; P1 PASS: 377085 checks
+Feature reservation regression	Exit 0; P2 PASS: 175 checks
+Chunk streaming regression	Exit 0; P3 PASS: 4403 checks
+Scenery visibility regression	Exit 0; SCENERY STABILITY PASS: 167 checks
+Commands used the Godot console executable at Q:\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe. The full regression scene paths and P4 fixture are listed in the P4 test handoff.
+
+Warnings, not test failures: Godot reported Camera2D overridden to physics process mode due to use of physics interpolation during both P4 phases and the chunk-streaming regression. The scenery test also reported grass.tuft: some objects could not fit; reduce count/spacing or enlarge bounds. Its stability assertions still passed.
+
+No tracked source changes are present; the worktree reports only untracked .uid sidecars, which I left untouched. The P4 fixtures used their isolated validation storage; real profile and campaign saves were not intentionally targeted.
+
+Still outstanding: the handoff’s in-editor graphical, save/quit/recovery interaction, and profiler/performance checks. These headless runs do not validate graphical smoothness or FPS, so P4 is not fully accepted yet. The machine has Intel HD Graphics 530 and NVIDIA GeForce GTX 1080 adapters; no graphical renderer was exercised by these checks.
