@@ -60,6 +60,7 @@ public partial class OcclusionController : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("OcclusionController.Process");
         if (!GodotObject.IsInstanceValid(_player)) return;
         float dt = (float)delta;
         _untilCheck -= dt;

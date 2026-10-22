@@ -180,6 +180,7 @@ public partial class BurningEffect : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("BurningEffect.Process");
         if (_ended) return;
         _time += (float)delta;
         RefreshWind();

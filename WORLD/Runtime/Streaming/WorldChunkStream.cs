@@ -90,6 +90,7 @@ public partial class WorldChunkStream : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldChunkStream.Process");
         if (!_bound) return;
         var timer = System.Diagnostics.Stopwatch.StartNew();
         if (_applying != null && _applying.Coord.Distance(PlayerChunk) > _settings.UnloadRadius) Release(_applying);
@@ -110,7 +111,8 @@ public partial class WorldChunkStream : Node
             {
                 _applying.Binding ??= BindChunkSteps(_applying).GetEnumerator();
                 var bindTimer = System.Diagnostics.Stopwatch.StartNew();
-                bool pending = _applying.Binding.MoveNext();
+                bool pending;
+                using (RuntimeFrameTrace.Measure("Chunk effect binding")) pending = _applying.Binding.MoveNext();
                 _applying.BindMilliseconds += bindTimer.Elapsed.TotalMilliseconds;
                 if (!pending)
                 {
@@ -162,6 +164,7 @@ public partial class WorldChunkStream : Node
     // =========================================================
     private Chunk Begin(ChunkCoord coord)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Chunk data and ground");
         var chunk = new Chunk { Coord = coord, State = WorldChunkState.Queued };
         var timer = System.Diagnostics.Stopwatch.StartNew();
         _chunks.Add(coord,chunk); chunk.State = WorldChunkState.GeneratingData; chunk.Items = _data.Build(coord); LastDataMilliseconds = timer.Elapsed.TotalMilliseconds;
@@ -178,6 +181,7 @@ public partial class WorldChunkStream : Node
     // =========================================================
     private void ApplyOne(Chunk chunk)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Chunk instantiate");
         var item = chunk.Items[chunk.Applied++]; if (_removed.Contains(item.Id)) return;
         var content = item.Content; var tree = content as TreeDefinition;
         var scene = tree != null ? GD.Load<PackedScene>("res://WORLD/Content/Vegetation/Trees/Shared/Tree.tscn") : content.Variants[item.Variant];
@@ -233,6 +237,7 @@ public partial class WorldChunkStream : Node
     // =========================================================
     private void Release(Chunk chunk)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Chunk release");
         var releaseTimer = System.Diagnostics.Stopwatch.StartNew();
         bool loaded = chunk.State == WorldChunkState.Loaded; chunk.State = WorldChunkState.Unloading;
         chunk.Binding?.Dispose(); chunk.Binding = null;

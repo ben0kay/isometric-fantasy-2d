@@ -101,6 +101,7 @@ public partial class EnvironmentRuntime : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("EnvironmentRuntime.Process");
         if (!Initialized) return;
         long started = System.Diagnostics.Stopwatch.GetTimestamp();
         Rect2 view = SceneryVisualBounds.View(this).Grow(Mathf.Max(64,Config.SceneryPrepareMargin));

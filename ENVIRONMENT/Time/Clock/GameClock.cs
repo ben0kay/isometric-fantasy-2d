@@ -11,6 +11,7 @@ public partial class GameClock : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("GameClock.Process");
         if (!Config.Paused) SetHour(Hour + (float)delta * 24f / Mathf.Max(1f, Config.CycleSeconds));
     }
     // Public command for developer tools and future time-setting callers.

@@ -20,6 +20,7 @@ public partial class WorldLiquidRainSplashes : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidRainSplashes.Process");
         if (!GodotObject.IsInstanceValid(Region) || Config == null || Weather == null) return;
         if (!Region.Active || !Config.RainSurfaceSplashes)
         {
@@ -94,6 +95,7 @@ public partial class WorldLiquidRainSplashes : Node2D
     // =========================================================
     public override void _Draw()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidRainSplashes.Draw");
         if (Region == null || Config == null || !Region.Active || !Config.RainSurfaceSplashes) return;
         float lifetime = Mathf.Clamp(Config.RainSplashLifetime, 0.2f, 1.2f);
         float opacity = Mathf.Clamp(Config.RainSplashOpacity, 0f, 1f);

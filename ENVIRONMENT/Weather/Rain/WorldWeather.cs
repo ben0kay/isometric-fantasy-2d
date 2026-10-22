@@ -35,6 +35,7 @@ public partial class WorldWeather : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldWeather.Process");
         Rain = Mathf.MoveToward(Rain, Mathf.Clamp(Config.RainIntensity, 0f, 1f), (float)delta / Mathf.Max(0.1f, Config.TransitionSeconds));
         _rainLayers.UpdateRain(Rain, WindStrength, VisibleWorldRect());
     }

@@ -1,0 +1,15 @@
+# Optional runtime frame trace
+
+`RuntimeFrameTrace` is shared diagnostic plumbing, not a game system or per-object processor. Production callbacks use value-type timing scopes that are inactive by default. The removable right-side F9 panel starts/stops a capture, resets it and copies its report. Only one main-thread capture is supported at a time; the owning panel stops it when removed. No production code depends on DEBUG.
+
+Capture on the target machine: enable **Trace C# callbacks**, walk until a hitch, then use **Copy trace report** and paste it back. F9 can hide the controls while recording continues. The worst frame interval above 25ms stays recorded until Reset; ordinary subsequent frames do not erase its callback breakdown. Do not pause the debugger or alt-tab during a representative capture; those waits can dominate the interval. Reset after any such interruption.
+
+Scopes cover production environment callbacks, wind/wetness/snow, atmospheric/weather drawing, lighting, entities/player/tool feedback, liquids, occlusion, streaming and debug UI. Streaming data/instantiation/release/effect-binding, navigation rebuilds and actor-source refreshes have subordinate scopes. Nested child durations are subtracted from their parents before summing: timing a streaming callback and its data generation does not count the same duration twice. Scopes aggregate all instances of each named callback within a frame, avoiding one display row per tree/chunk.
+
+The report distinguishes observed frame intervals from measured callback CPU wall time. Intervals can include native engine/rendering work, scheduling, waits, VSync and uninstrumented code. Native work called synchronously inside a scope contributes to that scope. Unmeasured time is not proof of C# CPU usage. GPU work and arbitrary .NET methods are not sampled; if a large interval has little measured callback time, use an external .NET/engine sampling profiler rather than assuming another scenery script is responsible.
+
+Main-thread managed allocation and global generation 0/1/2 collection-count deltas span the same observed frame interval. A collection-count change is a clue, not a measurement of GC pause duration or proof that GC caused the hitch. First-use metric registration and formatting/copying a report can themselves allocate. Storage is bounded at 96 named metrics and 64 nested scopes, with preallocated snapshots and no per-callback log messages. Report text is formatted on demand at the visible panel's 4Hz refresh rate. Instrumentation has overhead; compare normal performance with tracing disabled.
+
+The engine process monitor in the existing diagnostics is explicitly labelled sampled. It is not synchronized with every other last-value/FPS counter; the trace preserves its own same-frame breakdown instead.
+
+Validation: `TESTS/Generation/ValidateRuntimeTrace.tscn` checks controlled nested exclusive attribution, preservation of a deliberately slow frame, capture while diagnostics are hidden, disable/reset, and removal of the owning world/UI.

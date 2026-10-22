@@ -49,6 +49,7 @@ public partial class WorldAtmosphere : Node2D
     // =========================================================
     public void RefreshTrees()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Atmosphere source refresh");
         _trees.Clear();
         foreach (Node child in Actors.FindChildren("*","",true,false))
             if (child is WorldTree tree && tree.Definition.HasFoliage) _trees.Add((tree,tree.GetNode<TreeHitResponse>("HitResponse")));
@@ -60,6 +61,7 @@ public partial class WorldAtmosphere : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldAtmosphere.Process");
         _time += delta;
         // Keep the bounded pollen/haze pool near the camera rather than spreading it over the finite map.
         _worldBounds = Day.Weather.VisibleWorldRect().Grow(200).Intersection(WorldBounds);
@@ -96,6 +98,7 @@ public partial class WorldAtmosphere : Node2D
     // =========================================================
     public override void _Draw()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldAtmosphere.Draw");
         if (_day == null) return;
         if (Config.Pollen)
             for (int i = 0; i < Mathf.Clamp(Config.PollenCount, 0, 100); i++) DrawPollen(i);

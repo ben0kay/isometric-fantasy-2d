@@ -37,6 +37,7 @@ public partial class PlayerSnowVisual : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("PlayerSnowVisual.Process");
         if (!_attached)
         {
             _sprite.Material = _material; _attached = true;

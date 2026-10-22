@@ -81,6 +81,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Entity.Process");
         float dt = (float)delta;
         _flashTimer = Mathf.Max(0f, _flashTimer - dt);
         float red = Mathf.Clamp(_flashTimer / Mathf.Max(0.05f, Config.HitFlashSeconds), 0f, 1f);

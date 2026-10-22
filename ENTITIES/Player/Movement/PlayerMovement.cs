@@ -23,6 +23,7 @@ public partial class PlayerMovement : CharacterBody2D
     // =========================================================
     public override void _PhysicsProcess(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("PlayerMovement.PhysicsProcess");
         Velocity = _input.ReadMovement() * Config.WalkSpeed * Mathf.Clamp(SurfaceSpeedMultiplier, 0.1f, 1f);
         if (Streaming != null && !Streaming.CanMoveTo(GlobalPosition + Velocity * (float)delta)) Velocity = Vector2.Zero;
         MoveAndSlide();

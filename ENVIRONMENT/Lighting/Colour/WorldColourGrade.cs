@@ -16,6 +16,7 @@ public partial class WorldColourGrade : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldColourGrade.Process");
         _grade.Visible = Config.Enabled;
         _material.SetShaderParameter("contrast", Config.Contrast);
         _material.SetShaderParameter("saturation", Config.Saturation);

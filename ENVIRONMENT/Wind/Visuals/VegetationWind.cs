@@ -27,7 +27,11 @@ public partial class VegetationWind : Node
     }
     // Update only shared variants after the single wind source advances.
     // =========================================================
-    public override void _Process(double delta) => UpdateWind();
+    public override void _Process(double delta)
+    {
+        using var frameTrace = RuntimeFrameTrace.Measure("VegetationWind.Process");
+        UpdateWind();
+    }
     // Initialize and tick using the same shared wind value as shadows and precipitation.
     // =========================================================
     private void UpdateWind()

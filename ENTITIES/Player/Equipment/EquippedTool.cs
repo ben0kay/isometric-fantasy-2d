@@ -35,6 +35,7 @@ public partial class EquippedTool : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("EquippedTool.Process");
         Visible = Config.Enabled;
         if (!Visible) { IsAttacking = false; return; }
         Position = Config.HandAnchor + _playerSprite.Position;

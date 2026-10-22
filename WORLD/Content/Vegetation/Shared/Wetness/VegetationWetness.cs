@@ -66,6 +66,7 @@ public partial class VegetationWetness : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("VegetationWetness.Process");
         if (Weather?.Config == null) return;
         foreach (var pair in _sources) pair.Key.SetShaderParameter("wind_multiplier",pair.Value.GetShaderParameter("wind_multiplier"));
         WeatherProfile settings = Weather.Config;

@@ -38,6 +38,7 @@ public partial class GroundChase : Node
     // =========================================================
     public override void _PhysicsProcess(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("GroundChase.PhysicsProcess");
         if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !GodotObject.IsInstanceValid(_target) || _navigation == null) return;
         EntityDefinition config = _actor.Config;
         float distanceSquared = _actor.GlobalPosition.DistanceSquaredTo(_target.GlobalPosition);

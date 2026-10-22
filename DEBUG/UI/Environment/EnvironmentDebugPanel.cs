@@ -121,6 +121,7 @@ public partial class EnvironmentDebugPanel : CanvasLayer
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("EnvironmentDebugPanel.Process");
         if (_panel == null || !GodotObject.IsInstanceValid(_environment)) return;
         _panel.OffsetBottom = Mathf.Max(200f, GetViewport().GetVisibleRect().Size.Y - 16f);
         if (!_panel.Visible) return;

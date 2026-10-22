@@ -19,6 +19,7 @@ public partial class CloudShade : Polygon2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("CloudShade.Process");
         Visible = Config.Enabled;
         _material.SetShaderParameter("opacity", Config.Opacity);
         _material.SetShaderParameter("drift", -Wind.Displacement);

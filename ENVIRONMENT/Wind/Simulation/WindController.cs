@@ -12,5 +12,9 @@ public partial class WindController : Node
     public override void _Ready() => ProcessPriority = -20;
     // Integrate velocity instead of deriving position from current strength and elapsed time.
     // =========================================================
-    public override void _Process(double delta) => Displacement += Velocity * (float)delta;
+    public override void _Process(double delta)
+    {
+        using var frameTrace = RuntimeFrameTrace.Measure("WindController.Process");
+        Displacement += Velocity * (float)delta;
+    }
 }

@@ -20,6 +20,7 @@ public partial class WorldLiquidWading : Node2D
     // =========================================================
     public override void _PhysicsProcess(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidWading.PhysicsProcess");
         float distance = Region.Active ? Region.SignedDistance(Player.GlobalPosition) : -1f;
         _target = distance <= 0 ? 0f : Mathf.Clamp(distance / Mathf.Max(10f, Region.Definition.DepthDistance), 0f, 1f);
         Player.SurfaceSpeedMultiplier = Mathf.Lerp(1f, Region.Definition.MovementMultiplier, _target);
@@ -29,6 +30,7 @@ public partial class WorldLiquidWading : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidWading.Process");
         _time += (float)delta;
         Immersion = Region.Active ? Mathf.MoveToward(Immersion, _target, (float)delta * 3f) : 0f;
         GlobalPosition = Player.GlobalPosition;
@@ -39,6 +41,7 @@ public partial class WorldLiquidWading : Node2D
     // =========================================================
     public override void _Draw()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidWading.Draw");
         if (Immersion <= 0.01f) return;
         DrawSetTransform(new Vector2(0, -1), 0, new Vector2(1f, 0.35f));
         for (int i = 0; i < 2; i++)

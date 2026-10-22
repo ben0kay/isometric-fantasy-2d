@@ -48,6 +48,7 @@ public partial class WorldSnowfall : GpuParticles2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldSnowfall.Process");
         Visible = Snow.Config.Enabled && Snow.Config.Snowfall;
         Emitting = Visible && Snow.Config.SnowfallRate > 0f;
         AmountRatio = Mathf.Clamp(Snow.Config.SnowfallRate, 0.001f, 1f);

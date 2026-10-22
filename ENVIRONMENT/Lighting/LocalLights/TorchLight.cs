@@ -13,6 +13,7 @@ public partial class TorchLight : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("TorchLight.Process");
         _elapsed += (float)delta;
         ApplySettings();
         float flicker = 1f + 0.07f * Mathf.Sin(_elapsed * 8.7f) + 0.035f * Mathf.Sin(_elapsed * 17.3f);

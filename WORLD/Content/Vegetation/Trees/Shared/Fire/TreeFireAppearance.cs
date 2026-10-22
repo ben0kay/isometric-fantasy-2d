@@ -89,6 +89,7 @@ public partial class TreeFireAppearance : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("TreeFireAppearance.Process");
         float delay = Mathf.Max(0f, Config.IgnitionDelaySeconds), duration = Mathf.Max(0.1f, Config.TransitionSeconds);
         _elapsed = BurnProgress * (delay + duration);
         float blend = Mathf.Clamp((_elapsed - delay) / duration, 0f, 1f);

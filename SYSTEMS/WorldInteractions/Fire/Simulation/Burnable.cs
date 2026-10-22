@@ -50,6 +50,7 @@ public partial class Burnable : Node
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Burnable.Process");
         _elapsed += (float)delta;
         BurnProgress = Mathf.Clamp(_elapsed / (Mathf.Max(0f, Profile.IgnitionDelaySeconds) + Mathf.Max(0.1f, Profile.TransitionSeconds)), 0f, 1f);
         if (BurnProgress < 1f) return;

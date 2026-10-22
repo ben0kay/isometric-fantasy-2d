@@ -8,3 +8,5 @@ Controls only issue commands or edit private runtime profile values; they do not
 World diagnostics now occupy a separate scrollable right-side column owned by this same removable panel. F9 hides/shows both columns together. FPS/streaming/sun counters refresh at 4 Hz only while visible; world/biome/reservation details and the culling comparison toggle moved here from F7. F7 now controls only the map.
 
 Validation: C# compiled with Godot source generators; a headless runtime UI smoke check verified right anchoring, F9 hiding/restoring both columns, map-only F7, and independent map/diagnostic visibility.
+
+**Trace C# callbacks** in the right-side diagnostics captures per-system exclusive timings and retains the worst slow-frame breakdown. Enable it, walk until a hitch, then **Copy trace report**. It continues capturing while F9 is hidden; stop/reset it from the same controls. Reports include allocation and GC-count indicators with explicit limitations. See CORE/Diagnostics/README.md.

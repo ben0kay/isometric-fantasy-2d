@@ -6,7 +6,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
 {
     public WorldScene World { get; set; }
     public EnvironmentRuntime Environment { get; set; }
-    private Label _live;
+    private Label _live, _trace;
     private double _statusTimer;
 
     // Use viewport anchors so the diagnostic column stays on the right when the window resizes.
@@ -26,6 +26,20 @@ public partial class WorldDiagnosticsPanel : PanelContainer
         box.AddChild(culling);
         _live = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         box.AddChild(_live);
+        var tracing = new CheckButton { Text = "Trace C# callbacks", FocusMode = Control.FocusModeEnum.None };
+        tracing.Toggled += enabled =>
+        {
+            if (enabled) RuntimeFrameTrace.Start(GetInstanceId());
+            else RuntimeFrameTrace.Stop(GetInstanceId());
+        };
+        box.AddChild(tracing);
+        var resetTrace = new Button { Text = "Reset trace capture", FocusMode = Control.FocusModeEnum.None };
+        resetTrace.Pressed += () => RuntimeFrameTrace.Reset(); box.AddChild(resetTrace);
+        var copyTrace = new Button { Text = "Copy trace report", FocusMode = Control.FocusModeEnum.None };
+        copyTrace.Pressed += () => DisplayServer.ClipboardSet(RuntimeFrameTrace.Report()); box.AddChild(copyTrace);
+        _trace = new Label { Text = "Enable tracing, walk until a hitch, then copy the report. Tracing continues while F9 is hidden.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        box.AddChild(_trace);
         var world = World;
         if (world.MacroMap is not { } map) return;
         var text = new StringBuilder($"Seed {map.Seed} | v{MacroWorldMap.GeneratorVersion} | {map.Columns}×{map.Rows} cells | {map.Regions.Count} regions\nBounds {map.Bounds} | cell {map.CellSize} | 100% land assigned\nHash {map.Hash[..16]} | World {world.Blueprint.WorldId[..12]}\n");
@@ -51,17 +65,22 @@ public partial class WorldDiagnosticsPanel : PanelContainer
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldDiagnosticsPanel.Process");
         if (!Visible || _live == null) return;
         _statusTimer += delta; if (_statusTimer < 0.25) return; _statusTimer = 0;
+        _trace.Text = RuntimeFrameTrace.Report();
         if (World.Stream == null) { _live.Text = "Compatibility preview — chunk streaming disabled"; return; }
         var stream = World.Stream;
         var environment = Environment;
         var shadows = environment.DayNight.Shadows;
         _live.Text = $"Player chunk {stream.PlayerChunk} | loaded {stream.LoadedCount} | pending {stream.PendingCount}\n"
-            + $"{Engine.GetFramesPerSecond()} FPS | engine process {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
+            + $"{Engine.GetFramesPerSecond()} FPS | engine process monitor (sampled) {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
             + $"Stream last/peak {stream.LastFrameMilliseconds:F2}/{stream.PeakFrameMilliseconds:F2}ms | data last/peak {stream.LastDataMilliseconds:F2}/{stream.PeakDataMilliseconds:F2}ms\n"
             + $"Last item {stream.LastApplyMilliseconds:F2}ms | chunk bind total {stream.LastBindMilliseconds:F2}ms | nav {stream.LastNavigationMilliseconds:F2}ms | unload {stream.LastUnloadMilliseconds:F2}ms\n"
             + $"Cosmetic chunks {environment.CosmeticChunkCount}/{environment.RegisteredChunkCount} | sun casters updated {shadows.UpdatedCasterCount}/{shadows.TotalCasterCount} | sun {shadows.LastProjectionMilliseconds:F2}ms\n"
             + $"Published {stream.PublishedChunks} / released {stream.ReleasedChunks} | {stream.PlayerBiome}";
     }
+    // A removed world/debug panel cannot leave global tracing active in another scene.
+    // =========================================================
+    public override void _ExitTree() => RuntimeFrameTrace.Release(GetInstanceId());
 }

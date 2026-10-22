@@ -55,6 +55,7 @@ public partial class WorldEntityPlacement : Node
     // =========================================================
     public void RefreshNavigation(Node2D actors, CharacterBody2D player, Rect2 bounds)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Navigation rebuild");
         if (_navigation == null || !GodotObject.IsInstanceValid(_instance)) return;
         bool active = bounds.HasPoint(_instance.GlobalPosition);
         _instance.ProcessMode = active ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;

@@ -86,6 +86,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("TreeHitResponse.Process");
         float dt = (float)delta; _age += dt;
         float progress = Mathf.Clamp(_age / Mathf.Max(0.1f, Config.WobbleSeconds), 0f, 1f);
         float angle = Mathf.Sin(progress * Mathf.Tau * 2f) * (1f - progress) * (1f - progress) * Mathf.DegToRad(Config.WobbleDegrees) * _push;
@@ -109,6 +110,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     // =========================================================
     public override void _Draw()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("TreeHitResponse.Draw");
         if (_leaves == null) return;
         foreach (Leaf leaf in _leaves)
         {

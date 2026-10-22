@@ -15,6 +15,7 @@ public partial class WorldDayNight : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldDayNight.Process");
         float hour = Clock.Hour, altitude = SunCycle.Altitude(hour);
         Daylight = SunCycle.Edge(-0.12f, 0.20f, altitude);
         float noon = SunCycle.Edge(0f, 0.70f, Mathf.Max(0, altitude));

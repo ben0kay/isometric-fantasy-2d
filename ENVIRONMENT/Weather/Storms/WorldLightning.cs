@@ -105,6 +105,7 @@ public partial class WorldLightning : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLightning.Process");
         _age += (float)delta;
         if (!Weather.Config.Lightning)
         {
@@ -145,6 +146,7 @@ public partial class WorldLightning : Node2D
     // =========================================================
     public override void _Draw()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("WorldLightning.Draw");
         if (!_visibleStrike || Flash <= 0.002f || _bolt.Length < 2) return;
         Color glow = new(0.45f, 0.65f, 1f, Flash * 0.18f);
         Color core = new(0.94f, 0.98f, 1f, Mathf.Min(1f, Flash * 1.8f));

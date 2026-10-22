@@ -30,6 +30,7 @@ public partial class GroundRainSplashes : Node2D
     // =========================================================
     public void RefreshActors()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("Rain source refresh");
         _blocked.Clear();
         Node2D actors = Actors;
         _world = WorldBounds;
@@ -70,6 +71,7 @@ public partial class GroundRainSplashes : Node2D
     // =========================================================
     public override void _Process(double delta)
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("GroundRainSplashes.Process");
         for (int i = 0; i < _pool.Length; i++)
             if (_pool[i].Active) { _pool[i].Age += (float)delta; if (_pool[i].Age >= Mathf.Clamp(Weather.Config.SplashLifetime, 0.15f, 0.6f)) _pool[i].Active = false; }
         if (Weather.Config.Splashes && Weather.Rain > 0.001f)
@@ -123,6 +125,7 @@ public partial class GroundRainSplashes : Node2D
     // =========================================================
     public override void _Draw()
     {
+        using var frameTrace = RuntimeFrameTrace.Measure("GroundRainSplashes.Draw");
         if (!Weather.Config.Splashes) return;
         foreach (Splash splash in _pool)
         {

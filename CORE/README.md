@@ -17,3 +17,5 @@ Cross-cutting, engine-agnostic contracts and shared infrastructure: stable ident
 - `CoreMasterConfig.cs` and `DefaultCoreConfig.tres` are **blank placeholders**; don't add settings before owning mechanics are designed.
 - Use shared logic and data-driven definitions when it reduces duplication; keep clearly specialized systems in their own modules.
 - Folder names and documentation are navigation aids, not a promise that gameplay is already implemented.
+
+Implemented exception to the planning-only foundation above: [Diagnostics/](Diagnostics/README.md) provides optional, Godot-aware runtime callback timing. It has no gameplay responsibility and is disabled unless a debug capture is requested.
