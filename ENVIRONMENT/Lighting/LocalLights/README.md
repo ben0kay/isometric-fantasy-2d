@@ -28,6 +28,51 @@ The sun renderer/lighting formulas, seed placement, physics and weather are unch
 
 Validation: C# compiled against GodotSharp 4.5.1; full production scene imported/rendered in Godot .NET 4.5.1 Compatibility software OpenGL. On/off image probes verified darkness behind an oak with the same emitter on both sides; runtime checks cover all tree/rock footprints, mirrors, three lamps, shadow opt-out, independent energy/radius and retained sun cache. Tree integration and original DEBUG startup are checked separately. The repository SDK remains 4.7.2; your Windows renderer/performance needs the local check. See TESTS/Lighting.
 
+## Continuation handoff — 22 October 2026
+
+**Completed implementation:** [LL0–LL1 commit](https://github.com/ben0kay/isometric-fantasy-2d/commit/c6a0d314705d78bd0e3e199df9b07ee0fc2cb15e). LL2 and LL3 have not been implemented by this lighting pass. Updating these notes does not authorize executing later phases.
+
+### Read the current code before continuing
+
+- `TorchLight.cs` currently owns both applying common light settings and torch flicker. It applies settings every frame and frees its referenced torch in `_ExitTree`. A reusable controller must not inherit that ownership assumption: removing a light behaviour must not delete an unrelated entity or structure.
+- `TorchProfile.cs` currently combines common illumination fields with temporary spawn offsets. `TorchProfile.tres` explicitly enables CastShadows and adds two preview offsets; the C# default remains opt-out.
+- `EnvironmentRuntime.Initialize` creates the original torch and at most two extras. All three share one resolved runtime TorchProfile, so current F9 controls affect all three. Only the main torch supplies the existing ambient smoke/embers.
+- `WORLD/Content/Shared/LocalLightOccluder.cs` is already reusable. It builds native polygons once and never processes. Reuse it; do not implement another blocker registry or per-light raycast system.
+- Generic trees configure `CastLocalLightShadows` and optional `TreeVisualVariant.LocalLightPolygon`; otherwise their mirrored trunk footprint is used. Rocks use the same helper with RockFootprint.
+- **Streaming has since changed:** current EnvironmentRuntime has RegisterChunk/UnregisterChunk plus wind, wetness, snow and sun-cache integration. Read the latest `WORLD/Generation_Implementation.md`, phase handoff/status notes, streamer and WorldScene before extending it. Do not treat LL0–LL1's original startup-only snapshot below as current architecture, or assume that newer streaming code is already stable.
+- Preserve the current wind → wetness → snow material setup, fire adapters, visibility fading, centralized player input and entity navigation. Local shadows must remain independent of custom sun projections.
+
+### Known comparison limitation / first visual check
+
+The user reports that the preview torches are too far from scenery to make shadows easy to see. The automated LL1 rendered test **moves one existing torch next to a generated tree**; it does not establish that all random-seed spawn arrangements give a good three-torch demonstration. Do not describe the default placement as visually confirmed on the user's machine.
+
+Before judging quality, use an explicit removable comparison fixture or place a preview lamp near a loaded trunk/rock with safe clearance. Keep this developer-only, separate from persistent world generation. Do not move ordinary scenery, modify collision, hardcode species names or add arbitrary torch/rock assets to biome content. Ensure nighttime, sufficient texture radius, matching masks and no second lamp filling the test shadow. Windows renderer and target-machine performance remain unverified here.
+
+### LL2 — concrete next implementation scope (requires approval)
+
+1. Extract common Enabled, Energy, TextureScale, Colour, CastShadows, filter and softness fields into a reusable LocalLightProfile under LocalLights/Shared. Keep torch placement offsets in torch/developer composition. Prefer embedded settings or an inherited profile over requiring another standalone .tres for every light; preserve existing TorchProfile serialization and F9 bindings deliberately.
+2. Extract applying those settings to a supplied PointLight2D into one reusable controller/helper. Keep canonical art, physical colliders and the actual light with WORLD content. Avoid creating a new global manager or replacing the sun system.
+3. Layer optional torch flicker on top of common configuration. A steady or disabled light should have no continuous idle process. Apply steady settings once and on explicit changes; existing developer sliders must still update live. Do not duplicate Energy updates between two controllers or mutate saved/shared asset resources.
+4. Prove reuse with the current warm flickering torch and one removable steady, differently coloured/ranged comparison preset using existing artwork. Do not invent an inventory, lantern/campfire gameplay system, new art requirement or species scene. Distinct per-instance light settings must be supported; the existing three-torch shared slider is not proof of independent light types.
+5. Verify independent lights, correct shadow directions, masks, shadow toggle, disabled presentation/collision policy, node removal and no stale flicker/light references. Repeat comparisons with tree and rock, mirrored/scaled content, day/night, rain/wetness, snow and fire. Keep original DEBUG loadable.
+
+**LL2 completion evidence:** C# build/import; actual rendered nighttime comparisons; two presets using one common settings path; a steady light without a frame loop; working live controls; explicit cleanup ownership; documentation and one commit. Do not mark LL3 complete as a side effect.
+
+### LL3 — concrete follow-up after LL2 (requires approval)
+
+- Integrate with the current chunk owner/lifecycle, not a new world scan. Object-owned native occluders should disappear automatically with their objects; test whether any explicit local-light registration is needed before adding it.
+- Chunk-owned emitter controllers must stop and release references on unload. Preview torches currently created by EnvironmentRuntime are development composition, not proof of persistent chunk-owned sources.
+- Check repeated chunk load/unload and dynamic spawn/removal for duplicate lights, ghost blockers and retained controllers/materials. Coordinate existing sun-caster registration separately.
+- Profile dense loaded scenery and multiple overlapping lights on target hardware. Add a bounded visible/distance/importance shadow-light budget only if measurements justify it; retain inexpensive unshadowed decorative lights where appropriate.
+- Follow existing profile/world save ownership for any future lit/extinguished/fuel state and stable object IDs. Do not serialize renderer nodes or derived shadow polygons, or add a parallel save system. Fuel/inventory gameplay is outside this lighting handoff.
+
+### Validation commands / recorded limits
+
+- Build with the repository's current Godot .NET SDK; do not downgrade project.godot or the csproj to match an older test runner.
+- `TESTS/Lighting/validate_local_lights.gd`: headless checks; use a rendered Compatibility run for opposite-side image probes. Read the test README. Tests that depend on the old startup arrangement may need narrow updates for the latest chunk architecture.
+- `TESTS/Trees/validate_generic_trees.gd` and original DEBUG startup were passing at the LL1 commit; recheck against current HEAD rather than presenting old results as a new run.
+- Historical LL1 validation used GodotSharp/Godot .NET 4.5.1, software OpenGL and full preview density while the project declared SDK 4.7.2. These are historical results, not certification of current HEAD or Windows performance.
+
 ## Goal
 
 A data-driven, reusable **local point-light shadow system**. Torches, campfires, lanterns, candles, magical lights, glowing ores/crystals and suitable fires should illuminate nearby content and cast **directionally correct shadows away from each light**, based on the relative positions of light and obstruction.
@@ -150,4 +195,4 @@ Put common controls in shared data, light-type-specific presets in their respect
 - [x] Existing DEBUG tests and future production chunk streaming plans remain isolated.
 - [x] Update this README to distinguish implemented functionality from planned functionality after each pass; **one commit per job**.
 
-**Recommendation:** Start with **LL0–LL1 only**. Godot's built-in `PointLight2D` + `LightOccluder2D` is enough for the first working test. Don't prebuild a complex shadow architecture until two or more light types actually need it.
+**Next phase:** LL0–LL1 are complete. After approval, continue with the LL2 scope in the continuation handoff above, starting with the reported preview-placement limitation. LL3 remains a separate streaming/performance/persistence follow-up. Preserve native Godot shadows and avoid a broad manager without measured need.
