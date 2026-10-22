@@ -12,6 +12,14 @@
 
 **First P3 stability + SO1 pass:** Off-screen chunk wind/wetness/snow updates suspend through shared artwork bounds; sun casters use conservative shadow reach. Chunk effect binding is staged while hidden, partial binding cancels cleanly, and static streamed visuals disable interpolation. The right-side F9 diagnostics expose culling A/B and CPU timings; F7 shows the map. Terrain/systems/debug UI now have clear containers; Actors/Y-sorting stays intact. Target-machine rendering/flicker verification remains open. See [streaming](WORLD/Runtime/Streaming/README.md) and [scene organization](SCENES/World/scene%20organize.md).
 
+## Performance is an architectural requirement
+
+Design every new mechanic for **low idle cost and large-world scalability from the start**, not as a later optimization pass. **Dormant systems should remain dormant:** activate effects through events/signals or explicit state changes, stop unnecessary `_Process`/`_PhysicsProcess` callbacks, simulation, redraws and GPU updates when disabled or settled, and ensure F9/gameplay events can reliably wake them again. Rain/snow at zero intensity and healthy trees with no fire are examples—not exceptions.
+
+Prefer **shared controllers, reusable materials, pooled effects, cached/spatial queries, and chunk-local registration** over per-object polling, full-world scans and repeated unchanged shader writes. Off-screen cosmetics may sleep, but persistent world state and legitimately continuous effects (clock, active wind, sunlight) must remain correct. Preserve visual quality and modular Resource-driven authoring; avoid optimizing by simply freezing visible animations.
+
+**Every implementation should answer:** *What activates it? What stops it? What does it cost while nothing is happening?* Validate idle, active, shutdown, reactivation and streaming behavior with Godot profiling; distinguish measured improvements from assumptions. Follow the full mandatory guidance in [CodePreferences.md](CodePreferences.md). See [Notes/performance_refactor.md](Notes/performance_refactor.md) for the staged environment audit and Codex handoff; cross-check [world scene organization](SCENES/World/scene%20organize.md) before changing scene ownership.
+
 ## Current production state — 22 October 2026
 
 **Production F6 now runs the P0–P3 finite streamed world by default.** The current macro map is **45,000×33,750 world units**, currently filled by repeated Oak Forest/Pink Meadow regions. Its physical scenery, ground, collisions and local navigation load in chunks around the player; the old **3840×1728** adjacent-biome scene remains an optional **compatibility preview** when `WorldMasterConfig.Streaming.Enabled=false`. The independent F5 DEBUG/TopDownTest is preserved. This is a playable **technical foundation**, not a finished survival sandbox.
