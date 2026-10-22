@@ -9,6 +9,7 @@ public partial class EnvironmentDebugPanel : CanvasLayer
     private EnvironmentRuntime _environment;
     private PanelContainer _panel;
     private Label _status;
+    private WorldDiagnosticsPanel _diagnostics;
     private readonly List<Action> _refresh = new();
     private bool _syncing;
 
@@ -23,6 +24,12 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         _environment = GetNodeOrNull<EnvironmentRuntime>(EnvironmentPath);
         if (_environment?.Initialized != true) { GD.PushWarning("Environment panel has no initialized production environment."); return; }
         Layer = 20;
+        for (Node ancestor = GetParent(); ancestor != null; ancestor = ancestor.GetParent())
+        {
+            if (ancestor is not WorldScene world) continue;
+            _diagnostics = new WorldDiagnosticsPanel { Name = "WorldDiagnostics", World = world, Environment = _environment };
+            AddChild(_diagnostics); break;
+        }
         _panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 16, OffsetRight = 366, OffsetBottom = 940 };
         AddChild(_panel);
         var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(340, 0), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
@@ -125,7 +132,7 @@ public partial class EnvironmentDebugPanel : CanvasLayer
     public override void _UnhandledInput(InputEvent @event)
     {
         if (@event is InputEventKey key && key.Pressed && !key.Echo && key.Keycode == Key.F9 && _panel != null)
-        { _panel.Visible = !_panel.Visible; GetViewport().SetInputAsHandled(); }
+        { _panel.Visible = !_panel.Visible; if (_diagnostics != null) _diagnostics.Visible = _panel.Visible; GetViewport().SetInputAsHandled(); }
     }
     #endregion
 }

@@ -1,6 +1,6 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**First P3 stability + SO1 pass:** Off-screen chunk wind/wetness/snow updates suspend through shared artwork bounds; sun casters use conservative shadow reach. Chunk effect binding is staged while hidden, partial binding cancels cleanly, and static streamed visuals disable interpolation. F7 exposes culling A/B and CPU timings. Terrain/systems/debug UI now have clear containers; Actors/Y-sorting stays intact. Target-machine rendering/flicker verification remains open. See [streaming](WORLD/Runtime/Streaming/README.md) and [scene organization](SCENES/World/scene%20organize.md).
+**First P3 stability + SO1 pass:** Off-screen chunk wind/wetness/snow updates suspend through shared artwork bounds; sun casters use conservative shadow reach. Chunk effect binding is staged while hidden, partial binding cancels cleanly, and static streamed visuals disable interpolation. The right-side F9 diagnostics expose culling A/B and CPU timings; F7 shows the map. Terrain/systems/debug UI now have clear containers; Actors/Y-sorting stays intact. Target-machine rendering/flicker verification remains open. See [streaming](WORLD/Runtime/Streaming/README.md) and [scene organization](SCENES/World/scene%20organize.md).
 
 ## Current production state — 22 October 2026
 

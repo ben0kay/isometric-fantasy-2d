@@ -1,11 +1,8 @@
 // Removable F7 overview of biome geography and P2 feature reservations; never drives production generation or player movement.
 using Godot;
-using System.Linq;
-using System.Text;
 public partial class MacroMapDebugPanel : CanvasLayer
 {
     private PanelContainer _panel;
-    private WorldScene _world; private Label _live; private double _statusTimer;
     #region Overview
     // Bind after world startup; absent/failed generation simply omits this optional panel.
     // =========================================================
@@ -16,12 +13,9 @@ public partial class MacroMapDebugPanel : CanvasLayer
     {
         if (GetNodeOrNull<WorldScene>("../..") is not WorldScene world || world.MacroMap is not { } map) return;
         Layer = 30;
-        _panel = new PanelContainer { Visible = false, OffsetLeft = 24, OffsetTop = 80, OffsetRight = 760, OffsetBottom = 780 };
+        _panel = new PanelContainer { Visible = false, OffsetLeft = 24, OffsetTop = 80, OffsetRight = 760, OffsetBottom = 580 };
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
-        var culling = new CheckButton { Text = "Cull off-screen scenery cosmetics", ButtonPressed = world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Config.CullOffscreenSceneryEffects };
-        culling.Toggled += enabled => world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Config.CullOffscreenSceneryEffects = enabled;
-        box.AddChild(culling);
         box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
@@ -44,44 +38,6 @@ public partial class MacroMapDebugPanel : CanvasLayer
         box.AddChild(new TextureRect { Texture = ImageTexture.CreateFromImage(image), CustomMinimumSize = new Vector2(700, 460),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered });
         image.Dispose();
-        var text = new StringBuilder($"Seed {map.Seed} | v{MacroWorldMap.GeneratorVersion} | {map.Columns}×{map.Rows} cells | {map.Regions.Count} regions\nBounds {map.Bounds} | cell {map.CellSize} | 100% land assigned\nHash {map.Hash[..16]} | World {world.Blueprint.WorldId[..12]}\n");
-        for (int b = 0; b < map.Biomes.Count; b++)
-        {
-            var regions = map.Regions.Where(r => r.BiomeIndex == b).ToArray();
-            int cells = regions.Sum(r => r.CellCount);
-            text.AppendLine($"{map.Biomes[b].Name}: {regions.Length} regions, {100.0 * cells / (map.Columns * map.Rows):F1}% cells; actual region cells {(regions.Length == 0 ? 0 : regions.Min(r => r.CellCount))}–{(regions.Length == 0 ? 0 : regions.Max(r => r.CellCount))}");
-        }
-        if (world.FeaturePlan is { } features)
-        {
-            text.AppendLine($"Reservations {features.Reservations.Features.Count} | hash {features.Hash[..12]} | tint includes clearance");
-            foreach (var feature in features.Reservations.Features.Take(4))
-                text.AppendLine($"{feature.Name} [{feature.Id}] — {(feature.Required ? "required" : "preferred")}, priority {feature.Priority}");
-            if (features.Reservations.Features.Count > 4) text.AppendLine($"+ {features.Reservations.Features.Count - 4} more (see generation log)");
-            foreach (string warning in features.Warnings.Take(2)) text.AppendLine(warning);
-        }
-        var live = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill }; box.AddChild(live);
-        _world = world; _live = live;
-        var details = new ScrollContainer { CustomMinimumSize = new Vector2(700, 200),
-            SizeFlagsVertical = Control.SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
-        details.AddChild(new Label { Text = text.ToString(), AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
-        box.AddChild(details);
-    }
-    // Update only the small debug status line while the panel is open.
-    // =========================================================
-    public override void _Process(double delta)
-    {
-        if (_panel?.Visible != true || _world?.Stream == null) return;
-        _statusTimer += delta; if (_statusTimer < 0.25) return; _statusTimer = 0;
-        var stream = _world.Stream;
-        var environment = _world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment");
-        var shadows = environment.DayNight.Shadows;
-        _live.Text = $"Player chunk {stream.PlayerChunk} | loaded {stream.LoadedCount} | pending {stream.PendingCount}\n"
-            + $"{Engine.GetFramesPerSecond()} FPS | engine process {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
-            + $"Stream last/peak {stream.LastFrameMilliseconds:F2}/{stream.PeakFrameMilliseconds:F2}ms | data last/peak {stream.LastDataMilliseconds:F2}/{stream.PeakDataMilliseconds:F2}ms\n"
-            + $"Last item {stream.LastApplyMilliseconds:F2}ms | chunk bind total {stream.LastBindMilliseconds:F2}ms | nav {stream.LastNavigationMilliseconds:F2}ms | unload {stream.LastUnloadMilliseconds:F2}ms\n"
-            + $"Cosmetic chunks {environment.CosmeticChunkCount}/{environment.RegisteredChunkCount} | sun casters updated {shadows.UpdatedCasterCount}/{shadows.TotalCasterCount} | sun {shadows.LastProjectionMilliseconds:F2}ms\n"
-            + $"Published {stream.PublishedChunks} / released {stream.ReleasedChunks} | {stream.PlayerBiome}";
     }
     // Toggle only the overview, keeping input and preview behaviour independent.
     // =========================================================
