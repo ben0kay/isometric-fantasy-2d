@@ -7,6 +7,7 @@ public partial class LiquidRegion : Node2D
     [Export] public LiquidDefinition Definition { get; set; }
     public bool Active => Config.Enabled;
     public Vector2[] Boundary { get; private set; }
+    public Rect2 SurfaceBounds { get; private set; } // World-space rectangle enclosing the fixed lake and its bank.
     private Vector2[] _edgeDelta;
     private float[] _inverseLength;
     private ShaderMaterial _material;
@@ -42,6 +43,8 @@ public partial class LiquidRegion : Node2D
             bounds = bounds.Expand(Boundary[i]);
         }
         bounds = bounds.Grow(40f);
+        // Rain-impact candidates can be sampled in this small region instead of the full world.
+        SurfaceBounds = new Rect2(ToGlobal(bounds.Position), ToGlobal(bounds.End) - ToGlobal(bounds.Position)).Abs();
         Texture2D field = BuildDistanceField(bounds);
         _material = new ShaderMaterial { Shader = GD.Load<Shader>("res://DEBUG/TopDownTest/Liquids/Shaders/LiquidSurface.gdshader") };
         _material.SetShaderParameter("distance_field", field);

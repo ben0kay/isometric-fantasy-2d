@@ -53,3 +53,7 @@ SnowTest/ implements the snow-accumulation note as an independent scene instance
 [Liquids/](Liquids/README.md) adds one organic lake southeast of the clearing, with independent liquid-type data, depth colours, shared-wind ripples, a wet bank and walk-in sprite submersion. The right-side panel includes a Go to lake bank button. Its footprint excludes trees, rocks and grass at startup; ground snow stays beneath the water. The player body/camera remain stable while its sprite dips and lower part is clipped. Disabling the test restores normal traversal.
 
 The larger world, camera, walls, grass and atmosphere bounds now agree at 2560×1728. Scattering still runs once. Gravel edges also use a wider smooth fade with restrained pebble contrast, avoiding the old broken/blotchy outer coverage. See the liquid guide for tests, limits and removal hooks.
+
+## Rain impacts on the lake
+
+The `Liquids/` test now creates bounded expanding ripple rings when the existing Weather rain slider is above zero. Use the new **Rain surface splashes** checkbox in the liquid panel; the original **Ground splashes** checkbox still controls dry-ground effects independently. See [Liquids/README.md](Liquids/README.md) for settings and performance limits. No production mechanics were changed.

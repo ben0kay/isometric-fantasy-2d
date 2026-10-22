@@ -14,6 +14,8 @@ public partial class LiquidTestController : Node2D
         ProcessPriority = 1;
         _region = GetNode<LiquidRegion>("Lake");
         _weather = GetNode<DebugWeather>("../Weather");
+        // Each region owns its own bounded ring pool; no new weather controller.
+        _region.AddChild(new LiquidRainSplashes { Name = "RainSplashes", Region = _region, Weather = _weather, Config = Config, ZIndex = -4 });
         AddChild(new LiquidWading { Name = "Wading", Region = _region });
         var ui = new CanvasLayer { Name = "UI", Layer = 20 }; AddChild(ui);
         var panel = new PanelContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -296, OffsetRight = -16, OffsetTop = 600, OffsetBottom = 875 };
@@ -23,6 +25,7 @@ public partial class LiquidTestController : Node2D
         AddSwitch(controls, "Show lake / wading", Config.Enabled, value => Config.Enabled = value);
         AddSwitch(controls, "Surface animation", Config.Animate, value => Config.Animate = value);
         AddSwitch(controls, "Organic shoreline", Config.Shoreline, value => Config.Shoreline = value);
+        AddSwitch(controls, "Rain surface splashes", Config.RainSurfaceSplashes, value => Config.RainSurfaceSplashes = value);
         controls.AddChild(new Label { Text = "Surface ripples" });
         var slider = new HSlider { MinValue = 0, MaxValue = 1, Step = 0.01, Value = Config.RippleStrength, FocusMode = Control.FocusModeEnum.None };
         slider.ValueChanged += value => Config.RippleStrength = (float)value; controls.AddChild(slider);

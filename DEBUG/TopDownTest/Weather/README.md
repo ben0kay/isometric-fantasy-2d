@@ -21,6 +21,10 @@ Weather keeps moving when the 30-second demonstration clock is paused. Sliders d
 
 The previous separate DayNight WindStrengthMultiplier, Atmosphere DriftVelocity and Polish CloudVelocity settings were removed. Weather is now the single wind source. Each effect retains its appropriate response: tree materials retain authored sway strength/speed; fog/clouds/pollen use integrated world drift, and short-lived emissions integrate drift within their lifetimes. Changing wind does not teleport these patterns. Rain direction updates on new particle emission, settling within its 0.65-second lifetime.
 
+## Rain hitting liquids
+
+The new `../Liquids/LiquidRainSplashes.cs` draws a separate bounded impact/ripple pool directly over the liquid surface, driven by the **same** `DebugWeather.Rain` amount as dry-ground splashes. Its colour comes from the liquid definition, and its rate/visibility is controlled by the Liquids inspector/UI. Existing `DebugRainSplashes.cs` still excludes water and only handles dry ground (and the shared clear-ground lightning target query). No duplicated wind or rainfall state was added.
+
 ## Ground-only splashes
 
 Splashes draw at world Z=-4, above terrain and below all actors. Static tree/rock sprite rectangles are transformed into world bounds once after seeded scenery generation, including scale/mirroring. Polygon-authored torch artwork is included too. Spawn samples reject these conservative rectangles plus clearance and the moving player's current sprite bounds. Thus splashes do not appear on trunks, canopies, rocks, torch or player. Full rectangles intentionally exclude some transparent gaps around artwork. Small rings stay within the padded exclusion margin.

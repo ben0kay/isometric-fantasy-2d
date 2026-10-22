@@ -17,14 +17,31 @@ This is visual wading, not swimming, drowning, buoyancy, survival or damage. Oth
 - `Shaders/LiquidColour.gdshaderinc`: palette/depth only; `LiquidMovement.gdshaderinc`: waves only; `ShoreEdge.gdshaderinc`: variable-width wet bank only. `LiquidSurface.gdshader` composes them with regular CanvasItem lighting. The mask's Y coordinate explicitly matches the QuadMesh UV convention.
 - `LiquidWading.cs` / `Shaders/WadingSprite.gdshader`: player visual response and one shared surface-speed multiplier, separate from liquid appearance and shape. Only the demo player is connected in V1.
 - `LiquidTestController.cs` / `LiquidTest.tscn`: grouping, compact controls and existing Weather inputs. No new weather controller or global post-process.
+- `LiquidRainSplashes.cs`: one bounded 96-slot pool per region, placed over the liquid but below actors. Samples the camera-visible lake rectangle, accepts only points at least a little inside the polygon, and draws a tiny splash/expanding elliptical ripple using the active liquid's highlight colour. No individual nodes for raindrops, no collision callbacks, no extra GPU rain emitter.
 
-Water has an opaque interior so old ground textures/snow do not show through. Its shallow edge and tiny highlights provide depth without 3D terrain or external artwork. Wind integrates surface drift, avoiding pattern jumps when its slider changes. Animation off freezes accumulated movement. Existing day/night, torch and lightning lighting still apply. Fog/cloud shade continue above the lake. No reflection, refraction, new normal-map lighting, ice, fishing, water simulation or per-raindrop water ripples are included.
+Water has an opaque interior so old ground textures/snow do not show through. Its shallow edge and tiny highlights provide depth without 3D terrain or external artwork. Wind integrates surface drift, avoiding pattern jumps when its slider changes. Animation off freezes accumulated movement. Existing day/night, torch and lightning lighting still apply. Fog/cloud shade continue above the lake. Rain now creates separate **small surface splashes and expanding rings** on any liquid profile; these are stylized sampled impacts, not collisions for every GPU raindrop. No reflection, refraction, new normal-map lighting, ice, fishing or physical water simulation is included.
+
+## Rain splashes on liquid surfaces
+
+The existing `Weather.Rain` intensity drives how often small impacts appear on the liquid. These **reuse the dry-land rain splash visual language**, but form flatter expanding rings appropriate for a lake instead of ground splatters. The impact colour comes from `LiquidDefinition.HighlightColour`, so the exact same renderer also works for future mud, quicksand or toxic pools.
+
+- **Rain at 0:** no new splashes; remaining rings finish fading naturally.
+- **Light to heavy rain:** proportionally more impacts, using the same gradual rain transition as the existing Weather slider.
+- **Lake disabled:** splashes disappear and the pooled effects are cleared.
+- **Surface animation disabled:** the continuous wave shader pauses, while rain impacts can still appear because they are separate real-time precipitation.
+- **Existing Ground splashes toggle:** still affects **dry ground only**. The new **Rain surface splashes** switch in the Liquid panel independently controls the lake.
+
+Tune `RainSurfaceSplashes`, `RainSplashRate` (default 72 candidate impacts/second at full rain), `RainSplashOpacity`, `RainSplashSize`, and `RainSplashLifetime` (default 0.6 s) in `DefaultLiquidConfig.tres` / `LiquidMasterConfig.cs`. Impact density depends on the portion of the lake visible and its actual polygon shape; it is **not a physical count of falling raindrops**.
+
+Implementation is **one draw node per region**, a fixed **96-impact pool**, at most **8 spawn attempts per frame** with up to 8 bounded polygon checks each, no per-frame texture upload or collision tests. Region startup caches a world-space lake bounding rectangle for fast camera clipping. Normal 2D lighting still tints the impacts. The old dry-ground splash pool and rain emitter are untouched.
+
+**Test:** Go to lake bank, set Rain to 0, then 25%, 55%, and 100%; watch surface rings increase. Turn Wind between -3 and +3 to confirm the existing surface wave motion remains independent. Toggle Rain surface splashes, Surface animation, Show lake, and Ground splashes separately. Walk/wade across the water while raining; the wading rings and rainfall impacts should coexist.
 
 ## Placement and draw order
 
 Liquids appears **before Actors** in the main scene. Its region is registered/built before tree/rock scattering, and decorative grass subsequently calls the same scatter exclusion helper. Trees/rocks reserve an artwork/base/shore margin; grass reserves an extra bank margin. There are no solid lake colliders and no invisible rectangular barrier. The field rectangle is only a rendering support; outside the actual water/bank its alpha is zero.
 
-Ground is Z=-10, gravel -8, ground snow -7, liquid surface -6, sun/contact shadows -5 and actors 0. Decorative grass is also -6, but its placement excludes the lake and bank. This keeps the lake unfrozen/visible when ground snow is enabled. Dry-ground rain splashes and manual lightning ground targets exclude active water using the same region query. Snowflakes/rain can still pass over the lake as foreground weather.
+Ground is Z=-10, gravel -8, ground snow -7, liquid surface -6, liquid rain splashes -4 (same level as dry-ground splashes), sun/contact shadows -5 and actors 0. Decorative grass is also -6, but its placement excludes the lake and bank. This keeps the lake unfrozen/visible when ground snow is enabled. Dry-ground rain splashes and manual lightning ground targets exclude active water using the same region query. Snowflakes/rain can still pass over the lake as foreground weather.
 
 The footprint stays **reserved for startup scenery whenever the Liquids scene exists**, including if its display starts off. Toggling the lake does not re-scatter props, so disabling it reveals an empty grass clearing in its place. Remove the scene instance and restart to populate that area normally. The lake is located away from the starting clearing and the north/east trail.
 
@@ -44,7 +61,7 @@ The grass, weather, snow, original tree/rock artwork and production folders have
 
 ## Cost and validation
 
-One masked lake draw includes its shoreline; one temporary player material plus two small drawn rings handle wading. Queries use cached polygon edges, with no scene searches or per-pixel CPU loops during play. The distance texture rasterization is a bounded startup cost. Surface shader work is limited to the local lake rectangle. Profile real hardware before scaling to many lakes.
+One masked lake draw includes its shoreline; one temporary player material plus two small drawn rings handle wading. Rain impacts add a small pooled draw node with no physics bodies, allocated once per liquid region. Queries use cached polygon edges, with no scene searches or per-pixel CPU loops during play. The distance texture rasterization is a bounded startup cost. Surface shader work is limited to the local lake rectangle. Profile real hardware before scaling to many lakes.
 
 All debug C# scripts compile with Godot 4.5.1 source generators and against GodotSharp 4.7.2 / .NET 8. Actual software OpenGL renders checked the bank, dipped player, normal shadow material, snow ordering and restoring the player when disabled. Sampled distance-field values were compared to polygon queries. Three scatter seeds placed all **80 trees + 34 rocks** outside water/shore margins, with grass exclusions and valid triangulatable outlines; another LiquidDefinition palette used the same renderer. Local render checks reduced decorative grass density (all tree/rock counts retained), as in the existing snow tests. Windows D3D12 appearance and performance remain local checks.
 
