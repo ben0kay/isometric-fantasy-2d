@@ -15,7 +15,12 @@ public partial class WorldSnow : Node2D
     public Node2D Actors { get; set; }
     public Rect2 WorldBounds { get; set; }
     public float Coverage => _coverage;
-    private float _coverage;
+    private float _coverage, _lastCoverage = float.NaN;
+    private Color _lastColour;
+    private float _lastCap, _lastScale, _lastContrast;
+    private bool _applying;
+    private WorldSnowfall _snowfall;
+    public int AppliedUpdates { get; private set; }
 
     #region Setup
     // This last scene sibling starts after scenery and the day/night tree material cache are ready.
@@ -23,9 +28,8 @@ public partial class WorldSnow : Node2D
     public override void _Ready()
     {
         Config ??= new SnowProfile();
-        var weather = Weather;
         Texture2D noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
-        _trees.Attach(Actors, noise, _vegetationShaders);
+        _trees.Attach(Actors, noise, _vegetationShaders, Weather);
         _rocks.Attach(Actors, noise);
         _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://WORLD/Terrain/Ground/Surfaces/Snow/GroundSnow.gdshader") };
         _ground.SetShaderParameter("snow_noise", GD.Load<Texture2D>("res://ENVIRONMENT/Weather/Snow/SnowCoverageNoise.tres"));
@@ -33,7 +37,8 @@ public partial class WorldSnow : Node2D
         Rect2 world = WorldBounds;
         _cover = new MeshInstance2D { Name = "GroundCover", Mesh = new QuadMesh { Size = world.Size }, Position = world.GetCenter(), ZIndex = -7, Material = _ground };
         AddChild(_cover);
-        AddChild(new WorldSnowfall { Name = "Snowfall", Snow = this, Weather = weather });
+        Config.Changed += RefreshState;
+        RefreshState();
         PlayerSnowVisual.Ensure(Actors.GetNode<PlayerMovement>("Player")).Snow = this;
     }
 
@@ -43,13 +48,14 @@ public partial class WorldSnow : Node2D
     {
         var trees = new VegetationSnowAdapter(); var rocks = new WorldRockSnowAdapter();
         var noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
-        trees.Attach(chunk,noise,_vegetationShaders); rocks.Attach(chunk,noise); _chunks.Add(chunk,(trees,rocks));
+        trees.Attach(chunk,noise,_vegetationShaders,Weather); rocks.Attach(chunk,noise); _chunks.Add(chunk,(trees,rocks));
         trees.Update(_coverage,Config.SnowColour); rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth);
     }
     // Suspend cosmetics only; coverage is world-owned and refreshed before the chunk re-enters view.
     // =========================================================
     public void SetChunkVisualActive(Node2D chunk, bool active)
     {
+        if (_chunks.TryGetValue(chunk, out var state)) state.Trees.SetVisualActive(active);
         if (!active) { _inactiveChunks.Add(chunk); return; }
         _inactiveChunks.Remove(chunk);
         if (_chunks.TryGetValue(chunk,out var adapters))
@@ -66,7 +72,8 @@ public partial class WorldSnow : Node2D
     // =========================================================
     public void SetCoverage(float value)
     {
-        Config.Coverage = Mathf.Clamp(value, 0f, 1f); _coverage = Config.Enabled ? Config.Coverage : 0f;
+        _applying = true; Config.Coverage = Mathf.Clamp(value, 0f, 1f); _applying = false;
+        _coverage = Config.Enabled ? Config.Coverage : 0f; ApplyCoverage(); RefreshState();
     }
     #endregion
 
@@ -76,24 +83,53 @@ public partial class WorldSnow : Node2D
     public override void _Process(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldSnow.Process");
+        _applying = true;
         if (Config.Enabled && Config.AutoAccumulate)
-            Config.Coverage = Mathf.MoveToward(Config.Coverage, Config.Snowfall && Config.SnowfallRate > 0 ? 1f : 0f, (float)delta / Mathf.Max(5f, Config.AccumulationSeconds));
+            Config.Coverage = Mathf.MoveToward(Config.Coverage, AutoTarget, (float)delta / Mathf.Max(5f, Config.AccumulationSeconds));
+        _applying = false;
         _coverage = Config.Enabled ? Mathf.MoveToward(_coverage, Mathf.Clamp(Config.Coverage, 0f, 1f), (float)delta / Mathf.Max(0.1f, Config.TransitionSeconds)) : 0f;
-        Rect2 local = Weather.VisibleWorldRect().Grow(300).Intersection(WorldBounds);
-        if (local.HasArea()) { ((QuadMesh)_cover.Mesh).Size = local.Size; _cover.Position = local.GetCenter(); }
-        _cover.Visible = _coverage > 0f;
+        ApplyCoverage(); RefreshProcessing();
+    }
+
+    private float AutoTarget => Config.Snowfall && Config.SnowfallRate > 0 ? 1f : 0f;
+    // Profile setters wake sleeping coverage and independently manage the optional GPU emitter.
+    // =========================================================
+    private void RefreshState()
+    {
+        if (_applying) return;
+        if (!Config.Enabled) _coverage = 0;
+        bool falling = Config.Enabled && Config.Snowfall && Config.SnowfallRate > 0;
+        if (falling && _snowfall == null)
+        { _snowfall = new WorldSnowfall { Name = "Snowfall", Snow = this, Weather = Weather }; AddChild(_snowfall); }
+        else if (!falling && _snowfall != null)
+        { RemoveChild(_snowfall); _snowfall.Free(); _snowfall = null; }
+        _snowfall?.ApplySettings();
+        ApplyCoverage(); RefreshProcessing();
+    }
+    private void RefreshProcessing() => SetProcess(Config.Enabled &&
+        (_coverage != Mathf.Clamp(Config.Coverage,0,1) || (Config.AutoAccumulate && Config.Coverage != AutoTarget)));
+
+    // The world-bounded quad is clipped by the renderer; settled cover needs no camera callback.
+    // Only changing coverage/settings visit material adapters, never the idle frame loop.
+    // =========================================================
+    private void ApplyCoverage()
+    {
+        if (_lastCoverage == _coverage && _lastColour == Config.SnowColour && _lastCap == Config.RockCapDepth
+            && _lastScale == Config.DriftScale && _lastContrast == Config.DriftContrast) return;
+        AppliedUpdates++;
+        _lastCoverage = _coverage; _lastColour = Config.SnowColour; _lastCap = Config.RockCapDepth;
+        _lastScale = Config.DriftScale; _lastContrast = Config.DriftContrast;
+        _cover.Visible = _coverage > 0;
         _ground.SetShaderParameter("snow_coverage", _coverage);
         _ground.SetShaderParameter("snow_colour", Config.SnowColour);
         _ground.SetShaderParameter("drift_scale", Config.DriftScale);
         _ground.SetShaderParameter("drift_contrast", Config.DriftContrast);
-        // Every snow-compatible surface uses the same settled coverage; no per-kind on/off gates.
         foreach (var pair in _chunks)
         {
-            if (_inactiveChunks.Contains(pair.Key)) continue;
+            if (_coverage > 0 && _inactiveChunks.Contains(pair.Key)) continue;
             pair.Value.Trees.Update(_coverage,Config.SnowColour); pair.Value.Rocks.Update(_coverage,Config.SnowColour,Config.RockCapDepth);
         }
-        _trees.Update(_coverage, Config.SnowColour);
-        _rocks.Update(_coverage, Config.SnowColour, Config.RockCapDepth);
+        _trees.Update(_coverage, Config.SnowColour); _rocks.Update(_coverage, Config.SnowColour, Config.RockCapDepth);
     }
 
     // The same smooth depth field as SnowDepth.gdshaderinc, evaluated only for the player.
@@ -112,6 +148,7 @@ public partial class WorldSnow : Node2D
     // =========================================================
     public override void _ExitTree()
     {
+        Config.Changed -= RefreshState;
         foreach (var chunk in new System.Collections.Generic.List<Node2D>(_chunks.Keys)) UnregisterChunk(chunk);
         _rocks.Restore();
         _trees.Restore(); _vegetationShaders.Clear();

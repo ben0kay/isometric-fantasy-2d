@@ -7,12 +7,14 @@ public sealed class VegetationSnowAdapter
     private readonly Dictionary<Sprite2D, Material> _original = new();
     private readonly List<(ShaderMaterial Source, ShaderMaterial Snow, bool Wet)> _materials = new();
     private readonly Dictionary<Sprite2D, Material> _adapted = new();
-    private bool _applied;
+    private bool _applied, _visualActive = true;
+    private WorldWeather _weather;
 
     // Shared normal/mirrored variants work for tree roots or direct grass sprites using the sway shader.
     // =========================================================
-    public void Attach(Node2D actors, Texture2D noise, Dictionary<Shader, Shader> sharedShaders = null)
+    public void Attach(Node2D actors, Texture2D noise, Dictionary<Shader, Shader> sharedShaders = null, WorldWeather weather = null)
     {
+        _weather = weather;
         const string output = "    COLOR = pixel * sprite_tint * inside;";
         var variants = new Dictionary<(ShaderMaterial, bool, int), ShaderMaterial>();
         var shaders = sharedShaders ?? new Dictionary<Shader, Shader>();
@@ -51,7 +53,7 @@ public sealed class VegetationSnowAdapter
         }
     }
 
-    // Copy the existing wind cache to shared snow variants, never update every individual tree.
+    // Apply coverage on changes; wind/wetness links independently keep visible overlays current.
     // =========================================================
     public void Update(float coverage, Color colour)
     {
@@ -60,21 +62,32 @@ public sealed class VegetationSnowAdapter
         {
             foreach (var pair in _original)
                 if (GodotObject.IsInstanceValid(pair.Key)) pair.Key.Material = show ? _adapted[pair.Key] : pair.Value;
+            SetLinks(show && _visualActive);
             _applied = show;
         }
         if (!show) return;
         foreach (var pair in _materials)
         {
-            pair.Snow.SetShaderParameter("wind_multiplier", pair.Source.GetShaderParameter("wind_multiplier"));
-            if (pair.Wet)
-            {
-                // This snow material was cloned from the production wet/wind variant.
-                // Preserve the ongoing rain/dry changes beneath its snow colour overlay.
-                pair.Snow.SetShaderParameter("wet_coverage", pair.Source.GetShaderParameter("wet_coverage"));
-                pair.Snow.SetShaderParameter("wet_darkening", pair.Source.GetShaderParameter("wet_darkening"));
-            }
             pair.Snow.SetShaderParameter("snow_coverage", coverage);
             pair.Snow.SetShaderParameter("snow_colour", colour);
+        }
+    }
+
+    // Chunk culling suspends forwarded cosmetic writes without discarding its settled appearance.
+    // =========================================================
+    public void SetVisualActive(bool active)
+    {
+        if (_visualActive == active) return;
+        _visualActive = active; if (_applied) SetLinks(active);
+    }
+    private void SetLinks(bool active)
+    {
+        foreach (var pair in _materials)
+        {
+            if (active)
+            { _weather?.Wind.RegisterMaterial(pair.Snow); if (pair.Wet) _weather?.FoliageLinks.Register(pair.Source, pair.Snow); }
+            else
+            { _weather?.Wind.UnregisterMaterial(pair.Snow); if (pair.Wet) _weather?.FoliageLinks.Unregister(pair.Source, pair.Snow); }
         }
     }
 
@@ -87,6 +100,7 @@ public sealed class VegetationSnowAdapter
             if (!GodotObject.IsInstanceValid(pair.Key)) continue;
             pair.Key.Material = pair.Value;
         }
+        SetLinks(false);
         _original.Clear(); _adapted.Clear(); _materials.Clear(); _applied = false;
     }
 }

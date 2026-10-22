@@ -1,5 +1,7 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**Snow off contract (P0-A/P0-B):** Snow has its own master Enabled switch. OFF clears surface snow and frees snowfall; settled coverage sleeps, with profile/F9 changes waking it. Zero snowfall rate removes flakes independently of settled coverage. See [snow lifecycle and validation](ENVIRONMENT/Weather/Snow/README.md).
+
 **Rain off contract:** Production rain now defaults to 0. Zero immediately stops rain processing, removes drops and clears/stops ground/liquid splash pools. Positive intensity wakes it by a profile-change event; wet foliage finishes drying then sleeps. Shared wind and independent lightning queries remain separate. Disabled falling-leaf simulation is skipped. See [rain behaviour](ENVIRONMENT/Weather/Rain/README.md).
 
 **Measured P3 hitch fix:** Rain/leaf source caches now register and remove changed props incrementally inside streaming binding, replacing full loaded-world rescans measured at 41–47.5ms combined in user traces. Rain exclusions use spatial cells. Target-machine recapture remains necessary; steady-state visual costs are a separate follow-up. See [streaming evidence and validation](WORLD/Runtime/Streaming/README.md).

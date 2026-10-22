@@ -99,6 +99,7 @@ public partial class VegetationWetness : Node
         {
             material.SetShaderParameter("wet_coverage", _coverage);
             material.SetShaderParameter("wet_darkening", darkening);
+            Weather.FoliageLinks.Update(material);
         }
     }
     #endregion

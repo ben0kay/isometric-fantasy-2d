@@ -6,6 +6,9 @@ public partial class WorldSnowfall : GpuParticles2D
     public WorldSnow Snow { get; set; }
     public WorldWeather Weather { get; set; }
     private ParticleProcessMaterial _motion;
+    private Rect2 _lastView;
+    private float _lastWind = float.NaN;
+    public int AppliedUpdates { get; private set; }
 
     // Generate distinct pixel flake shapes once; random atlas frame, size and speed add variation.
     // =========================================================
@@ -41,7 +44,18 @@ public partial class WorldSnowfall : GpuParticles2D
         };
         TextureFilter = TextureFilterEnum.Nearest;
         Amount = 1300; Lifetime = 4; Preprocess = 4; LocalCoords = false; Emitting = false;
-        ZIndex = 6;
+        ZIndex = 6; ApplySettings();
+    }
+
+    // Parent only creates this emitter while enabled with positive rate; zero frees GPU state.
+    // =========================================================
+    public void ApplySettings()
+    {
+        float rate = Mathf.Clamp(Snow.Config.SnowfallRate,0.001f,1f);
+        if (AmountRatio != rate) AmountRatio = rate;
+        if (!Visible) Visible = true;
+        _Process(0);
+        if (!Emitting) Emitting = true;
     }
 
     // Broad margins cover flake travel while the player moves; disabling hides existing flakes too.
@@ -49,14 +63,17 @@ public partial class WorldSnowfall : GpuParticles2D
     public override void _Process(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldSnowfall.Process");
-        Visible = Snow.Config.Enabled && Snow.Config.Snowfall;
-        Emitting = Visible && Snow.Config.SnowfallRate > 0f;
-        AmountRatio = Mathf.Clamp(Snow.Config.SnowfallRate, 0.001f, 1f);
         Rect2 view = Weather.VisibleWorldRect();
-        Vector2 half = view.Size / 2f + new Vector2(600, 400);
-        GlobalPosition = view.GetCenter();
-        _motion.EmissionBoxExtents = new Vector3(half.X, half.Y, 1);
-        VisibilityRect = new Rect2(-half * 2f, half * 4f);
+        if (view != _lastView)
+        {
+            _lastView = view; AppliedUpdates++;
+            Vector2 half = view.Size / 2f + new Vector2(600, 400);
+            GlobalPosition = view.GetCenter();
+            _motion.EmissionBoxExtents = new Vector3(half.X, half.Y, 1);
+            VisibilityRect = new Rect2(-half * 2f, half * 4f);
+        }
+        if (_lastWind == Weather.WindStrength) return;
+        _lastWind = Weather.WindStrength; AppliedUpdates++;
         Vector2 velocity = new(Weather.WindStrength * 32f, 42f);
         _motion.Direction = new Vector3(velocity.X, velocity.Y, 0).Normalized();
         _motion.InitialVelocityMin = velocity.Length() * 0.55f;

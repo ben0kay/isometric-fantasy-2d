@@ -3,6 +3,7 @@ using Godot;
 
 public partial class WorldWeather : Node2D
 {
+    public FoliageMaterialLinks FoliageLinks { get; } = new();
     [Export] public WeatherProfile Config { get; set; }
     public WindController Wind { get; set; }
     public Node2D Actors { get; set; }
