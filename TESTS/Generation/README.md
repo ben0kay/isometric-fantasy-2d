@@ -28,3 +28,5 @@ Incremental source cache coverage in ValidateSceneryVisibility: stationary scene
 `ValidateSnowSleeping.tscn` verifies snow master dormancy/reactivation, settled coverage, independent snowfall/zero rate, changed GPU inputs/canvas bounds, wind/wetness composition, chunk cleanup and automatic endpoints. Run headless with a built C# assembly; target graphical/FPS checks remain separate.
 
 `ValidatePollenBatch.tscn` checks pollen instancing, hard off/zero/reactivation, sleeping all-off atmosphere, changed shared inputs and independent ambient effects. `BenchmarkPollen.tscn` records 180 CPU callback samples per count (35/0/100/0) after warm-up, fixed seed, other atmosphere effects off; GPU timing/FPS is deliberately not inferred from headless measurements.
+
+`ValidateCloudWindCaching.tscn` checks cloud never-active/off/zero/wake and changed shader uploads, stable vegetation wind uploads, inactive chunk/re-entry, fresh material initialization and unload restoration. Counters verify writes rather than inferring dormancy solely from SetProcess flags.

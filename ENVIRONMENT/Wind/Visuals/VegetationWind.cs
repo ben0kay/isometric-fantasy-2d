@@ -6,6 +6,8 @@ public partial class VegetationWind : Node
     public WindController Wind { get; set; }
     private readonly Dictionary<Sprite2D, Material> _original = new();
     private readonly List<ShaderMaterial> _materials = new();
+    private float _lastStrength = float.NaN;
+    public int MaterialWrites { get; private set; }
     // Clone authored resources once, so runtime wind changes never modify saved scene materials.
     // =========================================================
     public void Attach(Node2D actors)
@@ -23,7 +25,7 @@ public partial class VegetationWind : Node
             }
             _original.Add(sprite, source); sprite.Material = material;
         }
-        ProcessPriority = -15; UpdateWind();
+        ProcessPriority = -15; _lastStrength = float.NaN; UpdateWind();
     }
     // Update only shared variants after the single wind source advances.
     // =========================================================
@@ -36,7 +38,11 @@ public partial class VegetationWind : Node
     // =========================================================
     private void UpdateWind()
     {
-        foreach (ShaderMaterial material in _materials) material.SetShaderParameter("wind_multiplier", Wind.Strength);
+        float strength = Wind.Strength;
+        if (_lastStrength == strength) return;
+        _lastStrength = strength;
+        foreach (ShaderMaterial material in _materials)
+        { material.SetShaderParameter("wind_multiplier",strength); MaterialWrites++; }
     }
     // Removing the environment restores authored materials, including mirrored variants.
     // =========================================================
