@@ -31,7 +31,7 @@ public partial class EquippedTool : Node2D
     }
     #endregion
     #region Visual and tool contact
-    // Only uses mouse WORLD POSITION for continuous aiming, not mouse/button input.
+    // Continuous facing reads centralized mouse aim, not independent tool input.
     // =========================================================
     public override void _Process(double delta)
     {
@@ -39,7 +39,7 @@ public partial class EquippedTool : Node2D
         if (!Visible) { IsAttacking = false; return; }
         Position = Config.HandAnchor + _playerSprite.Position;
         float dt = (float)delta;
-        Vector2 direction = GetGlobalMousePosition() - GlobalPosition;
+        Vector2 direction = _input.ReadToolAim(GlobalPosition);
         if (IsAttacking)
         {
             _elapsed += dt;

@@ -18,6 +18,11 @@ public partial class PlayerInput : Node
         }
     }
 
+    // Keep cursor-position reads centralized here as well as button presses.
+    // =========================================================
+    public Vector2 ReadToolAim(Vector2 worldOrigin) =>
+        GetParent<Node2D>().GetGlobalMousePosition() - worldOrigin;
+
     // Input.GetVector limits diagonals so they are not faster than cardinal movement.
     // =========================================================
     public Vector2 ReadMovement() => Input.GetVector("player_left", "player_right", "player_up", "player_down");
