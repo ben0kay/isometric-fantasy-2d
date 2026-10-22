@@ -6,7 +6,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
 {
     public WorldScene World { get; set; }
     public EnvironmentRuntime Environment { get; set; }
-    private Label _live, _trace;
+    private Label _live, _trace, _fps;
     private double _statusTimer;
 
     // Use viewport anchors so the diagnostic column stays on the right when the window resizes.
@@ -24,6 +24,9 @@ public partial class WorldDiagnosticsPanel : PanelContainer
             ButtonPressed = Environment.Config.CullOffscreenSceneryEffects };
         culling.Toggled += enabled => Environment.Config.CullOffscreenSceneryEffects = enabled;
         box.AddChild(culling);
+        _fps = new Label { Text = "FPS —", HorizontalAlignment = HorizontalAlignment.Center };
+        _fps.AddThemeFontSizeOverride("font_size", 23);
+        box.AddChild(_fps);
         _live = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         box.AddChild(_live);
         var tracing = new CheckButton { Text = "Trace C# callbacks", FocusMode = Control.FocusModeEnum.None };
@@ -68,18 +71,33 @@ public partial class WorldDiagnosticsPanel : PanelContainer
         using var frameTrace = RuntimeFrameTrace.Measure("WorldDiagnosticsPanel.Process");
         if (!Visible || _live == null) return;
         _statusTimer += delta; if (_statusTimer < 0.25) return; _statusTimer = 0;
+        int fps = Engine.GetFramesPerSecond();
+        _fps.Text = $"{fps} FPS";
+        _fps.AddThemeColorOverride("font_color", FpsColour(fps));
         _trace.Text = RuntimeFrameTrace.Report();
         if (World.Stream == null) { _live.Text = "Compatibility preview — chunk streaming disabled"; return; }
         var stream = World.Stream;
         var environment = Environment;
         var shadows = environment.DayNight.Shadows;
         _live.Text = $"Player chunk {stream.PlayerChunk} | loaded {stream.LoadedCount} | pending {stream.PendingCount}\n"
-            + $"{Engine.GetFramesPerSecond()} FPS | engine process monitor (sampled) {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
+            + $"Engine process monitor (sampled) {Performance.GetMonitor(Performance.Monitor.TimeProcess)*1000:F1}ms | physics {Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess)*1000:F1}ms\n"
             + $"Stream last/peak {stream.LastFrameMilliseconds:F2}/{stream.PeakFrameMilliseconds:F2}ms | data last/peak {stream.LastDataMilliseconds:F2}/{stream.PeakDataMilliseconds:F2}ms\n"
             + $"Last item {stream.LastApplyMilliseconds:F2}ms | chunk bind total {stream.LastBindMilliseconds:F2}ms | nav {stream.LastNavigationMilliseconds:F2}ms | unload {stream.LastUnloadMilliseconds:F2}ms\n"
             + $"Cosmetic chunks {environment.CosmeticChunkCount}/{environment.RegisteredChunkCount} | sun casters updated {shadows.UpdatedCasterCount}/{shadows.TotalCasterCount} | sun {shadows.LastProjectionMilliseconds:F2}ms\n"
             + $"Published {stream.PublishedChunks} / released {stream.ReleasedChunks} | {stream.PlayerBiome}";
     }
+    // Smooth warning colours: green at 60+, yellow at 45, orange at 30, red at 15 or below.
+    // =========================================================
+    private static Color FpsColour(int fps)
+    {
+        Color green = new(0.30f, 0.90f, 0.40f), yellow = new(1f, 0.88f, 0.20f);
+        Color orange = new(1f, 0.50f, 0.12f), red = new(1f, 0.23f, 0.23f);
+        if (fps >= 60) return green;
+        if (fps >= 45) return yellow.Lerp(green, (fps - 45f) / 15f);
+        if (fps >= 30) return orange.Lerp(yellow, (fps - 30f) / 15f);
+        return red.Lerp(orange, Mathf.Clamp((fps - 15f) / 15f, 0f, 1f));
+    }
+
     // A removed world/debug panel cannot leave global tracing active in another scene.
     // =========================================================
     public override void _ExitTree() => RuntimeFrameTrace.Release(GetInstanceId());
