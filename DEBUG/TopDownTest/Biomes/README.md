@@ -20,3 +20,10 @@ Everything lives in DEBUG/TopDownTest. No production WORLD folders were changed.
 ## Validation
 
 All debug C# compiled against GodotSharp 4.7.2 / .NET 8 and the native Godot 4.5.1 source generators. Full-scene software OpenGL Compatibility rendering was inspected at the transition and inside Pink Meadow. Three seeds (213876, 12345, 901) each placed all 80 trees and 50 rocks; pink-side rock counts were 25, 29 and 30, with no trees or tufts beyond the reserved border. Render checks reduce decorative grass counts locally only; committed grass settings are unchanged. Windows D3D12 and hardware performance are not validated.
+
+
+## Wider transition and shallow snow depth
+
+Biome blending now spans 240 world pixels (previously 120), editable with DefaultBiomeConfig / BlendWidth. SnowDepth.gdshaderinc adds smooth shallow drifts and restrained bank/hollow shading without altering distributed coverage or the exact 0/100% coverage endpoints. SnowMasterConfig exposes DriftScale, DriftContrast, PlayerSinks (on by default) and MaximumSinkPixels (4). Snow itself remains opt-in as before. Player burial begins above 25% settled snow (a small dip at the default 60%), varies with the same world-space depth field, and reaches at most 4 pixels; body/collider/camera and movement speed remain unchanged.
+
+PlayerSurfaceVisual is the single sprite/material owner shared by optional snow and lake tests. Liquid immersion takes precedence; snow produces no water rings and keeps the projected sun shadow. Toggles/melting ease the sprite back up. Removing both experiments restores its original position/material. The helper is installed by either test, so snow burial also works with the Liquids scene removed.

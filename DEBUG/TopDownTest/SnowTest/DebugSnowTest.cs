@@ -30,6 +30,7 @@ public partial class DebugSnowTest : Node2D
         _cover = new MeshInstance2D { Name = "GroundCover", Mesh = new QuadMesh { Size = world.Size }, Position = world.GetCenter(), ZIndex = -7, Material = _ground };
         AddChild(_cover);
         AddChild(new DebugSnowfall { Name = "Snowfall", Snow = this, Weather = weather });
+        PlayerSurfaceVisual.Ensure(GetNode<TestPlayerMovement>("../Actors/Player")).Snow = this;
         BuildControls();
     }
 
@@ -81,9 +82,23 @@ public partial class DebugSnowTest : Node2D
         _cover.Visible = _coverage > 0f;
         _ground.SetShaderParameter("snow_coverage", _coverage);
         _ground.SetShaderParameter("snow_colour", Config.SnowColour);
+        _ground.SetShaderParameter("drift_scale", Config.DriftScale);
+        _ground.SetShaderParameter("drift_contrast", Config.DriftContrast);
         _trees.Update(_coverage, Config.SnowColour, Config.GrassSnow);
         _syncing = true; _slider.Value = Config.Coverage; _syncing = false;
         _label.Text = $"Settled snow: {_coverage:P0}";
+    }
+
+    // The same smooth depth field as SnowDepth.gdshaderinc, evaluated only for the player.
+    // Coverage gates burial so thin scattered deposits never swallow the player's feet.
+    // =========================================================
+    public float PlayerDepthAt(Vector2 world)
+    {
+        if (!Config.Enabled || !Config.PlayerSinks || _coverage <= 0f) return 0f;
+        float x = world.X / Mathf.Max(60f, Config.DriftScale), y = world.Y / Mathf.Max(60f, Config.DriftScale);
+        float depth = Mathf.Clamp(0.64f + 0.20f * Mathf.Sin(x + 0.42f * Mathf.Sin(y * 0.83f))
+            + 0.16f * Mathf.Sin(y * 1.31f + x * 0.37f), 0f, 1f);
+        return Mathf.Max(0f, Config.MaximumSinkPixels) * depth * Mathf.SmoothStep(0f, 1f, Mathf.Clamp((_coverage - 0.25f) / 0.75f, 0f, 1f));
     }
 
     // Deleting this node during play restores the original tree shaders as well as removing helpers.

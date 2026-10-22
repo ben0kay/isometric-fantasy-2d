@@ -65,3 +65,12 @@ Ground coverage now uses overlapping small world-space patches (roughly 16–32 
 GrassPatches now draws at Z=-6, above the ground snow at -7 and gravel at -8, while shadows remain at -5 and actors at 0. This fixes snow obscuring grass blades at full ground coverage. Snow on the grass artwork remains controlled by its own vegetation shader/toggle; turning that toggle off still leaves green blades visible above white terrain. Changing the grass layer is independent of the removable snow component and has no dependency on its files.
 
 Correction validation: rendered 0%, 25%, 70% and 100% in Godot 4.5.1 software OpenGL with no shader errors. Inspected the distributed deposits and visible grass blades at 100%, and asserted that grass draws above ground snow. Existing coverage, off and material-restoration checks passed. As with prior checks, decorative grass density was reduced locally for software rendering; committed counts remain unchanged.
+
+
+## Wider transition and shallow snow depth
+
+Biome blending now spans 240 world pixels (previously 120), editable with DefaultBiomeConfig / BlendWidth. SnowDepth.gdshaderinc adds smooth shallow drifts and restrained bank/hollow shading without altering distributed coverage or the exact 0/100% coverage endpoints. SnowMasterConfig exposes DriftScale, DriftContrast, PlayerSinks (on by default) and MaximumSinkPixels (4). Snow itself remains opt-in as before. Player burial begins above 25% settled snow (a small dip at the default 60%), varies with the same world-space depth field, and reaches at most 4 pixels; body/collider/camera and movement speed remain unchanged.
+
+PlayerSurfaceVisual is the single sprite/material owner shared by optional snow and lake tests. Liquid immersion takes precedence; snow produces no water rings and keeps the projected sun shadow. Toggles/melting ease the sprite back up. Removing both experiments restores its original position/material. The helper is installed by either test, so snow burial also works with the Liquids scene removed.
+
+Validation: all debug C# compiled against GodotSharp 4.7.2 / .NET 8 and native Godot 4.5.1 source generators. Software OpenGL rendering was inspected at full snow. Runtime checks passed for varied 0–4px burial, default 60% accumulation, camera stability, retained sun shadow, deeper lake priority, melt/off restoration, helper cleanup, and snow with the Liquids scene absent. Target Windows rendering/performance remains unverified.

@@ -9,7 +9,7 @@ public partial class BiomeMasterConfig : Resource
     [Export] public float BoundaryX { get; set; } = 1760f;
     [Export(PropertyHint.Range, "0,160,1")] public float CurveAmplitude { get; set; } = 70f;
     [Export(PropertyHint.Range, "100,1000,10")] public float CurveScale { get; set; } = 340f;
-    [Export(PropertyHint.Range, "1,240,1")] public float BlendWidth { get; set; } = 120f;
+    [Export(PropertyHint.Range, "1,480,1")] public float BlendWidth { get; set; } = 240f;
 
     // Keep this analytical curve identical to BiomeBlend.gdshaderinc; no sampled grid edges.
     // =========================================================

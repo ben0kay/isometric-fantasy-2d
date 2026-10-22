@@ -12,5 +12,10 @@ public partial class SnowMasterConfig : Resource
     [Export] public bool AutoAccumulate { get; set; } = false;
     [Export(PropertyHint.Range, "5,120,1")] public float AccumulationSeconds { get; set; } = 30f;
     [Export(PropertyHint.Range, "0.1,10,0.1")] public float TransitionSeconds { get; set; } = 3f;
+    [ExportGroup("Shallow snow depth")]
+    [Export] public bool PlayerSinks { get; set; } = true;
+    [Export(PropertyHint.Range, "0,8,0.25")] public float MaximumSinkPixels { get; set; } = 4f;
+    [Export(PropertyHint.Range, "60,500,10")] public float DriftScale { get; set; } = 220f;
+    [Export(PropertyHint.Range, "0,0.15,0.005")] public float DriftContrast { get; set; } = 0.065f;
     [Export] public Color SnowColour { get; set; } = new(0.87f, 0.91f, 0.94f);
 }

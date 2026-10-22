@@ -4,7 +4,7 @@ F5/F6 shows one lake southeast of the starting clearing, centred near **(1080,80
 
 ## Behaviour
 
-The lake is walkable. Near the shore the player gradually dips; deeper inside its **sprite** moves down up to 14 world pixels and clips below the waterline. The CharacterBody2D, feet collider and camera do not sink or change height. Default water slows movement to 70% in the deeper part. A pair of restrained rings marks the waterline; the contact/sun shadows are hidden while submerged. Walking out or disabling the comparison restores the normal appearance/speed; deleting the Liquids scene instance during play restores the original player material too.
+The lake is walkable. Near the shore the player gradually dips; deeper inside its **sprite** moves down up to 14 world pixels and clips below the waterline. The CharacterBody2D, feet collider and camera do not sink or change height. Default water slows movement to 70% in the deeper part. A pair of restrained rings marks the waterline; the contact/sun shadows are hidden while submerged. Walking out or disabling the comparison restores the normal appearance/speed; deleting the Liquids scene instance during play releases wading; the shared helper retains any active snow burial.
 
 This is visual wading, not swimming, drowning, buoyancy, survival or damage. Other liquid types reuse the region/renderer/response, with different data. No hardcoded water ID check selects a separate renderer.
 
@@ -15,7 +15,7 @@ This is visual wading, not swimming, drowning, buoyancy, survival or damage. Oth
 - `LiquidRegion.cs`: creates a stable 96-point harmonic perimeter and exposes signed shore distance / `Contains(worldPoint, margin)`. Positive distances are inside. One polygon drives every placement and player-depth query.
 - `LiquidRegion.cs` also generates a small **384×256 floating-point distance texture once**, so the shader samples shoreline distance rather than calculating distances to 96 segments for every pixel. No per-frame geometry/mask rebuilding or texture uploads. Moving/scaling the region root after startup is outside this prototype contract; use the startup config.
 - `Shaders/LiquidColour.gdshaderinc`: palette/depth only; `LiquidMovement.gdshaderinc`: waves only; `ShoreEdge.gdshaderinc`: variable-width wet bank only. `LiquidSurface.gdshader` composes them with regular CanvasItem lighting. The mask's Y coordinate explicitly matches the QuadMesh UV convention.
-- `LiquidWading.cs` / `Shaders/WadingSprite.gdshader`: player visual response and one shared surface-speed multiplier, separate from liquid appearance and shape. Only the demo player is connected in V1.
+- `LiquidWading.cs` / `../Surfaces/PlayerSurfaceVisual.cs`: liquid response and one shared surface-speed multiplier, separate from liquid appearance and shape. Only the demo player is connected in V1.
 - `LiquidTestController.cs` / `LiquidTest.tscn`: grouping, compact controls and existing Weather inputs. No new weather controller or global post-process.
 - `LiquidRainSplashes.cs`: one bounded 96-slot pool per region, placed over the liquid but below actors. Samples the camera-visible lake rectangle, accepts only points at least a little inside the polygon, and draws a tiny splash/expanding elliptical ripple using the active liquid's highlight colour. No individual nodes for raindrops, no collision callbacks, no extra GPU rain emitter.
 
@@ -57,7 +57,7 @@ For comparisons, turn **Show lake / wading** off. To remove the feature complete
 2. Remove the small `LiquidRegion` cache/query additions from `Generation/DebugWorldScatter.cs` and `Weather/DebugRainSplashes.cs` (search `LiquidRegion` / `_liquids` / `debug_liquid_regions`).
 3. Delete this Liquids/ folder. The generic `SurfaceSpeedMultiplier` in TestPlayerMovement may remain at its default 1, or be removed with its multiplication term.
 
-The grass, weather, snow, original tree/rock artwork and production folders have no shader/resource dependency on Liquids. The independently enlarged world and smoother gravel can remain. Reverting the single task commit undoes all three parts together.
+The shared Surfaces/ helper and its immersion shader are used by both snow and liquids. Keep Surfaces/ while either experiment remains, and remove its typed Liquid hooks when deleting liquid scripts. Grass, weather, original artwork and production folders otherwise retain their existing ownership. The independently enlarged world and smoother gravel can remain. Reverting the single task commit undoes all three parts together.
 
 ## Cost and validation
 
@@ -66,3 +66,10 @@ One masked lake draw includes its shoreline; one temporary player material plus 
 All debug C# scripts compile with Godot 4.5.1 source generators and against GodotSharp 4.7.2 / .NET 8. Actual software OpenGL renders checked the bank, dipped player, normal shadow material, snow ordering and restoring the player when disabled. Sampled distance-field values were compared to polygon queries. Three scatter seeds placed all **80 trees + 34 rocks** outside water/shore margins, with grass exclusions and valid triangulatable outlines; another LiquidDefinition palette used the same renderer. Local render checks reduced decorative grass density (all tree/rock counts retained), as in the existing snow tests. Windows D3D12 appearance and performance remain local checks.
 
 Additional physics checks verified slower movement in deep water, unchanged camera child position, collision at the expanded east/north map limits, and original player-material restoration when the whole liquid test was removed.
+
+
+## Wider transition and shallow snow depth
+
+Biome blending now spans 240 world pixels (previously 120), editable with DefaultBiomeConfig / BlendWidth. SnowDepth.gdshaderinc adds smooth shallow drifts and restrained bank/hollow shading without altering distributed coverage or the exact 0/100% coverage endpoints. SnowMasterConfig exposes DriftScale, DriftContrast, PlayerSinks (on by default) and MaximumSinkPixels (4). Snow itself remains opt-in as before. Player burial begins above 25% settled snow (a small dip at the default 60%), varies with the same world-space depth field, and reaches at most 4 pixels; body/collider/camera and movement speed remain unchanged.
+
+PlayerSurfaceVisual is the single sprite/material owner shared by optional snow and lake tests. Liquid immersion takes precedence; snow produces no water rings and keeps the projected sun shadow. Toggles/melting ease the sprite back up. Removing both experiments restores its original position/material. The helper is installed by either test, so snow burial also works with the Liquids scene removed.

@@ -6,13 +6,6 @@ public partial class LiquidWading : Node2D
     public LiquidRegion Region { get; set; }
     public float Immersion { get; private set; }
     private TestPlayerMovement _player;
-    private Sprite2D _sprite;
-    private Polygon2D _contact;
-    private Sprite2D _sunShadow;
-    private bool _shadowChecked, _contactVisible, _attached;
-    private Vector2 _originalPosition;
-    private Material _originalMaterial;
-    private ShaderMaterial _material;
     private float _target, _time;
 
     #region Setup and response
@@ -22,10 +15,7 @@ public partial class LiquidWading : Node2D
     {
         ProcessPriority = 2; ProcessPhysicsPriority = -10;
         _player = GetNode<TestPlayerMovement>("../../Actors/Player");
-        _sprite = _player.GetNode<Sprite2D>("Sprite");
-        _contact = _player.GetNode<Polygon2D>("Shadow"); _contactVisible = _contact.Visible;
-        _originalPosition = _sprite.Position; _originalMaterial = _sprite.Material;
-        _material = new ShaderMaterial { Shader = GD.Load<Shader>("res://DEBUG/TopDownTest/Liquids/Shaders/WadingSprite.gdshader") };
+        PlayerSurfaceVisual.Ensure(_player).Liquid = this;
         ZIndex = -4;
     }
 
@@ -38,20 +28,12 @@ public partial class LiquidWading : Node2D
         _player.SurfaceSpeedMultiplier = Mathf.Lerp(1f, Region.Definition.MovementMultiplier, _target);
     }
 
-    // Shadows are created later by DayNight; cache them once after scene startup is complete.
+    // Animate immersion and rings; Surfaces/PlayerSurfaceVisual applies the shared sprite response.
     // =========================================================
     public override void _Process(double delta)
     {
-        // Attach after DayNight has classified the original player material for its sun shadow.
-        if (!_attached) { _sprite.Material = _material; _attached = true; }
-        if (!_shadowChecked) { _sunShadow = GetNodeOrNull<Sprite2D>("../../DayNight/Shadows/PlayerSunShadow"); _shadowChecked = true; }
         _time += (float)delta;
         Immersion = Region.Active ? Mathf.MoveToward(Immersion, _target, (float)delta * 3f) : 0f;
-        _sprite.Position = _originalPosition + new Vector2(0, Immersion * Region.Definition.MaximumSubmergePixels);
-        _material.SetShaderParameter("immersion", Immersion);
-        _material.SetShaderParameter("waterline_y", _player.GlobalPosition.Y - 1f);
-        _contact.Visible = _contactVisible && Immersion < 0.01f;
-        if (_sunShadow != null && Immersion > 0.01f) _sunShadow.Visible = false;
         GlobalPosition = _player.GlobalPosition;
         QueueRedraw();
     }
@@ -71,12 +53,10 @@ public partial class LiquidWading : Node2D
         DrawSetTransform(Vector2.Zero);
     }
 
-    // Removing the experiment restores the player material, position, shadow and movement scale.
+    // Release liquid movement; the shared visual helper restores snow/dry artwork independently.
     // =========================================================
     public override void _ExitTree()
     {
-        if (GodotObject.IsInstanceValid(_sprite)) { _sprite.Position = _originalPosition; _sprite.Material = _originalMaterial; }
-        if (GodotObject.IsInstanceValid(_contact)) _contact.Visible = _contactVisible;
         if (GodotObject.IsInstanceValid(_player)) _player.SurfaceSpeedMultiplier = 1f;
     }
     #endregion

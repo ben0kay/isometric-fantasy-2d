@@ -2,6 +2,7 @@
 shader_type canvas_item;
 uniform sampler2D snow_noise : repeat_enable, filter_linear;
 uniform sampler2D snow_detail : repeat_enable, filter_linear;
+#include "res://DEBUG/TopDownTest/SnowTest/SnowDepth.gdshaderinc"
 uniform float snow_coverage = 0.0;
 uniform vec4 snow_colour : source_color = vec4(0.87, 0.91, 0.94, 1.0);
 varying vec2 snow_world;
@@ -23,5 +24,10 @@ void fragment() {
     float fine = texture(snow_detail, (floor(snow_world) + vec2(0.5)) / 34.0).r;
     vec3 surface = snow_colour.rgb * mix(vec3(0.965, 0.98, 1.0), vec3(1.01), roll);
     surface *= 0.985 + fine * 0.030;
+    // Finite differences create gentle sun-facing banks and blue-grey hollows, not coverage holes.
+    float depth = snow_depth_field(snow_world);
+    float slope = snow_depth_field(snow_world + vec2(4.0, -3.0)) - snow_depth_field(snow_world - vec2(4.0, -3.0));
+    surface *= 1.0 + (depth - 0.64) * drift_contrast + slope * drift_contrast * 5.0;
+    surface = mix(surface, surface * vec3(0.95, 0.975, 1.0), (1.0 - depth) * drift_contrast * 2.0);
     COLOR = vec4(surface, cover);
 }

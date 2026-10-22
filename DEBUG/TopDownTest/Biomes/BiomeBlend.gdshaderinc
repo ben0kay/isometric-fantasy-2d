@@ -2,7 +2,7 @@
 uniform float biome_boundary_x = 1760.0;
 uniform float biome_curve_amplitude = 70.0;
 uniform float biome_curve_scale = 340.0;
-uniform float biome_blend_width = 120.0;
+uniform float biome_blend_width = 240.0;
 uniform vec4 west_base : source_color = vec4(0.2196, 0.2745, 0.2078, 1.0);
 uniform vec4 east_base : source_color = vec4(0.43, 0.265, 0.35, 1.0);
 uniform vec4 east_shade : source_color = vec4(0.32, 0.19, 0.28, 1.0);
