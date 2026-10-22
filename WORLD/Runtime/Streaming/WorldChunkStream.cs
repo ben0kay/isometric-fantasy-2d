@@ -21,6 +21,7 @@ public partial class WorldChunkStream : Node
     private ShaderMaterial _ground; private Chunk _applying; private bool _bound;
     private EnvironmentRuntime _environment; private FireRuntime _fire; private OcclusionController _visibility;
     private double _navTimer; private bool _navDirty;
+    private ChunkCoord? _desiredCentre; private ChunkCoord[] _prefetch = Array.Empty<ChunkCoord>();
     public string WorldId { get; private set; }
     public int LoadedCount => _chunks.Values.Count(c => c.State == WorldChunkState.Loaded);
     public double LastDataMilliseconds { get; private set; }
@@ -86,7 +87,9 @@ public partial class WorldChunkStream : Node
         foreach (var chunk in _chunks.Values.Where(c => c.Coord.Distance(PlayerChunk) > _settings.UnloadRadius).OrderByDescending(c => c.Coord.Distance(PlayerChunk)).Take(2).ToArray()) Release(chunk);
         if (_applying == null)
         {
-            foreach (var coord in Desired(_settings.PreloadRadius))
+            if (_desiredCentre != PlayerChunk)
+            { _desiredCentre = PlayerChunk; _prefetch = Desired(_settings.PreloadRadius).ToArray(); _navDirty = true; }
+            foreach (var coord in _prefetch)
                 if (!_chunks.ContainsKey(coord)) { _applying = Begin(coord); break; }
         }
         int count = 0;
@@ -172,6 +175,7 @@ public partial class WorldChunkStream : Node
     {
         chunk.State = WorldChunkState.Loaded;
         if (_bound) BindChunk(chunk);
+        chunk.Actors.ResetPhysicsInterpolation();
         chunk.Actors.ProcessMode = ProcessModeEnum.Inherit; chunk.Actors.Visible = true; chunk.Ground.Visible = true; _navDirty = true;
     }
     private void BindChunk(Chunk chunk)

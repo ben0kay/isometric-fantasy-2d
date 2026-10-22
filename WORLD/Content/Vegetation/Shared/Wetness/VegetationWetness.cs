@@ -22,9 +22,9 @@ public partial class VegetationWetness : Node
     // World trees opt in through their generic group/foliage profile, not their species name.
     // Call after VegetationWind.Attach and BEFORE WorldSnow creates its shared variants.
     // =========================================================
-    public void Attach(Node2D actors)
+    public void Attach(Node2D actors, Dictionary<Shader, Shader> sharedShaders = null)
     {
-        var shaders = new Dictionary<Shader, Shader>();
+        var shaders = sharedShaders ?? new Dictionary<Shader, Shader>();
         var variants = new Dictionary<(ShaderMaterial, int), ShaderMaterial>();
         foreach (Node tree in actors.GetChildren())
         {

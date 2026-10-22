@@ -40,7 +40,8 @@ public partial class SunShadowRenderer : Node2D
                 Name = body.Name + "SunShadow", Texture = source.Texture,
                 Centered = source.Centered, Offset = source.Offset,
                 FlipH = source.FlipH, FlipV = source.FlipV,
-                TextureFilter = source.TextureFilter, Material = shadowMaterial
+                TextureFilter = source.TextureFilter, Material = shadowMaterial,
+                Visible = false, PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off
             };
             shadows.AddChild(shadow);
 

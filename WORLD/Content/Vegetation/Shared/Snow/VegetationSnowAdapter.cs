@@ -11,11 +11,11 @@ public sealed class VegetationSnowAdapter
 
     // Shared normal/mirrored variants work for tree roots or direct grass sprites using the sway shader.
     // =========================================================
-    public void Attach(Node2D actors, Texture2D noise)
+    public void Attach(Node2D actors, Texture2D noise, Dictionary<Shader, Shader> sharedShaders = null)
     {
         const string output = "    COLOR = pixel * sprite_tint * inside;";
         var variants = new Dictionary<(ShaderMaterial, bool, int), ShaderMaterial>();
-        var shaders = new Dictionary<Shader, Shader>();
+        var shaders = sharedShaders ?? new Dictionary<Shader, Shader>();
         foreach (Node child in actors.GetChildren())
         {
             if (!child.HasMeta("environment_snow") || child.GetMeta("environment_snow").AsInt32() != 1) continue;
@@ -62,6 +62,7 @@ public sealed class VegetationSnowAdapter
                 if (GodotObject.IsInstanceValid(pair.Key)) pair.Key.Material = show ? _adapted[pair.Key] : pair.Value;
             _applied = show;
         }
+        if (!show) return;
         foreach (var pair in _materials)
         {
             pair.Snow.SetShaderParameter("wind_multiplier", pair.Source.GetShaderParameter("wind_multiplier"));

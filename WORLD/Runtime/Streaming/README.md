@@ -39,3 +39,11 @@ The runtime blueprint also records local generator version, chunk size and candi
 Concurrent layered-rain and shared-enemy changes were retained. New foliage joins the world wetness level, its shader keeps receiving shared wind, and the generic enemy continues using the same bounded navigation instance.
 
 Compatibility fixtures for generic trees, fire and local lights explicitly select preview mode and also pass after the streaming change. Their tests keep their original authored-count/position expectations; the P3 suite tests the new runtime separately.
+
+## Rendering fixes after P3
+
+The protected start now uses a 320×320 footprint plus 64-unit clearance (DefaultWorldLayout.tres), leaving nearby trees/rocks visible while keeping arrival space clear. This changes new-session feature outcomes, not biome identity.
+
+Sun shadows start hidden until their first projection and disable physics interpolation because their transforms update in the render process. Completed chunk actors reset interpolation before publication. This prevents uninitialized full-resolution silhouettes and interpolation from identity transforms. Wetness and snow share generated Shader resources across chunks through world-owned caches; material parameters and cleanup remain owned by each adapter. Disabled snow no longer updates unused foliage uniforms. Actor-source refreshes coalesce once per frame, and prefetch ordering is cached until the player changes chunk.
+
+Regression checks cover nearby spawn trees, hidden initial shadows, interpolation settings and shared foliage shader identity across distant traversal. Headless checks cannot establish graphical frame rates or prove the Windows rendering symptoms resolved; verify those in the running game. Streaming bounds scenery memory, but shader compilation, loaded scenery effects and synchronous lifecycle/navigation work still have frame costs.

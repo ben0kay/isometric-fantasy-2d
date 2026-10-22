@@ -17,9 +17,18 @@ public partial class ValidateChunkStreaming : Node
     }
     private async Task Run()
     {
+        var fixture = new Node2D(); var body = new Node2D();
+        body.AddChild(new Sprite2D { Name = "Sprite", Texture = new GradientTexture2D() }); fixture.AddChild(body);
+        var initialShadows = new SunShadowRenderer(); initialShadows.Attach(fixture);
+        Check(initialShadows.GetChildren().OfType<Sprite2D>().All(s => !s.Visible),
+            "New sun shadows are visible before their first valid projection");
+        initialShadows.Free(); fixture.Free();
         var world = GD.Load<PackedScene>("res://SCENES/World/World.tscn").Instantiate<WorldScene>();
         world.Config = (WorldMasterConfig)world.Config.Duplicate(); world.Config.RandomSeedOnLoad = false;
         AddChild(world);
+        var initialActors = world.GetNode<Node2D>("Actors");
+        Check(initialActors.FindChildren("*","",true,false).OfType<FantasyGame.World.Trees.Tree>()
+            .Any(t => t.GlobalPosition.DistanceTo(world.Config.PlayerSpawn) < 700),"Spawn clearing hides all nearby trees");
         var stream = world.Stream; var player = world.GetNode<PlayerMovement>("Actors/Player");
         Check(world.GetNode<Node2D>("Actors").GetChildren().OfType<IWorldNavigationAgent>().Count() == 1,"Shared enemy did not load/spawn");
         Check(stream != null && stream.LoadedCount == 25,"Initial active square missing");
@@ -52,6 +61,13 @@ public partial class ValidateChunkStreaming : Node
                 string biome = prop.GetMeta("world_biome_id").AsString(); seenBiomes.Add(biome);
                 Check(world.MacroMap.BiomeAt(prop.GlobalPosition)?.Id == biome,"Scenery does not follow its macro biome");
             }
+            var shadows = env.DayNight.Shadows.FindChildren("*","Sprite2D",true,false).OfType<Sprite2D>().ToArray();
+            Check(shadows.Length > 0 && shadows.All(s => s.PhysicsInterpolationMode == Node.PhysicsInterpolationModeEnum.Off),
+                "Process-driven shadows interpolate through uninitialized full-size transforms");
+            var foliageShaders = world.GetNode<Node2D>("Actors").FindChildren("*","",true,false)
+                .OfType<FantasyGame.World.Trees.Tree>().Where(t => t.GetNode<Burnable>("Burnable").State == BurnState.Healthy)
+                .Select(t => ((ShaderMaterial)t.GetNode<Sprite2D>("Sprite").Material).Shader.GetInstanceId()).Distinct().Count();
+            Check(foliageShaders <= 8,"Chunks compile separate copies of the same foliage shaders");
             var healthy = world.GetNode<Node2D>("Actors").FindChildren("*","",true,false).OfType<FantasyGame.World.Trees.Tree>()
                 .First(t => t.GetNode<Burnable>("Burnable").State == BurnState.Healthy);
             var material = (ShaderMaterial)healthy.GetNode<Sprite2D>("Sprite").Material;

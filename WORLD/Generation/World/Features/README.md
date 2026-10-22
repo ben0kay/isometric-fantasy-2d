@@ -2,7 +2,7 @@
 
 Implemented: seeded, required/preferred polygon footprints with placement priorities, permission-aware queries, independent random streams and frozen save-contract outcomes. `WorldGenerationMasterConfig.Layout` references `DefaultWorldLayout.tres`. The default preset contains **two inline Resources**, not another scene or duplicate biome collection:
 
-- Required protected start: centred at normalized (0.5,0.5), 1600×1600 footprint plus 160-unit clearance. Allows low vegetation and paths, excludes unrelated solid scenery, water and destinations.
+- Required protected start: centred at normalized (0.5,0.5), 320×320 footprint plus 64-unit clearance. Allows low vegetation and paths, excludes unrelated solid scenery, water and destinations.
 - Required SE test footprint: irregular six-point 9000×7000 outline plus 200-unit clearance, placed wholly inside normalized zone (0.6,0.6)–(0.95,0.95). It is a neutral reservation, **not** a fake ocean, volcano or extra biome.
 
 F6 World → **F7** shows tinted reservations and white anchor crosses over the biome map. Tint includes clearance. The playable adjacent-biome scene remains unchanged; these reservations describe the future larger world. Its existing local spawn clearance/pond avoidance still operate separately. P3 must connect streamed placement to these queries and use StartingArea.Anchor for the new map's player arrival.

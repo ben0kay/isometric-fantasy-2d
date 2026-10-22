@@ -12,6 +12,9 @@ public partial class EnvironmentRuntime : Node2D
     public WorldSnow Snow { get; private set; }
     public bool Initialized { get; private set; }
 
+    private readonly System.Collections.Generic.Dictionary<Shader, Shader> _wetnessShaders = new();
+    private bool _actorsDirty;
+
     #region Composition
     // Called once by the production world after ground, spawn and scenery are configured.
     // =========================================================
@@ -39,7 +42,7 @@ public partial class EnvironmentRuntime : Node2D
         }
         Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds }; AddChild(Weather);
         // Wind is already attached; register leaf wetness before snow clones tree materials.
-        var wetness = new VegetationWetness { Name = "VegetationWetness", Weather = Weather }; AddChild(wetness); wetness.Attach(actors);
+        var wetness = new VegetationWetness { Name = "VegetationWetness", Weather = Weather }; AddChild(wetness); wetness.Attach(actors, _wetnessShaders);
         var shadows = new SunShadowRenderer { Name = "SunShadows", ZIndex = -5, Wind = Wind }; AddChild(shadows); shadows.Attach(actors);
         DayNight = new WorldDayNight { Name = "DayNight", Config = Settings.Lighting, Clock = Clock, Weather = Weather, Shadows = shadows }; AddChild(DayNight);
         var clouds = new CloudShade { Name = "Clouds", Config = Settings.Clouds, Day = DayNight, Wind = Wind }; clouds.Configure(world.Bounds); AddChild(clouds);
@@ -56,7 +59,7 @@ public partial class EnvironmentRuntime : Node2D
     public void RegisterChunk(Node2D chunk)
     {
         var wind = new VegetationWind { Name = "ChunkWind", Wind = Wind }; AddChild(wind); wind.Attach(chunk);
-        var wetness = new VegetationWetness { Weather = Weather }; AddChild(wetness); wetness.Attach(chunk);
+        var wetness = new VegetationWetness { Weather = Weather }; AddChild(wetness); wetness.Attach(chunk, _wetnessShaders);
         wetness.StartAt(GetNode<VegetationWetness>("VegetationWetness").Coverage);
         chunk.SetMeta("chunk_wetness",wetness.GetInstanceId());
         var shadow = new SunShadowRenderer { Wind = Wind }; DayNight.Shadows.AddChild(shadow); shadow.Attach(chunk);
@@ -69,8 +72,14 @@ public partial class EnvironmentRuntime : Node2D
         foreach (string key in new[] { "chunk_shadow","chunk_wetness","chunk_wind" })
             if (chunk.HasMeta(key) && GodotObject.InstanceFromId(chunk.GetMeta(key).AsUInt64()) is Node node) node.Free();
     }
-    public void RefreshLocalActors()
+    public void RefreshLocalActors() => _actorsDirty = true;
+
+    // Coalesce all chunk lifecycle changes into one actor-source scan per frame.
+    // =========================================================
+    public override void _Process(double delta)
     {
+        if (!_actorsDirty || !Initialized) return;
+        _actorsDirty = false;
         GetNode<WorldAtmosphere>("Atmosphere").RefreshTrees();
         Weather.GetNode<GroundRainSplashes>("GroundSplashes").RefreshActors();
     }

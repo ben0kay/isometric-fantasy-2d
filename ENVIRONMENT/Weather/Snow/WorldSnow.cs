@@ -7,6 +7,7 @@ public partial class WorldSnow : Node2D
     private readonly VegetationSnowAdapter _trees = new();
     private readonly WorldRockSnowAdapter _rocks = new();
     private readonly System.Collections.Generic.Dictionary<Node2D,(VegetationSnowAdapter Trees, WorldRockSnowAdapter Rocks)> _chunks = new();
+    private readonly System.Collections.Generic.Dictionary<Shader, Shader> _vegetationShaders = new();
     private ShaderMaterial _ground;
     private MeshInstance2D _cover;
     public WorldWeather Weather { get; set; }
@@ -23,7 +24,7 @@ public partial class WorldSnow : Node2D
         Config ??= new SnowProfile();
         var weather = Weather;
         Texture2D noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
-        _trees.Attach(Actors, noise);
+        _trees.Attach(Actors, noise, _vegetationShaders);
         _rocks.Attach(Actors, noise);
         _ground = new ShaderMaterial { Shader = GD.Load<Shader>("res://WORLD/Terrain/Ground/Surfaces/Snow/GroundSnow.gdshader") };
         _ground.SetShaderParameter("snow_noise", GD.Load<Texture2D>("res://ENVIRONMENT/Weather/Snow/SnowCoverageNoise.tres"));
@@ -41,7 +42,7 @@ public partial class WorldSnow : Node2D
     {
         var trees = new VegetationSnowAdapter(); var rocks = new WorldRockSnowAdapter();
         var noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
-        trees.Attach(chunk,noise); rocks.Attach(chunk,noise); _chunks.Add(chunk,(trees,rocks));
+        trees.Attach(chunk,noise,_vegetationShaders); rocks.Attach(chunk,noise); _chunks.Add(chunk,(trees,rocks));
     }
     public void UnregisterChunk(Node2D chunk)
     {
@@ -97,7 +98,7 @@ public partial class WorldSnow : Node2D
     {
         foreach (var chunk in new System.Collections.Generic.List<Node2D>(_chunks.Keys)) UnregisterChunk(chunk);
         _rocks.Restore();
-        _trees.Restore();
+        _trees.Restore(); _vegetationShaders.Clear();
     }
     #endregion
 }
