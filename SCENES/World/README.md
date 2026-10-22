@@ -36,3 +36,6 @@ Production FIRE1/FIRE2: build C# and F6 this scene; use the top-centre **Ignite 
 
 ## P0/P1 finite map overview
 F7 toggles the generated finite biome blueprint. This larger map is not yet streamed/playable; existing preview art/placement/controls remain unchanged. Configure WorldMasterConfig.Generation via WORLD/Generation/World/DefaultWorldGeneration.tres. Set Generation null to disable only the new macro branch. See the generation README and audit for configuration, identities and validation.
+
+
+LL0–LL1 local lighting: three preview torches now stand near spawn. Set midnight in F9 and expand Lighting and clouds to compare Local torch shadows, energy, radius and softness. Clear TorchProfile.AdditionalOffsets and reload to keep only the original torch.

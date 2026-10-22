@@ -19,6 +19,8 @@ public partial class TreeVisualVariant : Resource
     [Export] public float SpacingRadius { get; set; } = -1f;
     [Export] public Vector2 VisualMinimum { get; set; } = new(-80, -150);
     [Export] public Vector2 VisualMaximum { get; set; } = new(80, 10);
+    [ExportGroup("Optional local-light outline, root-local; empty uses trunk") ]
+    [Export] public Vector2[] LocalLightPolygon { get; set; } = System.Array.Empty<Vector2>();
     [ExportGroup("Optional per-artwork overrides")]
     [Export] public ShaderMaterial WindMaterial { get; set; }
     [Export] public TreeFireProfile FireProfile { get; set; }

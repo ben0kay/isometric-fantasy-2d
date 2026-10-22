@@ -55,6 +55,15 @@ public partial class Tree : StaticBody2D
         }
         var footprint = GetNode<CollisionPolygon2D>("TrunkFootprint");
         footprint.Polygon = polygon; footprint.Disabled = polygon.Length < 3;
+        var localShadow = GetNode<LocalLightOccluder>("LocalLightOccluder");
+        localShadow.Visible = Definition.CastLocalLightShadows;
+        Vector2[] lightPolygon = (Vector2[])SelectedVariant.LocalLightPolygon.Clone();
+        if (Mirrored)
+        {
+            System.Array.Reverse(lightPolygon);
+            for (int i = 0; i < lightPolygon.Length; i++) lightPolygon[i].X = -lightPolygon[i].X;
+        }
+        localShadow.Outline = lightPolygon;
         var hits = GetNode<TreeHitResponse>("HitResponse");
         hits.Enabled = Definition.HitResponseEnabled; hits.Config = Definition.HitConfig;
         hits.FoliageColour = Definition.FoliageColour; hits.FoliageEnabled = Definition.HasFoliage;

@@ -47,6 +47,9 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Slider(lighting, "Vignette", 0, 0.3, 0.01, () => s.ColourGrade.Vignette, v => s.ColourGrade.Vignette = (float)v);
         Slider(lighting, "Cloud opacity", 0, 0.4, 0.01, () => s.Clouds.Opacity, v => s.Clouds.Opacity = (float)v);
         Slider(lighting, "Torch energy", 0, 2, 0.05, () => s.Torch.Energy, v => s.Torch.Energy = (float)v);
+        Toggle(lighting, "Local torch shadows", () => s.Torch.CastShadows, v => s.Torch.CastShadows = v);
+        Slider(lighting, "Torch radius scale", 0.25, 3, 0.05, () => s.Torch.TextureScale, v => s.Torch.TextureScale = (float)v);
+        Slider(lighting, "Local shadow softness", 0, 8, 0.1, () => s.Torch.ShadowSoftness, v => s.Torch.ShadowSoftness = (float)v);
         var atmosphere = Section(controls, "Atmosphere", false);
         Toggle(atmosphere, "Ground haze", () => s.Atmosphere.Haze, v => s.Atmosphere.Haze = v);
         Toggle(atmosphere, "Pollen / dust", () => s.Atmosphere.Pollen, v => s.Atmosphere.Pollen = v);

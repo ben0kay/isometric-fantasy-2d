@@ -1,7 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Texture2D" path="res://WORLD/Content/Rocks/Sprites/rock_01.webp" id="art"]
 
+[ext_resource type="Script" path="res://WORLD/Content/Shared/LocalLightOccluder.cs" id="local_occluder"]
 [node name="Rock01" type="StaticBody2D"]
 
 [node name="Sprite" type="Sprite2D" parent="."]
@@ -13,3 +14,7 @@ centered = false
 
 [node name="RockFootprint" type="CollisionPolygon2D" parent="."]
 polygon = PackedVector2Array(-30, -8, -25, -18, -17, -24, 17, -24, 25, -18, 30, -8, 28, -3, 22, 1, -22, 1, -28, -3)
+
+[node name="LocalLightOccluder" type="LightOccluder2D" parent="."]
+script = ExtResource("local_occluder")
+FootprintPath = NodePath("../RockFootprint")

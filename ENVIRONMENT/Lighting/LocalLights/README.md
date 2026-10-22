@@ -1,6 +1,6 @@
 # Local Lights — Torch, Campfire, Lantern & Shadow Plan
 
-> **Status:** The production torch and its flickering `PointLight2D` are **implemented**. Local-light **shadow casting and the reusable framework below are planning only**. Do not implement a broad system merely because this document exists; let Codex propose a contained pass for approval.
+> **Status: LL0–LL1 implemented.** Native PointLight2D shadows are enabled in the existing torch preset. Generic trees and the rock template own footprint-derived LightOccluder2D nodes. Two extra preview torches stand near spawn. LL2 common light-type framework and LL3 streaming/budgets remain planned.
 >
 > **Codex:** Read root `README.md` and `CodePreferences.md`, then this README, `ENVIRONMENT/EnvironmentRuntime.cs`, `ENVIRONMENT/Lighting/Shadows/README.md`, `WORLD/Content/Props/Torch/Torch.tscn`, relevant tree/rock scenes and their collision geometry, plus the current production world/biome and chunk-generation code before making changes. One GitHub commit per approved job.
 
@@ -9,10 +9,24 @@
 - `TorchLight.cs` caches the torch's existing `PointLight2D` and adds a two-frequency energy flicker.
 - `TorchProfile.cs` / `TorchProfile.tres` configure whether it is visible, light energy and its offset from the world spawn.
 - `WORLD/Content/Props/Torch/Torch.tscn` owns the **actual torch art, physics body and light node**. Do not duplicate this content asset in ENVIRONMENT.
-- `EnvironmentRuntime.cs` instantiates **one temporary development torch** near the player's spawn, and adds the torch light controller. Disabling its presentation currently retains collision.
+- `EnvironmentRuntime.cs` instantiates **the original temporary development torch plus two configurable comparison torches** near the player's spawn, and adds the torch light controller. Disabling its presentation currently retains collision.
 - The sunlight system is **different**: `ENVIRONMENT/Lighting/Sun/`, `DayNight/` and `Shadows/SunShadowRenderer.cs` own one shared day/night calculation and custom projected sun silhouettes. **Do not replace or couple sunlight to local-light occlusion**.
 
-**Not yet present:** Godot `LightOccluder2D` shadow-casting geometry on trees/rocks, reusable configurable shadows for multiple local light types, per-light performance budgets or dynamic chunk registration.
+**Now implemented:** object-owned native occluders for generic trees (oak and pink blossom) and rocks, optional per-variant light outlines and independent torch energy/radius/shadow controls. No global shadow manager, per-object raycasts or per-frame polygon rebuilding.
+
+**Still planned:** shared controllers for several light types, per-light budgets and chunk streaming registration.
+
+## LL0–LL1 run / tweak / removal
+
+Build C#, open SCENES/World/World.tscn and F6. The existing torch plus two additional torches are near the player spawn. In F9 controls, set Time near midnight and expand **Lighting and clouds**. Compare **Local torch shadows** on/off; **Torch energy** changes brightness, **Torch radius scale** changes range, and **Local shadow softness** adjusts PCF smoothing. ShadowFilter and Colour are also Inspector-editable TorchProfile fields.
+
+TorchProfile.tres opts into CastShadows and specifies two AdditionalOffsets relative to player spawn. Clear AdditionalOffsets and reload to remove the extra lamps; at most two extra development lamps are instantiated. The original torch stays at OffsetFromSpawn. Set CastShadows=false to disable local shadow casting. The light texture, flame artwork/emissive material and flicker stay with the canonical torch; only the existing main torch emits the ambient smoke/embers for this contained comparison.
+
+WORLD/Content/Shared/LocalLightOccluder.cs creates a closed, double-sided native polygon once from the configured physical footprint. The generic tree template and Rock01.tscn own it, so masks/geometry follow object scale, mirror and lifetime naturally. TreeDefinition.CastLocalLightShadows opts a tree species out. TreeVisualVariant.LocalLightPolygon can supply separate root-local geometry; empty uses TrunkFootprint. Rock's helper accepts an authored Outline override. Physics polygons never change for lighting. Native light/occluder masks remain the matching default bit 1.
+
+The sun renderer/lighting formulas, seed placement, physics and weather are unchanged. No broad LL2 controller, LL3 budget, streaming or persistence work is included. The current preview torches remain temporary environment composition, not persistent inventory/fuel entities.
+
+Validation: C# compiled against GodotSharp 4.5.1; full production scene imported/rendered in Godot .NET 4.5.1 Compatibility software OpenGL. On/off image probes verified darkness behind an oak with the same emitter on both sides; runtime checks cover all tree/rock footprints, mirrors, three lamps, shadow opt-out, independent energy/radius and retained sun cache. Tree integration and original DEBUG startup are checked separately. The repository SDK remains 4.7.2; your Windows renderer/performance needs the local check. See TESTS/Lighting.
 
 ## Goal
 
@@ -95,14 +109,14 @@ Put common controls in shared data, light-type-specific presets in their respect
 
 ## Codex staged implementation plan
 
-### LL0 — Inspect and isolate a safe test
+### LL0 — Inspect and isolate a safe test (completed)
 
 - Inspect current torch scene and its `PointLight2D`, existing oak / pink blossom tree / rock scenes, and Godot engine version.
 - Confirm current object materials and render layers receive PointLight2D illumination; inspect whether any objects already have native occluders or unusual masks.
 - Use a contained production comparison with the existing torch or a removable test fixture. Preserve sun shadows, rain, snow, fog, wind, day/night and current DEBUG.
 - Identify minimum resource/config changes; **no new global shadow manager in this pass**.
 
-### LL1 — Minimal working torch shadows (recommended first implementation)
+### LL1 — Minimal working torch shadows (completed)
 
 - Make the existing torch's shadow casting opt-in through its profile and `PointLight2D`.
 - Add **reusable, object-owned** occluder geometry to at least one oak tree and one rock (or a small isolated test if safer).
@@ -127,13 +141,13 @@ Put common controls in shared data, light-type-specific presets in their respect
 
 ## Validation / do-not-break checklist
 
-- [ ] Same sun direction, ambient day/night system, sun-shadow silhouettes, wind and colour grading as before.
-- [ ] Existing torch remains spawned, visible and flickering with its current default settings when `CastShadows` is off.
-- [ ] At night, an occluding tree or rock blocks **only that torch's light**, while other light sources and daylight still contribute.
-- [ ] Shadow direction is correct relative to lamp/object positions; light range and light energy work as separate settings.
-- [ ] Occluder shapes look plausible with pixel-art assets and don't require per-object CPU collision queries every frame.
-- [ ] Godot build/import/scene validation and actual visual screenshot testing pass; no broken asset paths or editor errors.
-- [ ] Existing DEBUG tests and future production chunk streaming plans remain isolated.
-- [ ] Update this README to distinguish implemented functionality from planned functionality after each pass; **one commit per job**.
+- [x] Same sun direction, ambient day/night system, sun-shadow silhouettes, wind and colour grading as before.
+- [x] Existing torch remains spawned, visible and flickering with its current default settings when `CastShadows` is off.
+- [x] At night, an occluding tree or rock blocks **only that torch's light**, while other light sources and daylight still contribute.
+- [x] Shadow direction is correct relative to lamp/object positions; light range and light energy work as separate settings.
+- [x] Occluder shapes look plausible with pixel-art assets and don't require per-object CPU collision queries every frame.
+- [x] Godot build/import/scene validation and actual visual screenshot testing pass; no broken asset paths or editor errors.
+- [x] Existing DEBUG tests and future production chunk streaming plans remain isolated.
+- [x] Update this README to distinguish implemented functionality from planned functionality after each pass; **one commit per job**.
 
 **Recommendation:** Start with **LL0–LL1 only**. Godot's built-in `PointLight2D` + `LightOccluder2D` is enough for the first working test. Don't prebuild a complex shadow architecture until two or more light types actually need it.

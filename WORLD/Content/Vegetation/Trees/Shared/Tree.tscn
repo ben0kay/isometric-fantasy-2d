@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs" id="hit"]
 [ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/Burnable.cs" id="burn"]
 [ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Fire/TreeFireAppearance.cs" id="appearance"]
+[ext_resource type="Script" path="res://WORLD/Content/Shared/LocalLightOccluder.cs" id="local_occluder"]
 [node name="Tree" type="StaticBody2D"]
 script = ExtResource("tree")
 [node name="Sprite" type="Sprite2D" parent="."]
@@ -15,3 +16,7 @@ script = ExtResource("hit")
 script = ExtResource("burn")
 [node name="FireAppearance" type="Node" parent="."]
 script = ExtResource("appearance")
+
+[node name="LocalLightOccluder" type="LightOccluder2D" parent="."]
+script = ExtResource("local_occluder")
+FootprintPath = NodePath("../TrunkFootprint")

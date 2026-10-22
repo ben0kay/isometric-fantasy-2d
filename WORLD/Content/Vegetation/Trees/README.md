@@ -31,3 +31,6 @@ The template has stable Sprite, TrunkFootprint, HitResponse, Burnable and FireAp
 All player controls remain in PlayerInput.cs. Trees and hit receivers have no idle update loops. The world fire manager uses generic burnable registration and the debug buttons say “tree”, with no species filtering. Existing fire spread is **not implemented**; this refactor preserves the current FIRE1/FIRE2 semantics.
 
 Validation: C# build, full-density Godot 4.5.1 Compatibility rendering, both-biome runtime checks, both-species axe/wind/snow/fire, oak charred/reset alignment, original DEBUG startup, deterministic replay and a Resource-only third-species/two-variant fixture. See TESTS/Trees and TESTS/Fire. Windows renderer/performance needs a local check.
+
+
+Local torch shadows: CastLocalLightShadows on TreeDefinition defaults on. The template owns LocalLightOccluder, deriving the selected mirrored trunk polygon once. A variant can override LocalLightPolygon without changing collision. No additional species resource files or scripts are required.

@@ -6,3 +6,6 @@ Scene roots must be Node2D (StaticBody2D for collidable props); artwork and coll
 Environment fields: SnowResponse opts content into vegetation or rock-cap adapters; GrassLike selects blade snow and the decorative ground layer; CastSunShadow and ContactShadowRadius select shadow helpers. Placement copies these settings to per-instance metadata once. Canonical scenes retain species-specific wind material parameters; environment controllers own the shared changing wind.
 
 Placement: AvoidBiomeTransition reserves the layout blend and artwork extents for trees/tufts. Shared rocks leave this off. The generic placer uses this data without species-name conditions.
+
+
+LocalLightOccluder.cs is a shared object-owned native LightOccluder2D helper: configure an optional separate Outline or let it read its FootprintPath once at readiness. It follows the owning object transform/lifetime and has no processor or world registry. Trees configure it through their generic template; Rock01 uses the same helper.

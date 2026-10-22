@@ -17,6 +17,7 @@ public partial class TreeDefinition : SceneryDefinition
     [Export] public bool HitResponseEnabled { get; set; } = true;
     [Export] public TreeHitConfig HitConfig { get; set; } = new();
     [Export] public ShaderMaterial WindMaterial { get; set; }
+    [Export] public bool CastLocalLightShadows { get; set; } = true;
     [Export] public int SnowFoliageProfile { get; set; }
     [Export] public bool CanBurn { get; set; } = true;
     [Export] public TreeFireProfile FireProfile { get; set; } = new();

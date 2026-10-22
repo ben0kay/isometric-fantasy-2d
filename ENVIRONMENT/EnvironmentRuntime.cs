@@ -26,6 +26,17 @@ public partial class EnvironmentRuntime : Node2D
         var torch = GD.Load<PackedScene>("res://WORLD/Content/Props/Torch/Torch.tscn").Instantiate<Node2D>();
         torch.Name = "Torch"; torch.Position = world.PlayerSpawn + Settings.Torch.OffsetFromSpawn; actors.AddChild(torch);
         AddChild(new TorchLight { Name = "TorchLight", Torch = torch, Config = Settings.Torch });
+        // Temporary comparison lamps share the existing profile/controller; no new lighting manager.
+        int previewIndex = 0;
+        foreach (Vector2 offset in Settings.Torch.AdditionalOffsets)
+        {
+            if (++previewIndex > 2) break;
+            Vector2 position = world.PlayerSpawn + offset;
+            if (!world.Bounds.Grow(-20f).HasPoint(position)) continue;
+            var extra = GD.Load<PackedScene>("res://WORLD/Content/Props/Torch/Torch.tscn").Instantiate<Node2D>();
+            extra.Name = "PreviewTorch" + previewIndex; extra.Position = position; actors.AddChild(extra);
+            AddChild(new TorchLight { Name = "PreviewTorchLight" + previewIndex, Torch = extra, Config = Settings.Torch });
+        }
         Weather = new WorldWeather { Name = "Weather", Config = Settings.Weather, Wind = Wind, Actors = actors, WorldBounds = world.Bounds }; AddChild(Weather);
         var shadows = new SunShadowRenderer { Name = "SunShadows", ZIndex = -5, Wind = Wind }; AddChild(shadows); shadows.Attach(actors);
         DayNight = new WorldDayNight { Name = "DayNight", Config = Settings.Lighting, Clock = Clock, Weather = Weather, Shadows = shadows }; AddChild(DayNight);
