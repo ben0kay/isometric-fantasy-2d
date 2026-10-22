@@ -42,6 +42,9 @@ public partial class WorldScene : Node2D
         environment?.Initialize(Config, GetNode<Node2D>("Actors"));
         if (environment != null) GetNode<FireRuntime>("Fire").Initialize(GetNode<Node2D>("Actors"), environment);
         if (pond != null && environment?.Weather != null) pond.Initialize(GetNode<PlayerMovement>("Actors/Player"), environment.Weather);
+        var visibility = new OcclusionController { Name = "Occlusion" };
+        AddChild(visibility);
+        visibility.Initialize(player);
     }
 
     // Static boundary walls derive from the same bounds as ground and camera.
