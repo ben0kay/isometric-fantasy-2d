@@ -89,3 +89,7 @@ The removable `SnowTest/` now shades the upper surfaces of generated boulders us
 ## FIRE2 — GPU tree fire and foliage erosion
 
 [Fire/](Fire/README.md) now extends Codex's FIRE1 oak burn with **GPU orange/yellow flames, grey smoke, drifting embers, one temporary flickering orange light and a per-pixel foliage erosion shader** that reveals the charred leafless oak beneath the healthy artwork. FIRE1's **Ignite nearest oak** and **Reset all debug oaks** buttons remain the trigger; no lightning-to-tree ignition yet (FIRE3). The original tree object/ground collision and snow/wind ownership are unchanged. Fire intensity, wind response, particle counts, light and temporary effects cap are Inspector options under `Fire/DefaultFireConfig.tres`. Rebuild the C# project and inspect GPU visuals locally; see the [FIRE2 validation steps](Fire/README.md).
+
+## FIRE2 fire distributed across each tree canopy
+
+Flames, smoke and embers now use a reusable alpha-silhouette emission mask from the tree's healthy sprite instead of a small fixed centre rectangle. The mask is built/cached once per distinct tree shape and orientation and drives the existing GPU emitters. Flames are slightly rounder and fuller via a shared rounded procedural sprite and the `FlamePuffiness` Inspector setting (default 1.10). `FireMasterConfig` controls canopy height band/opacity for future tree species. [Fire/README.md](Fire/README.md) covers the details and local Godot test checklist.

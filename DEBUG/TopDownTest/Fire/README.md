@@ -78,3 +78,33 @@ Known limits: mid-transition shadow retains the healthy silhouette until final s
 ## Validation and handoff evidence
 
 All debug C# compiled with .NET 8 and Godot 4.5.1 source generators/native API. Actual software OpenGL Compatibility renders were inspected at mid-blend and burnt stages: grounded normal/mirrored art and the new shadow silhouette. Runtime checks passed for once-only ignition/completion signals, repeated-ignition rejection, idle/burnt processing disabled, both mirrored source anchors within 0.01 world pixels, unchanged entity/root/collider/material, no extra shadows/remaining overlay, axe foliage suppression/reset, snow enabled during a cycle and removed before reset, and nearest/no-range controls. Existing camera/enemy test changes were retained. Rendering used reduced decorative grass counts locally only. The existing seeded scatter logs 115/116 trees (bounded placement); FIRE1 does not change generation. Windows D3D12 and hardware performance were not tested.
+
+## FIRE2 canopy-shape and slightly puffier flames (October 2026)
+
+The first FIRE2 screenshot showed a column of long triangular flames concentrated in the middle of the oak. That happened because FIRE2 originally used a **single fixed rectangle only 46 world pixels wide** for its flame emitter. Different trees will have different canopy shapes, so expanding that rectangle would still be inaccurate.
+
+`Visuals/CanopyFireEmissionMask.cs` now derives a **bounded emission-point mask from the living tree's imported texture alpha**, limited to an adjustable upper-canopy band. It samples each opaque grid cell, converts source-pixel locations through the *actual sprite transform/flip/offset*, and packs up to **512** coordinates into a small **RG32F GPU point texture**. A cache stores one result per unique texture, orientation, artwork transform and canopy-settings combination. This is generated **only on the first ignition of each distinct silhouette**, never per frame; the three GPU particle emitters (flames, smoke, embers) share the point texture. Transparent gaps between branches and outside the crown aren't chosen as flame origins. Upward-moving flames can still extend past the silhouette naturally. No per-leaf objects, raycasts, CPU particles or scene-spawn proliferation.
+
+The same system works for *other tree species* when they opt into BurnableTree using their own healthy and charred textures and canopy-range configuration. Neither oak filenames nor rectangular per-species emission coordinates are hardcoded.
+
+The procedural flame particle texture was revised from a pointed 14×24 shape to a **20×28 rounded cluster of overlapping flame lobes**, with soft alpha edges and a warm core. Default `FlameParticles` was raised modestly from 90 to 120 to fill the wider distributed canopy. `FlamePuffiness` defaults to **1.10**, and the existing intensity, smoke/embers, shared wind and flickering firelight are unchanged.
+
+### Inspector controls
+
+- `UseCanopyEmissionMask` (default on): if disabled, or if a texture can't be sampled, uses the original simple box-emitter fallback.
+- `CanopyTopFraction` (0.07) and `CanopyBottomFraction` (0.71): limit emitters to a meaningful portion of the foliage. Different height/proportion tree art can adjust just these values.
+- `CanopyAlphaThreshold` (0.55): reject nearly transparent feathering/noise at the silhouette edge.
+- `FlamePuffiness` (1.10): overall GPU flame particle size multiplier; stays restrained by a 0.85–1.35 Inspector range.
+- `FlameParticles` (120): global cap per actively burning tree, not multiplied by the number of foliage points.
+
+### Testing
+
+1. Pull and **build the Godot .NET C# project**, then ignite an oak. Compare left/right outer canopy: flames should begin around both outer edges, instead of only a narrow centre column.
+2. Check a mirrored and scaled oak: particle spawn origins should follow its flipped sprite, with no canopy-to-trunk offset.
+3. Wind -3 / 0 / +3 should still tilt drifting flames and embers, while the emission origins stay attached to the same tree texture.
+4. Set `UseCanopyEmissionMask=false` to compare the old centered fallback against the distributed layout.
+5. Try `FlamePuffiness` values 1.0 and 1.2 to adjust softness/volume. The shader still controls the gradual foliage loss.
+6. Snow on/off, Reset all, smoke after burnout, capped 10 simultaneous effects, and both tree collider/sun-shadow alignment should remain unchanged.
+7. Before importing a new tree species, inspect its healthy source artwork and adjust the top/bottom height fractions if needed. The mask uses alpha, **not** exact flame collision or a continuously changing erosion silhouette; emitted particles continue rising beyond the canopy.
+
+**Verification scope:** Source and integration can be checked through GitHub; a real Godot build and in-game visual comparison are needed before considering the appearance validated.

@@ -34,13 +34,17 @@ public partial class BurningTreeEffect : Node2D
         if (_erosion.Attach(sprite, _burnNoise))
             Tree.SetFoliageErosion(true);
 
-        // A canopy-spanning band of small flames; the base of the rock-solid trunk stays visible.
+        // First build fallback box emitters; a cached alpha-mask turns them into
+        // silhouette-matched emission points for this exact tree texture/shape.
         Vector2 impact = root.ToLocal(Tree.WorldImpactPosition);
         _flames = MakeEmitter("Flames", _flameArt, Mathf.Clamp(Config.FlameParticles, 1, 180), 0.62f,
             new Vector2(Mathf.Clamp(impact.X * 0.3f, -18f, 18f),
                         Mathf.Clamp(impact.Y, -135f, -50f)), new Vector3(23f, 35f, 1f),
             new Color(1f, 0.94f, 0.85f, 1f), out _flameMotion);
-        _flameMotion.ScaleMin = 0.68f; _flameMotion.ScaleMax = 1.4f; _flameMotion.Spread = 24f;
+        float puff = Mathf.Clamp(Config.FlamePuffiness, 0.85f, 1.35f);
+        _flameMotion.ScaleMin = 0.62f * puff;
+        _flameMotion.ScaleMax = 1.32f * puff;
+        _flameMotion.Spread = 24f;
 
         _smoke = MakeEmitter("Smoke", _smokeArt, Mathf.Clamp(Config.SmokeParticles, 1, 130), 2.15f,
             new Vector2(0f, -115f), new Vector3(22f, 14f, 1f),
@@ -51,6 +55,17 @@ public partial class BurningTreeEffect : Node2D
             new Vector2(0f, -93f), new Vector3(28f, 30f, 1f),
             new Color(1f, 0.76f, 0.42f, 0.95f), out _emberMotion);
         _emberMotion.ScaleMin = 0.40f; _emberMotion.ScaleMax = 1.1f; _emberMotion.Spread = 37f;
+
+        // One GPU emission-point mask per unique sprite shape/flip/profile.
+        // Emitters follow the artwork's outer edges rather than a centre rectangle.
+        if (CanopyFireEmissionMask.TryGet(sprite, Config, out CanopyFireMask canopy))
+        {
+            CanopyFireEmissionMask.Apply(canopy, _flames, _flameMotion);
+            CanopyFireEmissionMask.Apply(canopy, _smoke, _smokeMotion);
+            CanopyFireEmissionMask.Apply(canopy, _embers, _emberMotion);
+        }
+        else if (Config.UseCanopyEmissionMask)
+            GD.PushWarning("FIRE2: foliage mask unavailable; keeping box emitter for this tree.");
 
         _light = new PointLight2D {
             Name = "TemporaryFirelight", Position = new Vector2(0f, -82f), Texture = _lightArt,
@@ -70,21 +85,27 @@ public partial class BurningTreeEffect : Node2D
     {
         if (_flameArt != null) return;
 
-        var flame = Image.CreateEmpty(14, 24, false, Image.Format.Rgba8);
+        // Slightly rounded, overlapping lobes instead of the old sharp triangles.
+        // The glow/alpha gradient preserves warmth without turning flames into large clouds.
+        var flame = Image.CreateEmpty(20, 28, false, Image.Format.Rgba8);
         flame.Fill(Colors.Transparent);
-        for (int y = 0; y < 24; y++)
-        {
-            float t = y / 23f;
-            float halfWidth = 0.6f + 5.5f * t * t;
-            float curve = Mathf.Sin((1f - t) * Mathf.Pi * 1.5f) * 1.4f;
-            for (int x = 0; x < 14; x++)
+        for (int y = 0; y < 28; y++)
+            for (int x = 0; x < 20; x++)
             {
-                float distance = Mathf.Abs(x - 6.5f - curve) / halfWidth;
-                if (distance >= 1f) continue;
-                float alpha = Mathf.Clamp((1f - distance) * 1.75f, 0f, 1f) * (0.48f + 0.52f * t);
-                flame.SetPixel(x, y, new Color(1f, 0.25f + 0.7f * t, 0.025f + 0.09f * t, alpha));
+                Vector2 p = new(x + 0.5f, y + 0.5f);
+                float puff = Mathf.Max(
+                    Mathf.Max(Puff(p, new Vector2(10f, 19.5f), new Vector2(8f, 8.0f)),
+                              Puff(p, new Vector2(7f, 12.8f), new Vector2(5.6f, 7.0f))),
+                    Mathf.Max(Puff(p, new Vector2(13.2f, 11.5f), new Vector2(5.2f, 7.2f)),
+                              Puff(p, new Vector2(10.5f, 5.7f), new Vector2(3.6f, 5.1f))));
+                if (puff <= 0f) continue;
+                float edge = Mathf.Clamp(puff * 4f, 0f, 1f);
+                float core = Mathf.Clamp(puff * 1.45f, 0f, 1f);
+                float heat = Mathf.Clamp(y / 28f * 0.62f + core * 0.50f, 0f, 1f);
+                flame.SetPixel(x, y, new Color(
+                    1f, 0.24f + 0.71f * heat, 0.025f + 0.17f * heat,
+                    edge * (0.55f + core * 0.40f)));
             }
-        }
         _flameArt = ImageTexture.CreateFromImage(flame);
 
         var smoke = Image.CreateEmpty(28, 28, false, Image.Format.Rgba8);
@@ -116,6 +137,14 @@ public partial class BurningTreeEffect : Node2D
             FillFrom = new Vector2(0.5f, 0.5f), FillTo = new Vector2(1f, 0.5f)
         };
         _burnNoise = GD.Load<Texture2D>("res://DEBUG/TopDownTest/Ground/Noise/GroundNoise.tres");
+    }
+
+    // Soft elliptical lobes make a flame look slightly fuller without a second particle system.
+    // =========================================================
+    private static float Puff(Vector2 pixel, Vector2 center, Vector2 radii)
+    {
+        Vector2 n = (pixel - center) / radii;
+        return Mathf.Max(0f, 1f - n.Length());
     }
 
     // One GPU emitter with a distinct motion profile; no per-particle nodes or timers.
