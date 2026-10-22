@@ -9,18 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Strip binaries
+      - name: Build and push code-only branch
         run: |
           rm -rf .github
-          find . -path ./.git -prune -o -type f \( \
-            -iname '*.png' -o -iname '*.webp' -o -iname '*.jpg' -o -iname '*.jpeg' \
-            -o -iname '*.import' -o -iname '*.uid' -o -iname '*.ogg' -o -iname '*.wav' \
-            -o -iname '*.mp3' -o -iname '*.ttf' -o -iname '*.otf' \) -delete
-      - name: Push code-only branch
-        run: |
+          find . -type f -not -path './.git/*' \( -iname '*.png' -o -iname '*.webp' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.import' -o -iname '*.uid' -o -iname '*.ogg' -o -iname '*.wav' -o -iname '*.mp3' -o -iname '*.ttf' -o -iname '*.otf' \) -delete
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git checkout --orphan claude-view
           git add -A
-          git commit -m "Code-only snapshot of ${GITHUB_SHA}"
+          git commit -m "Code-only snapshot of $GITHUB_SHA"
           git push -f origin claude-view
