@@ -6,6 +6,9 @@
 [ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/Oak/OakWind.tres" id="wind"]
 [ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs" id="hit"]
 [ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/DefaultTreeHitConfig.tres" id="hitconfig"]
+[ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/Burnable.cs" id="burn"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Oak/OakFireProfile.tres" id="fire_profile"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Fire/TreeFireAppearance.cs" id="fire_art"]
 [node name="Oak" type="StaticBody2D"]
 
 [node name="Sprite" type="Sprite2D" parent="."]
@@ -22,3 +25,9 @@ polygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -1
 [node name="HitResponse" type="Node2D" parent="."]
 script = ExtResource("hit")
 Config = ExtResource("hitconfig")
+
+[node name="Burnable" type="Node" parent="."]
+script = ExtResource("burn")
+Profile = ExtResource("fire_profile")
+[node name="FireAppearance" type="Node" parent="."]
+script = ExtResource("fire_art")

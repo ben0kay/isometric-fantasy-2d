@@ -248,3 +248,8 @@ Reviewed world-generation/hostility/underground notes: future expandable finite 
 C# build and native runtime validation cover three seeds, counts, membership, replay, transition traversal, enlarged ground/camera/shadow caches and pink snow integration. Actual software OpenGL transition/meadow/full-snow renders were inspected; Windows D3D12 and hardware performance remain untested.
 
 Integration: the concurrently added production pond is retained, including placement exclusions and wading. Its copied liquid classes were given unique WorldLiquid* names (and references updated) because the incoming global names collided with the preserved DEBUG liquid classes and prevented compilation. No original debug files were changed.
+
+
+## Production FIRE1 / FIRE2 — completed
+
+Shared lifecycle/effect ownership is in SYSTEMS/WorldInteractions/Fire; oak artwork/anchors and tree rendering adapters are in WORLD/Content/Vegetation/Trees. World scene initializes FireRuntime after the existing environment. Removable DEBUG/UI/Fire controls ignite/reset nearby oaks. Canopy GPU effects use production wind, preserve snow materials and refresh sun shadows. C# build and rendered/runtime lifecycle, mirror, collider, snow, wind, restoration and cap checks passed. FIRE3, spread, damage, extinguishing and persistence are not included. See the Fire README for configuration and validation.

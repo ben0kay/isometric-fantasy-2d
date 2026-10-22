@@ -30,3 +30,6 @@ Its reusable scene and configuration are in `ENTITIES/Species/Undead/Skeletons/V
 Skeleton Basic supports 3 HP, a damage flash and death fade via `TakeDamage(int)`. **This is not currently player-testable through left-click:** production player combat/axe is still a placeholder and the debug axe has not been promoted. No debug runtime dependencies were introduced. No loot, multiple enemies, pond avoidance or respawning in this pass.
 
 **Testing:** Open this production scene and press F6. Check that the skeleton appears near the starting player and follows around generated trees and rocks. Run different world seeds. Godot/.NET compilation and in-engine collision behaviour still require verification on the user's machine.
+
+
+Production FIRE1/FIRE2: build C# and F6 this scene; use the top-centre **Ignite nearest oak** / reset buttons. The optional `FireDebugPanel` can be removed while the `Fire` runtime and tree receivers remain. See [Fire documentation](../../SYSTEMS/WorldInteractions/Fire/README.md).

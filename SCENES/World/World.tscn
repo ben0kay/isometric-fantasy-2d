@@ -10,6 +10,9 @@
 [ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
 [ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldEntityPlacement.cs" id="entity_placement"]
 [ext_resource type="PackedScene" path="res://ENTITIES/Species/Undead/Skeletons/Variants/Basic/SkeletonBasic.tscn" id="skeleton_basic"]
+[ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs" id="fire_runtime"]
+[ext_resource type="Resource" path="res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres" id="fire_config"]
+[ext_resource type="Script" path="res://DEBUG/UI/Fire/WorldFireDebugPanel.cs" id="fire_debug"]
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
@@ -30,3 +33,9 @@ EntityScene = ExtResource("skeleton_basic")
 script = ExtResource("environment")
 Config = ExtResource("environment_config")
 [node name="EnvironmentDebugPanel" parent="." instance=ExtResource("debug_ui")]
+
+[node name="Fire" type="Node" parent="."]
+script = ExtResource("fire_runtime")
+Config = ExtResource("fire_config")
+[node name="FireDebugPanel" type="CanvasLayer" parent="."]
+script = ExtResource("fire_debug")

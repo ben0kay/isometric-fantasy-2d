@@ -1,5 +1,6 @@
 // Composes a bounded adjacent-biome world from reusable production modules; no debug dependencies.
 using Godot;
+using FantasyGame.WorldInteractions.Fire;
 
 public partial class WorldScene : Node2D
 {
@@ -39,6 +40,7 @@ public partial class WorldScene : Node2D
         GetNodeOrNull<WorldEntityPlacement>("EntityPlacement")?.Populate(placement, player, Config.Bounds);
         var environment = GetNodeOrNull<EnvironmentRuntime>("Environment");
         environment?.Initialize(Config, GetNode<Node2D>("Actors"));
+        if (environment != null) GetNode<FireRuntime>("Fire").Initialize(GetNode<Node2D>("Actors"), environment);
         if (pond != null && environment?.Weather != null) pond.Initialize(GetNode<PlayerMovement>("Actors/Player"), environment.Weather);
     }
 

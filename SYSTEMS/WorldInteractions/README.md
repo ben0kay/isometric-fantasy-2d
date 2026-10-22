@@ -1,12 +1,12 @@
 # SYSTEMS / WorldInteractions
 
-**Status:** category scaffold only. No gameplay implementation or runtime nodes have been added.
+**Status:** production FIRE1/FIRE2 are wired into the World scene. Other interaction categories remain future work.
 
 This category groups **reusable mechanics that change or react with objects in the world**, without owning the physical objects themselves. An interaction may involve vegetation, structures, entities, weather or magic, but the behaviour should remain reusable across content types.
 
 ## Current modules
 
-- [Fire/](Fire/README.md): ignition, burn-state progression, common fire presentation and eventual spread/extinguishing. Planned only; FIRE1/FIRE2 currently work in the independent DEBUG test.
+- [Fire/](Fire/README.md): ignition, burn-state progression, common fire presentation and eventual spread/extinguishing. FIRE1/FIRE2 now run in production; the independent DEBUG test is preserved.
 
 ## Potential future categories (not created)
 

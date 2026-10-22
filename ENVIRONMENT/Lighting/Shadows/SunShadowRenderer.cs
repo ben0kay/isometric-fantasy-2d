@@ -50,6 +50,19 @@ public partial class SunShadowRenderer : Node2D
                 AddContactShadow(body, shadows);
         }
     }
+    // Refresh one changed sprite without rebuilding shared shadow materials or unrelated casters.
+    // =========================================================
+    public void RefreshAppearance(Node2D body)
+    {
+        foreach (Caster caster in _casters)
+        {
+            if (caster.Body != body) continue;
+            caster.Shadow.Texture = caster.Source.Texture; caster.Shadow.Offset = caster.Source.Offset;
+            caster.Shadow.Centered = caster.Source.Centered;
+            caster.Shadow.FlipH = caster.Source.FlipH; caster.Shadow.FlipV = caster.Source.FlipV;
+            return;
+        }
+    }
     // Add a low-cost, stationary oval under a static tree or rock.
     // =========================================================
     private void AddContactShadow(Node2D body, Node2D shadows)

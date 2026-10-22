@@ -1,0 +1,8 @@
+[gd_resource type="Resource" format=3]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Fire/TreeFireProfile.cs" id="script"]
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01.png" id="healthy"]
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/oak_charred.png" id="burnt"]
+[resource]
+script = ExtResource("script")
+HealthyTexture = ExtResource("healthy")
+BurntTexture = ExtResource("burnt")
