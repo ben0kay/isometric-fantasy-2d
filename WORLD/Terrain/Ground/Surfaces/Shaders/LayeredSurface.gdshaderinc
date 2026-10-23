@@ -20,9 +20,14 @@ vec4 layer_data(float row,float column) {
     return texture(overlay_table,vec2((column+0.5)/9.0,(row+0.5)/overlay_rows));
 }
 vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
+    float slot=mod(row,2.0);
+    float visibility=slot<0.5 ? preview_overlay_visibility.x : preview_overlay_visibility.y;
+    if(visibility<0.5) return below;
     vec4 info=layer_data(row,8.0);
     if(info.g<0.5) return below;
     vec4 mask=layer_data(row,6.0);
+    mask.r=clamp(mask.r*(slot<0.5 ? preview_overlay_coverage.x : preview_overlay_coverage.y),0.0,1.0);
+    mask.g=clamp(mask.g*(slot<0.5 ? preview_overlay_opacity.x : preview_overlay_opacity.y),0.0,1.0);
     if(mask.r<=0.0 || mask.g<=0.0) return below;
     vec4 noise=layer_data(row,7.0);
     // Independent authored salt and slot offset remain deterministic at negative coordinates.

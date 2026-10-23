@@ -9,6 +9,7 @@ uniform vec4 dry_colour : source_color = vec4(0.32, 0.32, 0.22, 1.0);
 
 vec3 grass_patch_colour(vec2 world) {
     float biome = biome_weight(world);
+    if (!colour_patches) return mix(base_colour.rgb,secondary_base.rgb,biome);
     vec2 uv = world / max(mix(patch_size, secondary_patch_size, biome), 80.0) * 0.18;
     vec2 warp = vec2(texture(ground_noise, uv * 0.63 + vec2(0.17, 0.43)).r,
         texture(ground_noise, uv * 0.63 + vec2(0.71, 0.29)).r) - vec2(0.5);

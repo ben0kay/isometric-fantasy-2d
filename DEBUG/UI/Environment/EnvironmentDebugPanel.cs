@@ -36,6 +36,7 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         AddChild(_panel);
         var controls=_panel.AddCategory("Environment"); _environmentControls=controls;
         var combat=_panel.AddCategory("Combat"); combat.AddChild(new CombatDebugPanel());
+        var ground=_panel.AddCategory("Ground Surfaces"); ground.AddChild(new GroundSurfaceDebugPanel());
         _panel.CategoryChanged+=name=> { SetProcess(_panel.Visible && name=="Environment"); if(_diagnostics!=null) _diagnostics.Visible=_panel.Visible && name=="Environment"; };
         _panel.SelectCategory("Environment");
         _status = new Label(); controls.AddChild(_status);

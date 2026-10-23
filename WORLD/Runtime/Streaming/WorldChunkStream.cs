@@ -23,6 +23,7 @@ public partial class WorldChunkStream : Node
     private EnvironmentRuntime _environment; private FireRuntime _fire; private OcclusionController _visibility;
     private double _navTimer; private bool _navDirty;
     private ChunkCoord? _desiredCentre; private ChunkCoord[] _prefetch = Array.Empty<ChunkCoord>();
+    public GroundSurfacePreview GroundPreview { get; private set; }
     public string WorldId { get; private set; }
     public int LoadedCount => _chunks.Values.Count(c => c.State == WorldChunkState.Loaded);
     public double LastDataMilliseconds { get; private set; }
@@ -73,6 +74,7 @@ public partial class WorldChunkStream : Node
         _data = new ChunkSceneryData(world.MacroMap,world.FeaturePlan,_settings,config.Generation.Biomes,config.ExtraSpacing);
         if (liquid != null) _data.LiquidBlocked = liquid.Contains;
         _ground = StreamedGroundPalette.Build(world.MacroMap,config.Generation.Biomes);
+        GroundPreview=new GroundSurfacePreview(_ground,true);
         foreach (var coord in Desired(_settings.ActiveRadius))
         {
             var chunk = Begin(coord);

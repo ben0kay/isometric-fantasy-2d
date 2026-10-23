@@ -2,7 +2,7 @@
 
 ## Status
 
-GS2 direct stack compilation and GS3 two-slot streamed overlays implemented. Graphical acceptance and target-PC profiling are pending. GS0 Windows reference capture/performance baseline remains pending; no user sign-off is implied. The author explicitly requested GS2 and GS3 together; original appearances stay the production defaults. GS4 F9 and GS5 authored Oak overlays remain unimplemented.
+GS2 direct stack compilation and GS3 two-slot streamed overlays implemented. Graphical acceptance and target-PC profiling are pending. GS0 Windows reference capture/performance baseline remains pending; no user sign-off is implied. The author explicitly requested GS2 and GS3 together; original appearances stay the production defaults. GS4 F9 controls were subsequently implemented; see GS4_Validation.md. GS5 authored Oak overlays remain unimplemented.
 
 Baseline: remote `cb9dfaf7e77b9ac17e43a916aeeb8942356fe38e` (pre-GS2 tint). Production biome .tres, existing surface .tres, texture/noise assets, generation, world IDs, streamer lifecycle, collision and save formats are unchanged. No save bypass or automatic migration was added. Authored resource edits still invoke existing campaign compatibility policy.
 

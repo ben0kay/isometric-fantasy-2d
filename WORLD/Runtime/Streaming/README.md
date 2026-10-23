@@ -93,3 +93,5 @@ The existing stream receives ChunkActorsRoot, StreamedGroundRoot, the full actor
 SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.
 
 GS2/GS3 ground: same single quad per chunk and world-owned shared material; direct stack compilation adds optional two-slot overlays and distinct-art boundary blending without changing streaming lifecycle. Production layers are empty. See ../../Terrain/Ground/Surfaces/GS2_GS3_Validation.md for measured software checks, bounded memory/GPU-work accounting and pending target tests.
+
+GS4: the existing shared ground material owns scene-local GroundSurfacePreview overrides. No additional chunk lifecycle, per-frame callbacks or map rebuilding. See ../../Terrain/Ground/Surfaces/GS4_Validation.md for F9 behavior and pending local checks.

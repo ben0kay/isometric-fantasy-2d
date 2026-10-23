@@ -7,3 +7,5 @@
 - `PreGS2GroundPalette.cs` and References/PreGS2StreamedGround.txt are frozen test-only references. Do not update them to make parity tests pass.
 
 See [GS2/GS3 validation](../../WORLD/Terrain/Ground/Surfaces/GS2_GS3_Validation.md) for commands and honest run/deferred status. C# engine suites are authored but not executed in this runner, which has no Godot/.NET installation. Fixture artwork is deliberately simple test data, not approved production art.
+
+GS4: GroundLayersPractice now reuses the actual Ground drawer (F9). Keys 1/2 and R change the same session preview uniforms without rebuilding maps. ValidateGroundLayers adds API reset/nonmutation/world-isolation assertions; software-GL checks cover all new comparison uniforms. See ../../WORLD/Terrain/Ground/Surfaces/GS4_Validation.md for combined local testing.

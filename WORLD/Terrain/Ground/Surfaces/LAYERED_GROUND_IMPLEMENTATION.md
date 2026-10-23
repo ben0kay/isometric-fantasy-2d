@@ -1,6 +1,6 @@
 # Layered Ground Surfaces — Production Implementation Plan
 
-> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2/GS3 implemented, awaiting local engine/visual/performance validation; GS4–GS6 not implemented.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
+> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2/GS3 implemented, awaiting local engine/visual/performance validation; GS4 controls implemented, awaiting local engine/UI validation; GS5–GS6 not implemented.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
 >
 > **Absolute priority: DO NOT change how Oak Forest currently looks by default.** First extract its existing ground behaviour into a reusable layered architecture; only later offer optional, individually enabled layers for dirt and rock breakup. The supplied illustrated Oak Forest scene is art-direction inspiration, not an exact terrain shader replacement.
 >
@@ -119,7 +119,9 @@ A future desert should similarly pick Sand as its defining base and reuse the sa
 
 ### GS4 — F9 adds a third "Ground Surfaces" category
 
-**Actual current F9 structure:** `DEBUG/UI/Environment/EnvironmentDebugPanel.cs` owns the removable HUD shell, `DEBUG/UI/DebugCategoryMenu.cs` provides `AddCategory` and exclusive categories, and `DEBUG/UI/Combat/CombatDebugPanel.cs` owns Combat controls. There are already **Environment** and **Combat** categories. The shell stays named `EnvironmentDebugPanel` for scene/path compatibility. Its right-side `WorldDiagnosticsPanel` appears only in Environment. F7 is separate map-only UI.
+**Implemented; local engine/UI/Windows acceptance pending.** See [GS4 combined testing handoff](GS4_Validation.md). No earlier phase has been user-tested/accepted yet.
+
+**F9 host retained from the pre-GS4 structure:** `DEBUG/UI/Environment/EnvironmentDebugPanel.cs` owns the removable HUD shell, `DEBUG/UI/DebugCategoryMenu.cs` provides `AddCategory` and exclusive categories, and `DEBUG/UI/Combat/CombatDebugPanel.cs` owns Combat controls. There are already **Environment** and **Combat** categories. The shell stays named `EnvironmentDebugPanel` for scene/path compatibility. Its right-side `WorldDiagnosticsPanel` appears only in Environment. F7 is separate map-only UI.
 
 1. Add `DEBUG/UI/Ground/GroundSurfaceDebugPanel.cs` and local README, then register a **third** `_panel.AddCategory("Ground Surfaces")` inside existing F9 host. Do not add another HUD, global hotkey, scene-root panel or unrelated diagnostics window.
 2. Ground drawer suggested sections:

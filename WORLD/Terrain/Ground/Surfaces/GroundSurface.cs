@@ -3,6 +3,7 @@ using Godot;
 
 public partial class GroundSurface : Sprite2D
 {
+    public GroundSurfacePreview Preview { get; private set; }
     // Tile the original artwork across the configured world and preserve debug palette/detail math.
     // =========================================================
     public void Configure(Rect2 bounds, GroundSurfaceProfile profile, AdjacentBiomeLayout biomes = null, Color? tint = null)
@@ -39,5 +40,6 @@ public partial class GroundSurface : Sprite2D
             material.SetShaderParameter("biome_blend_width", biomes.BlendWidth);
         }
         Material = material;
+        Preview=new GroundSurfacePreview(material,false);
     }
 }

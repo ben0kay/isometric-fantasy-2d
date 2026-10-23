@@ -85,15 +85,16 @@ maps['overlay_table']=texture(table)
 fbo=c.c_uint();gl('glGenFramebuffers',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(fbo));gl('glBindFramebuffer',None,[c.c_uint,c.c_uint])(0x8D40,fbo)
 vao=c.c_uint();gl('glGenVertexArrays',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(vao));gl('glBindVertexArray',None,[c.c_uint])(vao)
 read=gl('glReadPixels',None,[c.c_int,c.c_int,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_void_p])
-def render(prog,flags=None,origin=(-1024,-1024),size=(2048,2048),resolution=128):
+def render(prog,flags=None,origin=(-1024,-1024),size=(2048,2048),resolution=128,vectors=None):
     output=texture(np.zeros((resolution,resolution,4),np.float32))
     gl('glFramebufferTexture2D',None,[c.c_uint,c.c_uint,c.c_uint,c.c_uint,c.c_int])(0x8D40,0x8CE0,0x0DE1,output,0)
     use(prog)
     for unit,(name,ident) in enumerate(maps.items()):
         activeTex(0x84C0+unit);bindTex(0x0DE1,ident);one(loc(prog,name.encode()),unit)
-    for name,value in {'has_ground_tint':False,'blend_ground_art':False,'has_ground_overlays':False,'has_surface_styles':False,**(flags or {})}.items():one(loc(prog,name.encode()),value)
+    for name,value in {'has_ground_tint':False,'blend_ground_art':False,'has_ground_overlays':False,'has_surface_styles':False,'preview_base_variation':True,'preview_base_detail':True,'preview_optional_layers':True,**(flags or {})}.items():one(loc(prog,name.encode()),value)
     for name,value in [('art_columns',2),('map_cell_size',512),('overlay_rows',4)]:scalar(loc(prog,name.encode()),value)
     for name,value in [('map_origin',(-1024,-1024)),('map_grid_size',(4,4)),('frame_origin',origin),('frame_size',size)]:vec(loc(prog,name.encode()),*value)
+    for name,value in {'preview_overlay_visibility':(1,1),'preview_overlay_coverage':(1,1),'preview_overlay_opacity':(1,1),**(vectors or {})}.items():vec(loc(prog,name.encode()),*value)
     gl('glViewport',None,[c.c_int,c.c_int,c.c_int,c.c_int])(0,0,resolution,resolution)
     gl('glDrawArrays',None,[c.c_uint,c.c_int,c.c_int])(4,0,3)
     result=np.zeros((resolution,resolution,4),np.float32);read(0,0,resolution,resolution,0x1908,0x1406,result.ctypes.data)
@@ -119,4 +120,19 @@ assert np.max(np.abs(only_b-both))>.001 and np.max(np.abs(only_a-both))>.001,'In
 table[:]=saved;table[:,6,1]=0;maps['overlay_table']=texture(table);zero=render(new,flags)
 assert np.max(np.abs(zero-base))<1e-6,'Zero opacity changed base'
 print('PASS: separate A/B toggles and all-zero opacity base parity')
+# Session controls must bypass overlays without mutating their packed authored table.
+table[:]=saved;maps['overlay_table']=texture(table)
+master_off=render(new,{**flags,'preview_optional_layers':False})
+assert np.max(np.abs(master_off-base))<1e-6,'Preview master did not restore base'
+opacity_off=render(new,flags,vectors={'preview_overlay_opacity':(0,0)})
+coverage_off=render(new,flags,vectors={'preview_overlay_coverage':(0,0)})
+assert np.max(np.abs(opacity_off-base))<1e-6 and np.max(np.abs(coverage_off-base))<1e-6,'Zero preview multipliers changed base'
+a_hidden=render(new,flags,vectors={'preview_overlay_visibility':(0,1)})
+b_hidden=render(new,flags,vectors={'preview_overlay_visibility':(1,0)})
+assert np.max(np.abs(a_hidden-only_b))<1e-6 and np.max(np.abs(b_hidden-only_a))<1e-6,'Preview slot controls disagree with authored toggles'
+base_flat=render(new,{'blend_ground_art':True,'preview_base_variation':False})
+base_no_detail=render(new,{'blend_ground_art':True,'preview_base_detail':False})
+assert np.max(np.abs(base_flat-base))>.001 and np.max(np.abs(base_no_detail-base))>.00001,'Base comparison controls had no effect'
+assert np.max(np.abs(render(new,flags)-both))<1e-6,'Uniform reset did not restore authored rendering'
+print('PASS: preview master, independent slots, coverage/opacity multipliers, base comparisons and neutral reset')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')

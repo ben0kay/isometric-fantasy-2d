@@ -11,6 +11,7 @@ public partial class WorldScene : Node2D
     public MacroWorldMap MacroMap { get; private set; }
     public WorldBlueprintManifest Blueprint { get; private set; }
     public WorldChunkStream Stream { get; private set; }
+    public GroundSurfacePreview GroundPreview { get; private set; }
     public int ActiveSeed { get; private set; }
 
     public CampaignSaveController Saves { get; private set; }
@@ -150,6 +151,7 @@ public partial class WorldScene : Node2D
                 ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };
         }
         else placement.Generate(Config, ActiveSeed,PreviewSceneryRoot);
+        GroundPreview=Stream?.GroundPreview ?? GetNode<GroundSurface>("TerrainRoot/Ground").Preview;
         // Build entity navigation only after the seeded tree/rock colliders exist.
         EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null,projectileFactory:GetProjectileSpawner);
         var environment = Environment;
