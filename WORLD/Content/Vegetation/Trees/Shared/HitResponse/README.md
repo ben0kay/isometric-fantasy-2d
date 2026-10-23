@@ -1,7 +1,7 @@
 # Shared tree hit response
 
-TreeHitResponse handles bounded sprite wobble and leaf bursts for all configured tree species. It reuses TreeDefinition.FoliageColour/HasFoliage, also consumed by ambient falling leaves. Burning/burnt trees suppress healthy foliage; reset respects HasFoliage.
+TreeHitResponse retains the shared tool-hit contract, received-hit count, trunk wobble and VisualTransformChanged shadow notifications. Hit-generated leaves now use [FEEDBACK/Particles](../../../../../../FEEDBACK/Particles/README.md), retaining the existing canvas/coordinates, 24 slots and default appearance. No scene children or per-species scripts/profiles are required.
 
-Default wobble/burst tuning comes from TreeHitConfig code defaults. No separate hit .tres is required. A species can embed a HitConfig subresource inside its existing tree .tres when timing/count overrides are needed. Player input stays in PlayerInput.cs.
+TreeDefinition owns FoliageColour and HasFoliage; burning clears/suppresses healthy leaves and reset respects HasFoliage. TreeHitConfig owns wobble, LeavesPerHit and an optional shared/embedded LeafParticles override. Ambient wind/weather leaves remain unchanged.
 
-P1-D: VisualTransformChanged notifies cached sun renderers only during active wobble/restoration, keeping shadows responsive while solar time is paused. It introduces no idle hit polling and does not change leaf trajectories. Renderer unload disconnects its subscription.
+Wobble and shadow notifications stop at wobble completion; the existing callback continues only for active leaves, then sleeps after the final clear redraw. Disable/suspension/unload clears particles and restores art. [C3.3a+b validation](../../../../../../COMBAT/C3_3ab_Validation.md) distinguishes headless evidence from pending Windows appearance/profiling.

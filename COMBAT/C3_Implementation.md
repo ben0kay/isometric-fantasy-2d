@@ -9,7 +9,7 @@ Read `CodePreferences.md`, root README, `COMBAT/COMBAT_IMPLEMENTATION.md`, `COMB
 | --- | --- | --- | --- |
 | **C3.1** | [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) | World-space numbers for **actual HP removed**; configurable single-label pop/float/fade/rapid-hit merge; independent event-driven presentation | Code added; build/visual tests pending |
 | **C3.2** | `ENTITIES/Shared/Movement` + `COMBAT/Weapons` | Shared, collision-safe knockback/stagger response from confirmed attacks. Axe prod stronger than swipe; integrate with existing actor movement/chase and P3 bounds | Implemented; Windows feel acceptance pending; [validation](C3_2_Validation.md) |
-| **C3.3a–d** | `FEEDBACK/Particles` + `FEEDBACK/HitFeedback` | Shared slot-based particles → migrate tree-hit leaves → material profiles → confirmed combat impact integration | Planned; a+b together first |
+| **C3.3a–d** | `FEEDBACK/Particles` + `FEEDBACK/HitFeedback` | Shared slot-based particles → migrate tree-hit leaves → material profiles → confirmed combat impact integration | a+b implemented; Windows visual/performance acceptance pending; c+d planned |
 | **C3.4** | `FEEDBACK/HitFeedback` + defense event contracts | Different responses to normal hit, blocked damage, guard break/parry if introduced, misses; only results from authoritative C2/C2.5 rules | Planned |
 | **C3.5** | `FEEDBACK/CameraShake` + audio module | Optional subtle camera impulse and attack/impact sounds, centralized tunable defaults with strong caps | Planned |
 
@@ -84,7 +84,7 @@ ENTITIES/
 
 ## C3.3 — Reusable particle foundation, tree-leaf migration and hit feedback
 
-> **Status: PLANNED — no C3.3 implementation yet.** Execute in order **C3.3a → C3.3b → C3.3c → C3.3d**. Recommend asking Codex to implement **a+b together** as one scoped job, then assess the proven shared system before authoring material-specific combat effects. Do not inadvertently rebuild existing tree leaf behaviour or implement later subphases without authorization.
+> **Status: C3.3a+b IMPLEMENTED — awaiting Windows visual/performance acceptance.** See [C3.3a+b validation](C3_3ab_Validation.md). C3.3c/d remain planned. The following sections retain their implementation contracts. Execute in order **C3.3a → C3.3b → C3.3c → C3.3d**. Recommend asking Codex to implement **a+b together** as one scoped job, then assess the proven shared system before authoring material-specific combat effects. Do not inadvertently rebuild existing tree leaf behaviour or implement later subphases without authorization.
 
 ### Architecture and folder ownership
 
@@ -127,7 +127,7 @@ Existing reference: `TreeHitResponse.cs` uses **24 reused Leaf slots**, `LeafSha
 - Do not regress wobble, snow/wetness appearance, tree shadow update notifications, hit mechanics, tool harvesting, streamed tree lifetime or existing art.
 - Accept a small adapter if needed to let the tree feed its local wind and foliage settings without coupling generic `FEEDBACK/Particles` directly to `WorldWeather` or tree classes.
 
-**C3.3a+b acceptance:** production oak/pine/blossom trees retain indistinguishable hit-leaf look and wobble, including tree-colour variants and burnt/no-foliage state; no duplicate leaves, per-hit node allocations, lingering processing, stale wind/tree references or new P3 streaming stalls. Record any intentional visual deviations before considering complete.
+**C3.3a+b acceptance:** production oak/blossom trees retain indistinguishable hit-leaf look and wobble, including tree-colour variants and burnt/no-foliage state; no duplicate leaves, per-hit node allocations, lingering processing, stale wind/tree references or new P3 streaming stalls. Record any intentional visual deviations before considering complete. Pine currently has staged artwork only, so it is not a production acceptance prerequisite.
 
 ### C3.3c — Material-specific combat impact profiles (later)
 

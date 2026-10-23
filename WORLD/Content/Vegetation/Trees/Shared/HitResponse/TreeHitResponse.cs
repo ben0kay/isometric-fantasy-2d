@@ -3,7 +3,13 @@ using Godot;
 
 public partial class TreeHitResponse : Node2D, IToolHitTarget
 {
-    [Export] public bool Enabled { get; set; } = true;
+    private bool _enabled=true;
+    [Export] public bool Enabled
+    {
+        get => _enabled;
+        set { if (_enabled==value) return; _enabled=value; if (!value) StopVisuals();
+            if (IsNodeReady()) { if (value) AddToGroup("world_tool_targets"); else RemoveFromGroup("world_tool_targets"); } }
+    }
     [Export] public TreeHitConfig Config { get; set; }
     public Color FoliageColour { get; set; } = new(0.58f, 0.57f, 0.24f);
     public bool FoliageEnabled { get; set; } = true;
@@ -16,11 +22,12 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     private Transform2D _original;
     private WorldWeather _weather;
     private float _age, _push;
-    private int _next;
-    private struct Leaf { public Vector2 Position, Velocity; public float Age, Life, Phase; }
-    private Leaf[] _leaves;
+    private bool _wobbling;
+    private ParticleEmitter _leaves;
+    private static readonly ParticleProfile DefaultLeaves = new();
     private readonly RandomNumberGenerator _random = new();
-    private static readonly Vector2[] LeafShape = { new(-2, 0), new(0, -1), new(2, 0), new(0, 1) };
+    public int ActiveParticleCount => _leaves?.ActiveCount ?? 0;
+    public bool IsWobbling => _wobbling;
 
     #region Setup and hit contract
     // Register each authored tree automatically, including future variants using this helper.
@@ -42,8 +49,8 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     public void SetHealthyLeaves(bool enabled)
     {
         HealthyLeaves = enabled && FoliageEnabled;
-        if (!enabled && _leaves != null) System.Array.Clear(_leaves);
-        QueueRedraw();
+        if (!HealthyLeaves && _leaves?.Active==true) { _leaves.Clear(); QueueRedraw(); }
+        if (!_wobbling && _leaves?.Active!=true) SetProcess(false);
     }
 
     // Measure actual transformed trunk polygon edges, including root scale and mirrored footprints.
@@ -66,17 +73,17 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     public void ReceiveHit(Vector2 direction)
     {
         if (!Enabled) return;
-        ReceivedHits++; _age = 0f; _push = direction.X < 0f ? -1f : 1f;
-        _leaves ??= new Leaf[24];
-        Rect2 art = _sprite.GetRect();
-        for (int i = 0; i < (HealthyLeaves ? Mathf.Clamp(Config.LeavesPerHit, 0, _leaves.Length) : 0); i++)
+        if (!direction.IsFinite()) direction=Vector2.Zero;
+        ReceivedHits++; _age = 0f; _push = direction.X < 0f ? -1f : 1f; _wobbling=true;
+        int count=HealthyLeaves ? Mathf.Clamp(Config.LeavesPerHit,0,24) : 0;
+        if (count>0)
         {
-            Vector2 pixel = art.Position + art.Size * new Vector2(_random.RandfRange(0.20f, 0.80f), _random.RandfRange(0.20f, 0.58f));
-            _leaves[_next] = new Leaf {
-                Position = _original * pixel, Velocity = new Vector2(_random.RandfRange(-12f, 12f) + direction.X * 5f, _random.RandfRange(18f, 29f)),
-                Age = 0f, Life = _random.RandfRange(2.4f, 3.8f), Phase = _random.RandfRange(0f, Mathf.Tau)
-            };
-            _next = (_next + 1) % _leaves.Length;
+            _leaves ??= new ParticleEmitter(24);
+            Rect2 art=_sprite.GetRect();
+            var region=new Rect2(art.Position+art.Size*new Vector2(0.20f,0.20f),art.Size*new Vector2(0.60f,0.38f));
+            // Preserve the old tree's horizontal hit bias; generic callers can use a full directional vector.
+            _leaves.EmitBurst((Config.LeafParticles ?? DefaultLeaves).Snapshot(),count,region,_original,new Vector2(direction.X,0),FoliageColour,_random);
+            QueueRedraw();
         }
         SetProcess(true);
     }
@@ -88,24 +95,24 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     public override void _Process(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("TreeHitResponse.Process");
-        float dt = (float)delta; _age += dt;
-        float progress = Mathf.Clamp(_age / Mathf.Max(0.1f, Config.WobbleSeconds), 0f, 1f);
-        float angle = Mathf.Sin(progress * Mathf.Tau * 2f) * (1f - progress) * (1f - progress) * Mathf.DegToRad(Config.WobbleDegrees) * _push;
-        _sprite.Transform = new Transform2D(angle, Vector2.Zero) * _original;
-        VisualTransformChanged?.Invoke();
-        bool alive = false;
-        if (_leaves != null)
-            for (int i = 0; i < _leaves.Length; i++)
-            {
-                ref Leaf leaf = ref _leaves[i];
-                if (leaf.Life <= 0f || leaf.Age >= leaf.Life) continue;
-                leaf.Age += dt;
-                float wind = GodotObject.IsInstanceValid(_weather) ? _weather.WindStrength * 10f : 0f;
-                leaf.Position += (leaf.Velocity + new Vector2(wind + Mathf.Sin(leaf.Age * 5f + leaf.Phase) * 8f, 0)) * dt;
-                alive = true;
-            }
-        QueueRedraw();
-        if (progress >= 1f && !alive) { _sprite.Transform = _original; VisualTransformChanged?.Invoke(); SetProcess(false); }
+        float dt=(float)delta;
+        if (_wobbling)
+        {
+            _age+=dt;
+            float duration=float.IsFinite(Config.WobbleSeconds) ? Mathf.Clamp(Config.WobbleSeconds,0.1f,10) : 0.65f;
+            float degrees=float.IsFinite(Config.WobbleDegrees) ? Mathf.Clamp(Config.WobbleDegrees,0,6) : 2.8f;
+            float progress=Mathf.Clamp(_age/duration,0,1);
+            float angle=Mathf.Sin(progress*Mathf.Tau*2f)*(1-progress)*(1-progress)*Mathf.DegToRad(degrees)*_push;
+            _sprite.Transform=progress>=1 ? _original : new Transform2D(angle,Vector2.Zero)*_original;
+            VisualTransformChanged?.Invoke();
+            if (progress>=1) _wobbling=false;
+        }
+        if (_leaves?.Active==true)
+        {
+            float wind=GodotObject.IsInstanceValid(_weather) ? _weather.WindStrength*10f : 0;
+            _leaves.Advance(dt,new Vector2(wind,0)); QueueRedraw();
+        }
+        if (!_wobbling && _leaves?.Active!=true) SetProcess(false);
     }
 
     // Only this tree emits these transient leaves; ambient wind leaves remain independent.
@@ -113,22 +120,25 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     public override void _Draw()
     {
         using var frameTrace = RuntimeFrameTrace.Measure("TreeHitResponse.Draw");
-        if (_leaves == null) return;
-        foreach (Leaf leaf in _leaves)
-        {
-            if (leaf.Life <= 0f || leaf.Age >= leaf.Life) continue;
-            float fade = Mathf.Clamp((leaf.Life - leaf.Age) / 0.7f, 0f, 1f);
-            DrawSetTransform(leaf.Position, leaf.Phase + leaf.Age * 3f, new Vector2(1f, 0.4f + Mathf.Abs(Mathf.Sin(leaf.Age * 4f)) * 0.6f));
-            DrawColoredPolygon(LeafShape, new Color(FoliageColour, FoliageColour.A * fade));
-        }
-        DrawSetTransform(Vector2.Zero);
+        _leaves?.Draw(this);
     }
 
+    // Disabled/chunk-retired owners cannot resume stale particles or a half-finished wobble.
+    // =========================================================
+    public override void _Notification(int what) { if (what==NotificationDisabled) StopVisuals(); }
+    // Restore art once and clear any final canvas commands without retaining weather/tree references.
+    // =========================================================
+    private void StopVisuals()
+    {
+        _wobbling=false; _age=0;
+        if (_leaves?.Active==true) { _leaves.Clear(); QueueRedraw(); }
+        if (GodotObject.IsInstanceValid(_sprite) && _sprite.Transform!=_original)
+        { _sprite.Transform=_original; VisualTransformChanged?.Invoke(); }
+        SetProcess(false);
+    }
     // Runtime removal leaves the original art transform intact.
     // =========================================================
-    public override void _ExitTree()
-    {
-        if (GodotObject.IsInstanceValid(_sprite)) { _sprite.Transform = _original; VisualTransformChanged?.Invoke(); }
-    }
+    public override void _ExitTree() { StopVisuals(); _weather=null; }
+
     #endregion
 }
