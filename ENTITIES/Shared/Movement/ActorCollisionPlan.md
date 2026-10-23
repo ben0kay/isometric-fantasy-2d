@@ -1,6 +1,6 @@
 # Actor-to-actor collision — implementation plan
 
-> **Status: AC0 source audit complete (2026-10-23); AC1–AC4 pending.** Documentation only. No code, collision masks or scene files changed. Runtime blocking and performance acceptance remain unverified.
+> **Status: AC0 source audit complete (2026-10-23); AC1 implemented, awaiting runtime validation; AC2–AC4 pending.** AC0 was documentation only; AC1 now changes layers and masks. Runtime blocking and performance acceptance remain unverified.
 
 ## Intent
 
@@ -24,12 +24,12 @@ The player, generic enemies and future wildlife should physically block each oth
 
 ## Implementation phases (AC0–AC4)
 
-AC0 is complete as a source audit; AC1–AC4 remain pending. AC means **Actor Collision** and is distinct from combat C3.
+AC0 is complete as a source audit; AC1 is implemented awaiting validation; AC2–AC4 remain pending. AC means **Actor Collision** and is distinct from combat C3.
 
 | Phase | Objective | Deliverable |
 | --- | --- | --- |
 | **AC0 — Audit — COMPLETE (source)** | Inventory existing physics layer/masks across actors, solids and melee hit queries | Matrix, migration and affected-file inventory below; no runtime acceptance implied |
-| **AC1 — Actor blocking** | Physically block player, enemies and future wildlife using shared feet colliders | Player and shared Entity scene layer/mask configuration |
+| **AC1 — Actor blocking — implemented, validation pending** | Physically block player, enemies and future wildlife using shared feet colliders | Player and shared Entity scene layer/mask configuration |
 | **AC2 — Lifecycle integration** | Ensure death, dodge, sprint, streaming and despawn work with collision | No ghost colliders or movement bypass |
 | **AC3 — Crowd checks** | Evaluate groups of pursuing actors and narrow pathways | Performance and clumping findings; optional small follow-up only |
 | **AC4 — Validation** | Verify combat, save and physics regression tests | Recorded test results and completion status |
@@ -138,3 +138,29 @@ Alternate minimal route: make the current layer-1 setup explicit and validate it
 Recommended order: **AC0 → AC1 → AC2 → AC4**, with **AC3 optional** when crowd issues justify it. Combat **C3.2 knockback/stagger** should follow validated AC1 and AC2 actor/obstacle collision, rather than assuming it is safe to displace actors.
 
 **Out of scope:** new entity AI, collision-based combat damage, advanced crowd steering, pushing actors around by walking into them, jump-over-enemy physics, hit particle feedback and player-specific collider hacks.
+
+
+## AC1 implementation — 23 October 2026
+
+Built from `19d0086`. Production player/shared Entity now explicitly use layer 2 (Actors), mask 3 (WorldSolids + Actors). Shared trees, rocks, torches and runtime bounds explicitly retain layer/mask 1. `project.godot` names the two layers. `AttackProfile.CollisionMask` defaults to 3, which feeds both melee overlap and obstruction ray; no authored attack-resource overrides exist. Faction/tool filtering, hurt radii, existing feet shapes and movement motors are unchanged. Campaign arrival already uses the player's mask, so it now detects both categories without a second query implementation. DEBUG remains independent on layer 1.
+
+`TESTS/Combat/ValidateActorCollision.tscn` adds automated production-body swept collision and arrival-style overlap checks. It uses direct swept motion only inside the disposable fixture; gameplay continues using its existing MoveAndSlide motors. Existing ValidateMeleeExecution covers attack direction/factions, walls, actor hits and Oak/Pink tool interactions with the new default mask. No new production processing, queries, timers or per-entity helpers were added: physics costs occur through existing movement/attack paths. No FPS improvement is claimed.
+
+**Validation:** repository source/mask review and `git diff --check` passed. Godot and dotnet are absent on PATH; compilation, import and every in-engine fixture below are **not run**. AC1 is implemented, **awaiting local validation**, not accepted. AC2 lifecycle/boundaries, AC3 crowd findings and AC4 regression acceptance remain outstanding; C3.2 is deferred.
+
+Run from project root with Godot 4.7.2 Mono/.NET 8 (`godot` below means the local Mono executable):
+
+```sh
+dotnet build isometric-fantasy-2d.csproj
+godot --headless --path . --editor --import --quit
+godot --headless --path . res://TESTS/Combat/ValidateActorCollision.tscn
+godot --headless --path . res://TESTS/Combat/ValidateCombatFoundation.tscn
+godot --headless --path . res://TESTS/Combat/ValidateMeleeExecution.tscn
+godot --headless --path . res://TESTS/Combat/ValidatePlayerActions.tscn
+godot --headless --path . res://TESTS/Generation/ValidateChunkStreaming.tscn
+godot --headless --path . res://TESTS/SceneOrganization/ValidateWorldOwnership.tscn
+```
+
+Expect exit 0 and fixture PASS messages (AC1 expects 11 checks); record any native-shutdown failures separately using the existing C2 baseline evidence. Run separate-process P4 write/read per `SAVE/P4_Copilot_Handoff.md` using isolated test storage; verify ordinary old-fingerprint refusal preserves campaign data. Player/Entity/scenery text changes intentionally change the content fingerprint; no migration/bypass was introduced. Use F6 World or a new test campaign, not an existing campaign assumed compatible.
+
+Manual F6 with Debug → Visible Collision Shapes: walk/sprint/dodge into skeleton/tree/rock/torch; slide around edges; verify skeleton contact and LMB/MMB/sword/enemy hits, including walls and tree chopping. Test two shared Entities blocking each other and Y sorting. Crowd navigation, death/disabled ownership and streaming cleanup require AC2–AC4 evidence before knockback. No visual test room or custom debug panel is added in this slice.

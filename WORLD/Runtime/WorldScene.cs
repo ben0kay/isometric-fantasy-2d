@@ -164,7 +164,7 @@ public partial class WorldScene : Node2D
     private void AddBounds()
     {
         Rect2 b = Config.Bounds;
-        var walls = new StaticBody2D { Name = "Bounds" }; GetNode("TerrainRoot").AddChild(walls);
+        var walls = new StaticBody2D { Name = "Bounds", CollisionLayer = 1, CollisionMask = 1 }; GetNode("TerrainRoot").AddChild(walls);
         AddWall(walls, new(b.GetCenter().X, b.Position.Y - 16), new(b.Size.X + 64, 32));
         AddWall(walls, new(b.GetCenter().X, b.End.Y + 16), new(b.Size.X + 64, 32));
         AddWall(walls, new(b.Position.X - 16, b.GetCenter().Y), new(32, b.Size.Y + 64));

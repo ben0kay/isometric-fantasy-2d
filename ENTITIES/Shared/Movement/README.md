@@ -2,7 +2,7 @@
 
 Future shared walking, swimming, flying and other locomotion components. Keep player-only controls in Player/Input and Player/Movement unless truly reusable.
 
-**Status:** Shared collision design remains planned; no new runtime component or physics changes yet. See [ActorCollisionPlan.md](ActorCollisionPlan.md) for explicit player/entity body-blocking layers, C2 compatibility and implementation/test instructions.
+**Status:** AC0 source audit complete; AC1 explicit WorldSolids/Actors layers and melee mask implemented, awaiting local validation. AC2–AC4 remain pending. No new movement component was added. See [ActorCollisionPlan.md](ActorCollisionPlan.md) for explicit player/entity body-blocking layers, C2 compatibility and implementation/test instructions.
 
 ## Upcoming C3.2 — Shared knockback/stagger
 

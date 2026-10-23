@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://WORLD/Content/Vegetation/Trees/Shared/Fire/TreeFireAppearance.cs" id="appearance"]
 [ext_resource type="Script" path="res://WORLD/Content/Shared/LocalLightOccluder.cs" id="local_occluder"]
 [node name="Tree" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 1
 script = ExtResource("tree")
 [node name="Sprite" type="Sprite2D" parent="."]
 texture_filter = 2

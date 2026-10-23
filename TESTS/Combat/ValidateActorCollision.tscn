@@ -1,0 +1,4 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://TESTS/Combat/ValidateActorCollision.cs" id="script"]
+[node name="ValidateActorCollision" type="Node2D"]
+script = ExtResource("script")

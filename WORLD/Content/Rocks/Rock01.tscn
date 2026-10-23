@@ -4,6 +4,8 @@
 
 [ext_resource type="Script" path="res://WORLD/Content/Shared/LocalLightOccluder.cs" id="local_occluder"]
 [node name="Rock01" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 1
 
 [node name="Sprite" type="Sprite2D" parent="."]
 position = Vector2(-35.28, -37.30)

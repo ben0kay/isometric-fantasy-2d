@@ -20,7 +20,7 @@ public partial class AttackProfile : Resource
     [Export(PropertyHint.Range,"1,89,1")] public float HitHalfAngleDegrees { get; set; } = 65f;
     [Export] public CombatFaction TargetFactions { get; set; } = CombatFaction.Hostile | CombatFaction.Neutral;
     [Export] public bool HitTools { get; set; }
-    [Export(PropertyHint.Layers2DPhysics)] public uint CollisionMask { get; set; } = 1;
+    [Export(PropertyHint.Layers2DPhysics)] public uint CollisionMask { get; set; } = 3; // World solids + actors, including obstruction rays.
 
     // Snapshot once per accepted request; edits cannot change a swing already in flight.
     // =========================================================
