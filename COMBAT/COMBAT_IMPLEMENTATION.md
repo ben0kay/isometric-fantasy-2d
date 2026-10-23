@@ -68,6 +68,10 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 **Implementation:** Shared plain `AttackExecution`, `AttackProfile` (inherited by existing AxeConfig), contact-window physics broad phase, receiving geometry/faction/obstruction policy and generic pursuit intent. No scene changes in C2. See [results, baseline comparisons and manual handoff](C2_Validation.md); broader headless shutdown failures are not represented as clean passes.
 
+## C2.5 — Player actions and starter equipment (planned)
+
+See [C2.5 Codex implementation handoff](C2_5_PlayerActions.md). Adds primary LMB sweep, alternate MMB prod, starter axe/sword switch, shield-equipped RMB block vs no-shield RMB visual jump, and data-driven attack profiles. No inventory. Preserve C2/shared damage and P4 saves; implement and validate before claiming complete. C3 should use the resulting attack/contact/block outcomes for feedback.
+
 ## C3 — Combat feedback and perceived impact
 
 **Early health-bar slice (headless integration checked; visual acceptance pending):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
