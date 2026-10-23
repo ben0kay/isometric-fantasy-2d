@@ -1,8 +1,8 @@
 # ENTITIES / Player
 
-**Production foundation implemented:** Player.tscn now has normalized arrow input, CharacterBody2D movement, grounded collision, temporary copied SVG art and bounded following Camera2D/wheel zoom. PlayerMasterConfig supplies movement/camera settings. Other systems described below remain plans; earlier scaffolding-only statements are historical.
+**Production foundation implemented:** Player.tscn now has normalized arrow input, CharacterBody2D movement, grounded collision, static `Visuals/Sprites/Player01.png` artwork with feet aligned to the player origin, and bounded following Camera2D/wheel zoom. PlayerMasterConfig supplies movement/camera settings. Other systems described below remain plans; earlier scaffolding-only statements are historical.
 
-> **Status:** Production walking/collision/camera foundation implemented. Inventory, survival, combat and other listed components remain planning scaffolding.
+> **Status:** Production walking/collision/camera and a static PNG visual are implemented. C0/C1 shared health/stats also exist; inventory, full survival, animation and later combat phases remain unfinished.
 
 The production player stays within `ENTITIES/Player/`. Keep each player-specific concern in its own folder, while extracting mechanisms reused by many actors to appropriate shared modules. No separate root-level `PLAYER/` directory is planned.
 

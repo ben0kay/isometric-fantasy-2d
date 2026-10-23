@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://ENTITIES/Player/Input/PlayerInput.cs" id="input"]
 [ext_resource type="Script" path="res://CAMERA/PlayerCamera.cs" id="camera_zoom"]
 [ext_resource type="Resource" path="res://ENTITIES/Player/DefaultPlayerConfig.tres" id="config"]
-[ext_resource type="Texture2D" path="res://ENTITIES/Player/Visuals/Sprites/player.svg" id="player"]
+[ext_resource type="Texture2D" path="res://ENTITIES/Player/Visuals/Sprites/Player01.png" id="player"]
 [ext_resource type="PackedScene" path="res://ITEMS/Tools/Axes/Axe.tscn" id="axe_tool"]
 [ext_resource type="Script" path="res://FEEDBACK/HealthBars/SharedHealthBar.cs" id="hpbar"]
 [sub_resource type="RectangleShape2D" id="Feet"]
@@ -19,8 +19,9 @@ color = Color(0.08, 0.12, 0.10, 0.5)
 
 [node name="Sprite" type="Sprite2D" parent="."]
 texture = ExtResource("player")
-scale = Vector2(0.8, 0.8)
-offset = Vector2(0, -24)
+texture_filter = 2
+scale = Vector2(0.17, 0.17)
+offset = Vector2(0, -147.5)
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 position = Vector2(0, -5)
