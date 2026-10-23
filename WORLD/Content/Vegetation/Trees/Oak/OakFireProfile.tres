@@ -6,3 +6,5 @@
 script = ExtResource("script")
 HealthyTexture = ExtResource("healthy")
 BurntTexture = ExtResource("burnt")
+HealthyAnchor = Vector2(109.6, 258)
+BurntAnchor = Vector2(113, 247)

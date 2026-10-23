@@ -18,8 +18,8 @@ script = ExtResource("3_sii3d")
 script = ExtResource("variant_script")
 Id = "01"
 Texture = ExtResource("art")
-SourceAnchor = Vector2(548, 1290)
-SpriteScale = Vector2(0.115, 0.115)
+SourceAnchor = Vector2(109.6, 258)
+SpriteScale = Vector2(0.575, 0.575)
 TrunkPolygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -17, 1)
 
 [resource]
