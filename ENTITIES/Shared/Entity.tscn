@@ -1,6 +1,7 @@
 [gd_scene format=3]
 [ext_resource type="Script" path="res://ENTITIES/Shared/Entity.cs" id="actor"]
 [ext_resource type="Script" path="res://ENTITIES/Shared/AI/GroundChase.cs" id="chase"]
+[ext_resource type="Script" path="res://FEEDBACK/HealthBars/SharedHealthBar.cs" id="hpbar"]
 [sub_resource type="CircleShape2D" id="feet"]
 radius = 9.0
 [node name="Entity" type="CharacterBody2D"]
@@ -13,3 +14,7 @@ position = Vector2(0, -5)
 shape = SubResource("feet")
 [node name="GroundChase" type="Node" parent="."]
 script = ExtResource("chase")
+
+[node name="HealthBar" type="Node2D" parent="."]
+z_index = 4
+script = ExtResource("hpbar")

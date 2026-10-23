@@ -54,6 +54,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatant
         _input.DodgeDoubleTapSeconds = Config.DodgeDoubleTapSeconds;
         _input.DodgeRequested += RequestDodge;
         MotionMode = MotionModeEnum.Floating;
+        GetNode<SharedHealthBar>("HealthBar").Bind(HealthState, GetNode<Sprite2D>("Sprite"));
     }
     #endregion
 

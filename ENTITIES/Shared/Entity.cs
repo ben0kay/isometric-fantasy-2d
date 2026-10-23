@@ -40,6 +40,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
         _chase = GetNode<GroundChase>("GroundChase");
         _chase.Enabled = Config.ChasePlayer;
         MotionMode = MotionModeEnum.Floating;
+        GetNode<SharedHealthBar>("HealthBar").Bind(HealthState, _sprite);
         SetProcess(false);
     }
 

@@ -68,6 +68,8 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 ## C3 — Combat feedback and perceived impact
 
+**Early health-bar slice (pending validation):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
+
 **Scope:** Resource-tunable enemy hit flash, bounded physical recoil/knockback, small impact particles, floating damage text, conditional temporary health bar; optional audio/camera impulse with settings OFF. Separation: `DamageResult` produces presentation events, presentation never changes resolved HP.
 
 **Performance:** Sleep when dormant, cap active objects, pool only where spawn frequency warrants, cleanly unregister on death/unload/scene change, minimize material allocations/copies and no permanent per-actor idle loop. Avoid adding many new `CanvasLayer`s.

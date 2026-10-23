@@ -1,3 +1,5 @@
 # Feedback
 
-Shared presentation-only systems. Gameplay simulation stays in SYSTEMS; HUD screens/layout stay in UI. Modules planned: Visibility (implemented), HealthBars, FloatingText, Camera shake, HitFeedback, ScreenEffects (future). Each module should own a Resource configuration and remain usable by different world entities/props.
+Shared presentation-only systems, independent of damage and world location. [HealthBars](HealthBars/README.md) now provide shared, configurable, event-driven world-space HP presentation for player and entities based on the existing C1 `ActorHealth`. [Visibility](Visibility/README.md) is implemented. FloatingText/DamageNumbers, CameraShake, HitFeedback and ScreenEffects remain future phases.
+
+Presentational bars never own HP, defense, damage, or save state. Each actor binds its bar to its own health and sprite; no per-frame scans or global feedback manager.
