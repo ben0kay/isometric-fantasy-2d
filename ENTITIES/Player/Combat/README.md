@@ -1,9 +1,5 @@
-# Player / Combat
+# Player combat adapter
 
-Future player-facing combat actions, attack state, weapon use and ability requests.
+C1/C2 player receiving uses `PlayerMovement`'s existing shared HP/stats and `ICombatTarget`; input stays centralized in `PlayerInput`. `EquippedTool` is the current attack-request/presentation adapter, using the same COMBAT/Weapons executor as enemy pursuit. No duplicate player-only timing, damage engine, HP or physics motor belongs here.
 
-Shared damage resolution, projectiles, status effects, and targetable health should **not** be duplicated for the player; those belong to reusable combat/entity systems when introduced.
-
-**Status:** Documentation/folder only.
-
-**Implementation roadmap:** [COMBAT/COMBAT_IMPLEMENTATION.md](../../../COMBAT/COMBAT_IMPLEMENTATION.md) defines C0–C5 shared player/enemy combat, hit detection, health/stats, feedback and movement. Player input is the request source, not a duplicate damage engine.
+Current sprint/dodge and health bars are preserved. C3–C5 will add feedback, movement tuning, telegraphs and a complete encounter/retry loop. See [combat plan](../../../COMBAT/COMBAT_IMPLEMENTATION.md).

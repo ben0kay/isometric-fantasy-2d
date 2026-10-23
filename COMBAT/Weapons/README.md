@@ -1,5 +1,9 @@
-# COMBAT/Weapons
+# Shared melee execution
 
-Shared combat attack profiles, cooldowns, swing rules and hit handling. Item IDs/visual item definitions belong in ITEMS/Weapons.
+C2 implemented. `AttackExecution` is a plain C# state machine shared by `EquippedTool` and `GroundChase`. Requests capture normalized aim, attacker effective stats and an immutable `AttackValues` snapshot. Fixed-step advancement covers wind-up, contact, recovery and cooldown. No Node/timer/global manager is added; adapters advance only active attacks. One accepted contact consumes the swing, including a zero-damage defended hit. Death, disabled scene owners and unload cancel pending contact.
 
-> **Status:** Folder planning only — no implementation or gameplay assets have been added.
+`AttackProfile` is the shared Resource: `AttackSeconds`, normalized `ContactProgress` + `ContactWindow`, extra `CooldownSeconds`, `BaseDamage`, `HitReach`, arc half-angle, receiving factions, optional prop hits and physics mask. Attack speed divides both duration and cooldown. Zero window means one contact sample at the crossing, preserving the original axe. A positive window can retry misses at physics steps until it ends; once something is contacted, no more queries occur that swing. Recovery is the remaining duration after contact ends. Aim is locked, while origin/receiving geometry use current positions.
+
+`AxeConfig` inherits the profile, retaining existing serialized timing/reach/aim fields and its existing `.tres`. It enables tool targets; default damage stays 1 and duration 0.38s, contact 85%. `DefaultEnemyMelee.tres` supplies generic pursuing-entity defaults: 6 damage, 36 reach, 0.9s swing, contact at 45% for an 8%-long window, then 0.35s extra cooldown. `EntityDefinition.MeleeAttack` can override it; `MeleeEnabled=false` disables attack intent while preserving chase. Non-pursuing entities do not gain AI or an executor. No species ID branching.
+
+`Contact` reports a target and nullable `DamageResult` (null for prop feedback). Actor HP/feedback remains with the receiving actor. No telegraph artwork, knockback, invulnerability, death/retry UI or C3–C5 polish is introduced. Item identity/art stays in ITEMS. See [validation](../C2_Validation.md).

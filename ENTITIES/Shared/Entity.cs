@@ -2,11 +2,13 @@
 // Behaviour modules handle locomotion/AI; no DEBUG dependencies.
 using Godot;
 
-public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatant
+public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatTarget
 {
     [Export] public EntityDefinition Config { get; set; }
     public ActorHealth HealthState { get; private set; }
     public ActorStats Stats { get; private set; }
+    public Node2D CombatNode => this;
+    public CombatFaction Faction => Config.Faction;
     public int Health => HealthState.Current;
 
     private Sprite2D _sprite;
@@ -65,9 +67,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     // =========================================================
     public Vector2 ClosestHitPoint(Vector2 origin)
     {
-        Vector2 direction = origin - GlobalPosition;
-        float radius = Mathf.Max(3f, Config.HitRadius);
-        return direction.LengthSquared() <= radius * radius ? origin : GlobalPosition + direction.Normalized() * radius;
+        return CombatTargeting.ClosestPoint(origin,GlobalPosition,Config.HitRadius);
     }
     // =========================================================
     public void ReceiveHit(Vector2 direction) => TakeDamage(1);

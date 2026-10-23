@@ -1,6 +1,6 @@
 # Combat implementation — C0–C5 Codex plan
 
-> **Status (2026-10-22): C0 + C1 implemented and headless validated.** Shared player/entity health, lazy effective stats and deterministic damage results are live. See [C0 audit](C0_Audit.md) and [C1 validation](C1_Validation.md). C2–C5 remain proposed; enemy attacks and encounter polish are not implemented.
+> **Status (2026-10-22): C0–C2 implemented; see C2 validation limitations.** Shared player/entity health, lazy effective stats and deterministic damage results are live. See [C0 audit](C0_Audit.md) and [C1 validation](C1_Validation.md). [C2](C2_Validation.md) adds shared player/enemy execution and contact validation. C3–C5 encounter polish remains planned.
 > **Purpose:** Make one player-versus-skeleton encounter responsive and satisfying while establishing reusable player/enemy/wildlife combat and clean integration with future caves/interiors.
 > **Authorization:** Codex should review the plan and suggest improvements before structural changes. Implement only the phase explicitly requested by the user; one commit per approved job. Never auto-implement C0–C5 as one pass.
 
@@ -16,7 +16,7 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 - `DEBUG/TopDownTest/Weapons/README.md`: older axe and tree-hit contact tests; DEBUG stays independent.
 - `FEEDBACK/README.md`, `COMBAT/*/README.md`, `ENTITIES/Player/Combat/README.md`, `ENTITIES/Player/Survival/Health/README.md`: present organizational intentions.
 
-**Existing, not yet polished:** player can swing an axe and hit registered tree/entity targets; skeleton can chase, lose health, flash and fade on death. C1 now supplies shared actor/player HP and cached effective stats. There is no reusable attack controller for both actors, enemy attacks, knockback, damage text/health bars, particles or sprint/dodge. CombatMasterConfig remains a placeholder. Confirm live behavior and current sources before modifying.
+**Existing, not yet polished:** player can swing an axe and hit registered tree/entity targets; skeleton can chase, lose health, flash and fade on death. C1 now supplies shared actor/player HP and cached effective stats. C2 supplies shared attack execution and basic enemy attacks. Shared health bars and a sprint/dodge mini-pass also exist; preserve them. Knockback, damage numbers, impact particles and encounter polish remain future work. CombatMasterConfig remains a placeholder. Confirm live behavior and current sources before modifying.
 
 ## Architecture contract: responsibilities, not one enormous combat node
 
@@ -58,7 +58,7 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 **Pass:** Unit/scene fixture proves damage, no negative HP, alive/dead transitions, defense and modifier ordering, P4 save/reload including prior checkpoints, no idle work increase.
 
-## C2 — Shared attack execution and contact validation
+## C2 — Shared attack execution and contact validation — implemented
 
 **Scope:** Player input and skeleton AI request attacks through the same executor; Resource-driven axe/basic-skeleton melee profile, wind-up/contact/recovery/cooldown; direction, reach and eligible hurtbox query. Do not poll entire scene every frame. Protect against duplicate contacts, dead/unloaded targets, friendly fire/self hits.
 
@@ -66,9 +66,11 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 **Pass:** Player hits skeleton, skeleton hits player, misses/distance/direction blocked as expected, one target once per swing, no hit when dead/on cooldown; stream and trees regressions pass. Enemy telegraph art can be deferred to C5.
 
+**Implementation:** Shared plain `AttackExecution`, `AttackProfile` (inherited by existing AxeConfig), contact-window physics broad phase, receiving geometry/faction/obstruction policy and generic pursuit intent. No scene changes in C2. See [results, baseline comparisons and manual handoff](C2_Validation.md); broader headless shutdown failures are not represented as clean passes.
+
 ## C3 — Combat feedback and perceived impact
 
-**Early health-bar slice (pending validation):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
+**Early health-bar slice (headless integration checked; visual acceptance pending):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
 
 **Scope:** Resource-tunable enemy hit flash, bounded physical recoil/knockback, small impact particles, floating damage text, conditional temporary health bar; optional audio/camera impulse with settings OFF. Separation: `DamageResult` produces presentation events, presentation never changes resolved HP.
 
@@ -86,7 +88,7 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 ## C5 — One complete skeleton encounter and tuning
 
-**Scope:** Skeleton attack request/telegraph/contact/recovery, fair player damage, defensible dodge response, death/respawn/retry in a disposable combat test; tune attack profile Resources (damage, hit window, speed, recoil, feedback). Prefer a dedicated `TESTS/Combat/` repeatable scene/fixtures reusing production components rather than introducing enemies/weapon content breadth.
+**Scope:** Refine the C2 skeleton attack/request/contact/recovery with readable telegraphs, fair player damage, defensible dodge response, death/respawn/retry in a disposable combat test; tune attack profile Resources (damage, hit window, speed, recoil, feedback). Prefer a dedicated `TESTS/Combat/` repeatable scene/fixtures reusing production components rather than introducing enemies/weapon content breadth.
 
 **Pass:** Repeatable player-vs-skeleton loop, clear readable telegraphs, hits and misses, no sticky chasing/velocity; test a real gameplay encounter at target renderer, multiple attempts and performance with several enemies. No A-Life, loot/progression, caves or new world generator in this phase.
 

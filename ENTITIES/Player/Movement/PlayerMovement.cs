@@ -1,12 +1,18 @@
-// Production CharacterBody2D movement: shared stats plus sprint and cursor-directed dodge physics.
+// Production CharacterBody2D movement: shared stats plus sprint and held-direction dodge physics.
 using Godot;
 
-public partial class PlayerMovement : CharacterBody2D, ICombatant
+public partial class PlayerMovement : CharacterBody2D, ICombatTarget
 {
     [ExportGroup("References")]
     [Export] public PlayerMasterConfig Config { get; set; }
     public float SurfaceSpeedMultiplier { get; set; } = 1f;
     public WorldChunkStream Streaming { get; set; }
+    public Node2D CombatNode => this;
+    public CombatFaction Faction => CombatFaction.Player;
+    public Vector2 HitAnchor => GlobalPosition;
+    // Explicit receiving geometry stays independent of the movement rectangle.
+    // =========================================================
+    public Vector2 ClosestHitPoint(Vector2 origin) => CombatTargeting.ClosestPoint(origin,GlobalPosition,12);
     public ActorHealth HealthState { get; private set; }
     public ActorStats Stats { get; private set; }
     private PlayerInput _input;
@@ -59,7 +65,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatant
     #endregion
 
     #region Dodge and movement
-    // Event-driven activation; direction is captured from mouse position at the second Shift press.
+    // Event-driven activation; direction is captured from held movement at the second Shift press.
     // =========================================================
     private void RequestDodge(Vector2 direction)
     {

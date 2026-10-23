@@ -28,4 +28,4 @@ This is the canonical home for living actors and their **species-specific defini
 
 Use `EntityMasterConfig.cs` / `DefaultEntityConfig.tres` already present here for genuinely shared top-level settings only; don't invent redundant empty MasterConfigs for every subfolder.
 
-**Status:** Shared Entity, player and one production test skeleton exist; C0/C1 shared HP/cached stats/damage results are headless-tested ([C1](../COMBAT/C1_Validation.md)). C2–C5 shared combat execution/encounter polish, widespread populations and offscreen A-Life are still planned.
+**Status:** Shared Entity, player and one production test skeleton exist; C0/C1 shared HP/cached stats/damage results are headless-tested ([C1](../COMBAT/C1_Validation.md)). C2 adds shared player/enemy attack execution and contact validation ([results/limits](../COMBAT/C2_Validation.md)); C3–C5 encounter polish, widespread populations and offscreen A-Life remain planned.

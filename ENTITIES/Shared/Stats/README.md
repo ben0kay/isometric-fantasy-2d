@@ -6,4 +6,4 @@
 
 Formula: `(base + sum(flat)) * max(0, 1 + sum(percent)) * product(multiplier)`, then clamp. Percent 0.25 means +25%. IDs sort ordinally so insertion order cannot change results; logarithmic multiplication avoids intermediate product overflow. Limits: damage 0–10000, defense 0–1000000, attack speed 0.05–20, movement 0–10. Invalid external base/modifier inputs reject. Profiles are authored data; runtime effects must use instance modifiers. Equipment/buff ownership and persistence are future work.
 
-Movement multiplies existing WalkSpeed/MoveSpeed. Equipped axe snapshots attack-speed timing at swing start; its existing contact query and one-damage actor adapter remain until C2 supplies attacker-aware shared attack execution.
+Movement multiplies existing WalkSpeed/MoveSpeed. C2 shared execution snapshots attacker damage/attack-speed values at swing start for player and enemy; target defense is read at contact. The legacy `Entity.ReceiveHit` neutral-attacker adapter remains for compatibility callers.
