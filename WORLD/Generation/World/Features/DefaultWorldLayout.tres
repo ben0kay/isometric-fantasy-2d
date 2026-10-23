@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="WorldLayoutPreset" format=3]
-[ext_resource type="Script" path="res://WORLD/Generation/World/Features/WorldLayoutPreset.cs" id="layout"]
-[ext_resource type="Script" path="res://WORLD/Generation/World/Features/WorldFeatureDirective.cs" id="feature"]
+[gd_resource type="Resource" script_class="WorldLayoutPreset" format=3 uid="uid://b4tx3ikbknw85"]
+
+[ext_resource type="Script" uid="uid://rqfanu23wi04" path="res://WORLD/Generation/World/Features/WorldFeatureDirective.cs" id="feature"]
+[ext_resource type="Script" uid="uid://beiw6jdop7h4i" path="res://WORLD/Generation/World/Features/WorldLayoutPreset.cs" id="layout"]
+
 [sub_resource type="Resource" id="start"]
 script = ExtResource("feature")
 Id = "feature.start"
@@ -8,12 +10,11 @@ DisplayName = "Protected start"
 Priority = 1000
 IsStartingArea = true
 Placement = 1
-NormalizedAnchor = Vector2(0.5, 0.5)
 Size = Vector2(320, 320)
 Clearance = 64.0
-Kind = 16
 AllowedPlacements = 5
 OverviewColour = Color(0.2, 0.9, 1, 1)
+
 [sub_resource type="Resource" id="southeast"]
 script = ExtResource("feature")
 Id = "feature.southeast_test"
@@ -24,8 +25,8 @@ Size = Vector2(9000, 7000)
 NormalizedPolygon = PackedVector2Array(-0.5, -0.2, -0.15, -0.5, 0.3, -0.4, 0.5, 0, 0.2, 0.5, -0.35, 0.35)
 Clearance = 200.0
 Kind = 64
-AllowedPlacements = 1
 OverviewColour = Color(1, 0.7, 0.1, 1)
+
 [resource]
 script = ExtResource("layout")
 Features = Array[ExtResource("feature")]([SubResource("start"), SubResource("southeast")])

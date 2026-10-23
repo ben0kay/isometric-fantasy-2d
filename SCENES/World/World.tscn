@@ -1,85 +1,105 @@
-[gd_scene format=3]
-[ext_resource type="Script" path="res://WORLD/Runtime/WorldScene.cs" id="world"]
-[ext_resource type="Resource" path="res://WORLD/DefaultWorldConfig.tres" id="config"]
-[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/GroundSurface.cs" id="ground"]
-[ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldSceneryPlacement.cs" id="placement"]
-[ext_resource type="PackedScene" path="res://ENTITIES/Player/Player.tscn" id="player"]
-[ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentRuntime.cs" id="environment"]
-[ext_resource type="Resource" path="res://ENVIRONMENT/DefaultEnvironmentConfig.tres" id="environment_config"]
-[ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
-[ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
-[ext_resource type="Script" path="res://WORLD/Generation/Placement/WorldEntityPlacement.cs" id="entity_placement"]
-[ext_resource type="PackedScene" path="res://ENTITIES/Shared/Entity.tscn" id="skeleton_basic"]
+[gd_scene format=3 uid="uid://bdfa4qnwlw6fw"]
+
 [ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres" id="basic_definition"]
-[ext_resource type="Script" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs" id="fire_runtime"]
+[ext_resource type="Resource" path="res://WORLD/DefaultWorldConfig.tres" id="config"]
+[ext_resource type="Script" uid="uid://b3v8h2kf0ac21" path="res://DEBUG/World/DebugActorRoot.cs" id="debug_actors"]
+[ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
+[ext_resource type="Script" uid="uid://f7qm7n0l8r4a" path="res://WORLD/Generation/Placement/WorldEntityPlacement.cs" id="entity_placement"]
+[ext_resource type="Script" uid="uid://dufbma3vhvavg" path="res://ENVIRONMENT/EnvironmentRuntime.cs" id="environment"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/DefaultEnvironmentConfig.tres" id="environment_config"]
 [ext_resource type="Resource" path="res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres" id="fire_config"]
-[ext_resource type="Script" path="res://DEBUG/UI/Fire/WorldFireDebugPanel.cs" id="fire_debug"]
-[ext_resource type="Script" path="res://DEBUG/UI/Generation/MacroMapDebugPanel.cs" id="macro_debug"]
-[ext_resource type="Script" path="res://DEBUG/World/DebugActorRoot.cs" id="debug_actors"]
-[node name="World" type="Node2D"]
+[ext_resource type="Script" uid="uid://btuf320hhq0ov" path="res://DEBUG/UI/Fire/WorldFireDebugPanel.cs" id="fire_debug"]
+[ext_resource type="Script" uid="uid://dyj0wfol5ymsw" path="res://SYSTEMS/WorldInteractions/Fire/Simulation/FireRuntime.cs" id="fire_runtime"]
+[ext_resource type="Script" uid="uid://drx0wfrdagstt" path="res://WORLD/Terrain/Ground/Surfaces/GroundSurface.cs" id="ground"]
+[ext_resource type="Script" uid="uid://b2ix63odfn6pv" path="res://DEBUG/UI/Generation/MacroMapDebugPanel.cs" id="macro_debug"]
+[ext_resource type="Script" uid="uid://bxahwlq4n1kqn" path="res://WORLD/Generation/Placement/WorldSceneryPlacement.cs" id="placement"]
+[ext_resource type="PackedScene" path="res://ENTITIES/Player/Player.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://WORLD/Liquids/Regions/WorldPond.tscn" id="pond"]
+[ext_resource type="PackedScene" path="res://ENTITIES/Shared/Entity.tscn" id="skeleton_basic"]
+[ext_resource type="Script" uid="uid://8oefrcon0irx" path="res://WORLD/Runtime/WorldScene.cs" id="world"]
+
+[node name="World" type="Node2D" unique_id=277013086]
 script = ExtResource("world")
 Config = ExtResource("config")
-[node name="TerrainRoot" type="Node2D" parent="."]
-[node name="StreamedGroundRoot" type="Node2D" parent="TerrainRoot"]
-[node name="SystemsRoot" type="Node" parent="."]
-[node name="DebugUIRoot" type="Node" parent="."]
-[node name="Ground" type="Sprite2D" parent="TerrainRoot"]
+
+[node name="TerrainRoot" type="Node2D" parent="." unique_id=1372233212]
+
+[node name="StreamedGroundRoot" type="Node2D" parent="TerrainRoot" unique_id=1558166654]
+
+[node name="Ground" type="Sprite2D" parent="TerrainRoot" unique_id=1853008679]
 z_index = -10
 script = ExtResource("ground")
-[node name="Liquids" parent="TerrainRoot" instance=ExtResource("pond")]
-[node name="WorldActorsRoot" type="Node2D" parent="."]
-y_sort_enabled = true
-metadata/world_actor_container = true
-[node name="PersistentEntitiesRoot" type="Node2D" parent="WorldActorsRoot"]
-y_sort_enabled = true
-metadata/world_actor_container = true
-[node name="PersistentPropsRoot" type="Node2D" parent="WorldActorsRoot"]
-y_sort_enabled = true
-metadata/world_actor_container = true
-[node name="ChunkActorsRoot" type="Node2D" parent="WorldActorsRoot"]
-y_sort_enabled = true
-metadata/world_actor_container = true
-[node name="PreviewSceneryRoot" type="Node2D" parent="WorldActorsRoot"]
-y_sort_enabled = true
-metadata/world_actor_container = true
-[node name="Player" parent="WorldActorsRoot/PersistentEntitiesRoot" instance=ExtResource("player")]
-[node name="SceneryPlacement" type="Node" parent="SystemsRoot"]
+
+[node name="Liquids" parent="TerrainRoot" unique_id=776580064 instance=ExtResource("pond")]
+
+[node name="SystemsRoot" type="Node" parent="." unique_id=266871006]
+
+[node name="SceneryPlacement" type="Node" parent="SystemsRoot" unique_id=1595737622]
 script = ExtResource("placement")
 
-[node name="EntityPlacement" type="Node" parent="SystemsRoot"]
+[node name="EntityPlacement" type="Node" parent="SystemsRoot" unique_id=864987602]
 script = ExtResource("entity_placement")
 EntityScene = ExtResource("skeleton_basic")
 EntityDefinition = ExtResource("basic_definition")
 
-[node name="Environment" type="Node2D" parent="SystemsRoot"]
+[node name="Environment" type="Node2D" parent="SystemsRoot" unique_id=697960373]
 script = ExtResource("environment")
 Config = ExtResource("environment_config")
-[node name="EnvironmentDebugPanel" parent="DebugUIRoot" instance=ExtResource("debug_ui")]
-EnvironmentPath = NodePath("../../SystemsRoot/Environment")
 
-[node name="Fire" type="Node" parent="SystemsRoot"]
+[node name="Fire" type="Node" parent="SystemsRoot" unique_id=1700398938]
 script = ExtResource("fire_runtime")
 Config = ExtResource("fire_config")
-[node name="FireDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
+
+[node name="DebugUIRoot" type="Node" parent="." unique_id=1795349160]
+
+[node name="EnvironmentDebugPanel" parent="DebugUIRoot" unique_id=499768501 instance=ExtResource("debug_ui")]
+EnvironmentPath = NodePath("../../SystemsRoot/Environment")
+
+[node name="FireDebugPanel" type="CanvasLayer" parent="DebugUIRoot" unique_id=1764683043]
 script = ExtResource("fire_debug")
 
-[node name="MacroMapDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
+[node name="MacroMapDebugPanel" type="CanvasLayer" parent="DebugUIRoot" unique_id=922005109]
 script = ExtResource("macro_debug")
 
-[node name="DebugActorsRoot" type="Node2D" parent="WorldActorsRoot/PersistentEntitiesRoot"]
+[node name="WorldActorsRoot" type="Node2D" parent="." unique_id=696164405]
 y_sort_enabled = true
 metadata/world_actor_container = true
-script = ExtResource("debug_actors")
 
-[node name="NorthWest" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+[node name="PersistentEntitiesRoot" type="Node2D" parent="WorldActorsRoot" unique_id=123844684]
+y_sort_enabled = true
+metadata/world_actor_container = true
+
+[node name="Player" parent="WorldActorsRoot/PersistentEntitiesRoot" unique_id=1614075169 instance=ExtResource("player")]
+
+[node name="DebugActorsRoot" type="Node2D" parent="WorldActorsRoot/PersistentEntitiesRoot" unique_id=1620804436]
+y_sort_enabled = true
+script = ExtResource("debug_actors")
+metadata/world_actor_container = true
+
+[node name="NorthWest" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot" unique_id=1921317100]
 position = Vector2(-180, -170)
 metadata/world_actor_container = true
-[node name="NorthEast" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+
+[node name="NorthEast" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot" unique_id=573204636]
 position = Vector2(180, -170)
 metadata/world_actor_container = true
-[node name="West" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+
+[node name="West" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot" unique_id=371155034]
 position = Vector2(-260, 80)
 metadata/world_actor_container = true
-[node name="East" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+
+[node name="East" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot" unique_id=479322690]
 position = Vector2(260, 80)
+metadata/world_actor_container = true
+
+[node name="PersistentPropsRoot" type="Node2D" parent="WorldActorsRoot" unique_id=574937771]
+y_sort_enabled = true
+metadata/world_actor_container = true
+
+[node name="ChunkActorsRoot" type="Node2D" parent="WorldActorsRoot" unique_id=5718065]
+y_sort_enabled = true
+metadata/world_actor_container = true
+
+[node name="PreviewSceneryRoot" type="Node2D" parent="WorldActorsRoot" unique_id=206184698]
+y_sort_enabled = true
 metadata/world_actor_container = true

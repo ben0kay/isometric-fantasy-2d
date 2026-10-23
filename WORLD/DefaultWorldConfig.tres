@@ -1,13 +1,15 @@
-[gd_resource type="Resource" script_class="WorldMasterConfig" format=3]
-[ext_resource type="Resource" path="res://WORLD/Biomes/Layouts/OakAndMeadow.tres" id="layout"]
-[ext_resource type="Script" path="res://WORLD/WorldMasterConfig.cs" id="script"]
+[gd_resource type="Resource" script_class="WorldMasterConfig" format=3 uid="uid://1mpgqhfn6jkk"]
+
 [ext_resource type="Resource" path="res://WORLD/Generation/World/DefaultWorldGeneration.tres" id="generation"]
-[ext_resource type="Script" path="res://WORLD/Runtime/Streaming/WorldStreamingConfig.cs" id="stream_script"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Layouts/OakAndMeadow.tres" id="layout"]
+[ext_resource type="Script" uid="uid://bbsg1eq1isg3d" path="res://WORLD/WorldMasterConfig.cs" id="script"]
+[ext_resource type="Script" uid="uid://hode8gr7q8m5" path="res://WORLD/Runtime/Streaming/WorldStreamingConfig.cs" id="stream_script"]
+
 [sub_resource type="Resource" id="stream"]
 script = ExtResource("stream_script")
+
 [resource]
 script = ExtResource("script")
 Biomes = ExtResource("layout")
 Generation = ExtResource("generation")
 Streaming = SubResource("stream")
-Bounds = Rect2(-800, -544, 3840, 1728)

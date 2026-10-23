@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3]
-[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
-[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomePopulation.cs" id="population"]
-[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossom.tres" id="tree"]
+[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3 uid="uid://dwhd66xu8rbv8"]
+
+[ext_resource type="Script" uid="uid://c8qjtch8btspx" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Script" uid="uid://b876ubumal6vo" path="res://WORLD/Biomes/Shared/BiomePopulation.cs" id="population"]
 [ext_resource type="Resource" path="res://WORLD/Content/Rocks/Rock.tres" id="rock"]
 [ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/PinkMeadowGrass.tres" id="surface"]
+[ext_resource type="Resource" uid="uid://f8to0shc3mpx" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossom.tres" id="tree"]
+
 [sub_resource type="Resource" id="trees"]
 script = ExtResource("population")
 Content = ExtResource("tree")
@@ -11,6 +13,7 @@ Count = 36
 InstancesPerMillionUnits = 26.0
 MinimumScale = 0.93
 MaximumScale = 1.07
+
 [sub_resource type="Resource" id="rocks"]
 script = ExtResource("population")
 Content = ExtResource("rock")
@@ -18,13 +21,12 @@ Count = 16
 InstancesPerMillionUnits = 11.0
 MinimumScale = 0.85
 MaximumScale = 1.15
+
 [resource]
 script = ExtResource("biome")
 Id = "biome.pink_meadow"
 DisplayName = "Pink Meadow"
+GenerationWeight = 40.0
+OverviewColour = Color(0.85, 0.48, 0.66, 1)
 Surface = ExtResource("surface")
 Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks")])
-GenerationWeight = 40.0
-MinimumRegionDiameter = 4000.0
-MaximumRegionDiameter = 8000.0
-OverviewColour = Color(0.85, 0.48, 0.66, 1)

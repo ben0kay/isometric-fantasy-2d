@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3]
-[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
-[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomePopulation.cs" id="population"]
-[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Oak/Oak.tres" id="oak"]
-[ext_resource type="Resource" path="res://WORLD/Content/Rocks/Rock.tres" id="rock"]
-[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Grass/Grass.tres" id="grass"]
-[ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/ForestGrass.tres" id="surface"]
+[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3 uid="uid://bnncly2kc5qhm"]
+
+[ext_resource type="Script" uid="uid://c8qjtch8btspx" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
 [ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Environment.tres" id="environment"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Grass/Grass.tres" id="grass"]
+[ext_resource type="Resource" uid="uid://ckx0f2rnjxwx" path="res://WORLD/Content/Vegetation/Trees/Oak/Oak.tres" id="oak"]
+[ext_resource type="Script" uid="uid://b876ubumal6vo" path="res://WORLD/Biomes/Shared/BiomePopulation.cs" id="population"]
+[ext_resource type="Resource" path="res://WORLD/Content/Rocks/Rock.tres" id="rock"]
+[ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/ForestGrass.tres" id="surface"]
+
 [sub_resource type="Resource" id="trees"]
 script = ExtResource("population")
 Content = ExtResource("oak")
@@ -13,6 +15,7 @@ Count = 80
 InstancesPerMillionUnits = 26.0
 MinimumScale = 0.93
 MaximumScale = 1.07
+
 [sub_resource type="Resource" id="rocks"]
 script = ExtResource("population")
 Content = ExtResource("rock")
@@ -20,6 +23,7 @@ Count = 34
 InstancesPerMillionUnits = 11.0
 MinimumScale = 0.85
 MaximumScale = 1.15
+
 [sub_resource type="Resource" id="tufts"]
 script = ExtResource("population")
 Content = ExtResource("grass")
@@ -28,15 +32,13 @@ InstancesPerMillionUnits = 60.0
 MinimumScale = 0.26
 MaximumScale = 0.42
 ClusterSize = 5
-ClusterRadius = 55.0
+
 [resource]
 script = ExtResource("biome")
-Environment = ExtResource("environment")
 Id = "biome.oak_forest"
 DisplayName = "Oak Forest"
+GenerationWeight = 60.0
+OverviewColour = Color(0.22, 0.49, 0.25, 1)
+Environment = ExtResource("environment")
 Surface = ExtResource("surface")
 Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks"), SubResource("tufts")])
-GenerationWeight = 60.0
-MinimumRegionDiameter = 4000.0
-MaximumRegionDiameter = 8000.0
-OverviewColour = Color(0.22, 0.49, 0.25, 1)
