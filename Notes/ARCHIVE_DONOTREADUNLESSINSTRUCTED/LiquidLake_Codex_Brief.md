@@ -1,6 +1,8 @@
+> **ARCHIVED — original DEBUG lake/wading implementation completed.** This is a historical specification, not a to-do. Current implementations: [DEBUG liquid experiment](../../DEBUG/TopDownTest/Liquids/README.md) and [production liquids](../../WORLD/Liquids/README.md). Additional ideas below are not approved implementation phases.
+
 # Liquid patches and lake — Codex debug implementation brief
 
-**Status:** Debug lake/wading prototype implemented; see [Liquids README](../Liquids/README.md) for current behaviour, validation and removal. Remaining suggestions below are not automatically implemented.  
+**Status:** Debug lake/wading prototype implemented; see [Liquids README](../../DEBUG/TopDownTest/Liquids/README.md) for current behaviour, validation and removal. Remaining suggestions below are not automatically implemented.  
 **Project:** Godot 4 C#, fully 2D top-down fantasy sandbox (NOT 3D/isometric).  
 **Scope:** DEBUG/TopDownTest/ only. Do not add or modify production WORLD, ENVIRONMENT, ENTITIES, SYSTEMS or SAVE code during this pass.  
 **Goal:** Build a beautiful, natural-looking little lake in the existing walkable forest debug map as the first example of a reusable **liquid-area system**, not a bespoke Lake.cs that will later need rewriting for quicksand, acid, toxic sludge, swamps or magical liquids.

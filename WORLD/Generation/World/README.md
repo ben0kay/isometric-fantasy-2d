@@ -2,7 +2,7 @@
 
 P3 now makes this map playable through nearby streaming; see [streaming guide](../../Runtime/Streaming/README.md). The remaining P0–P2 descriptions below document the original macro foundation; preview-only statements are superseded by this update. Biome regions remain separate from chunk size. Population density now controls streamed placement; Count/clusters remain for the explicit compatibility preview.
 
-Implemented: a complete finite coarse biome map, independently queryable without scenery. `WorldMasterConfig.Generation` references `DefaultWorldGeneration.tres`. The default production world now streams this map; the original adjacent layout is retained in explicit preview mode. F7 shows the map. P2 now adds required/preferred polygon reservation directives via the referenced Layout Resource; see [features](Features/README.md). Local streamed ground/scenery is implemented in P3; durable saves and major terrain remain later passes.
+Implemented: a complete finite coarse biome map, independently queryable without scenery. `WorldMasterConfig.Generation` references `DefaultWorldGeneration.tres`. The default production world now streams this map; the original adjacent layout is retained in explicit preview mode. F7 shows the map. P2 now adds required/preferred polygon reservation directives via the referenced Layout Resource; see [features](Features/README.md). Local streamed ground/scenery is implemented in P3. P4 durable per-profile/run/world saves and Continue are implemented; real terrain/landmarks (P5) remain future. **F7** is the macro/reservation map; **F8** saves an active P4 campaign, not the map. See [SAVE](../../../SAVE/README.md) and [phase guide](../../Generation_Implementation.md).
 
 ## Authoring
 
@@ -21,7 +21,7 @@ Default bounds are 45000×33750 world units, with 256-unit coarse cells (176×13
 
 This first version is a coarse connected partition, not a coast/terrain/climate simulator or final detailed border shader. No landmask exists yet: **all bounds are eligible land**. The debug image darkens region boundaries, including those between two regions of the same biome. Percentages/min-max counts describe coarse cells, not exact clipped land area. Future terrain rendering must interpolate/blend this blueprint consistently across chunk edges.
 
-Generation is synchronous, once per preview startup. MaximumCells and MaximumRegions reject excessive requests; there is no unbounded random retry loop. Growth is O(cells log cells), site sampling O(regions²). Default developer target: under 250 ms macro generation, under 262144 cells and 4096 sites. This is a profiling target, not a guarantee for every combination up to the limits. Do not raise limits blindly; cancellation/asynchronous staging is later streaming work.
+Macro generation is synchronous when creating a new world; P4 Continue restores its frozen blueprint instead of generating a new map. MaximumCells and MaximumRegions reject excessive requests; there is no unbounded random retry loop. Growth is O(cells log cells), site sampling O(regions²). Default developer target: under 250 ms macro generation, under 262144 cells and 4096 sites. This is a profiling target, not a guarantee for every combination up to the limits. Do not raise limits blindly; cancellation/asynchronous staging is later streaming work.
 
 ## Ownership and validation
 

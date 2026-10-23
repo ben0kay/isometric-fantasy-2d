@@ -228,7 +228,7 @@ Validation caveat: one repeated Godot 4.5.1 Mono fixture run logged `Handle is n
 
 ## 10. Updated SO1–SO4 handoff and future locations — 22 October 2026
 
-**Read this section before acting on the earlier historical proposals.** SO0/SO1 are implemented as documented above. P4 disk saves, New Campaign, Continue and save/quit have also been implemented and passed automated checks; **P4 manual UI/graphical/profiler acceptance and P3 visual/performance acceptance remain open**. Do not interpret older “P4 future” wording or the original raw node tree as current. Work in small, separately approved commits.
+**Read this section before acting on the earlier historical proposals.** SO0/SO1 are implemented as documented above. P4 disk saves, New Campaign, Continue and save/quit have also been implemented and passed automated checks; **earlier P4 functional save/profile checks were user-accepted; newer SO2/C1 graphical/UI regressions and P3 performance acceptance remain open**. Do not interpret older “P4 future” wording or the original raw node tree as current. Work in small, separately approved commits.
 
 ### SO1 — COMPLETE: safe grouping; validate, don't redo
 
@@ -236,7 +236,7 @@ Validation caveat: one repeated Godot 4.5.1 Mono fixture run logged `Handle is n
 - Codex should **inspect actual HEAD/Remote tree and compare against that record**; only fix an observed missing path, Y-sort issue, or regression. Do **not** repeat SO1 reparenting or add duplicate managers for cleaner names.
 - Keep F5 profile → campaign New/Continue and F6 direct disposable World separate. Include save/restore and old preview in SO1 regression checks.
 
-### SO2 — NEXT CONDITIONAL PASS: explicit ownership and destination APIs
+### SO2 — IMPLEMENTED (the original conditional implementation steps are historical)
 
 - Audit `WorldSceneryPlacement` (generator/controller mixed with `Actors`), `WorldChunkStream`, `WorldEntityPlacement`, navigation/collision source roots, F7/F9/fire/debug paths and all environment/scenery adapter subscriptions **at current HEAD**.
 - Prefer **typed explicit destinations** for `PersistentEntitiesRoot`, `PersistentPropsRoot`, `ChunkActorsRoot`, optional `PreviewSceneryRoot` and `StreamedGroundRoot`, rather than hardcoded parent walking; add only roots that eliminate a real ownership ambiguity. Preserve shared Y-sort space, global/local transforms, physics, occlusion, shadows and chunk seam draw order.
@@ -284,7 +284,7 @@ Validation caveat: one repeated Godot 4.5.1 Mono fixture run logged `Handle is n
 
 ## SO2 implementation handoff — 22 October 2026
 
-SO2 is implemented, **awaiting local compilation/runtime/graphical/performance validation by GitHub Copilot** at the user's request. See [SO2_Copilot_Handoff.md](SO2_Copilot_Handoff.md) for the before/after paths, audited dependencies, changed files, exact commands and acceptance/rollback requirements. This supersedes earlier SO2-next/planned wording; SO3/SO4 and GL0–GL3 remain unimplemented and separately scoped.
+SO2 is implemented and **Godot 4.7.2 build/import, SO2 ownership and real P4 disk-save compatibility automated checks passed** in [SO2_Validation.md](SO2_Validation.md). Rendered Y-sort/seams and target-PC graphical/performance acceptance remain open. The original Copilot testing delegation is historical. See [SO2_Copilot_Handoff.md](SO2_Copilot_Handoff.md) for the before/after paths, audited dependencies, changed files, exact commands and acceptance/rollback requirements. This supersedes earlier SO2-next/planned wording; SO3/SO4 and GL0–GL3 remain unimplemented and separately scoped.
 
 Actual hierarchy: WorldActorsRoot → PersistentEntitiesRoot (player/skeleton), PersistentPropsRoot (torches), ChunkActorsRoot (existing chunk roots), PreviewSceneryRoot (preview props). Ground stays under TerrainRoot/StreamedGroundRoot. SystemsRoot/SceneryPlacement is a plain Node controller, no longer the parent of runtime actors. WorldScene caches typed roots/services once; initial environment discovery crosses only marked ownership containers and skips chunks. All intermediate actor roots enable Y sorting and have identity transforms. No additional per-chunk roots, EffectsRoot, entity registry, duplicate streamer/clock/save system or process loops were added.
 

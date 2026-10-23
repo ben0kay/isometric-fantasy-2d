@@ -1,6 +1,6 @@
 # ENTITIES — Player, species, factions, roles and shared actor mechanics
 
-This is the canonical home for living actors and their **species-specific definitions, scenes and visuals**. `Player/` contains the existing **implemented production movement/camera foundation** and its separate future subsystems. Species/faction/role/shared directories added in this pass are **organization-only scaffolding**; none adds creatures to the game.
+This is the canonical home for living actors and their **species-specific definitions, scenes and visuals**. `Player/` owns implemented production input, camera/movement and axe. **`Shared/` provides a real Resource-driven Entity, actor health/stats, hit/death feedback, optional chase and navigation.** The production Skeleton Basic uses it. Other species/factions/roles mostly remain scaffolding; full populations/A-Life are future.
 
 ## Main structure
 
@@ -20,12 +20,12 @@ This is the canonical home for living actors and their **species-specific defini
 - **Gameplay entities vs ambience:** A firefly or bird that is *only* an atmosphere/particle effect belongs in `ENVIRONMENT/` (or its visual effect owner), not necessarily as a fully simulated ENTITIES actor. Real huntable, interactive or damageable ones do belong here.
 - **No biome-owned creature copies.** `WORLD/Biomes/` and `WORLD/Caves/` reference canonical species definitions and provide spawn restrictions, weights and populations. Content stays here. See [WORLD/README.md](../WORLD/README.md).
 - **Keep combat and items centralized.** Shared damage/weapon resolution belongs in `COMBAT/`; item definitions in `ITEMS/`; global interaction/gameplay services in `SYSTEMS/`. This folder can contain actor health state, animation reactions, AI, equipment references, etc.
-- **DEBUG is separate.** `DEBUG/TopDownTest/Enemies/` may contain a temporary skeleton demonstration; it is NOT production content and has not been promoted by creating these folders.
+- **DEBUG is separate.** `DEBUG/TopDownTest/Enemies/` remains an independent experiment; one production test Skeleton Basic already exists using the [shared Entity](Shared/README.md). No DEBUG dependency is needed.
 
-## Data-driven plan (not implemented)
+## Data-driven foundation and future authoring
 
-Eventually give species, variants, roles and factions **stable IDs** and reusable Godot Resource definitions (`.tres` / C# Resource classes), which a future Avalonia editor could modify. A species folder can later contain a base definition, a packed scene, `Visuals/`, `Variants/` and optionally unique behaviour scripts. Do not create a C# script per creature unless it genuinely needs one.
+`EntityDefinition`, `Entity.tscn` and optional combat profiles already provide a common Resource-driven foundation. Richer species/roles/factions and the Avalonia editor remain future. A species folder can later contain a base definition, a packed scene, `Visuals/`, `Variants/` and optionally unique behaviour scripts. Do not create a C# script per creature unless it genuinely needs one.
 
 Use `EntityMasterConfig.cs` / `DefaultEntityConfig.tres` already present here for genuinely shared top-level settings only; don't invent redundant empty MasterConfigs for every subfolder.
 
-**Status:** Folders/READMEs only in this pass. No AI, combat, spawning, new enemy scenes or other runtime changes.
+**Status:** Shared Entity, player and one production test skeleton exist; C0/C1 shared HP/cached stats/damage results are headless-tested ([C1](../COMBAT/C1_Validation.md)). C2–C5 shared combat execution/encounter polish, widespread populations and offscreen A-Life are still planned.

@@ -1,6 +1,6 @@
 # P4 local testing handoff — VS Code Copilot
 
-**Status: implemented, awaiting local validation. No C# compilation, Godot execution, recovery tests or performance tests were run by Codex for this pass, at the user's request.** Source review and diff checks are not runtime evidence. Use the single commit titled `Implement P4 private campaign checkpoints and local test handoff`; record its SHA with `git log -1 --format=%H` after pulling. Do not test an unrelated later revision without recording that change.
+**Historical implementation handoff:** initial P4 tests were delegated to Copilot and subsequently PASSED build/import, P4 write/read **31/33** on `ce6767d1`. The user later accepted the original save/restore/profile functional flows. Original handoff-time status: no C# compilation, Godot execution, recovery or performance tests were run by Codex for that initial implementation pass. Current SO2/C1 validation records supersede these as latest tests; target-PC large-save performance remains open. Source review and diff checks are not runtime evidence. Use the single commit titled `Implement P4 private campaign checkpoints and local test handoff`; record its SHA with `git log -1 --format=%H` after pulling. Do not test an unrelated later revision without recording that change.
 
 ## Instructions to Copilot
 
@@ -59,7 +59,7 @@ Run these once after the build/P4 checks, recording each outcome:
 
 Expected: each suite's PASS banner and exit 0. Inspect TESTS/Fire/README.md and TESTS/Trees/README.md for their current invocation if tree/fire assertions fail; do not blindly run every unrelated benchmark. The original macro and feature manifest creation APIs remain schema 2 for their fixtures; runtime streamed campaign manifests are schema 4.
 
-## Ben's graphical checks — required before acceptance
+## Original P4 graphical checklist — core functional flows later accepted; newer checks still open
 
 1. F5 existing Boot: verify existing profiles still appear. Select/create a disposable test profile. New Campaign enters the streamed world; first checkpoint succeeds. Existing main menu button styling remains intact.
 2. Walk away from spawn; set a distinct paused hour in F9; ignite/burn a tree. F8 reports saved. Esc → Save & Main Menu → Continue restores location, hour and burn progress. Close/reopen the application and repeat Continue.
@@ -103,4 +103,4 @@ Warnings, not test failures: Godot reported Camera2D overridden to physics proce
 
 No tracked source changes are present; the worktree reports only untracked .uid sidecars, which I left untouched. The P4 fixtures used their isolated validation storage; real profile and campaign saves were not intentionally targeted.
 
-Still outstanding: the handoff’s in-editor graphical, save/quit/recovery interaction, and profiler/performance checks. These headless runs do not validate graphical smoothness or FPS, so P4 is not fully accepted yet. The machine has Intel HD Graphics 530 and NVIDIA GeForce GTX 1080 adapters; no graphical renderer was exercised by these checks.
+This was Copilot's historical conclusion at the time of the original test: in-editor interaction and profiler/performance checks were then outstanding. The user subsequently accepted the original functional P4 checks. Newer SO2/C1 graphical/UI regression and large-save performance acceptance remain open; headless tests do not validate FPS. The machine has Intel HD Graphics 530 and NVIDIA GeForce GTX 1080 adapters; no graphical renderer was exercised by these checks.

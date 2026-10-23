@@ -1,6 +1,8 @@
+> **ARCHIVED — retired 3D rolling-terrain test.** Not part of current 2D production; **F5 starts Boot**, not this scene. `DEBUG/VisualTests/NaturalTerrainTest.tscn` is an old optional F6 experiment. Courtyard comparison scenes mentioned historically no longer exist.
+
 # Rolling terrain experiment (DEBUG-only)
 
-**Scene:** `NaturalTerrainTest.tscn` (new default F5 scene). The older `Courtyard2DProps.tscn` and `Courtyard3DProps.tscn` remain available for comparison.
+**Historical scene:** `DEBUG/VisualTests/NaturalTerrainTest.tscn`, NOT F5 default. Courtyard comparison scenes no longer exist.
 
 This disposable test creates **90 × 90 metres of real 3D rolling terrain**, with a single triangulated collision surface, gentle rolling slopes, subtle green color variation, **70 instances of the PNG tree sprite**, collision only around trunks, and direct warm sunlight with real shadows. The player remains the existing **2D PNG Sprite3D** on a CharacterBody3D. Arrow keys move relative to the fixed isometric camera.
 
@@ -21,7 +23,7 @@ This test depends on the **Godot .NET C# script** to generate the visible rollin
 A **low, flat static safety floor** now exists in the saved `.tscn` at approximately Y = -7 (below all normal generated hills). It prevents infinite falling even if generation fails, but it is **not** the intended rolling landscape. If you land on flat dark ground with no trees, **the procedural C# code did not execute**:
 
 1. Open the project using the **Godot .NET** editor.
-2. Press **Build** (hammer icon) or use **Project → Tools → C# → Build Project** before pressing F5.
+2. Press **Build** (hammer icon) or use **Project → Tools → C# → Build Project** before directly running the old scene with F6.
 3. Open Godot's **Output** and **Debugger → Errors** tabs; resolve C# compile errors first.
 4. On success the Output prints `[NaturalTerrainTest] Terrain surface and 3D collision created`, then a setup-complete/tree-count message.
 5. If the messages print but you still pass through terrain, check collision shapes via **Debug → Visible Collision Shapes** and report the errors/logs.
@@ -39,7 +41,7 @@ The fallback floor is intentionally lower than the terrain, so visible slopes an
 
 ## How to try it
 
-Run `git pull`, open the project in Godot .NET, allow its C# project to build, then press F5. To compare the old scene, open `Courtyard2DProps.tscn` and press F6.
+Run `git pull`, open the project in Godot .NET, allow its C# project to build, then open `DEBUG/VisualTests/NaturalTerrainTest.tscn` and press F6 for historical investigation. Do not use F5 or absent courtyard scenes.
 
 ## Technical files
 

@@ -1,24 +1,8 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
-**Combat development track (C0/C1 implemented; C2–C5 planned):** [COMBAT implementation plan](COMBAT/COMBAT_IMPLEMENTATION.md) coordinates shared player/enemy attacks, damage/health/stats, hit detection, feedback, movement feel and a skeleton encounter. It builds on the existing production axe/Entity foundations; C0/C1 now provide shared health, cached effective stats and damage results; enemy attacks and shared execution remain future phases. This is independent of world P phases and SO/GL scene work.
+A Godot C# **2D top-down medieval/high-fantasy survival sandbox** built around modular, data-driven systems, deterministic streamed worlds and low idle cost. The repo name says "isometric" for historical reasons; the active game is **not** diamond-isometric or 3D.
 
-**SO2 implemented — automated validation PASSED:** actor ownership is split into persistent entities, persistent props, streamed chunks and preview scenery beneath a shared Y-sort root. Controllers receive explicit destinations; existing P4 campaigns have a narrow layout-only compatibility bridge. Codex confirmed a clean build, Godot 4.7.2 import, SO2 ownership (60), P1–P3/environment/tree/fire/light regressions, P4 write/read (39/33), and actual SO1-to-SO2 disk-save restoration. Visual seam/Y-sort and Windows performance checks remain open. See [validation evidence](SCENES/World/SO2_Validation.md) and [SO2 testing handoff](SCENES/World/SO2_Copilot_Handoff.md) and [scene plan](SCENES/World/scene%20organize.md).
-
-**P4 baseline accepted for current functional scope:** existing menus and GUID profiles launch durable private campaigns; Continue restores frozen geography, surface player location, clock, chunk edits and test skeleton. F8 saves, Esc offers save/return/quit, autosave defaults to 120 seconds. VS Code Copilot confirmed a clean C# build, Godot 4.7.2 headless import, separate-process P4 write/read (31/33 checks) and P1/P2/P3/scenery regression suites on commit `ce6767d1`. The user subsequently confirmed the manual save/restore/profile checks worked. Large-save profiling and broader P3 visual/performance verification remain separate; SO2 changes require fresh regression checks. See [SAVE/README.md](SAVE/README.md) and [Copilot evidence/handoff](SAVE/P4_Copilot_Handoff.md). F5 starts Boot/Main Menu; F6 direct World remains disposable.
-
-**P2-A/P2-B cosmetic scheduling:** Cached camera envelopes and nearby chunk buckets replace repeated distant-chunk decisions. Occlusion queries nearby artwork and updates only active fades, with exact alpha restoration. All phases in [the performance refactor](Notes/performance_refactor.md) are implemented; target-PC visual/FPS verification remains separate.
-
-**P1-D sun/shadow caching:** Paused solar inputs reuse static shadows; moving actors, hit wobble, wind, camera and streaming remain responsive. Running-time static projection reuse is bounded by a configurable 0.25px tolerance (0 = exact), with immediate manual-time/settings refresh. F9 supports a 1440-second day and tolerance A/B. See [CPU evidence and target-PC limits](ENVIRONMENT/Lighting/Shadows/README.md).
-
-**Screen dust (P0-0 follow-up):** Sparse, softly fading specks now float in an independent screen layer, unaffected by camera/scenery/wind/daylight. One capped GPU batch animates without C# frame callbacks. OFF/zero removes it, and all-off atmosphere sleeps. Haze settings/bounds are cached; other effects retain independent controls. See [validation and target-PC limits](ENVIRONMENT/Atmosphere/README.md).
-
-**Snow off contract (P0-A/P0-B):** Snow has its own master Enabled switch. OFF clears surface snow and frees snowfall; settled coverage sleeps, with profile/F9 changes waking it. Zero snowfall rate removes flakes independently of settled coverage. See [snow lifecycle and validation](ENVIRONMENT/Weather/Snow/README.md).
-
-**Rain off contract:** Production rain now defaults to 0. Zero immediately stops rain processing, removes drops and clears/stops ground/liquid splash pools. Positive intensity wakes it by a profile-change event; wet foliage finishes drying then sleeps. Shared wind and independent lightning queries remain separate. Disabled falling-leaf simulation is skipped. See [rain behaviour](ENVIRONMENT/Weather/Rain/README.md).
-
-**Measured P3 hitch fix:** Rain/leaf source caches now register and remove changed props incrementally inside streaming binding, replacing full loaded-world rescans measured at 41–47.5ms combined in user traces. Rain exclusions use spatial cells. Target-machine recapture remains necessary; steady-state visual costs are a separate follow-up. See [streaming evidence and validation](WORLD/Runtime/Streaming/README.md).
-
-**First P3 stability + SO1 pass:** Off-screen chunk wind/wetness/snow updates suspend through shared artwork bounds; sun casters use conservative shadow reach. Chunk effect binding is staged while hidden, partial binding cancels cleanly, and static streamed visuals disable interpolation. The right-side F9 diagnostics expose culling A/B and CPU timings; F7 shows the map. Terrain/systems/debug UI now have clear containers; Actors/Y-sorting stays intact. Target-machine rendering/flicker verification remains open. See [streaming](WORLD/Runtime/Streaming/README.md) and [scene organization](SCENES/World/scene%20organize.md).
+**Read [CodePreferences.md](CodePreferences.md) before changing code.** This README is the project overview, architectural north star and navigation hub; feature READMEs and validation records own implementation detail and test evidence.
 
 ## Performance is an architectural requirement
 
@@ -26,32 +10,24 @@ Design every new mechanic for **low idle cost and large-world scalability from t
 
 Prefer **shared controllers, reusable materials, pooled effects, cached/spatial queries, and chunk-local registration** over per-object polling, full-world scans and repeated unchanged shader writes. Off-screen cosmetics may sleep, but persistent world state and legitimately continuous effects (clock, active wind, sunlight) must remain correct. Preserve visual quality and modular Resource-driven authoring; avoid optimizing by simply freezing visible animations.
 
-**Every implementation should answer:** *What activates it? What stops it? What does it cost while nothing is happening?* Validate idle, active, shutdown, reactivation and streaming behavior with Godot profiling; distinguish measured improvements from assumptions. Follow the full mandatory guidance in [CodePreferences.md](CodePreferences.md). See [Notes/performance_refactor.md](Notes/performance_refactor.md) for the staged environment audit and Codex handoff; cross-check [world scene organization](SCENES/World/scene%20organize.md) before changing scene ownership.
+**Every implementation should answer:** *What activates it? What stops it? What does it cost while nothing is happening?* Validate idle, active, shutdown, reactivation and streaming behavior with Godot profiling; distinguish measured improvements from assumptions. Follow the full mandatory guidance in [CodePreferences.md](CodePreferences.md). See [Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/performance_refactor.md](Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/performance_refactor.md) for the staged environment audit and Codex handoff; cross-check [world scene organization](SCENES/World/scene%20organize.md) before changing scene ownership.
 
 ## Current production state — 22 October 2026
 
-**Production F6 now runs the P0–P3 finite streamed world by default.** The current macro map is **45,000×33,750 world units**, currently filled by repeated Oak Forest/Pink Meadow regions. Its physical scenery, ground, collisions and local navigation load in chunks around the player; the old **3840×1728** adjacent-biome scene remains an optional **compatibility preview** when `WorldMasterConfig.Streaming.Enabled=false`. The independent F5 DEBUG/TopDownTest is preserved. This is a playable **technical foundation**, not a finished survival sandbox.
-
-| System/pass | Implemented now | Still missing / important limitation |
+| Track | Implemented now | Still pending |
 | --- | --- | --- |
-| **P0/P1 macro map** | Seeded finite, queryable, connected biome regions; any number of eligible biome Resources; weighted target diameters, complete land coverage, hashes and detached blueprint manifest | No oceans/continents, true height, rivers or climate fields; full map is currently assigned land |
-| **P2 feature planner** | Required/preferred polygon reservations, protected start, seeded priorities/permissions/clearance, F7 overlays and detached *value-only* manifest feature snapshots | Reservations do not yet make villages, roads, water, volcanoes or caves |
-| **P3 chunk streaming** | 512-unit chunks, active radius 2, prefetch 3, unload 4, stable coordinate-keyed scenery density, cross-chunk spacing, ground/biome materials, chunk-local environment/light/fire/occlusion registration, local navigation | Loading data and some lifecycle/nav steps remain synchronous; no guaranteed FPS; **graphical/performance verification still pending** |
-| **P3 session world changes** | Removed objects and fire/burn progress survive chunk unload/reload **during this running scene** | P4 campaign disk persistence is implemented but awaiting local validation; F6 direct sessions remain disposable. No offscreen fire simulation |
-| **Generic content/actors** | One [shared tree scene](WORLD/Content/Vegetation/Trees/README.md) with Oak/Pink Blossom Resources; one [shared entity scene](ENTITIES/Shared/README.md), common hit/health/death/optional chase, test skeleton and production axe hit registration | No full A-Life, loot/resource harvesting economy, creature populations, Avalonia import/catalog |
-| **Environment/feedback** | Shared clock/wind, projected sun/contact and LL0–LL1 native torch shadows, clouds, colour, snow, 3-layer GPU rain and wet leaves, adjustable overcast shadow reduction, pond/wading, fire FIRE1/FIRE2, tree occlusion | Seasons/climate scheduling, lightning-to-tree ignition, wildfire spread, LL2–LL3 reusable light framework |
+| **P0–P2 world generation** | Finite seeded macro biomes, protected spawn and feature reservations | P5 real terrain/locations/paths/caves/major geography |
+| **P3 streaming** | Default 45,000×33,750 world, 512-unit nearby chunks, local scenery/navigation, lifecycle-registered effects | Windows graphical stability, frame pacing, memory and hitches |
+| **P4 private campaigns** | Boot profiles, disk saves, New Campaign/Continue, F8, Esc, autosave; **earlier user functional checks accepted** | Large-save profiling and newer SO2/C1 graphical regression |
+| **SO0–SO2 scene layout** | Explicit persistent entity/prop, chunk and preview roots, shared Y sorting; automated checks passed | Windows rendered overlap/seams; SO3/SO4 still proposed |
+| **C0/C1 combat** | Actor HP/effective stats/damage results, player axe, test skeleton optional chase, schema-2 HP saves | C2–C5 enemy attacks, feel, health HUD/feedback |
+| **Fire/environment** | Production FIRE1/FIRE2, rain/wet foliage, snow, wind/clock, daylight/torch shadows, occlusion, atmosphere and pond | Fire spread/lightning ignition, seasons, LL2/LL3, climate simulation |
 
-**P3 acceptance caution:** The user reported grass-only spawn, severe lag and briefly flashing giant trees after the first P3 commit. A follow-up reduced protected-start clearance, hid/uninterpolated uninitialized sun silhouettes, shared foliage shader variants and trimmed unnecessary refreshes. Godot/.NET headless checks passed, but **Windows graphical stability and actual frame times must still be verified**. The soft **3 ms / 12 scenery-roots-per-frame** apply budget does not cover initial 25 active chunks, all synchronous generation, shader compilation or navigation. Read [current P3 handoff](WORLD/Generation_Implementation.md) and [streaming guide](WORLD/Runtime/Streaming/README.md) before changing the streaming architecture or claiming it is performance-complete.
+**Validation by revision (not competing totals):** P4 at `ce6767d1`: **31 write / 33 read**; SO2 at `64d44226`: **39/33**, 60 ownership assertions and real legacy-disk restoration; newer [C1](COMBAT/C1_Validation.md): **43/39** save checks, including schema-2 player HP. See [P4 handoff](SAVE/P4_Copilot_Handoff.md), [SO2 evidence](SCENES/World/SO2_Validation.md) and [SAVE status](SAVE/README.md). The user accepted original P4 save/restore/profile functionality; SO2/C1 visual and target-PC performance checks remain separate. Headless success does not demonstrate FPS.
 
-**Run/controls:** F6 runs `SCENES/World/World.tscn` (**streaming ON by default**); **F7** opens macro biome/reservation/chunk statistics; **F9** toggles removable environment controls (including rain, wet foliage, overcast shadows, torch shadows); removable Fire controls ignite/reset trees. **F5** launches the independent DEBUG/TopDownTest scene from `project.godot`. The 1920×1080 viewport is unchanged. New scene loads choose a fresh random seed unless fixed-seed replay is configured.
+**Run/controls:** **F5** launches `UI/Menus/Boot/BootScreen.tscn` (profile → Main Menu → New Campaign / Continue). Open `SCENES/World/World.tscn` and press **F6** for a **disposable** streamed-world test session without campaign persistence. **F7** macro map/reservations, **F9** environment/performance diagnostics, **F8** save active campaign, **Esc** campaign save/leave menu. `WorldMasterConfig.Streaming.Enabled=false` selects the old 3840×1728 compatibility preview. The independent [DEBUG/TopDownTest](DEBUG/TopDownTest/README.md) starts by opening its scene and pressing **F6**, not F5.
 
-**P4 implemented and automated-tested (manual acceptance pending); P5/P6 remain planned:** P4 = implemented private player-profile/run/world saves and recovery (automated-tested; manual acceptance pending); P5 = actual terrain features/landmarks/paths/cave links; P6 = lightweight offscreen A-Life. Future Avalonia authoring and climate/season systems are also **not implemented**. [WORLD/Generation_Implementation.md](WORLD/Generation_Implementation.md) is the current phase handoff; [SCENES/World/scene organize.md](SCENES/World/scene%20organize.md) is a **plan only**, not an already-applied scene tree refactor.
-
-**Four distinct feature statuses:**
-- **Implemented in production:** Runs in World.tscn or its production dependencies; check module docs/tests.
-- **Implemented in DEBUG:** Disposable isolated prototype, not automatically production code.
-- **Scaffolding only:** Directories/READMEs/configs without full working mechanics.
-- **Planned / exploratory:** Design intentions, agreed concepts and open alternatives. **Notes do not themselves authorize implementation.**
+**Performance acceptance:** P3 startup and some generation/binding/nav remain synchronous; a nominal 3ms scenery-apply budget is not a hard frame-time limit. Earlier grass-only/giant shadow bugs had fixes and headless regressions but still require target-PC rendering verification. See [streaming evidence](WORLD/Runtime/Streaming/README.md) and the [archived performance handoff](Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/performance_refactor.md).
 
 ## Start here — future ChatGPT / Codex / contributors
 
@@ -108,17 +84,17 @@ This is the preferred **collaboration workflow**, not a restriction against assi
 
 **Do-not-break contracts:** definition ≠ mutable individual instance; stable unique IDs ≠ file names or Godot node names; canonical assets defined once and referenced by many biomes; reusable opt-in profiles/behaviours; no new class per tree/item/enemy where existing archetypes suffice; resource schema and dependency validation; versioning for future saves. The exact Avalonia-to-Godot authoring/serialization design remains open. A PNG alone cannot supply collision, identity and behaviour.
 
-### 2. Large finite world — P0–P3 IMPLEMENTED; geography and durable persistence NEXT
+### 2. Large finite world — P0–P4 IMPLEMENTED; major geography NEXT
 
 **Existing runtime:** P0/P1 generates a complete, deterministic, queryable **finite macro biome map** using the configured Resource list. P2 freezes required/preferred polygon **feature reservations** and a protected starting anchor. P3 draws nearby chunk ground and canonical resource-driven scenery, handles load/unload/material/shadow/occlusion/fire lifecycle, and maintains **session-only** changed-object deltas. It is already the **default F6 world**—do not implement a duplicate streamer or revert to the compatibility preview as the primary architecture.
 
 **Existing separation:** coarse biome **regions are NOT streaming chunks**; one biome spans many chunks. The current streamed ground is flat 2D artwork/palette blending, not oceans/relief. Local decoration uses a globally keyed candidate grid and a density per million world units, with deterministic cross-chunk spacing independent of traversal/load order. P2 reservations exclude incompatible objects but **do not create** an actual village, lake or road. Default chunk size is 512; current prototype world bounds are 45,000×33,750. Bounds, region diameters and chunk sizes are separate settings.
 
-**Future conceptual pipeline (not a list of implemented systems):** add continent/ocean landmasks, relief/terrain and rivers; meaningful fantasy biome contrast and region themes; P5 actual reusable settlements, caves, landmarks, routes and entrances; P4 disk-backed deltas and per-profile/run/world saves; P6 abstract offscreen ecology; possible guided World Creator, finite-world expansion and versioned old-world migration. Keep climates a soft influence, allow visually distinctive neighbours, and don't assume infinite worlds or the final world size have been chosen.
+**Future conceptual pipeline (not a list of implemented systems):** add continent/ocean landmasks, relief/terrain and rivers; meaningful fantasy biome contrast and region themes; P5 actual reusable settlements, caves, landmarks, routes and entrances; P4 private campaign disk saves (implemented); P6 abstract offscreen ecology; possible guided World Creator, finite-world expansion and versioned old-world migration. Keep climates a soft influence, allow visually distinctive neighbours, and don't assume infinite worlds or the final world size have been chosen.
 
-**Protect existing contracts:** generation/world IDs, feature reservation ownership, stable candidate/object IDs, cross-chunk seams, biome Resource references, world-specific cache cleanup, shared weather/clock, and reproducible generation under a fixed generation/content version. P3 preserves removal/burn progress only **inside one running session**; no selected player profiles, disk saves, Continue or permanent old-world migration exist. The startup/preload system and some data/nav/shader work are synchronous; the per-frame application budget is **not** a hard frame-time cap. The latest P3 fixes still require in-game Windows performance verification.
+**Protect existing contracts:** generation/world IDs, feature reservation ownership, stable candidate/object IDs, cross-chunk seams, biome Resource references, world-specific cache cleanup, shared weather/clock, and reproducible generation under a fixed generation/content version. P3 maintains session deltas; P4 now persists supported edits, player state, clock and world identity through private profiles and Continue. Automatic content migrations and permanent old-world migration do not exist. The startup/preload system and some data/nav/shader work are synchronous; the per-frame application budget is **not** a hard frame-time cap. The latest P3 fixes still require in-game Windows performance verification.
 
-**Authoritative detail:** [generation phases / regressions / P4 policy](WORLD/Generation_Implementation.md), [macro generator](WORLD/Generation/World/README.md), [feature reservations](WORLD/Generation/World/Features/README.md), [streaming lifecycle](WORLD/Runtime/Streaming/README.md), [placement priority](WORLD/placement_priority.md), and [SAVE future ownership](SAVE/README.md).
+**Authoritative detail:** [generation phases / regressions / P4 policy](WORLD/Generation_Implementation.md), [macro generator](WORLD/Generation/World/README.md), [feature reservations](WORLD/Generation/World/Features/README.md), [streaming lifecycle](WORLD/Runtime/Streaming/README.md), [placement priority](WORLD/placement_priority.md), and [SAVE implementation](SAVE/README.md).
 
 ### 3. A-Life-style living world: populations + simulation LOD (DESIRED; NOT IMPLEMENTED)
 
@@ -144,7 +120,7 @@ Separate 2D cave scenes/layers can remain tied to logical surface X/Y and depth.
 - **Inventory and equipment:** weight **and** volume, bags/slots/container limitations, encumbrance; separate canonical item type from mutable instance durability, condition, freshness and timestamp. Clothing insulation/wetness and tool wear/repair support longer survival.
 - **Health and survival:** hunger, thirst, **long-term fatigue versus short-term stamina**, temperature/exposure, illness/injuries, sleep and shelter; status effects should interact through shared modifiers, not disconnected meter sprawl.
 - **Buildings:** modular floor tiles and **tile-edge walls**, rooms, doors, windows, furniture. Outdoors a completed house shows a **full roof**; entering hides/fades its roof to reveal the playable interior, restoring it when leaving. Possible hybrid automatically assembled roofs, multi-floor building ID + floor/depth, basements, stairs, shelter heat and long-term repair/persistence. **32×32 tiles are provisional, not locked.**
-- **Fire and world interactions:** generic ignition/lifecycle/effects in [SYSTEMS/WorldInteractions/Fire](SYSTEMS/WorldInteractions/Fire/README.md); ENVIRONMENT supplies wind/rain/lightning/light; WORLD owns species art. Production FIRE1/FIRE2 and **P3 in-session burn deltas** exist; lightning ignition, spread, damage, extinguishing, offline burning and **disk-persistent** burnt objects remain future.
+- **Fire and world interactions:** generic ignition/lifecycle/effects in [SYSTEMS/WorldInteractions/Fire](SYSTEMS/WorldInteractions/Fire/README.md); ENVIRONMENT supplies wind/rain/lightning/light; WORLD owns species art. Production FIRE1/FIRE2 and **P4 persistent campaign burn deltas** exist; lightning ignition, spread, damage, extinguishing, offline burning and **offline** burning remain future. Supported burn/removal deltas already persist in P4 campaigns.
 - **Living consequences:** harvesting/regrowth, water quality, muddy/snowy terrain movement, noise/scent, wildlife displacement, shelter and building wear. Keep common mechanics reusable and data-driven.
 - **Setting:** medieval/high fantasy now (possibly prehistoric elements). A later sci-fi/alien/robotic world is **optional**, not permission to introduce it into the starting medieval scene.
 
@@ -157,17 +133,17 @@ Separate 2D cave scenes/layers can remain tied to logical surface X/Y and depth.
 | [WORLD/Content](WORLD/Content/README.md) | Canonical scenery, tree, rock, structure, assets and species variants (one definition reused across biomes). |
 | [WORLD/Biomes](WORLD/Biomes/README.md) | Overworld Definitions/ and Shared/ types, content references and profiles. Cave biomes separate. |
 | [WORLD/Generation](WORLD/Generation/README.md) | Generic deterministic generation/placement/landmark algorithms, not species-specific spawners. |
-| [WORLD/Runtime](WORLD/Runtime/README.md), [SAVE](SAVE/README.md) | **P3 built:** chunk stream and memory-only changed-instance state. **P4 implemented:** per-profile/run/world durable checkpoints and Continue (automatic migrations not implemented; manual acceptance pending). |
+| [WORLD/Runtime](WORLD/Runtime/README.md), [SAVE](SAVE/README.md) | **P3 built:** chunk streaming and session changed-instance state. **P4 implemented:** per-profile/run/world durable checkpoints and Continue (original functional checks user-accepted; automatic content migrations not implemented). |
 | [ENVIRONMENT](ENVIRONMENT/README.md) | **One authoritative wind/clock**; daylight, weather, rain, snow, lightning and atmosphere. Not AI or generic burn state. |
 | [ENTITIES](ENTITIES/README.md) | Production Player plus [shared data-driven Entity scene](ENTITIES/Shared/README.md) and basic optional chase; richer NPC/population/AI remains future. |
 | [SYSTEMS](SYSTEMS/README.md) | Harvesting, crafting, building, farming, cooking, interaction, effects; fire lives under **WorldInteractions/Fire**. |
 | [ITEMS](ITEMS/README.md) | Canonical item/material/food/tool/armour definitions (instance state belongs to inventory/runtime). |
 | [CORE](CORE/README.md) | Shared IDs, future content registry, events/contracts and slow simulation scheduling where justified. |
 | [COMBAT](COMBAT/README.md) | Reusable hit/damage/defense rather than another per-enemy or player-only damage engine. |
-| [SCENES](SCENES/README.md) | Composition like World.tscn; [scene root regrouping](SCENES/World/scene%20organize.md) is a **plan only**, not an implemented refactor. |
+| [SCENES](SCENES/README.md) | Composition like World.tscn; [scene-root organization](SCENES/World/scene%20organize.md) has SO0–SO2 implemented; SO3/SO4 and GL proposals remain planned. |
 | [DEBUG](DEBUG/README.md) / [UI](UI/README.md) / [FEEDBACK](FEEDBACK/README.md) / [AUDIO](AUDIO/README.md) | Isolated experiments/developer panels / future player UI / **implemented foliage occlusion** and future screen feedback / audio. Production runs without developer UI. |
 
-**Cross-system example:** biome **references** canonical Oak; generic placement spawns an instance; Fire/Harvesting changes that tree; ENVIRONMENT gives wind/weather; ITEMS defines its dropped logs; SAVE will eventually record that this exact tree was removed/burnt. Never copy oak art into a biome, build a second wind simulator for fire, write every species directly into WorldScene or make production depend on DEBUG/TopDownTest assets/code.
+**Cross-system example:** biome **references** canonical Oak; generic placement spawns an instance; Fire/Harvesting changes that tree; ENVIRONMENT gives wind/weather; ITEMS defines its dropped logs; P4 SAVE records supported removal/burn states for that exact tree. Never copy oak art into a biome, build a second wind simulator for fire, write every species directly into WorldScene or make production depend on DEBUG/TopDownTest assets/code.
 
 ### 7. Scope guardrail and implementation status matrix
 
@@ -181,20 +157,12 @@ Before writing code identify (a) **implemented vs debug vs scaffold vs planned**
 | Old 3840×1728 Oak/Pink world | **Optional fallback, not the default** |
 | Shared Tree and Entity templates, test skeleton and axe hits, FIRE1/FIRE2, player occlusion | **Production foundations implemented** |
 | Shared wind/clock, sun/local shadows (LL0–LL1), layered rain/wet foliage, adjustable overcast, snow/pond | **Production effects implemented** |
-| **P4:** private profile/run/world saves, durable chunk deltas and Continue | **Implemented; automated tests passed, manual/visual/performance acceptance pending. Automatic migrations not implemented** |
+| **P4:** private profile/run/world saves, durable chunk deltas and Continue | **Implemented; earlier P4 functional checks user-accepted; latest C1 automated save checks passed. SO2/C1 graphical/performance acceptance remains open; automatic content migrations not implemented** |
 | **P5:** real terrain features, towns/POIs/routes/cave entrances | **Not implemented** |
 | **P6:** resident wildlife/NPC populations and tiered offscreen A-Life | **Not implemented** |
 | Avalonia toolbox/import and content registry; player inventory/needs/crafting/building | **Future goals/plans** |
 
-**Read these original sources for detail:** [World generation](Notes/World_Generation_Direction.md) · [Wildlife/hostility](Notes/Ideas/World_Hostility_Wildlife_Exploration.md) · [Underground geography](Notes/Ideas/Underground_Biome_Influence_And_Cave_Connections.md) · [Player buildings](Notes/Ideas/Playerbuildings.md) · [Survival/mechanic ideas](Notes/Ideas/FutureMechanicIdeas.md) · [Production implementation](Notes/Production_Implementation.md) · [Snow experiment](Notes/Snow_Accumulation_Codex_Test.txt). Notes/work.md is empty; it is not an active roadmap.
-
-## Run production or the preserved DEBUG scene
-
-- Open in **Godot .NET** and build the C# solution. With `SCENES/World/World.tscn` selected, **F6 runs the default P3 finite streamed world**. **F7** shows biome regions, feature reservations and live chunk counts. **F9** toggles the optional environment panel; removable Fire controls ignite/reset trees.
-- **F5** still starts `DEBUG/TopDownTest/TopDownVisualTest.tscn`, the independent older 2D test. Its trees/rocks scatter once on a bounded map; this **does not** describe F6 streamed production. See [DEBUG scene documentation](DEBUG/TopDownTest/README.md).
-- Arrow keys move; mouse wheel adjusts zoom; mouse aim/left-click uses the production axe on applicable hit targets (including the test skeleton). No full harvesting/loot/skill combat exists. Viewport is **1920×1080**.
-- **Streaming on:** current **45,000×33,750** macro world, with chunk scenery only around the player. **Streaming off:** old **3840×1728** adjacent Oak Forest/Pink Meadow compatibility preview. Edit `WorldMasterConfig.Streaming.Enabled` via `WORLD/DefaultWorldConfig.tres` to switch, then restart.
-- Generated scenery/chunks will not be hand-placed in the editor tree. The F6 scene uses runtime registration to add/remove effects with streamed chunks; F9/Fire debug panels can be removed without disabling the underlying systems.
+**Read these original sources for detail:** [World generation](Notes/World_Generation_Direction.md) · [Wildlife/hostility](Notes/Ideas/World_Hostility_Wildlife_Exploration.md) · [Underground geography](Notes/Ideas/Underground_Biome_Influence_And_Cave_Connections.md) · [Player buildings](Notes/Ideas/Playerbuildings.md) · [Survival/mechanic ideas](Notes/Ideas/FutureMechanicIdeas.md) · [Archived production implementation](Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/Production_Implementation.md) · [Snow experiment](Notes/Snow_Accumulation_Codex_Test.txt). Completed historical implementation plans are filed under Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/.
 
 ## Vision
 
@@ -210,7 +178,7 @@ A **fully 2D, top-down medieval / high-fantasy survival sandbox**: an ordinary p
 - Richer, more mature, semi-realistic-feeling **pixel art** rather than bright/cartoon styling. **Drova: Forsaken Kin** and **Stoneshard** are visual references for atmosphere, foliage, grounded palettes, stonework and readable characters.
 - Sprite/tile size, final resolution and animation workflow **are not locked**. Reuse modular art, variation, lighting and shader effects instead of requiring an enormous bespoke animation library.
 - Aim for atmospheric but efficient dynamic sun/day-night light, projected tree shadows, wind, rain, snow, cloud shade, mist, particles, water, seasons and environmental reactions. Many visual effects now also run in production; seasons and several gameplay consequences remain future work.
-- Loose art at repository root is not automatically usable content. Production FIRE1/FIRE2 include charred oak transformation, but spread/damage/persistence remain future work.
+- Loose art at repository root is not automatically usable content. Production FIRE1/FIRE2 include charred transformation and P4 saves supported burn state. Fire spread, survival damage and offscreen combustion remain future work.
 
 ## Gameplay pillars — intended direction (most mechanics still planned)
 
@@ -222,109 +190,13 @@ A **fully 2D, top-down medieval / high-fantasy survival sandbox**: an ordinary p
 6. **Fight, observe or evade:** Wildlife, bandits and fantasy creatures with diverse behaviour, rather than every entity aggressively pursuing the player.
 7. **Live in a changing world:** Longer-term possibilities include settlements, NPC schedules, ecosystems, seasonal conditions, changing populations and encounters.
 
-## World, hostility and exploration direction
+## Plans, owners and remaining work
 
-The **current F6 world already generates finite coarse biome geography (P0/P1), reserves important locations (P2) and streams local ground/scenery (P3)**. The expandable finite world preference and possible infinite mode remain longer-term design choices. Mountains, oceans, rivers, actual villages/caves/routes, offline A-Life and permanent save files have not been implemented. The old startup scatter is preserved **only** in DEBUG and optional compatibility preview; see [current phase handoff](WORLD/Generation_Implementation.md).
+- [World P0–P6 phases](WORLD/Generation_Implementation.md): P0–P4 implemented, P5/P6 planned; [WORLD](WORLD/README.md), [streaming](WORLD/Runtime/Streaming/README.md), [generation](WORLD/Generation/World/README.md), [SAVE](SAVE/README.md).
+- [Scene SO/GL plan](SCENES/World/scene%20organize.md): SO0–SO2 implemented; SO3/SO4 and GL0–GL3 future; [SO2 visual checklist](SCENES/World/SO2_Copilot_Handoff.md).
+- [Combat C0–C5](COMBAT/COMBAT_IMPLEMENTATION.md): C0/C1 implemented, C2–C5 future; [latest C1/save tests](COMBAT/C1_Validation.md).
+- Canonical production owners: [ENTITIES](ENTITIES/README.md), [ENVIRONMENT](ENVIRONMENT/README.md), [SYSTEMS](SYSTEMS/README.md), [COMBAT](COMBAT/README.md), [FEEDBACK](FEEDBACK/README.md), [CORE](CORE/README.md), [SCENES](SCENES/README.md), [UI](UI/README.md), [DEBUG](DEBUG/README.md).
+- Future vision: [world direction](Notes/World_Generation_Direction.md), [wildlife](Notes/Ideas/World_Hostility_Wildlife_Exploration.md), [caves](Notes/Ideas/Underground_Biome_Influence_And_Cave_Connections.md), [survival](Notes/Ideas/FutureMechanicIdeas.md), [building](Notes/Ideas/Playerbuildings.md). Completed old implementation plans are indexed in the [Notes archive](Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/README.md).
 
-- **Biome diversity matters more than strict climate realism.** Explore substantial visual contrasts at reasonable travel distances while retaining occasional huge forests or other memorable regions. Transition shapes should feel organic, not checkerboard-like.
-- **Danger exists during day *and* night.** Time of day changes activity, visibility, weather/exposure and encounters; don't make daylight perfectly safe or trigger all danger only after sunset.
-- **Shelter is valuable but not obligatory.** Temperature, rain, fatigue, recovery, supplies and security should motivate shelter; prepared players can continue exploring at night.
-- **Wildlife dispositions should vary:** passive, neutral, territorial, predatory, hostile and intelligent. Creatures may respond to other creatures and their environment, not just the player.
-- **Regions provide reasons to travel:** distinctive threats, resources, wildlife, caves, knowledge, trade and events. Prefer resident populations, roaming activity and rare events over arbitrary player-targeted spawns.
-- **Long-term realism must remain playable and performant:** Simulate nearby actors in detail; distant ecology could use aggregate state and bounded updates. Avoid multiplying micromanagement meters.
+**Next checks:** Windows Godot P3/SO2 stream seams, Y-sort, FPS/GC spikes, P4/C1 Continue and large-save performance. C2 combat is separately scoped. P5/P6, SO3/SO4, GL, Avalonia and new survival/population systems are not automatically authorized. One GitHub commit per assigned job; no accidental DEBUG-to-production promotion.
 
-These are **future ecology, survival and major-terrain preferences**, not finished creature populations or generated oceans/mountains. The P0–P3 biome/streaming foundation above is real production code.
-
-## Preserved DEBUG prototypes — not production streaming
-
-This **F5-only experiment** lives in [DEBUG/TopDownTest/](DEBUG/TopDownTest/README.md). The **F6 production scene** uses P0–P3 streaming; entries below describe DEBUG proofs of concept, not the current production world.
-
-| Debug area | Current experiment / capabilities |
-| --- | --- |
-| [Base demo](DEBUG/TopDownTest/README.md) | 2D placeholder player, arrow movement, foot collisions, bounded Camera2D, actor Y sorting and a larger authored ground/path scene. |
-| [Generation](DEBUG/TopDownTest/Generation/README.md), [Trees](DEBUG/TopDownTest/Trees/README.md), [Rocks](DEBUG/TopDownTest/Rocks/README.md) | Repeatable seeded **startup** scatter, ground-footprint collisions, varied scales/mirroring, tree/rock artwork and projected sun shadows. Latest documented map includes **Oak Forest / Pink Meadow**, with up to **80 oaks**, **36 pink blossom trees** and **50 rocks**; settings and placement constraints affect actual results. |
-| [Biomes](DEBUG/TopDownTest/Biomes/README.md), [Ground](DEBUG/TopDownTest/Ground/README.md) | Two adjacent biome profiles, curved/softened ground palette transition, sampled-noise organic grass colour/detail and separated rock/gravel ground transitions. Not a full biome/world generator. |
-| [Grass](DEBUG/TopDownTest/Grass/README.md), [Trees](DEBUG/TopDownTest/Trees/README.md) | Decorative scattered grass tufts, tree foliage sway, species-specific green/pink artwork, shared wind input and tree shadow behaviour. |
-| [DayNight](DEBUG/TopDownTest/DayNight/README.md), [Polish](DEBUG/TopDownTest/Polish/README.md) | Accelerated/adjustable day-night sunlight, moving projected shadows, colour grading, cloud shade and torch/flicker comparisons. |
-| [Atmosphere](DEBUG/TopDownTest/Atmosphere/README.md), [Weather](DEBUG/TopDownTest/Weather/README.md) | Haze, pollen/leaves, smoke/embers, signed shared wind, GPU rain, ground splashes, overcast and lightning tests (including manual controls). |
-| [SnowTest](DEBUG/TopDownTest/SnowTest/README.md) | Removable snow test: gradual ground/foliage accumulation and melting, GPU snowfall, snow on green/pink foliage, grass and rocks, plus shallow visual player sinking in snow. Not real snow-depth physics or seasons. |
-| [Liquids](DEBUG/TopDownTest/Liquids/README.md), [Surfaces](DEBUG/TopDownTest/Surfaces/README.md) | Organic debug lake with reusable liquid-type definitions, colour/depth, ripples/rain impacts, wading and player sprite immersion. Shared surface-visual helper coordinates water and snow visual offsets; camera/collider stay stable. |
-| [Weapons](DEBUG/TopDownTest/Weapons/README.md), [Trees/HitFeedback](DEBUG/TopDownTest/Trees/HitFeedback/README.md) | Permanently equipped mouse-aimed debug axe; nearby targeted hit triggers tree wobble and leaf/petal burst. **No harvesting, tree health, resource drops or general combat system yet.** |
-
-**Scope and limitations:** These modules are experiment-sized and independently documented for adjustment/removal. `DEBUG/TopDownTest/` must **not** be confused with production `WORLD/` or `ENVIRONMENT/`. Scenery is scattered once on a fixed test map, not streamed in world chunks. Shader-based snow, liquid immersion, weather and lighting are visual approximations; FIRE1/FIRE2 visuals exist, but there is no complete fire ecology/spread, seasons simulation, full inventory, A-Life ecology, saving, farming, building or survival loop. Some rendering checks in feature notes used software OpenGL and reduced scene density; **Windows D3D12 behaviour and target-machine performance still require local testing**.
-
-## Architecture and coding conventions
-
-**Read [CodePreferences.md](CodePreferences.md) for the full author preferences; the summary here does not replace it.**
-
-- **Godot + C#**, modular folders with a clear owner per feature and a short README inside each major folder.
-- Prefer **data-driven, reusable content**: species, biomes, item definitions, resources, recipes, effects, buildings and encounters should use common systems + assets rather than bespoke scripts for each instance.
-- Keep rules separate from art and shaders. Reuse helpers/shared components where appropriate, while maintaining clear boundaries (e.g. weather owns wind; environment visuals do not own gameplay terrain generation).
-- Maintain **MasterConfig / editable `.tres` Resources** for frequently adjusted values; organize inspector-exported settings into comprehensible groups.
-- Prefer simple, readable, modestly vertically compact C# with **top-of-file script explanations**, comments **above methods**, conspicuous `=========================================================` separators, and `#region` organization where helpful.
-- Prefer reusable helpers, contained scene nodes and modular test scenes rather than sprawling scene trees or duplicated per-entity logic.
-- **Performance-first but measured:** profile bottlenecks, favor caching/shared shader variants/bounded effects, and avoid expensive per-frame work for massive populations, scenery or inventory changes.
-- When a requested feature already exists in DEBUG, **inspect it before reimplementing**; extract only the approved/reusable parts to production. Preserve working experiments until asked to remove or replace them.
-- Keep documentation aligned with what **actually runs**, with explicit **implemented vs planned** status. Respect the preference for **one GitHub commit per job**.
-
-## Production folder foundations
-
-These folders combine implemented production foundations and remaining scaffolding; see the current world/environment status above:
-
-- [WORLD/](WORLD/README.md): canonical content/biomes/terrain/liquids; **built P0–P3 generation/reservation/streaming**; future mountains/oceans/landmarks/caves/expansion.
-- [ENVIRONMENT/](ENVIRONMENT/README.md): shared clock/wind, weather, snow, layered rain, overcast controls, sun/local torch shadows, atmosphere. Live per-region weather/season scheduling remains future.
-- [ENTITIES/Player/](ENTITIES/Player/README.md): production player/input/camera and axe; most inventory/survival remain plans. [ENTITIES/Shared/](ENTITIES/Shared/README.md): implemented generic Entity scene/definition, hit/health/death and optional chase.
-- [CORE/](CORE/README.md): shared IDs, registries, contracts/events and eventual simulation infrastructure.
-- [ITEMS/](ITEMS/README.md): central item/content definitions, tools, food, clothing and materials.
-- [SYSTEMS/](SYSTEMS/README.md): reusable interaction, harvesting, crafting, farming, building, skills/effects and [WorldInteractions/Fire](SYSTEMS/WorldInteractions/Fire/README.md).
-- [COMBAT/](COMBAT/README.md): common combat/damage resolution, distinct from player controls.
-- [SAVE/](SAVE/README.md): **P4 awaiting validation:** private profile/run/world checkpoints, recovery and explicit compatibility rejection; world deltas remain owned by WORLD/Runtime.
-- [UI/](UI/README.md): player-facing screens/HUD planning; [FEEDBACK/](FEEDBACK/README.md): production occlusion fade and future shared screen feedback.
-- [AUDIO/](AUDIO/README.md): ambience, music and shared sound effects.
-- [DEBUG/](DEBUG/README.md): temporary experiments, plus retired/historical visual tests.
-
-## Design notes & decision status
-
-`Notes/` mixes **current exploration**, future mechanic ideas and older references. Read **each note's own status/date**; none automatically supersede running code or constitutes an implementation order.
-
-- [World generation direction](Notes/World_Generation_Direction.md): original proposals for finite/infinite, biomes, geography/landmarks. **P0–P3 are now coded**; see [current generation handoff](WORLD/Generation_Implementation.md).
-- [Hostility, wildlife, shelter and exploration](Notes/Ideas/World_Hostility_Wildlife_Exploration.md): daytime/nighttime danger, creature dispositions, realistic ecosystem feel, reasons to shelter/travel, optional sci-fi direction. **Design ideas only.**
-- [Future mechanic ideas](Notes/Ideas/FutureMechanicIdeas.md): food spoilage/nutrition, preservation, inventory and load, clothing/temperature, survival, fire, structures and more. **Do not implement solely from this note.**
-- [Player building ideas](Notes/Ideas/Playerbuildings.md): modular rooms, exterior full roofs, roof fade and optional multi-floor construction. Ideas only.
-- [Underground cave connections](Notes/Ideas/Underground_Biome_Influence_And_Cave_Connections.md): agreed overhead surface biome + underground cave biome + depth model, multi-exit geography. Not built.
-- [Production implementation](Notes/Production_Implementation.md): early production extraction history; old preview-only text is superseded by newer code.
-- [WORLD/Generation_Implementation.md](WORLD/Generation_Implementation.md): **authoritative P0–P6 status**, P3 reported regressions/fixes, test/acceptance caveats and P4 save rules.
-- [Scene organization proposal](SCENES/World/scene%20organize.md): **plan only**, not actual World.tscn structure.
-- [Snow test design](Notes/Snow_Accumulation_Codex_Test.txt): earlier experiment specification; current behaviour is best checked against the **SnowTest README and code**.
-- [DEBUG/TopDownTest](DEBUG/TopDownTest/README.md): the **implementation index** for runnable experiments and their config paths.
-
-## Scope and next steps
-
-**Immediate need:** Verify P3 fixes on the user's actual Windows renderer before declaring streaming smooth or proceeding to the next larger phase. Do not create another streamer, ignore the compatibility preview, or treat headless checks as graphical FPS evidence. **These are suggested priorities, not automatic Codex work.**
-
-1. **P3 visual/performance check:** test trees/rocks near protected spawn, absence of giant flashing tree silhouettes, idle and crossing-chunk FPS/CPU/GPU/memory, 25% zoom, biome transitions and weather/snow/fire. Profile synchronous startup, generation, binding and local navigation if lag continues; don't blindly raise load radii.
-2. **P4 implemented, automated validation passed; manual acceptance remains open:** follow SAVE/P4_Copilot_Handoff.md for build, separate-process restore, profile isolation, recovery and target-machine checks. Default one active campaign, 120-second autosave, inactive worlds paused; no permadeath cleanup.
-3. **P5 only when approved:** use P2 reservations for actual major terrain, landmark scenes, roads, caves and entrances; preserve P3 streaming and data-driven placement.
-4. **P6 only when approved:** begin with a focused shared-Entity wildlife/population test, then lightweight offscreen state; **not** thousands of distant AI/physics nodes.
-5. **Future survival/content work:** item/resource harvest drops, inventory, building/shelter, needs, and a gradual Avalonia authoring pipeline for canonical tree/entity/biome Resources.
-6. **Independent optional refactors:** LL2/LL3 lights, live regional environment profiles and [scene organization](SCENES/World/scene%20organize.md) remain separately scoped plans. Preserve running F5/F6 scenes and all P3 lifecycle registrations.
-
-Follow the [current P0–P6 handoff](WORLD/Generation_Implementation.md) for phase boundaries and acceptance tests.
-
-## Decisions still open
-
-- Final art resolution, sprite scale/animation pipeline and the right balance of pixel-art detail and shaders.
-- Exact size/bounds of the world, expandable finite vs infinite approach, biome sizes/adjacency, generated-vs-authored balance and save/versioning of visited areas.
-- Height depiction, cave representation, world-creator options, settlement/NPC simulation and population density.
-- Combat, magic, survival depth, progression, permadeath persistence rules and difficulty.
-- Whether any future sci-fi setting is a separate world/project or ever shares content with the medieval game.
-
-## Repository history and transition
-
-The repository name still contains **`isometric`** for historical reasons, but **the active direction is a fully 2D top-down game**. The former 3D/isometric architecture is no longer the game's main path. Some legacy resources/scenes/`.uid` remnants may reference removed scripts; they are not evidence of implemented modern systems. Retired material under `DEBUG/VisualTests/` and older notes should be checked carefully before reuse.
-
-**General rule for future sessions:** Distinguish **game vision**, **current debug proof-of-concepts**, and **approved production code** at every step. Do not infer a mechanic is finished because its folder, README, art asset or config exists.
-
-## Combat C0/C1 foundation
-
-C0/C1 is implemented: shared player/entity HP, lazy four-stat cache, deterministic damage results and schema-2 player HP saves with schema-1 compatibility. No new per-frame combat nodes. Existing axe/tree hits and skeleton chase remain. Enemy attacks, shared execution and combat feel are C2 onward. See [combat plan](COMBAT/COMBAT_IMPLEMENTATION.md), [audit](COMBAT/C0_Audit.md) and [validation](COMBAT/C1_Validation.md).

@@ -1,7 +1,9 @@
-# DEBUG
+# DEBUG — Independent experiments and removable panels
 
-Disposable test content only. The current runnable test is [TopDownTest/TopDownVisualTest.tscn](TopDownTest/TopDownVisualTest.tscn): fully 2D forest clearing, static pixel-art player, arrow movement, collision, Y sorting and Camera2D. All its scripts, settings and SVG artwork live inside TopDownTest/.
+[TopDownTest/TopDownVisualTest.tscn](TopDownTest/TopDownVisualTest.tscn) is the preserved 2D forest sandbox. Build Godot .NET and run this scene directly with **F6**. Its current map is **3840×1728**, with Oak Forest/Pink Meadow; see [TopDownTest README](TopDownTest/README.md).
 
-Build C# in Godot .NET, then F5; or open the scene and press F6. See [test README](TopDownTest/README.md) for settings, limitations and removal instructions.
+**F5 now starts Boot**, via `project.godot`, not a debug experiment. Production test: open [World.tscn](../SCENES/World/World.tscn) with F6 or use the P4 campaign menu through F5.
 
-DebugMasterConfig.cs and DefaultDebugConfig.tres remain generic scaffolding. VisualTests/ contains retired 3D leftovers and historical terrain notes; those are not dependencies of the new test.
+[DEBUG/UI](UI/README.md) owns removable production F7/F9/fire controls. Removing a panel does not remove the production system behind it.
+
+`VisualTests/` contains retired 3D files, including `NaturalTerrainTest.tscn`, not an F5 default. Its obsolete instructions are preserved in the [Notes archive](../Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/NATURAL_TERRAIN.md). Courtyard scenes and a VisualTests README are no longer present.

@@ -1,6 +1,6 @@
 # Tree fire — Codex FIRE1 plan and follow-up implementation handoff
 
-**Status:** FIRE1 IMPLEMENTED; FIRE2–FIRE4 remain planned.  
+**Status:** DEBUG **FIRE1/FIRE2 implemented**; FIRE3 (lightning ignition) and FIRE4 (further polish/ecology) remain proposed. Production FIRE1/FIRE2 are also implemented ([Fire module](../../../SYSTEMS/WorldInteractions/Fire/README.md)). Earlier planned-step wording for FIRE1/FIRE2 is historical, not an instruction to redo them.  
 **Project:** 2D top-down fantasy survival prototype (Godot .NET / C#).  
 **Scope:** `DEBUG/TopDownTest/` only. No production code changes in FIRE1.  
 **Art choice:** Use **`Charred Leafless Oak Sprite.png`** currently uploaded at repository root. **Do not use** `Charred Oak Tree Sprite.png` for this initial prototype. Keep the unused file unchanged.  

@@ -1,4 +1,4 @@
-# SAVE — P4 implemented; automated validation passed, manual acceptance pending
+# SAVE — P4 implemented; original user functional acceptance recorded
 
 Existing Boot/Main Menu profiles now select durable private campaigns. `ProfileStore` keeps its original GUID/name `user://profiles.cfg` format; it is not replaced by a second registry.
 
@@ -33,12 +33,12 @@ Only changed props accumulate as world deltas. At a save boundary, the main thre
 
 Archived runs and unreferenced immutable blobs are retained deliberately; automated garbage collection/quota eviction is not implemented. Per-file/count limits fail visibly instead of truncating state. No automatic destructive cleanup runs.
 
-**Validation:** VS Code Copilot reports Godot 4.7.2 Mono import and .NET build successful (0 warnings/errors), P4 separate-process write/read 31/33 checks passed, and P1/P2/P3/scenery regression suites passed on commit `ce6767d1b37b34210b010b743ea2133d95c2ae15`. Full commands and warnings are in [P4_Copilot_Handoff.md](P4_Copilot_Handoff.md). **Manual in-editor save/quit/Continue, profile-switching UX and target-PC visual/performance tests are still outstanding**; automated tests do not prove FPS or graphical correctness.
+**Validation:** VS Code Copilot reports Godot 4.7.2 Mono import and .NET build successful (0 warnings/errors), P4 separate-process write/read 31/33 checks passed, and P1/P2/P3/scenery regression suites passed on commit `ce6767d1b37b34210b010b743ea2133d95c2ae15`. Full commands and warnings are in [P4_Copilot_Handoff.md](P4_Copilot_Handoff.md). **The user subsequently accepted the earlier P4 save/restore/profile functional checks.** Large-save profiling and newer SO2/C1 UI/rendering regression acceptance remain separate; headless tests do not establish FPS.
 
-## SO2 integration — awaiting local validation
+## SO2 integration — automated validation passed; visual/performance pending
 Player/environment/entity references now come from the world's typed ownership API. A narrowly gated source-layout compatibility bridge permits existing SO1/P4 campaigns to Continue without reseeding or losing edits; the next checkpoint uses the verified SO2 fingerprint. Unsupported content/schema still rejects. The user confirmed prior P4 functional tests passed; these SO2 changes require new local tests. See SCENES/World/SO2_Copilot_Handoff.md for the exact internal-test and save-compatibility handoff.
 
-SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.
+SO2 revision: Godot 4.7.2 build/import, scene ownership and **real SO1-layout checkpoint restoration passed**, including **39/33** P4 write/read. Newer [C1 validation](../COMBAT/C1_Validation.md) extended save checks to **43/39** for schema-2 HP and legacy compatibility. Original P4 [Copilot handoff](P4_Copilot_Handoff.md) covered **31/33** on `ce6767d1`. These are different tested revisions; C1 is the **latest save-test record**. Earlier P4 user functional acceptance and pending SO2/C1 visual/performance checks remain distinct. See [SO2 evidence](../SCENES/World/SO2_Validation.md).
 
 ## C1 health checkpoint compatibility
 

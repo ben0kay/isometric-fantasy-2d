@@ -1,4 +1,6 @@
-# P0/P1 audit and baseline — 22 October 2026
+# P0/P1 historical audit and baseline — 22 October 2026
+
+**Historical P0/P1 snapshot, not current production state.** P3 streaming and P4 durable campaign saves have since been implemented. Read [current generation](README.md), [phase plan](../../Generation_Implementation.md) and [SAVE](../../../SAVE/README.md). Baseline findings and measured evidence below are preserved.
 
 ## Actual ownership and data flow
 

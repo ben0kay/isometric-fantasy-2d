@@ -1,61 +1,20 @@
-# Production Oak Forest / Pink Meadow world
-Open `World.tscn`, build C# in Godot .NET, then press **F6**. F5 still starts DEBUG.
+# Production World — streamed sandbox and SO2 ownership
 
-Arrow keys move; mouse wheel zooms out up to 25% and back to the default view.
-The map is 3840×1728, with 80 requested oaks, 36 pink blossom trees, 50 shared rocks and 210 Oak-side grass tufts; bounded placement may fit fewer objects. All actors use feet-based Y sorting and rooted collisions.
+Open `World.tscn` in Godot .NET and press **F6** for a **disposable** streamed production test session (no P4 disk save). **F5** enters Boot/Profile/Main Menu; New Campaign / Continue starts durable private P4 campaigns. See [SAVE](../../SAVE/README.md).
 
-`WORLD/DefaultWorldConfig.tres` controls bounds, spawn, seed and placement limits. **RandomSeedOnLoad defaults to true.** Copy the printed `World seed` into FixedSeed and disable RandomSeedOnLoad to replay an arrangement. Same seed, same ordered definitions/settings and same Godot RNG version reproduce the same placement. Editing content/order/settings can change the result. No persistence or chunk streaming exists.
+## Current default
 
-The scene composes production world and environment modules. The optional EnvironmentDebugPanel lives under DEBUG/UI/Environment and can be removed independently. F9 hides/shows its collapsible controls. Original DEBUG experiments remain intact.
+`WORLD/DefaultWorldConfig.tres` enables P0/P1 finite macro biomes, P2 reservations and P3 streaming. The current world is **45,000×33,750** with **512-unit chunks**, active radius 2, prefetch 3 and unload 4. Oak Forest and Pink Meadow share canonical Resource-driven content. Fresh disposable F6 sessions use a new seed unless fixed replay is configured. Set `WorldMasterConfig.Streaming.Enabled=false` for the old **3840×1728** adjacent-biome compatibility preview. See [generation](../../WORLD/Generation/World/README.md) and [streaming](../../WORLD/Runtime/Streaming/README.md).
 
-## Validation
-C# built successfully against the repository's Godot.NET.Sdk 4.7.2 / .NET 8 configuration. Runtime checks in Godot 4.5.1 .NET verified same-seed replay, different seeds, fresh random loads and replay from a logged random seed; movement, four boundary walls, collision and both camera zoom limits passed. The actual 1920×1080 scene was rendered and inspected with software OpenGL Compatibility. The unchanged DEBUG main scene also loaded. Windows D3D12 and target-machine performance still require local checking.
+World composes player, an authored Skeleton Basic (optional chase but no attack), pond/wading, torches, FIRE1/FIRE2, clock/wind, sun/local shadows, rain/wetness, snow, occlusion and atmosphere. [Shared Entity](../../ENTITIES/Shared/README.md) and [C0/C1 combat](../../COMBAT/COMBAT_IMPLEMENTATION.md) are implemented foundations.
 
-## Environment profiles
-See ENVIRONMENT/README.md for ownership and validation. WORLD/Biomes/Definitions/OakForest/Environment.tres supplies optional local components (currently Atmosphere.tres); unspecified components inherit ENVIRONMENT/Profiles/DefaultEnvironmentProfile.tres. One clock is shared. Rain defaults to 0% (off), snow starts off. Runtime previews reset on restart.
+## SO2 scene ownership — implemented
 
-## Second biome — 22 October 2026
-Walk east from the normal spawn to find Pink Meadow beyond the curved boundary around x=1760. Bounds are (-800,-544) -> (3040,1184). Height and spawn are unchanged; camera, ground, walls and environment all derive the enlarged dimensions from the same world config.
+`TerrainRoot` owns ground/terrain; `WorldActorsRoot` is the common Y-sort parent of `PersistentEntitiesRoot` (player/skeleton), `PersistentPropsRoot` (torches), `ChunkActorsRoot` (streamed props) and `PreviewSceneryRoot` (compatibility scene). `SystemsRoot` owns placement and runtime controllers; `DebugUIRoot` owns removable panels. Typed destinations replace the old mixed `Actors` hierarchy. No second streamer or per-frame source scan was introduced. See [SO2 validation](SO2_Validation.md) and [SO3/SO4 future plan](scene%20organize.md).
 
-WORLD/DefaultWorldConfig.tres selects WORLD/Biomes/Layouts/OakAndMeadow.tres. This is the small two-region composition only; no massive world sizing, streaming or encounter generation is implemented. Shared weather/clock remain the same on both sides, matching DEBUG.
+## Controls, saves and acceptance
 
-Validation: C# build, three seeded population/membership checks, exact fixed-seed replay, traversal across the border, enlarged ground/camera/shadows, and shared pink snow shader passed. Native 1920×1080 software OpenGL renders were inspected at the transition, inside Pink Meadow and at full snow. Windows D3D12 remains a local check. Original DEBUG and project default scene are unchanged.
-
-## First production creature — Skeleton Basic
-
-The `EntityPlacement` node in `World.tscn` spawns **one Skeleton Basic** relative to the player's spawn after seeded scenery generation. The closest unobstructed grid cell is used, so randomized trees/rocks should not overlap the skeleton. Disable `EntityPlacement.Enabled` to remove the test creature without deleting species assets.
-
-Its reusable scene and configuration are in `ENTITIES/Species/Undead/Skeletons/Variants/Basic/`; copied static SVG art is in `ENTITIES/Species/Undead/Skeletons/Visuals/Sprites/`. Navigation is shared under `ENTITIES/Shared/Navigation/` and built only once. The skeleton detects and chases the player, routes around tree/rock collision footprints, and stops near the player. It cannot attack.
-
-Skeleton Basic supports 3 HP, a damage flash and death fade via `TakeDamage(int)`. **This is not currently player-testable through left-click:** production player combat/axe is still a placeholder and the debug axe has not been promoted. No debug runtime dependencies were introduced. No loot, multiple enemies, pond avoidance or respawning in this pass.
-
-**Testing:** Open this production scene and press F6. Check that the skeleton appears near the starting player and follows around generated trees and rocks. Run different world seeds. Godot/.NET compilation and in-engine collision behaviour still require verification on the user's machine.
-
-
-Production FIRE1/FIRE2: build C# and F6 this scene; use the top-centre **Ignite nearest tree** / reset buttons. The optional `FireDebugPanel` can be removed while the `Fire` runtime and tree receivers remain. See [Fire documentation](../../SYSTEMS/WorldInteractions/Fire/README.md).
-
-## P0/P1 finite map overview
-F7 toggles the generated finite biome blueprint. This larger map is not yet streamed/playable; existing preview art/placement/controls remain unchanged. Configure WorldMasterConfig.Generation via WORLD/Generation/World/DefaultWorldGeneration.tres. Set Generation null to disable only the new macro branch. See the generation README and audit for configuration, identities and validation.
-
-
-LL0–LL1 local lighting: three preview torches now stand near spawn. Set midnight in F9 and expand Lighting and clouds to compare Local torch shadows, energy, radius and softness. Clear TorchProfile.AdditionalOffsets and reload to keep only the original torch.
-
-## P3 streamed world (current default)
-F6 now starts the finite generated map with a local chunk ring. F7 shows live counts. Set WorldMasterConfig.Streaming.Enabled=false to use the earlier small preview described above. The pond, torches, environment and skeleton remain; edits persist across chunks for this session only. See WORLD/Runtime/Streaming/README.md for settings, limits, controls and validation.
-
-## SO1 containers and stability (current)
-
-`TerrainRoot` owns Ground, StreamedGroundRoot, Liquids and runtime Bounds. `SystemsRoot` owns EntityPlacement, Environment, Fire, Streaming and Occlusion. `DebugUIRoot` owns F7/F9/fire controls. `Actors` deliberately retains its generator script and existing player/prop/chunk Y-sorting hierarchy; separating those responsibilities is SO2, not part of this pass. These are ordinary containers, not additional managers.
-
-The right-side F9 diagnostics include the off-screen cosmetic culling comparison switch and streaming/sun CPU counters. F7 shows only the map. Configure margins via ENVIRONMENT/DefaultEnvironmentConfig.tres (EnvironmentMasterConfig). See WORLD/Runtime/Streaming/README.md for current streaming behaviour and remaining graphical validation. Older preview-only paragraphs above are historical and do not describe the default P3 world.
-
-## P4 campaign entry — awaiting local validation
-
-F5 now starts the existing Boot/Main Menu. New Campaign/Continue pass a one-shot identity/restoration request into this scene. The world restores frozen map/reservations, loads nearby chunks with durable edits, then enables player movement after a physics arrival check. F8 saves; Esc offers save/main-menu/quit. The scene hierarchy/Y sorting is unchanged; one CampaignSave controller is added under SystemsRoot only for campaigns, with its own CanvasLayer. F6 without a launch request remains disposable. Save policy and the deferred VS Code Copilot test handoff are in SAVE/README.md and SAVE/P4_Copilot_Handoff.md. Earlier preview-only/F5-debug/no-save text above is historical.
-
-## SO2 ownership — implemented, awaiting local validation
-WorldActorsRoot is a plain common Y-sort container. PersistentEntitiesRoot owns player/skeleton; PersistentPropsRoot owns torches; ChunkActorsRoot owns streamed chunk actors; PreviewSceneryRoot owns compatibility props. Every intermediate actor container enables Y sorting and retains identity transforms. TerrainRoot/StreamedGroundRoot remains the ground destination. SystemsRoot/SceneryPlacement is now a separate plain Node controller. WorldScene caches typed destinations/services before child Ready; adapters use startup-only container-aware sources and explicit chunk registration. No old Actors alias remains.
-
-F5 campaign/P4 restore and F6 disposable modes are preserved by design; a narrow layout fingerprint bridge protects existing saves. SO2 build/runtime/visual/performance testing is delegated to Copilot: see [SO2_Copilot_Handoff.md](SO2_Copilot_Handoff.md). Earlier SO1 statements about keeping the generator on Actors are historical. No frame-time improvement is claimed.
-
-SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.
+- **F7** macro map/reservations; **F9** environment/performance diagnostics; removable Fire buttons ignite/reset nearby trees. **F8** explicit campaign save, **Esc** campaign Resume / Save & Main Menu / Save & Quit. F6 direct World is unsaved.
+- **P4** Continue restores frozen map/features, player position/HP, clock, supported chunk edits/burns and the authored test skeleton. Earlier original P4 functional save/profile checks were **accepted by the user** after Copilot's 31/33 automated tests.
+- **SO2** Godot 4.7.2 build/import, scene ownership (60 assertions), SO1→SO2 real disk restore and P4 write/read **39/33** automated checks passed. Newer [C1 validation](../../COMBAT/C1_Validation.md) extended save checks to **43/39**. Counts are revision-specific.
+- **Open:** visually verify Y-sort/seams, Windows frame pacing and large-save performance, and perform newer SO2/C1 graphical/UI regression testing. Headless passes are not proof of FPS. See [SO2 manual checklist](SO2_Copilot_Handoff.md) and [streaming evidence](../../WORLD/Runtime/Streaming/README.md).

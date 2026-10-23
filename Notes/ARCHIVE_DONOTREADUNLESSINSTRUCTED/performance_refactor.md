@@ -4,11 +4,11 @@
 **Status:** Original source audit plus completed implementation handoffs below. Original observations are historical where a completed pass supersedes them.
 **Current implementation status:** All P0/P1/P2 items listed here are implemented; see dated handoffs below. Target-PC visual/FPS verification and any newly measured bottlenecks remain follow-up work.
 **Target:** `SCENES/World/World.tscn` and production environment/runtime systems (Godot C#).  
-**Authoring rules:** Read root `README.md`, `CodePreferences.md`, **[`SCENES/World/scene organize.md`](../SCENES/World/scene%20organize.md)**, `SCENES/World/README.md`, and the README beside each system before editing. Follow the new *Performance-first rules for every new mechanic*. Preserve data-driven Resource profiles, F9 live controls, streaming, and all DEBUG scenes.
+**Authoring rules:** Read root `README.md`, `CodePreferences.md`, **[`SCENES/World/scene organize.md`](../../SCENES/World/scene%20organize.md)**, `SCENES/World/README.md`, and the README beside each system before editing. Follow the new *Performance-first rules for every new mechanic*. Preserve data-driven Resource profiles, F9 live controls, streaming, and all DEBUG scenes.
 
 ## Related world-scene organization plan (mandatory reading)
 
-Before changing world scene composition, runtime node ownership, effect containers, registration, or chunk lifecycle, read **[`SCENES/World/scene organize.md`](../SCENES/World/scene%20organize.md)** at current HEAD. It explains the existing World/Actors/Environment hierarchy, the enabled P3 chunk streamer, Y-sorting, object ownership, runtime containers, and dependencies that must not be broken by a casual reparent.
+Before changing world scene composition, runtime node ownership, effect containers, registration, or chunk lifecycle, read **[`SCENES/World/scene organize.md`](../../SCENES/World/scene%20organize.md)** at current HEAD. It explains the existing World/Actors/Environment hierarchy, the enabled P3 chunk streamer, Y-sorting, object ownership, runtime containers, and dependencies that must not be broken by a casual reparent.
 
 **Coordination rule:** This performance plan and the scene-organization document are **two separate plans**. Do not silently implement scene reparenting or an unapproved organization phase while optimizing environmental systems. If an optimization relies on changing node paths or ownership, first cross-check the scene-organization plan and explicitly identify its affected phase; preserve both streaming and legacy compatibility mode. Node containers organize ownership but do not automatically improve performance. Inspect both plans and current source before beginning each phase.
 

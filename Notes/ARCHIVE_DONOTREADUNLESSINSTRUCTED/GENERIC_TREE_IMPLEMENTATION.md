@@ -1,6 +1,8 @@
+> **ARCHIVED — IMPLEMENTED (22 October 2026).** The reusable Resource-driven Shared/Tree.tscn foundation replaced the separate per-species production tree scenes. Earlier "at present" and "implement" text is the superseded plan, not current status. See [trees](../../WORLD/Content/Vegetation/Trees/README.md) and [shared tree mechanics](../../WORLD/Content/Vegetation/Trees/Shared/README.md).
+
 # Codex Implementation Plan — Generic Resource-Driven Trees
 
-> **Status: IMPLEMENTED — 22 October 2026.** The plan below is retained as the original specification. Current Resource contracts and runtime details are documented in [README.md](README.md). Production trees now use Shared/Tree.tscn; no per-species scenes are required.
+> **Status: IMPLEMENTED — 22 October 2026.** The plan below is retained as the original specification. Current Resource contracts and runtime details are documented in [README.md](../../WORLD/Content/Vegetation/Trees/README.md). Production trees now use Shared/Tree.tscn; no per-species scenes are required.
 >
 > **Goal:** One reusable, internally managed tree scene/controller for all tree species. Adding a species or sprite variant should require only Resources (.tres), artwork and biome data — **no species-specific scene editing or new C# scripts**. A future external **Avalonia toolbox** must be able to create/edit these definitions, without authoring Godot scenes.
 >

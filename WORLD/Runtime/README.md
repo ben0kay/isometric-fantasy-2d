@@ -1,10 +1,7 @@
-# World runtime
+# WORLD Runtime — P3 stream, P4 persistent state
 
-WorldScene now composes the P3 finite streamed world by default: seeded macro map/reservations, protected start, finite camera/walls, local chunk ground/scenery and the existing player/pond/environment/fire/skeleton/occlusion systems. Stream owns world-scoped chunk lifecycle and touched session deltas. F7 exposes map and chunk status.
+**Production default:** `WorldScene` composes P0/P1 macro map, P2 reservations and P3 nearby chunk ground/scenery/navigation. `WorldChunkStream` registers wind/weather/shadow/fire/occlusion adaptors per chunk and unregisters at unload. Edited/burnt objects survive local unload/reload as session deltas. See [Streaming](Streaming/README.md) and [P0–P6 phase status](../Generation_Implementation.md).
 
-Disable WorldMasterConfig.Streaming for the preserved adjacent-biome compatibility preview. Persistent profiles/Continue, disk deltas and A-Life remain later passes. See Streaming/README.md for implementation details, configuration and validation.
+**P4 durable private campaigns and Continue are implemented** under [SAVE](../../SAVE/README.md): profiles, run/world identity, restored player/clock/skeleton and supported chunk edits. F6 direct World sessions remain disposable; F5 starts Boot/Main Menu. Do not create duplicate save coordinators or per-tree polling.
 
-## SO2 ownership — awaiting local validation
-WorldScene caches typed actor/entity/prop/chunk/preview/ground destinations and services once at tree entry. WorldActorSources.Initial traverses marked ownership containers only at initial adapter setup, excluding streamed roots; each chunk keeps its existing independent lifecycle. No registry or per-frame discovery is added. F5 P4 private campaigns and F6 disposable worlds use the same roots. See SCENES/World/SO2_Copilot_Handoff.md for local tests and exact migration paths.
-
-SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.
+**SO2 implemented and headless-tested:** `WorldScene` caches explicit typed persistent actor/prop, streamed chunk, preview and terrain destinations; streamed effects continue lifecycle registration. Actual older SO1 disk checkpoints restored correctly. See [SO2 evidence](../../SCENES/World/SO2_Validation.md). Rendered Y-sort and Windows target-PC frame times remain unverified; SO3/SO4 are future design, not code. P5 features and P6 offscreen A-Life are planned.

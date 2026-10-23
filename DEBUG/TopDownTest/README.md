@@ -1,12 +1,14 @@
 # Top-down visual test
 
-> Disposable **fully 2D** forest map for the new fantasy game direction. Open `TopDownVisualTest.tscn` and press **F6** (or **F5** for the project's main scene). Requires a Godot .NET project build.
+> Disposable **fully 2D** forest map for the new fantasy game direction. Open `TopDownVisualTest.tscn` and press **F6** (**F5 now launches Boot/Main Menu**, not this experiment). Requires a Godot .NET project build.
 
-## Larger, seeded procedural scenery
+## Earlier seeded-scatter pass (historical 2560×1728 snapshot)
 
-- The playable grass area is now **2560 × 1728 world pixels**, 1.8 times the previous map area, bounded from **(-800,-544)** to **(1760,1184)**. The original central clearing, player spawn and torch are retained. The path continues to the northern and eastern map borders.
+**Historical:** The following 2560×1728 / 80-tree / 34-rock numbers belonged to an earlier debug revision. Current 3840×1728 two-biome counts are recorded under [Adjacent biome prototype](#adjacent-biome-prototype) and the later Pink Blossom update.
+
+- At that historical stage, the playable grass area was **2560 × 1728 world pixels**, 1.8 times the previous map area, bounded from **(-800,-544)** to **(1760,1184)**. The original central clearing, player spawn and torch are retained. The path continues to the northern and eastern map borders.
 - All trees and rocks are now **generated at runtime once** from `Actors._Ready()`. The old hand-placed props are no longer in the scene. You will see grass/clearing/path in the editor and **trees/rocks when you run the scene**.
-- The default seed generates up to **80 trees and 34 rocks**, with per-object scale and mirroring and spacing around obstacles, the player clearing and the main path. Alter `Generation/DefaultScatterConfig.tres` for different arrangements, quantities and size ranges. The seed is repeatable; change it to get a new pattern.
+- That earlier seed generated up to **80 oaks and 34 rocks**, with per-object scale and mirroring and spacing around obstacles, the player clearing and the main path. Alter `Generation/DefaultScatterConfig.tres` for different arrangements, quantities and size ranges. The seed is repeatable; change it to get a new pattern.
 - **Tree and rock collisions follow the visual changes.** The generator scales each StaticBody2D root (rather than only its Sprite) and flips CollisionPolygon2D ground footprints alongside mirrored artwork. Rock bases remain collidable without blocking the entire sprite silhouette.
 - **All effects still work:** day/night and moving projected shadows, tree-canopy wind, torchlight, smooth cloud shade, haze, pollen, leaves, smoke and embers. DayNight and Atmosphere cache generated objects *after* scattering completes.
 - See the [generation guide](Generation/README.md), [tree guide](Trees/README.md) and [rock guide](Rocks/README.md).
@@ -52,7 +54,7 @@ SnowTest/ implements the snow-accumulation note as an independent scene instance
 
 [Liquids/](Liquids/README.md) adds one organic lake southeast of the clearing, with independent liquid-type data, depth colours, shared-wind ripples, a wet bank and walk-in sprite submersion. The right-side panel includes a Go to lake bank button. Its footprint excludes trees, rocks and grass at startup; ground snow stays beneath the water. The player body/camera remain stable while its sprite dips and lower part is clipped. Disabling the test restores normal traversal.
 
-The larger world, camera, walls, grass and atmosphere bounds now agree at 2560×1728. Scattering still runs once. Gravel edges also use a wider smooth fade with restrained pebble contrast, avoiding the old broken/blotchy outer coverage. See the liquid guide for tests, limits and removal hooks.
+At that stage the world, camera, walls, grass and atmosphere bounds agreed at 2560×1728. Scattering still runs once. Gravel edges also use a wider smooth fade with restrained pebble contrast, avoiding the old broken/blotchy outer coverage. See the liquid guide for tests, limits and removal hooks.
 
 ## Rain impacts on the lake
 
@@ -61,7 +63,7 @@ The `Liquids/` test now creates bounded expanding ripple rings when the existing
 
 ## Adjacent biome prototype
 
-See [Biomes](Biomes/README.md) for the Oak Forest / Pink Meadow test. The current map is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with **80 trees / 50 rocks**. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.
+See [Biomes](Biomes/README.md) for the Oak Forest / Pink Meadow test. The **current DEBUG map** is **3840×1728**, bounds **(-800,-544) → (3040,1184)**, with up to **80 oak trees, 36 pink blossom trees and 50 rocks**, subject to placement constraints. The original forest and lake remain west; east of the curved x≈1760 boundary is pink ground with shared rocks only. Biome definitions own ground palettes and placement permissions; ground detail, gravel, weather and snow remain separate. These current dimensions supersede earlier map-size/count examples above.
 
 
 ## Equipped axe prototype

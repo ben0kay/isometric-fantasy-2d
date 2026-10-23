@@ -1,6 +1,6 @@
 # Finite world streaming — P3
 
-The production World now streams the P1 biome map and respects P2 reservations. F6 starts at the protected macro starting anchor. F7 retains the map/reservation view and adds live chunk/count status. The default finite bounds remain 45000×33750; a new scene session still chooses one random seed. Disk saves/Continue remain P4.
+The production World now streams the P1 biome map and respects P2 reservations. F6 starts at the protected macro starting anchor. F7 retains the map/reservation view and adds live chunk/count status. The default finite bounds remain 45000×33750; a new scene session still chooses one random seed. P4 private campaign disk saves/Continue are **implemented** under SAVE. F6 direct sessions remain disposable.
 
 ## Data and scheduling
 
@@ -28,13 +28,13 @@ Chunk wind/wetness/shadow/snow adapters register after materialization and resto
 
 Navigation reuses one active-area grid and refreshes after lifecycle changes at most twice per second, never over the complete map. The existing skeleton keeps its identity and sleeps outside the local active bounds. Biome environment overrides currently resolve from the starting biome; **automatic per-region weather/profile blending is not implemented**. Ground/content already follow all region lookups.
 
-Removed generated props and burn progress survive unload/reload **within this scene session**, using touched-instance deltas. Burning pauses while unloaded; no off-screen fire simulation is claimed. Full run/clock/inventory saving, generator/content migration policy and disk-backed deltas belong to P4. Restarting the scene still starts a new temporary world and loses these session edits.
+Removed generated props and burn progress survive unload/reload **within this scene session**, using touched-instance deltas. Burning pauses while unloaded; no off-screen fire simulation is claimed. P4 now persists supported player/run/clock and changed chunk state through private profile campaigns; inventory is not yet a completed gameplay system and automatic content migrations remain future. Restarting a **disposable F6** scene still creates a temporary world and loses edits.
 
 ## Validation
 
 See TESTS/Generation/ValidateChunkStreaming.tscn. The headless integration passed 4227 checks: negative floor coordinates, reverse-order generation, neighbour seam separation, four distant areas/return, bounded loaded chunks, stable home IDs/positions, burnt-state restoration, a removed prop tombstone, both-biome membership, finite edge chunks and world exit cleanup. At rest each tested destination reached 49 loaded chunks; observed scene nodes varied ~3342–4695 with biome density rather than growing each trip. Existing P1 (377085 checks), P2 (175 checks) and explicit legacy-preview baseline also passed. C# was compiled with .NET 8 Roslyn/Godot source generators, using Godot 4.5.1 .NET for runtime checks; the repo SDK declaration is unchanged. Native graphical Windows/D3D12, visual frame times and target-hardware memory still need local verification.
 
-The runtime blueprint also records local generator version, chunk size and candidate-cell size (schema 3). This is metadata for later SAVE integration, not a shipped disk-save format.
+The runtime blueprint also records local generator version, chunk size and candidate-cell size (schema 3). P4 SAVE now stores compatible blueprint/checkpoint identity; runtime blueprint metadata is not a second independent disk-save format.
 
 Concurrent layered-rain and shared-enemy changes were retained. New foliage joins the world wetness level, its shader keeps receiving shared wind, and the generic enemy continues using the same bounded navigation instance.
 
@@ -83,11 +83,11 @@ Rain activation contract: zero intensity now stops precipitation callbacks/GPU/s
 
 Validation: the dry-state suite passed 22 checks; streamed traversal/session deltas, visibility/source lifecycle (167 checks), generic trees, production fire and F7/F9 UI checks passed with the new dry default. One concurrent visibility-suite run passed its assertions but crashed in Godot 4.5.1 Mono shutdown with unsafe-reference messages; an isolated repeat passed and exited cleanly. This recurring local Mono shutdown issue remains recorded, not claimed fixed. Target Godot 4.7.2/Windows visual and performance checks remain necessary.
 
-## P4 campaign integration — awaiting local validation
+## P4 campaign integration — implemented, original functional checks accepted
 
-Menu-launched campaigns restore frozen macro/features and import SavedChunk deltas before initial chunk materialization. CaptureChanges snapshots loaded removed/burnt props plus retained unloaded edits at save boundaries; healthy visited trees do not accumulate records. SAVE owns the worker/checkpoint/menu lifecycle. Stable candidate IDs and cross-chunk placement remain unchanged. F6 direct sessions remain disposable; fire still pauses while unloaded. See SAVE/README.md and SAVE/P4_Copilot_Handoff.md for exact local test commands. No compilation/runtime/performance tests were executed here for P4.
+Menu-launched campaigns restore frozen macro/features and import SavedChunk deltas before initial chunk materialization. CaptureChanges snapshots loaded removed/burnt props plus retained unloaded edits at save boundaries; healthy visited trees do not accumulate records. SAVE owns the worker/checkpoint/menu lifecycle. Stable candidate IDs and cross-chunk placement remain unchanged. F6 direct sessions remain disposable; fire still pauses while unloaded. See SAVE/README.md and SAVE/P4_Copilot_Handoff.md for exact local test commands. Historical statement about the initial P4 implementation handoff: Copilot later verified commit `ce6767d1` (31/33 write/read checks) and the user accepted the earlier P4 functional flow. SO2/C1 automated regressions also passed. Large-save profiling remains open.
 
-## SO2 destinations — awaiting local validation
+## SO2 destinations — implemented and automated-tested
 The existing stream receives ChunkActorsRoot, StreamedGroundRoot, the full actor navigation-source root and EntityPlacement explicitly. Chunk props remain immediate children of the same hidden/publication-controlled chunk node; binding/cancellation/unload and saved deltas are unchanged. Player/skeleton and authored torches now have persistent sibling roots. No additional streamed SceneryRoot/EntitiesRoot layers or streamer are introduced. Regression paths follow genuine hierarchy changes. See SCENES/World/SO2_Copilot_Handoff.md.
 
 SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.

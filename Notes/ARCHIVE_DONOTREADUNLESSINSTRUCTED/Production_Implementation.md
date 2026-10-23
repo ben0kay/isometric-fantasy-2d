@@ -1,8 +1,10 @@
+> **ARCHIVED — COMPLETED original production extraction plan (22 October 2026).** The initial production scene, environment, Pink Meadow, FIRE1/FIRE2 and generic-tree promotion are implemented. This is historical design/acceptance context, **not an active plan**. Refer instead to [World](../../SCENES/World/README.md), [world phases](../../WORLD/Generation_Implementation.md) and [environment](../../ENVIRONMENT/README.md).
+
 # Production Implementation — First Playable Oak Forest World
 
 > **Status:** Production foundation implemented. See SCENES/World/README.md for launch/configuration and validation status. The original scope below is preserved as the implementation reference. RandomSeedOnLoad defaults to true; FixedSeed enables deterministic replay.
 > **Scope:** Extract/copy proven parts of `DEBUG/TopDownTest/` into the actual production folders, then assemble a minimal playable `SCENES/World/World.tscn`. Preserve the entire existing debug test intact.
-> **Read first:** [root README](../README.md), [CodePreferences](../CodePreferences.md), the relevant production-folder READMEs and [DEBUG/TopDownTest/README](../DEBUG/TopDownTest/README.md). Inspect actual scripts, scenes, .tres and shader dependencies before editing.
+> **Read first:** [root README](../../README.md), [CodePreferences](../../CodePreferences.md), the relevant production-folder READMEs and [DEBUG/TopDownTest/README](../../DEBUG/TopDownTest/README.md). Inspect actual scripts, scenes, .tres and shader dependencies before editing.
 
 ## Goal and acceptance criteria
 

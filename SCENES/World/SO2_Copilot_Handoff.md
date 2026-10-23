@@ -19,7 +19,7 @@ Dependency audit: WorldScene composition; stream actor/ground destinations and n
 
 P4 compatibility must explicitly recognize the previous SO1 source scene fingerprint using its frozen reference text while hashing the CURRENT dependencies; no seed/blueprint/delta regeneration, reset or broad bypass. Subsequent checkpoints use the current fingerprint. Resource changes must still fail. Existing durable schema stays unchanged.
 
-## Implemented changes — awaiting local validation
+## Implemented changes — automated validation passed; local graphical retest checklist retained
 
 WorldScene now exposes cached typed `Player`, `ActorsRoot`, `EntitiesRoot`, `PropsRoot`, `ChunkActorsRoot`, `PreviewSceneryRoot`, `StreamedGroundRoot`, `SceneryPlacement`, `EntityPlacement`, `Environment` and `Fire`. The legacy placer is a plain Node controller with an explicit output destination. Entity spawning has a separate persistent destination and navigation-source root. The existing streamer receives explicit actor/ground/navigation destinations; IDs, placement/density, chunk dimensions/rings/budgets and hidden binding/unload lifecycle are unchanged.
 

@@ -1,12 +1,12 @@
 # SYSTEMS
 
-> **Status:** Planning/folder foundation only. This pass does not implement systems or content.
+> **Status:** Mixed. WorldInteractions/Fire **FIRE1/FIRE2 are implemented in production**; most other listed interaction/harvesting/crafting/building modules remain planned foundations.
 
 Reusable interactive gameplay mechanics that connect WORLD objects, ENTITIES, ITEMS and ENVIRONMENT without hard-coding each feature into the player or a specific world object.
 
 ## Folder map
 
-- [WorldInteractions/](WorldInteractions/README.md): World-object interaction mechanics; [Fire/](WorldInteractions/Fire/README.md) is scaffolded here for future extraction from DEBUG. Nothing runs in production yet.
+- [WorldInteractions/](WorldInteractions/README.md): World-object interaction mechanics; [Fire/](WorldInteractions/Fire/README.md) includes dormant-idle burn lifecycle, effects and streamed registration **in production**. Lightning-to-tree ignition, fire spread, damage and offline simulation are future.
 - [Interaction/](Interaction/README.md): Generic interaction resolution and requests for doors, containers, animals and objects.
 - [Harvesting/](Harvesting/README.md): Shared resource extraction/chopping/mining/foraging rules and loot-plan execution.
 - [Crafting/](Crafting/README.md): Shared recipes, ingredient rules, production, workstations and output item references.
@@ -19,6 +19,6 @@ Reusable interactive gameplay mechanics that connect WORLD objects, ENTITIES, IT
 
 ## Conventions
 
-- `SystemsMasterConfig.cs` and `DefaultSystemsConfig.tres` are **blank placeholders**; don't add settings before owning mechanics are designed.
+- `SystemsMasterConfig.cs` and `DefaultSystemsConfig.tres` remain general placeholders, but FIRE1/FIRE2 already use their own real Fire settings and profile Resources.
 - Use shared logic and data-driven definitions when it reduces duplication; keep clearly specialized systems in their own modules.
 - Folder names and documentation are navigation aids, not a promise that gameplay is already implemented.

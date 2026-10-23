@@ -1,9 +1,9 @@
 # World Generation Direction — Fantasy 2D Sandbox
 
-> **Status:** Design discussion / provisional preference, not a locked implementation decision.
+> **Status:** Future-geography design / provisional preferences. **P0–P4 foundational generation, streaming and saves are already implemented**; remaining proposals are not automatically approved work.
 > **Last updated:** 2026-10-21
 > **Scope:** The new **fully top-down Godot 2D** fantasy survival sandbox, despite the repository's "isometric" name.
-> **Implementation:** Planning note only. Do not treat any world-generation systems below as built or approved for production.
+> **Current implementation:** P0/P1 seeded finite macro biome regions, P2 feature reservations, P3 local chunk streaming and P4 private disk saves/Continue exist. Oceans/continents/relief/rivers, real settlements/caves, expandable finite boundaries and offline ecology remain future. Use [phase guide](../WORLD/Generation_Implementation.md) for authoritative status.
 
 ## Core decision under consideration
 
