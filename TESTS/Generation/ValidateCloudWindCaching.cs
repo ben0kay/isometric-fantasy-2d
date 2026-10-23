@@ -21,6 +21,15 @@ public partial class ValidateCloudWindCaching : Node
         await Frames(180);
         var winds=env.GetChildren().OfType<VegetationWind>().ToArray();
         int writes=winds.Sum(w=>w.MaterialWrites), cloudWrites=clouds.MaterialWrites;
+        // Shared foliage wind must remain source-resolution-independent with a draw margin.
+        var sway=GD.Load<Shader>("res://ENVIRONMENT/Wind/Visuals/VegetationSway.gdshader").Code;
+        Check(sway.Contains("strength_world_pixels") && sway.Contains("MODEL_MATRIX[0].xy")
+            && sway.Contains("VERTEX.x +=") && sway.Contains("UV.x ="),"Production sway lost world-unit scaling or anti-clip margin");
+        foreach(string path in new[] { "res://WORLD/Content/Vegetation/Trees/Oak/OakWind.tres",
+            "res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomWind.tres",
+            "res://WORLD/Content/Vegetation/Grass/GrassWind.tres" })
+            Check(GD.Load<ShaderMaterial>(path).GetShaderParameter("strength_world_pixels").AsSingle()>0,
+                "Vegetation material missing world-unit strength: "+path);
         await Frames(5);
         Check(winds.Sum(w=>w.MaterialWrites)==writes,"Unchanged wind keeps uploading materials");
         Check(clouds.MaterialWrites==cloudWrites,"Stable clouds keep uploading uniforms");

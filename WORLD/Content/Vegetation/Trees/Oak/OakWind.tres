@@ -4,6 +4,6 @@
 
 [resource]
 shader = ExtResource("wind")
-shader_parameter/strength_pixels = 14.0
+shader_parameter/strength_world_pixels = 1.61
 shader_parameter/speed = 0.8
 shader_parameter/canopy_end = 0.7
