@@ -1,12 +1,12 @@
 # Shared melee execution
 
-C2 implemented. `AttackExecution` is a plain C# state machine shared by `EquippedTool` and `GroundChase`. Requests capture normalized aim, attacker effective stats and an immutable `AttackValues` snapshot. Fixed-step advancement covers wind-up, contact, recovery and cooldown. No Node/timer/global manager is added; adapters advance only active attacks. One accepted contact consumes the swing, including a zero-damage defended hit. Death, disabled scene owners and unload cancel pending contact.
+C2 implemented. `AttackExecution` is a plain C# state machine shared by `EquippedTool` and `GroundChase`. Requests capture normalized aim, attacker effective stats and an immutable `AttackValues` snapshot. Fixed-step advancement covers wind-up, contact, recovery and cooldown. No Node/timer/global manager is added; adapters advance only active attacks. One successful contact batch consumes the swing, including a zero-damage defended hit. Each target is struck once per swing, with a configurable MaxTargets (default 1, hard cap 16). Death, disabled scene owners and unload cancel pending contact.
 
 `AttackProfile` is the shared Resource: `AttackSeconds`, normalized `ContactProgress` + `ContactWindow`, extra `CooldownSeconds`, `BaseDamage`, `HitReach`, arc half-angle, receiving factions, optional prop hits and physics mask. Attack speed divides both duration and cooldown. Zero window means one contact sample at the crossing, preserving the original axe. A positive window can retry misses at physics steps until it ends; once something is contacted, no more queries occur that swing. Recovery is the remaining duration after contact ends. Aim is locked, while origin/receiving geometry use current positions.
 
 `AxeConfig` inherits the profile, retaining existing serialized timing/reach/aim fields and its existing `.tres`. It enables tool targets; default damage stays 1 and duration 0.38s, contact 85%. `DefaultEnemyMelee.tres` supplies generic pursuing-entity defaults: 6 damage, 36 reach, 0.9s swing, contact at 45% for an 8%-long window, then 0.35s extra cooldown. `EntityDefinition.MeleeAttack` can override it; `MeleeEnabled=false` disables attack intent while preserving chase. Non-pursuing entities do not gain AI or an executor. No species ID branching.
 
-`Contact` reports a target and nullable `DamageResult` (null for prop feedback). Actor HP/feedback remains with the receiving actor. The original C2 slice introduced no telegraph artwork, knockback, invulnerability or death/retry UI; C3.2 reactions are described below. Item identity/art stays in ITEMS. See [validation](../C2_Validation.md).
+`Contact` fires once **per confirmed selected target** and reports its nullable `DamageResult` (null for prop feedback). Actor HP/feedback remains with the receiving actor. The original C2 slice introduced no telegraph artwork, knockback, invulnerability or death/retry UI; C3.2 reactions are described below. Item identity/art stays in ITEMS. See [validation](../C2_Validation.md).
 
 ## C2.5 dual attacks
 
@@ -17,3 +17,9 @@ C3.2 now snapshots `KnockbackDistance` (0–120), `KnockbackSeconds` (0.05–0.5
 Starter axe swipe: 15px / 0.12s stagger; prod: 55px / 0.30s and explicit interruption. Sword swipe/thrust: 10/30px and 0.10/0.20s; default enemy: 12px / 0.12s. Push duration defaults to 0.18s. Existing damage/timing stays unchanged. Resistance and movement live in ENTITIES, not feedback. [C3.2 results](../C3_2_Validation.md).
 
 AC1: default physics mask is now **3** (WorldSolids layer 1 + Actors layer 2) for both contact overlap and obstruction rays. Custom attack masks must retain required actors and blockers. See [collision audit and validation handoff](../../ENTITIES/Shared/Movement/ActorCollisionPlan.md).
+
+## C2.6 — Multi-target cleave (implementation added; validation pending)
+
+`AttackProfile.MaxTargets` defaults to 1 for backward compatibility. The starter axe **primary** attack opts into 3 targets; secondary prod, sword and enemy attacks remain 1 unless explicitly configured. A `targetBonus` parameter on `AttackExecution.TryStart` / `AttackProfile.Snapshot` allows future proficiency/skill modifiers to increase or decrease the effective integer cap at swing start, clamped 1–16. No proficiency progression is implemented yet.
+
+The existing single physics broad phase gathers nearest candidates up to the target cap, with per-candidate world obstruction and deterministic distance/instance-ID order. For cleaves, actors do not block line-of-sight to other actors, while world solids remain blocking. Tree/tool hits retain single-target selection so chopping visuals don't multiply. Every actor independently receives authoritative damage, knockback and contact events. No idle queries, extra movement controller, duplicated HP system or projectile changes. Godot build, regressions and Windows visual acceptance remain **unverified** for this GitHub-only change.

@@ -23,7 +23,7 @@ public partial class ValidateMeleeExecution : Node2D
             _enemy=MakeEnemy(new Vector2(30,0));
             _profile=new AttackProfile { AttackSeconds=0.4f,ContactProgress=0.25f,ContactWindow=0.25f,CooldownSeconds=0.2f,BaseDamage=2,HitReach=40,TargetFactions=CombatFaction.Hostile };
             _attack=new AttackExecution(_player); _attack.Contact+=c => { _contacts++; _last=c; };
-            await Sync(); Timing(); await Geometry(); await Lifecycle(); await Capacity(); await Props(); await PlayerAdapter(); await EnemyAdapter();
+            await Sync(); Timing(); await Geometry(); await Cleave(); await Lifecycle(); await Capacity(); await Props(); await PlayerAdapter(); await EnemyAdapter();
             _attack.Dispose(); _profile.Dispose();
             _player.QueueFree(); _enemy.QueueFree(); await Sync();
             GD.Print($"C2 PASS: {_checks} checks"); GetTree().Quit();
@@ -102,6 +102,34 @@ public partial class ValidateMeleeExecution : Node2D
         _attack.TryStart(_profile,Vector2.Right); _attack.Advance(0.12); Check(neutral.Health==100,"Excluded faction damaged"); _attack.Cancel();
         _profile.TargetFactions|=CombatFaction.Neutral; _attack.TryStart(_profile,Vector2.Right); _attack.Advance(0.12);
         Check(neutral.Health==98,"Opt-in neutral faction missed"); _attack.Cancel(); neutral.QueueFree(); await Sync();
+        _enemy.Position=new Vector2(30,0); await Sync();
+    }
+    // Two targets by profile, three with a snapped proficiency bonus, and no repeat hits in recovery.
+    // =========================================================
+    private async Task Cleave()
+    {
+        _enemy.Position=new Vector2(30,0);
+        var flankA=MakeEnemy(new Vector2(35,20));
+        var flankB=MakeEnemy(new Vector2(35,-20));
+        await Sync();
+        using var sweep=new AttackProfile { BaseDamage=3,MaxTargets=2,HitReach=54,
+            HitHalfAngleDegrees=65,AttackSeconds=0.3f,ContactProgress=0.3f,TargetFactions=CombatFaction.Hostile };
+        int hpA=_enemy.Health, hpB=flankA.Health, hpC=flankB.Health, start=_contacts;
+        Check(_attack.TryStart(sweep,Vector2.Right),"Cleave request rejected");
+        _attack.Advance(0.12);
+        int loss=(hpA-_enemy.Health)+(hpB-flankA.Health)+(hpC-flankB.Health);
+        Check(loss==6 && _contacts==start+2,"Two-target cleave did not apply two contacts");
+        _attack.Advance(0.1);
+        Check(_contacts==start+2,"Cleave repeated contact in same swing");
+        _attack.Cancel();
+        hpA=_enemy.Health; hpB=flankA.Health; hpC=flankB.Health; start=_contacts;
+        Check(_attack.TryStart(sweep,Vector2.Right,1),"Proficiency-modified cleave rejected");
+        sweep.MaxTargets=1; // The already-started swing must keep its snapped effective limit of 3.
+        _attack.Advance(0.12);
+        loss=(hpA-_enemy.Health)+(hpB-flankA.Health)+(hpC-flankB.Health);
+        Check(loss==9 && _contacts==start+3,"Snapshot target bonus missed clustered actors");
+        _attack.Cancel();
+        flankA.QueueFree(); flankB.QueueFree(); await Sync();
         _enemy.Position=new Vector2(30,0); await Sync();
     }
     // Queued/removed targets, source death and disabled scene owners never produce stale contacts.

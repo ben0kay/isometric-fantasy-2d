@@ -6,6 +6,7 @@ public sealed class AttackExecution : IDisposable
 {
     private readonly ICombatTarget _source;
     private readonly MeleeHitQuery _query;
+    private readonly AttackContact[] _contacts = new AttackContact[MeleeHitQuery.MaxTargetCount];
     private AttackValues _values;
     private EffectiveStats _stats;
     private float _elapsed;
@@ -29,10 +30,10 @@ public sealed class AttackExecution : IDisposable
     }
     // Alive, idle requests capture aim, timing and attacker stats exactly once.
     // =========================================================
-    public bool TryStart(AttackProfile profile, Vector2 aim)
+    public bool TryStart(AttackProfile profile, Vector2 aim, int targetBonus = 0)
     {
         if (_disposed || Busy || profile==null || !CombatTargeting.Active(_source) || !aim.IsFinite() || aim.LengthSquared()<0.0001f) return false;
-        _stats=_source.Stats.Values; _values=profile.Snapshot(_stats.AttackSpeedMultiplier);
+        _stats=_source.Stats.Values; _values=profile.Snapshot(_stats.AttackSpeedMultiplier,targetBonus);
         Aim=aim.Normalized(); _elapsed=0; _contacted=false; _interrupted=false; Busy=true; return true;
     }
     // Advance only while active, on the owner's physics path. Crossing a tiny window still gets one contact sample.
@@ -44,9 +45,15 @@ public sealed class AttackExecution : IDisposable
         if (!double.IsFinite(delta) || delta<0) throw new ArgumentOutOfRangeException(nameof(delta));
         float before=_elapsed;
         _elapsed=(float)Math.Min(_values.Duration+_values.Cooldown,_elapsed+delta);
-        if (!_contacted && before<=_values.ContactEnd*_values.Duration && _elapsed>=_values.ContactStart*_values.Duration
-            && _query.Strike(_source,_values,Aim,_stats,out var hit))
-        { _contacted=true; Contact?.Invoke(hit); }
+        if (!_contacted && before<=_values.ContactEnd*_values.Duration && _elapsed>=_values.ContactStart*_values.Duration)
+        {
+            int hits=_query.StrikeMany(_source,_values,Aim,_stats,_contacts);
+            if (hits>0)
+            {
+                _contacted=true;
+                for(int i=0;i<hits;i++) Contact?.Invoke(_contacts[i]);
+            }
+        }
         if (_elapsed>=_values.Duration+_values.Cooldown) Busy=false;
     }
     // Interrupt windup/contact/recovery without refunding the remaining attack or cooldown.

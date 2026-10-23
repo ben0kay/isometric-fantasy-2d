@@ -4,6 +4,7 @@
 script = ExtResource("script")
 Presentation = 0
 BaseDamage = 11.0
+MaxTargets = 3
 HitReach = 52.0
 AttackSeconds = 0.38
 ContactProgress = 0.5

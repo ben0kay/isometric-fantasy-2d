@@ -22,6 +22,7 @@ public partial class AttackProfile : Resource
     [Export(PropertyHint.Range,"0,3,0.01")] public float CooldownSeconds { get; set; }
     [ExportGroup("Contact")]
     [Export] public float BaseDamage { get; set; } = 1;
+    [Export(PropertyHint.Range,"1,16,1")] public int MaxTargets { get; set; } = 1;
     [Export(PropertyHint.Range,"1,200,1")] public float HitReach { get; set; } = 52f;
     [Export(PropertyHint.Range,"1,89,1")] public float HitHalfAngleDegrees { get; set; } = 65f;
     [Export] public CombatFaction TargetFactions { get; set; } = CombatFaction.Hostile | CombatFaction.Neutral;
@@ -30,7 +31,7 @@ public partial class AttackProfile : Resource
 
     // Snapshot once per accepted request; edits cannot change a swing already in flight.
     // =========================================================
-    public AttackValues Snapshot(float speed)
+    public AttackValues Snapshot(float speed, int targetBonus = 0)
     {
         if (!Enum.IsDefined(Presentation) || !float.IsFinite(SweepDegrees) || SweepDegrees<10 || SweepDegrees>160
             || !float.IsFinite(SweepWindupFraction) || SweepWindupFraction<0 || SweepWindupFraction>0.3f
@@ -38,16 +39,18 @@ public partial class AttackProfile : Resource
             || !float.IsFinite(ContactProgress) || ContactProgress < 0 || ContactProgress > 1
             || !float.IsFinite(ContactWindow) || ContactWindow < 0 || ContactProgress+ContactWindow > 1
             || !float.IsFinite(CooldownSeconds) || CooldownSeconds < 0 || CooldownSeconds > 10
+            || MaxTargets < 1 || MaxTargets > MeleeHitQuery.MaxTargetCount
             || !float.IsFinite(BaseDamage) || BaseDamage < 0 || !float.IsFinite(HitReach) || HitReach < 1 || HitReach > 1000
             || !float.IsFinite(HitHalfAngleDegrees) || HitHalfAngleDegrees < 1 || HitHalfAngleDegrees > 89
             || (TargetFactions & ~(CombatFaction.Player|CombatFaction.Hostile|CombatFaction.Neutral)) != 0 || CollisionMask == 0)
             throw new ArgumentException("Invalid melee attack profile.");
+        int effectiveTargets = (int)Math.Clamp((long)MaxTargets + targetBonus, 1L, MeleeHitQuery.MaxTargetCount);
         return new(AttackSeconds/speed,CooldownSeconds/speed,ContactProgress,ContactProgress+ContactWindow,
-            BaseDamage,HitReach,Mathf.Cos(Mathf.DegToRad(HitHalfAngleDegrees)),TargetFactions,HitTools,CollisionMask,Bound(KnockbackDistance,0,120),Bound(KnockbackSeconds,0.05f,0.5f),Bound(StaggerSeconds,0,0.6f),InterruptAttack);
+            BaseDamage,HitReach,Mathf.Cos(Mathf.DegToRad(HitHalfAngleDegrees)),TargetFactions,HitTools,CollisionMask,Bound(KnockbackDistance,0,120),Bound(KnockbackSeconds,0.05f,0.5f),Bound(StaggerSeconds,0,0.6f),InterruptAttack,effectiveTargets);
     }
     // Reject non-finite authored values and bound extreme reaction tuning at snapshot time.
     // =========================================================
     private static float Bound(float value, float min, float max) => float.IsFinite(value) ? Mathf.Clamp(value,min,max) : throw new ArgumentException("Invalid reaction value.");
 }
 public readonly record struct AttackValues(float Duration, float Cooldown, float ContactStart, float ContactEnd,
-    float Damage, float Reach, float MinimumDot, CombatFaction Targets, bool HitTools, uint CollisionMask, float KnockbackDistance=0, float KnockbackSeconds=0.18f, float StaggerSeconds=0, bool InterruptAttack=false);
+    float Damage, float Reach, float MinimumDot, CombatFaction Targets, bool HitTools, uint CollisionMask, float KnockbackDistance=0, float KnockbackSeconds=0.18f, float StaggerSeconds=0, bool InterruptAttack=false, int MaxTargets=1);
