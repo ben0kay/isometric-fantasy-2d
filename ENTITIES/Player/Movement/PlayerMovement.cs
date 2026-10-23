@@ -70,6 +70,9 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget
         _input.DodgeRequested += RequestDodge;
         MotionMode = MotionModeEnum.Floating;
         GetNode<SharedHealthBar>("HealthBar").Bind(HealthState, GetNode<Sprite2D>("Sprite"));
+        var numbers = new DamageNumbers { Name = "DamageNumbers", ZIndex = 5 };
+        AddChild(numbers);
+        numbers.Bind(HealthState, _art);
     }
     #endregion
 

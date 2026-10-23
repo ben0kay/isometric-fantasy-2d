@@ -43,6 +43,9 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
         _chase.Enabled = Config.ChasePlayer;
         MotionMode = MotionModeEnum.Floating;
         GetNode<SharedHealthBar>("HealthBar").Bind(HealthState, _sprite);
+        var numbers = new DamageNumbers { Name = "DamageNumbers", ZIndex = 5 };
+        AddChild(numbers);
+        numbers.Bind(HealthState, _sprite);
         SetProcess(false);
     }
 

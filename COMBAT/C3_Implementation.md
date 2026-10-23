@@ -7,7 +7,7 @@ Read `CodePreferences.md`, root README, `COMBAT/COMBAT_IMPLEMENTATION.md`, `COMB
 
 | Phase | Module location | Scope | State |
 | --- | --- | --- | --- |
-| **C3.1** | [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) | World-space numbers for **actual HP removed**; configurable single-label pop/float/fade/rapid-hit merge; independent event-driven presentation | Folder/notes only |
+| **C3.1** | [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) | World-space numbers for **actual HP removed**; configurable single-label pop/float/fade/rapid-hit merge; independent event-driven presentation | Code added; build/visual tests pending |
 | **C3.2** | `ENTITIES/Shared/Movement` + `COMBAT/Weapons` | Shared, collision-safe knockback/stagger response from confirmed attacks. Axe prod stronger than swipe; integrate with existing actor movement/chase and P3 bounds | Planned |
 | **C3.3** | `FEEDBACK/HitFeedback` | Small impact bursts, adjustable flash and target material/type feedback (bones, wood, metal), optional trail; do not mix gameplay damage into FX | Planned |
 | **C3.4** | `FEEDBACK/HitFeedback` + defense event contracts | Different responses to normal hit, blocked damage, guard break/parry if introduced, misses; only results from authoritative C2/C2.5 rules | Planned |

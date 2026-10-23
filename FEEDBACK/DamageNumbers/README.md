@@ -1,6 +1,6 @@
-# Damage Numbers — C3.1 (planned)
+# Damage Numbers — C3.1 (implemented; validation pending)
 
-> **Status:** Documentation/folder scaffold only. No damage-number scripts, Resources, visuals or runtime hooks have been implemented here yet.
+> **Status:** Runtime C3.1 component, settings and player/entity binding committed. Godot build and gameplay validation have **not** been run in this GitHub-only change.
 
 ## Purpose and ownership
 
@@ -19,9 +19,9 @@ Reference design from older project:
 ```text
 FEEDBACK/DamageNumbers/
 ├── README.md                         ← this scaffold
-├── DamageNumbers.cs                  ← future event-driven display
-├── DamageNumberSettings.cs           ← future [GlobalClass] Resource
-└── DefaultDamageNumberSettings.tres  ← future inspector configuration
+├── DamageNumbers.cs                  ← event-driven display
+├── DamageNumberSettings.cs           ← inspector Resource
+└── DefaultDamageNumberSettings.tres  ← default settings
 ```
 
 ## Behavior
@@ -44,4 +44,4 @@ FEEDBACK/DamageNumbers/
 6. Compile Godot Mono .NET 8, headless import, targeted C1/C2/combat/feedback fixtures, and P4 save/read as relevant. Record actual results and any existing native-shutdown baseline failures.
 7. Update this README and `COMBAT/C3_Implementation.md` only after verification. Separate visuals from damage rules.
 
-The folder exists through this README; no runtime damage numbers are included in the scaffold.
+The runtime label is created once per actor by PlayerMovement/Entity at setup; this avoids any change to serialized Player.tscn or Entity.tscn fingerprints. One label is reused per actor, merge resets the float animation, processing sleeps when hidden, and health subscriptions detach on exit. Visual verification and C1/C2/P4 regression testing are outstanding.
