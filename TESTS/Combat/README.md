@@ -9,3 +9,5 @@ C2.5: `ValidatePlayerActions.tscn` checks actual starter item/profile selection,
 AC1: `ValidateActorCollision.tscn` checks canonical player/entity masks, swept player/entity and entity/entity blocking, static-wall blocking, removal, and campaign-arrival-style overlaps against actors and scenery. Exit 0 with `AC1 PASS: 11 checks` is expected. Added but not yet executed; see [AC1 commands/limitations](../../ENTITIES/Shared/Movement/ActorCollisionPlan.md). No campaigns are accessed.
 
 AC2: `ValidateActorLifecycle.tscn` adds 17 intended checks for living/dead blocking, disabled-root physics removal/reactivation, stale enemy velocity, player death/restoration, retirement, hop invariants, and real walk/sprint/dodge into a wall. Added but not executed here; see [commands and limitations](../../ENTITIES/Shared/Movement/AC2_Validation.md).
+
+AC4 follow-up: AC1 11 and AC2 17 checks now pass headless, as do C1 10037, C2 46 and updated C2.5 44. See [AC4 evidence and broader shutdown limitations](../../ENTITIES/Shared/Movement/AC4_Validation.md); earlier not-executed notes describe the initial implementation.

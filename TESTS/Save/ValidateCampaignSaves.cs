@@ -65,18 +65,26 @@ public partial class ValidateCampaignSaves : Node
         Check(store.Load(A).Snapshot.Clock.Hour == 3 && store.Load(B).Snapshot.Clock.Hour == 17,"Clock isolation failed");
         CheckpointFiles.Write(Path.Combine(_root,"expectations.json"),new[] { removed,burnt,aWorld },1024*1024);
         StorageCases(checkpointA);
-        // An SO1 campaign must restore unchanged after the layout-only SO2 refactor.
+        // Only the exact historical SO2 scene can use its layout bridge. Later content must reject it.
+        // Schema-1 HP restoration remains independently testable with a compatible content fingerprint.
         var legacy = checkpointA with { SchemaVersion=1,Player=checkpointA.Player with { Health=null }, ContentFingerprint = CampaignSession.LegacySO1ContentFingerprint() };
+        string scene=Godot.FileAccess.GetFileAsString("res://SCENES/World/World.tscn").Replace("\r\n","\n");
+        bool historicalLayout=CheckpointFiles.Digest(System.Text.Encoding.UTF8.GetBytes(scene))==SaveCompatibility.SO2SceneSourceHash;
+        if (!historicalLayout)
+        {
+            Reject(() => CampaignSession.RequireContent(legacy),"Changed scene accepted historical SO1 fingerprint");
+            legacy=legacy with { ContentFingerprint=CampaignSession.ContentFingerprint() };
+        }
         CampaignSession.RequireContent(legacy);
         CampaignSession.Continue(legacy);
         var migrated = await Spawn();
         Check(migrated.Player.HealthState.Current==migrated.Player.HealthState.Maximum,"Schema-1 HP default");
         Check(migrated.Saves.Capture().SchemaVersion==2 && migrated.Saves.Capture().Player.Health!=null,"Schema-2 capture missing HP");
         migrated.Player.ReceiveDamage(new DamageRequest(13),EffectiveStats.Neutral);
-        Check(migrated.Blueprint.WorldId == legacy.WorldId && migrated.MacroMap.Hash == legacy.Blueprint.MapHash,"SO1 compatibility bridge changed world identity");
-        Check(!Props(migrated).Any(p => Id(p)==removed),"SO1 compatibility bridge resurrected an edit");
-        Check(migrated.Saves.Capture().ContentFingerprint == CampaignSession.ContentFingerprint(),"SO2 checkpoint did not adopt verified current fingerprint");
-        Check(await migrated.Saves.SaveAsync(),"Verified legacy campaign could not commit an SO2 checkpoint");
+        Check(migrated.Blueprint.WorldId == legacy.WorldId && migrated.MacroMap.Hash == legacy.Blueprint.MapHash,"Schema-1 restoration changed world identity");
+        Check(!Props(migrated).Any(p => Id(p)==removed),"Schema-1 restoration resurrected an edit");
+        Check(migrated.Saves.Capture().ContentFingerprint == CampaignSession.ContentFingerprint(),"Restored checkpoint did not retain verified current fingerprint");
+        Check(await migrated.Saves.SaveAsync(),"Verified schema-1 campaign could not commit a schema-2 checkpoint");
         var committedMigration = CampaignSession.Store().Load(A).Snapshot;
         Check(committedMigration.ContentFingerprint == CampaignSession.ContentFingerprint()
             && committedMigration.WorldId == legacy.WorldId && committedMigration.Blueprint.MapHash == legacy.Blueprint.MapHash

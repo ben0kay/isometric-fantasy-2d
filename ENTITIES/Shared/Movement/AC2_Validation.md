@@ -1,5 +1,7 @@
 # AC2 — Lifecycle and World practice handoff
 
+> Follow-up: [AC4 validation](AC4_Validation.md) supersedes the toolchain/testing availability below. AC1/AC2 targeted headless checks passed; broad world shutdown and graphical/performance limits remain.
+
 **Implemented from `bbdca8518e967e2c5b235fe63a8c6c9b16a7ae96`, 23 October 2026. Awaiting local validation.** AC1 runtime acceptance is also still open. This change does not implement C3.2 or claim collision/crowd/FPS acceptance.
 
 ## Behavior and ownership

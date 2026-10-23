@@ -1,6 +1,6 @@
 # Actor-to-actor collision — implementation plan
 
-> **Status: AC0 source audit complete (2026-10-23); AC1 implemented, awaiting runtime validation; AC2 implemented, awaiting runtime validation; AC3–AC4 pending.** AC0 was documentation only; AC1 now changes layers and masks. Runtime blocking and performance acceptance remain unverified.
+> **Status: AC0 source audit complete (2026-10-23); AC1/AC2 targeted headless checks passed; initial open-terrain user acceptance recorded; AC3 corridor checks deferred; AC4 executed with world shutdown limitations.** AC0 was documentation only; AC1 now changes layers and masks. Full rendered/performance acceptance and clean world shutdown remain open. See [AC4 results](AC4_Validation.md).
 
 ## Intent
 
@@ -13,7 +13,9 @@ The player, generic enemies and future wildlife should physically block each oth
 - **Godot node group:** a named gameplay lookup/tag, such as `world_tool_targets`; **not** a collision layer and by itself does not block movement.
 - **Combat hurt geometry:** `ICombatTarget.ClosestHitPoint` / hit radius; separate from the actor's small physical feet collider.
 
-## Current production baseline to inspect
+## Pre-AC1 baseline (historical audit inputs)
+
+Current AC1/AC2 configuration is actor layer 2, movement/contact masks 3; the original audit inputs below intentionally describe the pre-change state.
 
 - `ENTITIES/Player/Player.tscn`: `CharacterBody2D` with 14×10 feet `RectangleShape2D`, no explicit collision layer/mask (Godot defaults).
 - `ENTITIES/Shared/Entity.tscn`: shared `CharacterBody2D` with radius-9 feet `CircleShape2D`, also default physics masks.
@@ -24,15 +26,15 @@ The player, generic enemies and future wildlife should physically block each oth
 
 ## Implementation phases (AC0–AC4)
 
-AC0 is complete as a source audit; AC1 is implemented awaiting validation; AC2 is implemented awaiting validation; AC3–AC4 remain pending. AC means **Actor Collision** and is distinct from combat C3.
+AC0 is complete as a source audit; AC1/AC2 targeted headless checks now pass. AC3 corridors are deferred; AC4 results and limitations are recorded in [AC4_Validation.md](AC4_Validation.md). AC means **Actor Collision** and is distinct from combat C3.
 
 | Phase | Objective | Deliverable |
 | --- | --- | --- |
 | **AC0 — Audit — COMPLETE (source)** | Inventory existing physics layer/masks across actors, solids and melee hit queries | Matrix, migration and affected-file inventory below; no runtime acceptance implied |
-| **AC1 — Actor blocking — implemented, validation pending** | Physically block player, enemies and future wildlife using shared feet colliders | Player and shared Entity scene layer/mask configuration |
-| **AC2 — Lifecycle integration — implemented, validation pending** | Ensure death, dodge, sprint, streaming and despawn work with collision | No ghost colliders or movement bypass |
-| **AC3 — Crowd checks** | Evaluate groups of pursuing actors and narrow pathways | Performance and clumping findings; optional small follow-up only |
-| **AC4 — Validation** | Verify combat, save and physics regression tests | Recorded test results and completion status |
+| **AC1 — Actor blocking — targeted headless checks passed** | Physically block player, enemies and future wildlife using shared feet colliders | Player and shared Entity scene layer/mask configuration |
+| **AC2 — Lifecycle integration — targeted headless checks passed** | Ensure death, dodge, sprint, streaming and despawn work with collision | No ghost colliders or movement bypass |
+| **AC3 — Crowd checks — open terrain observed; corridors deferred** | Evaluate groups of pursuing actors and narrow pathways | Performance and clumping findings; optional small follow-up only |
+| **AC4 — Validation — executed with limitations** | Verify combat, save and physics regression tests | Recorded test results and completion status |
 
 ### AC0 — Collision layer audit
 
@@ -173,3 +175,8 @@ Player death disables its feet collider; explicit health restoration restores it
 The original test skeleton now lives under WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot. F6 adds four nearby marker-authored skeletons using a bounded safe-position search and the same shared grid. The root's Enabled switch suspends/hides existing actors; disabling before startup skips placement. New/Continue retains the single persisted skeleton contract and excludes all four extras. Updated source-discovery/ownership/save fixture paths; no campaign schema migration or fingerprint bypass.
 
 See [AC2 validation](AC2_Validation.md). Static review and diff whitespace checks passed; Godot/.NET runtime checks could not run here. AC2 is **implemented, awaiting local validation**, not accepted. AC3/AC4 and C3.2 remain pending.
+
+
+## AC4 follow-up — 23 October 2026
+
+See [AC4 validation](AC4_Validation.md) for tested revision, commands, results, the save-fixture correction, and known world native-shutdown failures. AC1 11 checks, AC2 17 checks and C1/C2/C2.5 all pass headless. The user observed grouping without visible overlap in open terrain and considers AC2 okay for now; corridor/bottleneck AC3 checks are deferred, not passed. No measured FPS claim. AC4 ran the checks, but broad ownership/streaming shutdown remains unclean. Earlier awaiting-validation entries below/above are historical to their implementation date and superseded by the AC4 result record. C3.2 remains separately scoped.
