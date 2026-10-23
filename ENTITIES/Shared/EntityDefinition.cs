@@ -24,6 +24,7 @@ public partial class EntityDefinition : Resource
     [Export(PropertyHint.Range, "0.15,2,0.05")] public float RepathSeconds { get; set; } = 0.45f;
 
     [Export] public SeparationProfile Separation { get; set; }
+    [Export] public EngagementProfile Engagement { get; set; }
 
     [Export] public CombatStatProfile CombatStats { get; set; }
     [ExportGroup("Melee (requires pursuit intent)")]

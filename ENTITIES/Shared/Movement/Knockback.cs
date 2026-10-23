@@ -39,6 +39,9 @@ public sealed class Knockback
         if (!Active && _burst>0) { _burst=0; _grace=0.25f; }
         return velocity;
     }
+    // Live master switches can suppress either axis of an existing reaction independently.
+    // =========================================================
+    public void Suppress(bool push,bool stagger) { if(push) _pushRemaining=0; if(stagger) _stagger=0; }
     // Death, suspension and unload discard all transient motion, including grace.
     // =========================================================
     public void Clear() { _direction=Vector2.Zero; _pushRemaining=_pushDuration=_distance=_stagger=_burst=_grace=0; }

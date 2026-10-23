@@ -5,8 +5,14 @@ public partial class GroundChase : Node
 {
     public bool Enabled { get; set; }
     public AttackExecution Attack { get; private set; }
+    public int ConfirmedMeleeContacts { get; private set; }
     private AttackProfile _defaultAttack;
     private MovementMasterConfig _movement;
+    public EngagementPositioning EngagementState { get; } = new();
+    private CombatMasterConfig _combat;
+    private EngagementProfile _engagementProfile;
+    private bool _engagementEnabled;
+    private Vector2 _destination;
     public Separation SeparationState { get; } = new();
     private float _blockedSeconds;
     private Entity _actor;
@@ -21,18 +27,19 @@ public partial class GroundChase : Node
     public override void _Ready()
     {
         _actor = GetParent<Entity>();
+        _combat=GD.Load<CombatMasterConfig>("res://COMBAT/DefaultCombatConfig.tres");
         _movement=GD.Load<MovementMasterConfig>("res://ENTITIES/Shared/Movement/DefaultMovementConfig.tres");
         SetPhysicsProcess(Enabled);
     }
     // =========================================================
     public void ConfigureNavigation(CharacterBody2D target, StaticObstacleNavigation navigation)
     {
-        SeparationState.Clear(); _blockedSeconds=0;
+        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0;
         _target = target;
         _navigation = navigation;
         _repathTimer = 0f;
         Attack?.Cancel();
-        if (Enabled && _actor.Config.MeleeEnabled) EnsureAttack();
+        if (Enabled && (_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) EnsureAttack();
         SetPhysicsProcess((Enabled && target != null) || _actor.Reaction.NeedsUpdate);
     }
     // Optional melee allocates one executor only when enabled, including later config reactivation.
@@ -40,7 +47,7 @@ public partial class GroundChase : Node
     private void EnsureAttack()
     {
         if (Attack!=null) return;
-        Attack=new AttackExecution(_actor); _defaultAttack=GD.Load<AttackProfile>("res://COMBAT/Weapons/DefaultEnemyMelee.tres");
+        Attack=new AttackExecution(_actor); Attack.Contact+=_=>ConfirmedMeleeContacts++; _defaultAttack=GD.Load<AttackProfile>("res://COMBAT/Weapons/DefaultEnemyMelee.tres");
     }
     // Reuse this motor for event-driven passive recoil; sleep again when it expires.
     // =========================================================
@@ -49,7 +56,7 @@ public partial class GroundChase : Node
     // =========================================================
     public void Stop()
     {
-        SeparationState.Clear(); _blockedSeconds=0; Attack?.Cancel(); _actor?.Reaction.Clear();
+        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0; Attack?.Cancel(); _actor?.Reaction.Clear();
         SetPhysicsProcess(false);
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity = Vector2.Zero;
     }
@@ -58,12 +65,12 @@ public partial class GroundChase : Node
     public override void _Notification(int what)
     {
         if (what!=NotificationDisabled) return;
-        SeparationState.Clear(); _blockedSeconds=0; _actor?.Reaction.Clear(); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
+        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0; _actor?.Reaction.Clear(); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero;
     }
     // Dispose contact-query resources on death cleanup/unload.
     // =========================================================
-    public override void _ExitTree() { Attack?.Dispose(); SeparationState.Dispose(); }
+    public override void _ExitTree() { Attack?.Dispose(); SeparationState.Dispose(); EngagementState.Dispose(); }
     #endregion
     #region Pursuit
     // Cached static-obstacle route, equivalent to the original Basic Skeleton chasing.
@@ -71,14 +78,20 @@ public partial class GroundChase : Node
     public override void _PhysicsProcess(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("GroundChase.PhysicsProcess");
+        var engagement=_actor.Config.Engagement ?? _movement.EngagementDefaults;
+        bool useEngagement=_movement.EngagementEnabled && engagement?.Mode!=EngagementMode.Direct;
+        if(useEngagement!=_engagementEnabled || engagement!=_engagementProfile)
+        { EngagementState.Clear(); _repathTimer=0; _engagementEnabled=useEngagement; _engagementProfile=engagement; }
+        if(!useEngagement) EngagementState.Clear();
+        _actor.Reaction.Suppress(!_combat.KnockbackEnabled,!_combat.StaggerEnabled);
         if (_actor.Reaction.NeedsUpdate && _actor.HealthState.IsAlive)
         {
             bool staggered=_actor.Reaction.Staggered;
             Vector2 recoil=_actor.Reaction.Advance((float)delta);
             if (staggered || recoil!=Vector2.Zero)
             {
-                SeparationState.Clear(); _blockedSeconds=0;
-                if (_actor.Config.MeleeEnabled) Attack?.Advance(delta); else Attack?.Cancel();
+                SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0;
+                if ((_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) Attack?.Advance(delta); else Attack?.Cancel();
                 Vector2 reactionNext=_actor.GlobalPosition+recoil*(float)delta;
                 if ((_navigation==null || _navigation.Contains(reactionNext)) && !(_target is PlayerMovement p && p.Streaming!=null && !p.Streaming.IsPositionLoaded(reactionNext)))
                 { _actor.Velocity=recoil; _actor.MoveAndSlide(); }
@@ -92,15 +105,15 @@ public partial class GroundChase : Node
         if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !_actor.HealthState.IsAlive
             || !GodotObject.IsInstanceValid(_target) || !_target.IsInsideTree() || _target.IsQueuedForDeletion()
             || (_target is ICombatTarget dead && !CombatTargeting.Active(dead)))
-        { SeparationState.Clear(); Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
-        if (!_actor.Config.MeleeEnabled) Attack?.Cancel();
+        { EngagementState.Clear(); SeparationState.Clear(); Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
+        if (!(_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) Attack?.Cancel();
         else { EnsureAttack(); Attack.Advance(delta); }
         EntityDefinition config = _actor.Config;
         float distanceSquared = _actor.GlobalPosition.DistanceSquaredTo(_target.GlobalPosition);
         if (Attack?.IsSwinging==true) { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
         // Pursuit supplies intent only; the same executor as the player owns contacts and cooldown.
         var profile=config.MeleeAttack ?? _defaultAttack;
-        if (config.MeleeEnabled && Attack!=null && !Attack.Busy && profile!=null && _target is ICombatTarget target
+        if ((config.MeleeEnabled && _combat.EnemyMeleeEnabled) && Attack!=null && !Attack.Busy && profile!=null && _target is ICombatTarget target
             && distanceSquared<=config.DetectionRadius*config.DetectionRadius
             && CombatTargeting.Eligible(_actor,target,profile.TargetFactions)
             && _actor.GlobalPosition.DistanceSquaredTo(target.ClosestHitPoint(_actor.GlobalPosition))<=profile.HitReach*profile.HitReach
@@ -109,6 +122,7 @@ public partial class GroundChase : Node
         if (_navigation==null || distanceSquared > config.DetectionRadius * config.DetectionRadius ||
             distanceSquared <= config.StopDistance * config.StopDistance)
         {
+            if(_navigation==null || distanceSquared>config.DetectionRadius*config.DetectionRadius) EngagementState.Clear();
             SeparationState.Clear();
             _actor.Velocity = Vector2.Zero;
             _repathTimer = 0f;
@@ -117,7 +131,8 @@ public partial class GroundChase : Node
         _repathTimer -= (float)delta;
         if (_repathTimer <= 0f)
         {
-            _path = _navigation.FindPath(_actor.GlobalPosition, _target.GlobalPosition);
+            _destination=useEngagement ? EngagementState.Select(_actor,_target,_navigation,engagement,profile?.HitReach ?? config.StopDistance) : _target.GlobalPosition;
+            _path = _navigation.FindPath(_actor.GlobalPosition, _destination);
             _index = 0;
             _repathTimer = Mathf.Max(0.15f, config.RepathSeconds);
         }
@@ -127,12 +142,12 @@ public partial class GroundChase : Node
                _actor.GlobalPosition.DistanceSquaredTo(_path[_index]) <= waypointRadius * waypointRadius)
             _index++;
         Vector2 goal = _path[_index];
-        if (_index == _path.Length - 1 && goal.DistanceSquaredTo(_target.GlobalPosition) < 30f * 30f)
-            goal = _target.GlobalPosition;
+        if (_index == _path.Length - 1 && goal.DistanceSquaredTo(_destination) < 30f * 30f)
+            goal = _destination;
         Vector2 heading = goal - _actor.GlobalPosition;
         _actor.Velocity = heading.LengthSquared() <= 1f ? Vector2.Zero : heading.Normalized() * config.MoveSpeed * _actor.Stats.Values.MovementSpeedMultiplier;
         Vector2 intent=_actor.Velocity;
-        float fade=Mathf.Clamp((Mathf.Sqrt(distanceSquared)-Mathf.Max(config.StopDistance,config.MeleeEnabled ? profile?.HitReach ?? 0 : 0))/24f,0,1);
+        float fade=Mathf.Clamp((Mathf.Sqrt(distanceSquared)-Mathf.Max(config.StopDistance,(config.MeleeEnabled && _combat.EnemyMeleeEnabled) ? profile?.HitReach ?? 0 : 0))/24f,0,1);
         _actor.Velocity=SeparationState.Blend(_actor,_target,intent,(float)delta,_movement.Enabled && _blockedSeconds<0.5f,fade);
         Vector2 before=_actor.GlobalPosition;
         Vector2 next=_actor.GlobalPosition+_actor.Velocity*(float)delta;
@@ -141,6 +156,7 @@ public partial class GroundChase : Node
         _actor.MoveAndSlide();
         // Retry the static route without steering after sustained poor progress against scenery.
         float progress=(_actor.GlobalPosition-before).Dot(intent.Normalized());
+        EngagementState.Advance((float)delta,progress,intent.Length(),engagement);
         _blockedSeconds=progress<intent.Length()*(float)delta*0.2f ? _blockedSeconds+(float)delta : 0;
         if(_blockedSeconds>0.9f) _blockedSeconds=0;
     }

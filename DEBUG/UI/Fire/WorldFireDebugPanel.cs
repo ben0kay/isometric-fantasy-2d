@@ -5,18 +5,28 @@ public partial class WorldFireDebugPanel : CanvasLayer
 {
     private Node2D _actors, _player;
     private Label _status;
+    private VBoxContainer _body;
     // The World parent finishes generation before this child accepts button presses.
     // =========================================================
     public override void _Ready()
     {
         var world = GetNode<WorldScene>("../.."); _actors = world.ActorsRoot; _player = world.Player;
-        Layer = 21;
-        var panel = new VBoxContainer { OffsetLeft = 730, OffsetTop = 12, OffsetRight = 1190 }; AddChild(panel);
+        SetProcess(false);
+    }
+    // The shared F9 Environment drawer owns placement/visibility; no standalone overlay remains.
+    // =========================================================
+    public void AttachTo(VBoxContainer parent)
+    {
+        if(_body!=null) return;
+        var panel=new VBoxContainer(); _body=panel; parent.AddChild(panel);
         panel.AddChild(new Label { Text = "Production fire — FIRE1 / FIRE2" });
         var ignite = new Button { Text = "Ignite nearest tree", FocusMode = Control.FocusModeEnum.None }; panel.AddChild(ignite); ignite.Pressed += IgniteNearest;
         var reset = new Button { Text = "Reset burnt / burning trees", FocusMode = Control.FocusModeEnum.None }; panel.AddChild(reset); reset.Pressed += ResetAll;
         _status = new Label { Text = "Walk within 320 pixels of a tree." }; panel.AddChild(_status);
     }
+    // Removing this optional tool also removes its externally hosted widgets.
+    // =========================================================
+    public override void _ExitTree() { if(GodotObject.IsInstanceValid(_body)) _body.QueueFree(); }
     // Only this world's registered receivers are eligible; distance uses stable tree roots.
     // =========================================================
     public void IgniteNearest()

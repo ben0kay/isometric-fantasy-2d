@@ -23,6 +23,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     // =========================================================
     public void ReceiveImpact(AttackContact contact) => _hitFeedback=HitFeedback.Emit(this,_hitFeedback,Config.ImpactFeedback,contact);
     public Knockback Reaction { get; } = new();
+    private CombatMasterConfig _combatConfig;
     public bool IsDodging => _dodgeRemaining>0;
     public bool IsHopping => _hopRemaining>0;
     public float HopHeight { get; private set; }
@@ -39,6 +40,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     public override void _EnterTree()
     {
         Config ??= new PlayerMasterConfig();
+        _combatConfig ??= GD.Load<CombatMasterConfig>("res://COMBAT/DefaultCombatConfig.tres");
         Actions=new PlayerActions(); Guard=new DirectionalGuard(Config.ShieldGuard ?? GD.Load<GuardProfile>("res://COMBAT/Defense/DefaultGuard.tres"));
         HealthState = new ActorHealth(Config.MaxHealth); Stats = new ActorStats(Config.CombatStats);
         HealthState.Changed += OnHealthChanged;
@@ -71,6 +73,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     public override void _Ready()
     {
         Config ??= new PlayerMasterConfig();
+        _combatConfig ??= GD.Load<CombatMasterConfig>("res://COMBAT/DefaultCombatConfig.tres");
         _art=GetNode<Sprite2D>("Sprite"); _artOffset=_art.Offset;
         _input = GetNode<PlayerInput>("Input");
         _input.DodgeDoubleTapSeconds = Config.DodgeDoubleTapSeconds;
@@ -87,7 +90,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     // =========================================================
     public void ReceiveReaction(AttackValues attack, Vector2 direction)
     {
-        if (!CombatTargeting.Active(this) || !Reaction.Apply(attack,direction,Config.ReactionImmune,Config.KnockbackResistance,Config.StaggerResistance)) return;
+        if (!CombatTargeting.Active(this) || !Reaction.Apply(attack with { KnockbackDistance=_combatConfig.KnockbackEnabled ? attack.KnockbackDistance : 0, StaggerSeconds=_combatConfig.StaggerEnabled ? attack.StaggerSeconds : 0 },direction,Config.ReactionImmune,Config.KnockbackResistance,Config.StaggerResistance)) return;
         StopGuard(); _dodgeRemaining=0; Actions.End(PlayerAction.Dodge);
         if (attack.InterruptAttack && Reaction.Staggered) GetNodeOrNull<EquippedTool>("EquippedAxe")?.Attack?.Interrupt();
     }
@@ -136,6 +139,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     // =========================================================
     public override void _PhysicsProcess(double delta)
     {
+        Reaction.Suppress(!_combatConfig.KnockbackEnabled,!_combatConfig.StaggerEnabled);
         using var frameTrace = RuntimeFrameTrace.Measure("PlayerMovement.PhysicsProcess");
         if (!HealthState.IsAlive) { Velocity = Vector2.Zero; return; }
         float dt = (float)delta;

@@ -13,6 +13,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
     // =========================================================
     public override void _Ready()
     {
+        VisibilityChanged+=()=>SetProcess(IsVisibleInTree());
         AnchorLeft = 1; AnchorRight = 1; AnchorBottom = 1;
         OffsetLeft = -456; OffsetRight = -16; OffsetTop = 16; OffsetBottom = -16;
         var scroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };

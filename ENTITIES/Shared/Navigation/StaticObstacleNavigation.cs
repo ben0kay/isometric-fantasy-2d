@@ -101,6 +101,10 @@ public sealed class StaticObstacleNavigation
     // =========================================================
     public bool Contains(Vector2 point) => point.IsFinite() && _bounds.HasPoint(point);
 
+    // Exact candidate cells must be walkable; engagement must not snap a point through nearby scenery.
+    // =========================================================
+    public bool IsWalkable(Vector2 point) => _grid!=null && Contains(point) && !_grid.IsPointSolid(ToCell(point));
+
     #region Lookup
     // Map world coordinates to bounded grid cells without relying on active scenes.
     // =========================================================

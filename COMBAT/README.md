@@ -15,7 +15,7 @@ Shared combat resolution for player, creatures, enemies and NPCs: damage, hit te
 
 ## Conventions
 
-- `CombatMasterConfig.cs` and `DefaultCombatConfig.tres` are **blank placeholders**; don't add settings before owning mechanics are designed.
+- `CombatMasterConfig.cs` / `DefaultCombatConfig.tres` expose independent enemy-melee, knockback, stagger and combat-impact-particle masters. F9 → Combat edits these live in memory and restores the original values when its panel unloads. Turning push/stagger Off suppresses that existing reaction axis on the next motor tick; impact Off stops new bursts while existing particles finish.
 - Use shared logic and data-driven definitions when it reduces duplication; keep clearly specialized systems in their own modules.
 - Folder names and documentation are navigation aids, not a promise that gameplay is already implemented.
 

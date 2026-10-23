@@ -7,7 +7,9 @@ public partial class EnvironmentDebugPanel : CanvasLayer
 {
     [Export] public NodePath EnvironmentPath { get; set; } = "../Environment";
     private EnvironmentRuntime _environment;
-    private PanelContainer _panel;
+    private DebugCategoryMenu _panel;
+    private VBoxContainer _environmentControls;
+    private double _refreshTimer;
     private Label _status;
     private WorldDiagnosticsPanel _diagnostics;
     private readonly List<Action> _refresh = new();
@@ -30,12 +32,12 @@ public partial class EnvironmentDebugPanel : CanvasLayer
             _diagnostics = new WorldDiagnosticsPanel { Name = "WorldDiagnostics", World = world, Environment = _environment };
             AddChild(_diagnostics); break;
         }
-        _panel = new PanelContainer { OffsetLeft = 16, OffsetTop = 16, OffsetRight = 366, OffsetBottom = 940 };
+        _panel=new DebugCategoryMenu { Name="CategoryMenu",OffsetLeft=16,OffsetTop=16,OffsetRight=366,OffsetBottom=940 };
         AddChild(_panel);
-        var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(340, 0), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
-        _panel.AddChild(scroll);
-        var controls = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill }; scroll.AddChild(controls);
-        controls.AddChild(new Label { Text = "Environment controls — F9 to hide" });
+        var controls=_panel.AddCategory("Environment"); _environmentControls=controls;
+        var combat=_panel.AddCategory("Combat"); combat.AddChild(new CombatDebugPanel());
+        _panel.CategoryChanged+=name=> { SetProcess(_panel.Visible && name=="Environment"); if(_diagnostics!=null) _diagnostics.Visible=_panel.Visible && name=="Environment"; };
+        _panel.SelectCategory("Environment");
         _status = new Label(); controls.AddChild(_status);
         BiomeEnvironmentProfile s = _environment.Settings;
         var time = Section(controls, "Time", true);
@@ -85,6 +87,11 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Toggle(snow, "Falling snow", () => s.Snow.Snowfall, v => s.Snow.Snowfall = v);
         Slider(snow, "Snowfall intensity", 0, 1, 0.01, () => s.Snow.SnowfallRate, v => s.Snow.SnowfallRate = (float)v);
         Toggle(snow, "Auto accumulate / melt", () => s.Snow.AutoAccumulate, v => s.Snow.AutoAccumulate = v);
+        var fire=Section(controls,"Tree fire",false);
+        GetParent().GetNodeOrNull<WorldFireDebugPanel>("FireDebugPanel")?.AttachTo(fire);
+        GetViewport().SizeChanged+=ResizePanel; ResizePanel();
+        _panel.VisibilityChanged+=()=>SetProcess(_panel.Visible && _panel.ActiveCategory=="Environment");
+
     }
 
     // Sections collapse without pausing their underlying production effects.
@@ -125,17 +132,23 @@ public partial class EnvironmentDebugPanel : CanvasLayer
     {
         using var frameTrace = RuntimeFrameTrace.Measure("EnvironmentDebugPanel.Process");
         if (_panel == null || !GodotObject.IsInstanceValid(_environment)) return;
-        _panel.OffsetBottom = Mathf.Max(200f, GetViewport().GetVisibleRect().Size.Y - 16f);
-        if (!_panel.Visible) return;
+        if (!_panel.Visible || !_environmentControls.IsVisibleInTree()) return;
+        _refreshTimer+=delta; if(_refreshTimer<0.25) return; _refreshTimer=0;
         _syncing = true; foreach (Action refresh in _refresh) refresh(); _syncing = false;
         _status.Text = $"{_environment.Clock.Hour:00.00} h | Rain {_environment.Weather.Rain:P0}\nSettled snow {_environment.Snow.Coverage:P0}";
     }
+    // Resize only on viewport changes; no per-frame layout writes.
+    // =========================================================
+    private void ResizePanel()
+    { _panel.OffsetBottom=Mathf.Max(180,GetViewport().GetVisibleRect().Size.Y-16); _panel.OffsetRight=Mathf.Min(366,GetViewport().GetVisibleRect().Size.X-16); }
+    // =========================================================
+    public override void _ExitTree() { if(_panel!=null) GetViewport().SizeChanged-=ResizePanel; }
     // Hiding a panel is a developer affordance; effects keep running with it absent entirely.
     // =========================================================
     public override void _UnhandledInput(InputEvent @event)
     {
         if (@event is InputEventKey key && key.Pressed && !key.Echo && key.Keycode == Key.F9 && _panel != null)
-        { _panel.Visible = !_panel.Visible; if (_diagnostics != null) _diagnostics.Visible = _panel.Visible; GetViewport().SetInputAsHandled(); }
+        { _panel.Visible = !_panel.Visible; if (_diagnostics != null) _diagnostics.Visible = _panel.Visible && _panel.ActiveCategory=="Environment"; GetViewport().SetInputAsHandled(); }
     }
     #endregion
 }

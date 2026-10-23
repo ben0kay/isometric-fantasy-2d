@@ -29,3 +29,9 @@ See [ES1 validation and remaining acceptance](ES1_Validation.md).
 ## ES0–ES4 — Entity separation roadmap
 
 [EntitySeparationPlan.md](EntitySeparationPlan.md) tracks reusable local crowd separation, species-specific Resource profiles, optional engagement positioning, and five-skeleton validation. **ES0 source audit and limited five-skeleton headless baseline are complete**; [findings and ES1 proposal](ES0_Audit.md). ES1 local steering is implemented; Windows feel/performance acceptance remains pending. AC body blocking remains independent and C3.2 knockback/stagger must retain movement priority.
+
+## ES3 engagement positioning
+
+`MovementMasterConfig` → Engagement Enabled overrides all profiles. `EngagementDefaults` contains shared Direct/Spread settings; `EntityDefinition.Engagement` optionally overrides those defaults. `AI/EngagementPositioning.cs` chooses stable reserved approach points before the existing motor requests its static route. Existing eligible attacks run first, so reaching a position is never a prerequisite to attack. Reaction/death/disable/target change/unload release claims.
+
+F9 → Combat exposes independent separation/engagement masters, Direct/Spread, numeric ES3 tuning and persistence/movement-threshold/blocked-fallback/detour-limit switches. It also controls shared knockback, stagger, enemy melee and combat impact particles. Sliders edit an in-memory copy of shared engagement defaults; authored per-entity overrides remain independent. Closing F9 preserves the trial settings; Reset or unloading the debug panel restores them. See [ES3 and HUD validation](ES3_Validation.md).

@@ -7,3 +7,5 @@
 Roaming, fleeing, guarding, populations and simulation LOD remain future work; this is not an A-Life system or a dedicated skeleton controller.
 
 AC2: suspension additionally clears velocity/cached pursuit route. Moving enemies check the active navigation rectangle and loaded destination chunk before their existing MoveAndSlide. They do not request the player camera preload ring. One navigation grid is shared by the authored test actors; rebuild cadence stays with the existing streamer. Runtime acceptance remains pending.
+
+ES3: `EngagementPositioning.cs` and `EngagementProfile.cs` provide bounded Direct/Spread approach selection and transient target-scoped reservations. They never move bodies or own callbacks. GroundChase consumes the chosen destination after existing attack/reaction gates. Global settings live under Shared/Movement/MovementMasterConfig; optional per-entity overrides live on EntityDefinition. See [ES3 validation](../Movement/ES3_Validation.md).

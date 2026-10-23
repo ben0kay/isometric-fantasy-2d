@@ -1,6 +1,6 @@
 # ES0–ES4 — Shared Entity Separation and Engagement Positioning
 
-> **Status: ES0 audit COMPLETE (23 October 2026); ES1 IMPLEMENTED / visual acceptance pending; ES2–ES4 PLANNED.** See [ES0 findings and ES1 proposal](ES0_Audit.md). ES1 runtime/results are recorded in [ES1 validation](ES1_Validation.md). **ES** means Entity Separation, distinct from AC actor collision and C3 combat feedback. Implement only the user-requested slice; update status after real validation.
+> **Status: ES0 audit COMPLETE (23 October 2026); ES1 and ES3 IMPLEMENTED / visual acceptance pending; ES2 and ES4 PLANNED.** See [ES0 findings and ES1 proposal](ES0_Audit.md). ES1 runtime/results are recorded in [ES1 validation](ES1_Validation.md). **ES** means Entity Separation, distinct from AC actor collision and C3 combat feedback. Implement only the user-requested slice; update status after real validation.
 
 ## Problem and goals
 
@@ -33,7 +33,7 @@ File names are proposals, not requirements to add unused placeholders. Shared be
 | **ES0 — Audit** | Inspect pursuit, actor/query indexing, existing collisions, C3.2 priority, streaming limits | Complete: source audit + limited five-skeleton headless baseline; Windows profiling pending |
 | **ES1 — Local separation** | Bounded nearby-actor steering blended with existing chase velocity | Implemented; focused headless checks pass, crowd-feel acceptance pending |
 | **ES2 — Species profiles** | Resource-driven distance/strength/personality with optional opt-out | Planned |
-| **ES3 — Engagement positioning** | Optional distributed approach/attack positions around target | Planned |
+| **ES3 — Engagement positioning** | Optional distributed approach/attack positions around target | Implemented: Direct/Spread, bounded reservations and fallback; visual acceptance pending |
 | **ES4 — Regression and performance validation** | Multi-enemy, narrow terrain, chunk lifecycle, combat, profiling and handoff | Planned |
 
 ### ES0 — Audit current movement and available neighbors

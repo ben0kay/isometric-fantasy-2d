@@ -12,7 +12,7 @@ public partial class HitFeedback : Node2D
     // =========================================================
     public static HitFeedback Emit(Node2D owner,HitFeedback current,HitFeedbackProfile profile,AttackContact contact)
     {
-        if (profile?.Enabled!=true || profile.Particles==null || profile.Count<=0 || contact.Damage?.AppliedDamage is not >0
+        if (!GD.Load<CombatMasterConfig>("res://COMBAT/DefaultCombatConfig.tres").ImpactFeedbackEnabled || profile?.Enabled!=true || profile.Particles==null || profile.Count<=0 || contact.Damage?.AppliedDamage is not >0
             || contact.Target!=owner || !contact.Position.IsFinite() || !contact.Direction.IsFinite()
             || !GodotObject.IsInstanceValid(owner) || !owner.IsInsideTree() || owner.IsQueuedForDeletion() || !owner.CanProcess()) return current;
         if (!GodotObject.IsInstanceValid(current))

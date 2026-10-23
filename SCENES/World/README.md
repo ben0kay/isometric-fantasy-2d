@@ -14,7 +14,7 @@ World composes player, authored Skeleton Basic combat practice (shared chase/mel
 
 ## Controls, saves and acceptance
 
-- **F7** macro map/reservations; **F9** environment/performance diagnostics; removable Fire buttons ignite/reset nearby trees. **F8** explicit campaign save, **Esc** campaign Resume / Save & Main Menu / Save & Quit. F6 direct World is unsaved.
+- **F7** macro map/reservations; **F9** exclusive Environment/Combat debug drawers; Environment → Tree fire ignites/resets nearby trees. **F8** explicit campaign save, **Esc** campaign Resume / Save & Main Menu / Save & Quit. F6 direct World is unsaved.
 - **P4** Continue restores frozen map/features, player position/HP, clock, supported chunk edits/burns and the authored test skeleton. Earlier original P4 functional save/profile checks were **accepted by the user** after Copilot's 31/33 automated tests.
 - **SO2** Godot 4.7.2 build/import, scene ownership (60 assertions), SO1→SO2 real disk restore and P4 write/read **39/33** automated checks passed. Newer [C1 validation](../../COMBAT/C1_Validation.md) extended save checks to **43/39**. Counts are revision-specific.
 - **Open:** visually verify Y-sort/seams, Windows frame pacing and large-save performance, and perform newer SO2/C1 graphical/UI regression testing. Headless passes are not proof of FPS. See [SO2 manual checklist](SO2_Copilot_Handoff.md) and [streaming evidence](../../WORLD/Runtime/Streaming/README.md).

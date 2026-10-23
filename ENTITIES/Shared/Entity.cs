@@ -15,6 +15,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     // =========================================================
     public void ReceiveImpact(AttackContact contact) => _hitFeedback=HitFeedback.Emit(this,_hitFeedback,Config.ImpactFeedback,contact);
     public Knockback Reaction { get; } = new();
+    private CombatMasterConfig _combatConfig;
     public int Health => HealthState.Current;
 
     private Sprite2D _sprite;
@@ -39,6 +40,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     public override void _Ready()
     {
         Config ??= new EntityDefinition();
+        _combatConfig ??= GD.Load<CombatMasterConfig>("res://COMBAT/DefaultCombatConfig.tres");
         HealthState = new ActorHealth(Config.MaxHealth);
         Stats = new ActorStats(Config.CombatStats);
         HealthState.Changed += OnHealthChanged;
@@ -98,7 +100,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     // =========================================================
     public void ReceiveReaction(AttackValues attack, Vector2 direction)
     {
-        if (!CombatTargeting.Active(this) || !Reaction.Apply(attack,direction,Config.ReactionImmune,Config.KnockbackResistance,Config.StaggerResistance)) return;
+        if (!CombatTargeting.Active(this) || !Reaction.Apply(attack with { KnockbackDistance=_combatConfig.KnockbackEnabled ? attack.KnockbackDistance : 0, StaggerSeconds=_combatConfig.StaggerEnabled ? attack.StaggerSeconds : 0 },direction,Config.ReactionImmune,Config.KnockbackResistance,Config.StaggerResistance)) return;
         if (attack.InterruptAttack && Reaction.Staggered) _chase?.Attack?.Interrupt();
         _chase?.WakeReaction();
     }

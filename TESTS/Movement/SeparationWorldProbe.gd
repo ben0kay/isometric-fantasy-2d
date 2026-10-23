@@ -4,7 +4,8 @@ func _initialize(): call_deferred("run")
 func run():
     var movement=load("res://ENTITIES/Shared/Movement/DefaultMovementConfig.tres")
     movement.set("Enabled",not OS.get_cmdline_user_args().has("--separation-off"))
-    print("SEPARATION enabled=",movement.get("Enabled"))
+    movement.set("EngagementEnabled",not OS.get_cmdline_user_args().has("--engagement-off"))
+    print("SEPARATION enabled=",movement.get("Enabled")," ENGAGEMENT enabled=",movement.get("EngagementEnabled"))
     var world=load("res://SCENES/World/World.tscn").instantiate()
     world.set("Config",world.get("Config").duplicate())
     world.get("Config").set("RandomSeedOnLoad",false)
@@ -46,6 +47,9 @@ func run():
             var distances=[]
             for a in actors: distances.append(snapped(a.global_position.distance_to(player.global_position),0.1))
             print("ES1 t=",(frame+1)/60.0," distances=",distances)
+    var contacts=[]
+    for a in actors: contacts.append(a.get_node("GroundChase").get("ConfirmedMeleeContacts"))
+    print("ES3 confirmed_contacts=",contacts)
     physics_ms.sort()
     var sum=0.0
     for ms in physics_ms: sum+=ms
