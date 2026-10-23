@@ -33,7 +33,7 @@ public partial class ValidateGroundStack : Node
             layer.Tint=new Color(1f,0.65f,0.8f,1f);
             using var overlay = new BiomeGroundLayer { Id="extra",Label="Optional",Surface=surface };
             stack.OverlayLayers.Add(overlay); Check(third.Surface == surface,"Disabled overlay preserves base");
-            overlay.Enabled=true; Reject(stack); overlay.Enabled=false;
+            overlay.Enabled=true; Check(third.Surface==surface,"Enabled overlay validates without replacing base"); overlay.Enabled=false;
             overlay.Coverage=float.NaN; Reject(stack); overlay.Coverage=0.25f;
             overlay.PatchSize=0; Reject(stack); overlay.PatchSize=320;
             overlay.Id="base"; Reject(stack); overlay.Id="extra";

@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Resource" path="res://TESTS/Terrain/Fixtures/Soil.tres" id="soil"]
+[resource]
+script = ExtResource("biome")
+Id = "fixture.soil"
+DisplayName = "Soil (legacy fallback)"
+Surface = ExtResource("soil")

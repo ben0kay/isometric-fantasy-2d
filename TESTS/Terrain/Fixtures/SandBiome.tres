@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundLayer.cs" id="layer"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundStack.cs" id="stack"]
+[ext_resource type="Resource" path="res://TESTS/Terrain/Fixtures/Sand.tres" id="sand"]
+[ext_resource type="Resource" path="res://TESTS/Terrain/Fixtures/Soil.tres" id="soil"]
+[sub_resource type="Resource" id="base"]
+script = ExtResource("layer")
+Id = "base"
+Label = "Sand base"
+Surface = ExtResource("sand")
+[sub_resource type="Resource" id="soil_layer"]
+script = ExtResource("layer")
+Id = "soil"
+Label = "Soil patches"
+Surface = ExtResource("soil")
+Enabled = true
+Coverage = 0.6
+Opacity = 0.85
+PatchSize = 180.0
+EdgeSoftness = 0.12
+WarpStrength = 0.4
+SeedSalt = 101
+[sub_resource type="Resource" id="mineral_layer"]
+script = ExtResource("layer")
+Id = "mineral"
+Label = "Mineral breakup"
+Surface = ExtResource("soil")
+Tint = Color(0.7, 0.75, 0.85, 1)
+Enabled = true
+Coverage = 0.38
+Opacity = 0.65
+PatchSize = 80.0
+EdgeSoftness = 0.08
+WarpStrength = 0.65
+SeedSalt = 202
+[sub_resource type="Resource" id="ground"]
+script = ExtResource("stack")
+DefiningBaseGround = SubResource("base")
+OverlayLayers = Array[ExtResource("layer")]([SubResource("soil_layer"), SubResource("mineral_layer")])
+[resource]
+script = ExtResource("biome")
+Id = "fixture.sand"
+DisplayName = "Sand with two overlays"
+GroundStack = SubResource("ground")

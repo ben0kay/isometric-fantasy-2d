@@ -9,3 +9,5 @@ GroundSurface now accepts AdjacentBiomeLayout and binds both palette/detail prof
 GS1: Oak/Pink now author inline GroundStack Resources with a clearly labelled required base and empty optional overlays. Surface remains a compatibility adapter; renderers are unchanged. See [GS0/GS1 validation](GS0_GS1_Validation.md).
 
 Pre-GS2 tint addition: biome-owned base Tint now works in streamed and preview rendering, defaults to white, and leaves source profiles untouched. See WORLD/Terrain/Ground/Surfaces/TINT_Validation.md for behavior and pending validation.
+
+GS2/GS3: streamed rendering now compiles GroundStack directly and supports two opt-in ordered organic overlays, distinct-art biome blending and reusable detail styles. Production Oak/Pink remain base-only. Preview retains its original base-only path. See [validation and practice fixture](GS2_GS3_Validation.md); engine/Windows/performance acceptance pending.

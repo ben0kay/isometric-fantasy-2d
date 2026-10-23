@@ -1,6 +1,6 @@
 # Layered Ground Surfaces — Production Implementation Plan
 
-> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2–GS6 not implemented.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
+> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2/GS3 implemented, awaiting local engine/visual/performance validation; GS4–GS6 not implemented.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
 >
 > **Absolute priority: DO NOT change how Oak Forest currently looks by default.** First extract its existing ground behaviour into a reusable layered architecture; only later offer optional, individually enabled layers for dirt and rock breakup. The supplied illustrated Oak Forest scene is art-direction inspiration, not an exact terrain shader replacement.
 >
@@ -32,7 +32,7 @@ Target Oak example after optional authoring:
 
 A future desert should similarly pick Sand as its defining base and reuse the same mechanics with different overlay Resource references/parameters, with no Desert-specific C# class.
 
-## 2. Current repository findings — verified 23 October 2026
+## 2. Historical pre-GS1 repository findings — verified 23 October 2026
 
 - `WORLD/Biomes/Shared/WorldBiomeDefinition.cs` currently exports one `GroundSurfaceProfile Surface`. `WORLD/Biomes/Definitions/OakForest/Biome.tres` selects `ForestGrass.tres`; Pink Meadow selects `PinkMeadowGrass.tres`.
 - `WORLD/Terrain/Ground/Surfaces/Profiles/GroundSurfaceProfile.cs` holds `Texture`, `Material`, four colour values (`BaseColour`, `ShadeColour`, `FreshColour`, `DryColour`), `Variation`, `PatchSize` and `DetailStrength`. Both existing profiles use `grass.svg` and the shared grass material/noise; Pink overrides its colour palette.
@@ -96,6 +96,8 @@ A future desert should similarly pick Sand as its defining base and reuse the sa
 
 ### GS2 — Streamed renderer migration with pixel-level base parity
 
+**Implemented; engine checks and target visual acceptance pending.** See [GS2/GS3 evidence](GS2_GS3_Validation.md).
+
 1. Make `StreamedGroundPalette.Build` and related streamed ground code read **Base Ground** through the new schema. Keep the exact current palette-map values, 32x32 artwork atlas behaviour, pixel snapping, noise frequency, base shade/fresh/dry blending, 0.22 artwork influence and fine-detail computation.
 2. Preserve shared world-owned material and per-chunk clipped quad ownership; no new tiles, scene hierarchy or per-frame update callback.
 3. Don't accidentally convert the preview renderer when doing streamed work; either retain a fallback or intentionally verify that a new preview adapter reproduces the old appearance.
@@ -104,6 +106,8 @@ A future desert should similarly pick Sand as its defining base and reuse the sa
 **Done when:** with zero optional overlays, **Oak looks exactly as before**, Pink Meadow unchanged, streamed world/saves/preview functional. This is a mandatory user-accepted parity gate before aesthetic layering.
 
 ### GS3 — Up to two opt-in organic surface overlays
+
+**Implemented; engine checks and target performance/visual acceptance pending.** Production layers remain OFF/empty; see [fixture and evidence](GS2_GS3_Validation.md).
 
 1. Implement sequential overlay A/B blending on the existing streamed ground quad, each controlled by biome Resource fields: profile/type, enabled, coverage, opacity, patch size, warp, mask threshold and edge softness.
 2. Use stable world-space noise and independent masks. Properly support distinct source artwork and surface types (Dirt/Stone/Sand/Grass) without a grass-only composition hardwired for every type. Keep generalized shader includes/reusable helpers.

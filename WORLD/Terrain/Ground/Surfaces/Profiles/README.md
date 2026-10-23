@@ -2,3 +2,5 @@
 GroundSurfaceProfile owns texture, material, palette and surface detail values. ForestGrass.tres matches the DEBUG Oak Forest palette. Biomes reference profiles; shader code has no species/biome identity.
 
 PinkMeadowGrass.tres preserves the debug pink palette with the same shared ground artwork/material/noise. Both profiles can tune palette, patch scale, variation and fine-detail strength independently.
+
+GS3 profiles can choose Organic (existing default), Granular or Mineral detail plus ArtworkInfluence (existing default 0.22). The streamed renderer supports shared data composition, not arbitrary shader code. Existing profiles/resources are unchanged; sand/soil fixtures live only under TESTS/Terrain.

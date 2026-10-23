@@ -14,3 +14,5 @@ P1 macro generation: each definition now includes enabled/weight/target-diameter
 P3: streamed populations use explicit InstancesPerMillionUnits; Count/cluster settings retain preview-only semantics. Scale/mirror/variant settings remain shared. All enabled biome definitions supply palettes, textures and local scenery to arbitrary regions. Automatic regional environment-profile blending remains future work; see WORLD/Runtime/Streaming/README.md.
 
 GS1: Oak/Pink now author inline GroundStack Resources with a clearly labelled required base and empty optional overlays. Surface remains a compatibility adapter; renderers are unchanged. See [GS0/GS1 validation](../Terrain/Ground/Surfaces/GS0_GS1_Validation.md).
+
+GS2/GS3: streamed setup reads GroundStack directly (legacy Surface remains fallback). Biomes may author at most two ordered enabled organic overlays; existing production arrays stay empty. Ground surfaces/overlays belong in WORLD/Terrain, decorative grass objects remain Content. See ../Terrain/Ground/Surfaces/GS2_GS3_Validation.md.

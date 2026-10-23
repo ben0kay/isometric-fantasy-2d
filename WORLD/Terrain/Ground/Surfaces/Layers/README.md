@@ -1,9 +1,11 @@
-# Biome ground stacks — GS1
+# Biome ground stacks — GS1–GS3
 
-Each biome authors one inline GroundStack: required DefiningBaseGround plus an ordered array of zero to two overlays. Each layer references a canonical GroundSurfaceProfile and has a local unique ID and readable label. No extra resource file per layer is required.
+Each biome authors an inline GroundStack with one required DefiningBaseGround and zero to two ordered OverlayLayers. A layer references a canonical GroundSurfaceProfile, local unique ID and readable label. No extra .tres per layer is required. Base fills 100%; its overlay-only fields never hide it.
 
-Base fills 100% regardless of overlay-only fields. Existing Oak/Pink reference the original profiles unchanged and have no overlays. Enabled overlays are rejected until GS3 supplies rendering; coverage determines mask threshold later, avoiding duplicate threshold/coverage authorities. Each layer now exposes Tint in its biome-owned entry. White preserves the source profile; RGB multiplies the completed base appearance, including artwork and fine detail. Alpha must be 1. Existing profiles retain their palettes; tint is an additional colour choice, not an exact replacement of the palette.
+Tint is biome-owned, opaque RGB with white neutral. It multiplies completed surface artwork/palette/detail, rather than recolouring the shared Resource. Surface profiles choose source texture, palette, Organic/Granular/Mineral detail and artwork influence. Current Grass profiles remain unchanged.
 
-WorldBiomeDefinition.Surface is a temporary compatibility adapter: a configured stack wins; a missing stack uses legacy Surface. An invalid configured stack throws rather than falling back. Both existing renderers apply base tint; the broader stack migration remains GS2. Validation allocates only during surface resolution at setup; no frame callback, node, material, shader or per-tile overhead is introduced. GS2 can compile/cache validated data for rendering.
+For overlays set Enabled, Coverage, Opacity, PatchSize, EdgeSoftness, WarpStrength and SeedSalt. Coverage biases the noise threshold; opacity controls blend strength. Array order is A then B; salts and slot offsets separate the masks. Disabled, zero-coverage or zero-opacity slots do not render. All original production arrays remain empty. Use the test fixture before authoring production overlays.
 
-Inspector ranges are also checked in code. Missing base/profile/art/material, duplicate IDs, null arrays/entries, excess slots, nonfinite/out-of-range overlay values and unsupported enabled overlays reject. Shared Resources are never changed by resolution.
+CompiledGroundBiome resolves stacks once during streamed setup, with Surface only for legacy fallback. GroundOverlayPalette packs two rows per biome into a single setup-time GPU table. No idle callbacks, per-tile objects or runtime Resource writes. GroundSurfaceProfile.Validate and stack validation reject missing data, invalid ranges/nonfinite values, duplicate IDs, null slots, too many layers and unsupported streamed materials.
+
+The old adjacent preview remains base-only with tint. Arbitrary custom shaders are not interpreted by the streamed data renderer; use the shared material and supported detail styles. See [GS2/GS3 evidence and local checks](../GS2_GS3_Validation.md). GS4 F9 controls are a later phase.

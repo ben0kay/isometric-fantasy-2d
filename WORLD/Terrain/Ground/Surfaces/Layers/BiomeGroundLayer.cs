@@ -1,4 +1,4 @@
-// One inline use of a shared surface; overlay settings are data only until GS3.
+// One biome-owned surface use; at most two optional streamed organic overlays.
 using Godot;
 using System;
 
@@ -11,7 +11,7 @@ public partial class BiomeGroundLayer : Resource
     [Export] public GroundSurfaceProfile Surface { get; set; }
     [ExportGroup("Biome tint - white preserves the surface")]
     [Export] public Color Tint { get; set; } = Colors.White;
-    [ExportGroup("Optional overlay only - reserved for GS3")]
+    [ExportGroup("Optional overlay only")]
     [Export] public bool Enabled { get; set; } = false;
     [Export(PropertyHint.Range,"0,1")] public float Coverage { get; set; } = 0.25f;
     [Export(PropertyHint.Range,"0,1")] public float Opacity { get; set; } = 1f;
@@ -28,13 +28,14 @@ public partial class BiomeGroundLayer : Resource
             throw new ArgumentException("Ground layers require an ID, label and surface.");
         if (Surface.Texture == null || Surface.Material == null)
             throw new ArgumentException("Ground layer surfaces require texture and material.");
+        Surface.Validate();
         RequireRange(Tint.R,0,1); RequireRange(Tint.G,0,1); RequireRange(Tint.B,0,1);
         if (!float.IsFinite(Tint.A) || Tint.A != 1f)
             throw new ArgumentException("Ground tint must be opaque; it changes colour, not ground coverage.");
         if (isBase) return; // Base always fills 100%; overlay fields never affect it.
         RequireRange(Coverage,0,1); RequireRange(Opacity,0,1); RequireRange(PatchSize,80,8192);
         RequireRange(EdgeSoftness,0,1); RequireRange(WarpStrength,0,1);
-        if (Enabled) throw new ArgumentException("Active ground overlays require GS3; keep them disabled in GS1.");
+
     }
     // Inspector hints do not protect programmatic/resource-file input.
     // =========================================================

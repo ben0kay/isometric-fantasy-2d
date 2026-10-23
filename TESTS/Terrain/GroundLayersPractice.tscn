@@ -1,0 +1,4 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://TESTS/Terrain/GroundLayersPractice.cs" id="script"]
+[node name="GroundLayersPractice" type="Node2D"]
+script = ExtResource("script")

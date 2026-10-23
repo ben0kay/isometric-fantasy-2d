@@ -1,5 +1,8 @@
 // Surface data only: shared shaders render palettes without knowing biome names.
 using Godot;
+using System;
+
+public enum GroundDetailStyle { Organic, Granular, Mineral }
 
 [GlobalClass]
 public partial class GroundSurfaceProfile : Resource
@@ -15,4 +18,22 @@ public partial class GroundSurfaceProfile : Resource
     [Export] public float Variation { get; set; } = 0.7f;
     [Export] public float PatchSize { get; set; } = 320f;
     [Export] public float DetailStrength { get; set; } = 0.065f;
+    [ExportGroup("Shared streamed composition")]
+    [Export] public GroundDetailStyle DetailStyle { get; set; } = GroundDetailStyle.Organic;
+    [Export(PropertyHint.Range,"0,1")] public float ArtworkInfluence { get; set; } = 0.22f;
+
+    // Fail during compilation, not after uploading NaN/invalid data to the GPU.
+    // =========================================================
+    public void Validate()
+    {
+        if (Texture == null || Material == null || !Enum.IsDefined(DetailStyle)
+            || !float.IsFinite(Variation) || Variation < 0 || Variation > 1
+            || !float.IsFinite(PatchSize) || PatchSize < 80 || PatchSize > 8192
+            || !float.IsFinite(DetailStrength) || DetailStrength < 0 || DetailStrength > 1
+            || !float.IsFinite(ArtworkInfluence) || ArtworkInfluence < 0 || ArtworkInfluence > 1)
+            throw new ArgumentException("Invalid ground surface appearance settings.");
+        foreach (var colour in new[] { BaseColour,ShadeColour,FreshColour,DryColour })
+            if (!float.IsFinite(colour.R) || !float.IsFinite(colour.G) || !float.IsFinite(colour.B) || !float.IsFinite(colour.A))
+                throw new ArgumentException("Ground palettes must be finite.");
+    }
 }

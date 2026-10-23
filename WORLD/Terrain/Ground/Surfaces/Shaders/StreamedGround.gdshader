@@ -13,6 +13,13 @@ uniform sampler2D map_tint : filter_linear, repeat_disable;
 uniform vec2 map_origin;
 uniform vec2 map_grid_size;
 uniform float map_cell_size;
+uniform bool blend_ground_art = false;
+uniform bool has_surface_styles = false;
+uniform sampler2D map_styles : filter_linear, repeat_disable;
+uniform bool has_ground_overlays = false;
+uniform sampler2D overlay_table : filter_nearest, repeat_disable;
+uniform float overlay_rows = 1.0;
+#include "res://WORLD/Terrain/Ground/Surfaces/Shaders/LayeredSurface.gdshaderinc"
 varying vec2 ground_world;
 varying vec4 ground_tint;
 void vertex() { ground_world = (MODEL_MATRIX * vec4(VERTEX,0.0,1.0)).xy; ground_tint = COLOR; }
@@ -30,11 +37,20 @@ void fragment() {
     float art_index = texture(map_settings,nearest_lookup).a;
     vec2 art_uv = (vec2(mod(art_index,art_columns),floor(art_index/art_columns))+fract(ground_world/32.0))/art_columns;
     vec4 artwork = texture(ground_art,art_uv);
-    surface = mix(surface,artwork.rgb,0.22*artwork.a);
+    if (blend_ground_art) artwork = blended_ground_art(lookup,ground_world);
+    float influence = has_surface_styles ? texture(map_styles,lookup).r : 0.22;
+    surface = mix(surface,artwork.rgb,influence*artwork.a);
     vec2 pixel = floor(ground_world)+vec2(0.5);
     float detail = texture(ground_noise,pixel/48.0+vec2(0.23,0.59)).r;
     float grain = texture(ground_noise,pixel/13.0+vec2(0.71,0.19)).r;
-    surface *= 1.0 + ((smoothstep(0.48,0.78,detail)-0.5)+(grain-0.5)*0.45)*settings.b;
+    float grain_value = (smoothstep(0.48,0.78,detail)-0.5)+(grain-0.5)*0.45;
+    if (has_surface_styles) {
+        vec2 styles = texture(map_styles,lookup).gb;
+        grain_value = grain_value*(1.0-styles.r-styles.g)
+            +material_grain(ground_world,1.0)*styles.r+material_grain(ground_world,2.0)*styles.g;
+    }
+    surface *= 1.0 + grain_value*settings.b;
     if (has_ground_tint) surface *= texture(map_tint,lookup).rgb;
+    if (has_ground_overlays) surface = blended_ground_layers(surface,lookup,ground_world);
     COLOR = vec4(surface,1.0) * ground_tint;
 }
