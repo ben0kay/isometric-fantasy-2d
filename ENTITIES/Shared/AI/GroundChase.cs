@@ -6,6 +6,9 @@ public partial class GroundChase : Node
     public bool Enabled { get; set; }
     public AttackExecution Attack { get; private set; }
     private AttackProfile _defaultAttack;
+    private MovementMasterConfig _movement;
+    public Separation SeparationState { get; } = new();
+    private float _blockedSeconds;
     private Entity _actor;
     private CharacterBody2D _target;
     private StaticObstacleNavigation _navigation;
@@ -18,11 +21,13 @@ public partial class GroundChase : Node
     public override void _Ready()
     {
         _actor = GetParent<Entity>();
+        _movement=GD.Load<MovementMasterConfig>("res://ENTITIES/Shared/Movement/DefaultMovementConfig.tres");
         SetPhysicsProcess(Enabled);
     }
     // =========================================================
     public void ConfigureNavigation(CharacterBody2D target, StaticObstacleNavigation navigation)
     {
+        SeparationState.Clear(); _blockedSeconds=0;
         _target = target;
         _navigation = navigation;
         _repathTimer = 0f;
@@ -44,7 +49,7 @@ public partial class GroundChase : Node
     // =========================================================
     public void Stop()
     {
-        Attack?.Cancel(); _actor?.Reaction.Clear();
+        SeparationState.Clear(); _blockedSeconds=0; Attack?.Cancel(); _actor?.Reaction.Clear();
         SetPhysicsProcess(false);
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity = Vector2.Zero;
     }
@@ -53,12 +58,12 @@ public partial class GroundChase : Node
     public override void _Notification(int what)
     {
         if (what!=NotificationDisabled) return;
-        _actor?.Reaction.Clear(); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
+        SeparationState.Clear(); _blockedSeconds=0; _actor?.Reaction.Clear(); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero;
     }
     // Dispose contact-query resources on death cleanup/unload.
     // =========================================================
-    public override void _ExitTree() => Attack?.Dispose();
+    public override void _ExitTree() { Attack?.Dispose(); SeparationState.Dispose(); }
     #endregion
     #region Pursuit
     // Cached static-obstacle route, equivalent to the original Basic Skeleton chasing.
@@ -72,6 +77,7 @@ public partial class GroundChase : Node
             Vector2 recoil=_actor.Reaction.Advance((float)delta);
             if (staggered || recoil!=Vector2.Zero)
             {
+                SeparationState.Clear(); _blockedSeconds=0;
                 if (_actor.Config.MeleeEnabled) Attack?.Advance(delta); else Attack?.Cancel();
                 Vector2 reactionNext=_actor.GlobalPosition+recoil*(float)delta;
                 if ((_navigation==null || _navigation.Contains(reactionNext)) && !(_target is PlayerMovement p && p.Streaming!=null && !p.Streaming.IsPositionLoaded(reactionNext)))
@@ -86,12 +92,12 @@ public partial class GroundChase : Node
         if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !_actor.HealthState.IsAlive
             || !GodotObject.IsInstanceValid(_target) || !_target.IsInsideTree() || _target.IsQueuedForDeletion()
             || (_target is ICombatTarget dead && !CombatTargeting.Active(dead)))
-        { Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
+        { SeparationState.Clear(); Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
         if (!_actor.Config.MeleeEnabled) Attack?.Cancel();
         else { EnsureAttack(); Attack.Advance(delta); }
         EntityDefinition config = _actor.Config;
         float distanceSquared = _actor.GlobalPosition.DistanceSquaredTo(_target.GlobalPosition);
-        if (Attack?.IsSwinging==true) { _actor.Velocity=Vector2.Zero; return; }
+        if (Attack?.IsSwinging==true) { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
         // Pursuit supplies intent only; the same executor as the player owns contacts and cooldown.
         var profile=config.MeleeAttack ?? _defaultAttack;
         if (config.MeleeEnabled && Attack!=null && !Attack.Busy && profile!=null && _target is ICombatTarget target
@@ -99,10 +105,11 @@ public partial class GroundChase : Node
             && CombatTargeting.Eligible(_actor,target,profile.TargetFactions)
             && _actor.GlobalPosition.DistanceSquaredTo(target.ClosestHitPoint(_actor.GlobalPosition))<=profile.HitReach*profile.HitReach
             && Attack.TryStart(profile,_target.GlobalPosition-_actor.GlobalPosition))
-        { _actor.Velocity=Vector2.Zero; return; }
+        { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
         if (_navigation==null || distanceSquared > config.DetectionRadius * config.DetectionRadius ||
             distanceSquared <= config.StopDistance * config.StopDistance)
         {
+            SeparationState.Clear();
             _actor.Velocity = Vector2.Zero;
             _repathTimer = 0f;
             return;
@@ -114,7 +121,7 @@ public partial class GroundChase : Node
             _index = 0;
             _repathTimer = Mathf.Max(0.15f, config.RepathSeconds);
         }
-        if (_path.Length == 0) { _actor.Velocity = Vector2.Zero; return; }
+        if (_path.Length == 0) { SeparationState.Clear(); _actor.Velocity = Vector2.Zero; return; }
         const float waypointRadius = 12f;
         while (_index < _path.Length - 1 &&
                _actor.GlobalPosition.DistanceSquaredTo(_path[_index]) <= waypointRadius * waypointRadius)
@@ -124,10 +131,18 @@ public partial class GroundChase : Node
             goal = _target.GlobalPosition;
         Vector2 heading = goal - _actor.GlobalPosition;
         _actor.Velocity = heading.LengthSquared() <= 1f ? Vector2.Zero : heading.Normalized() * config.MoveSpeed * _actor.Stats.Values.MovementSpeedMultiplier;
+        Vector2 intent=_actor.Velocity;
+        float fade=Mathf.Clamp((Mathf.Sqrt(distanceSquared)-Mathf.Max(config.StopDistance,config.MeleeEnabled ? profile?.HitReach ?? 0 : 0))/24f,0,1);
+        _actor.Velocity=SeparationState.Blend(_actor,_target,intent,(float)delta,_movement.Enabled && _blockedSeconds<0.5f,fade);
+        Vector2 before=_actor.GlobalPosition;
         Vector2 next=_actor.GlobalPosition+_actor.Velocity*(float)delta;
         if (!_navigation.Contains(next) || (_target is PlayerMovement player && player.Streaming!=null && !player.Streaming.IsPositionLoaded(next)))
             _actor.Velocity=Vector2.Zero;
         _actor.MoveAndSlide();
+        // Retry the static route without steering after sustained poor progress against scenery.
+        float progress=(_actor.GlobalPosition-before).Dot(intent.Normalized());
+        _blockedSeconds=progress<intent.Length()*(float)delta*0.2f ? _blockedSeconds+(float)delta : 0;
+        if(_blockedSeconds>0.9f) _blockedSeconds=0;
     }
     #endregion
 }

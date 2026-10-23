@@ -16,6 +16,16 @@ Death, disabled ownership and unloading discard transient state; it is never sav
 
 See [C3.2 validation and tuning](../../../COMBAT/C3_2_Validation.md).
 
+## ES1 tuning
+
+Open `DefaultMovementConfig.tres` here: **Separation → Enabled** is the master switch. Off clears cached steering on the next active motor tick and skips neighbor queries/calculation; existing chase, collision, navigation and knockback continue. Re-enable resumes queries through the existing motor. No dormant entities are woken. Edit the shared Resource itself, rather than a unique duplicate, to affect every chaser.
+
+`EntityDefinition.Separation` optionally references a reusable `SeparationProfile`; omitted means enabled with 10px soft clearance and 0.35 strength. Per-profile Enabled cannot override master Off. Broader species presets remain ES2.
+
+`Separation.cs` owns no Node/callback/movement. Only actual pursuit samples actor-layer bodies at 5Hz with phase offsets, takes the nearest eight eligible entities, and rejects saturated 33-result queries. Scratch/query resources are lazy. Cached steering is smoothed over 0.1s, capped, faded near attack reach and cleared on every stop/attack/reaction/lifecycle gate. Sustained poor progress briefly retries the static route without adjustment. `Entity.FeetCenter/FeetRadius` use cached physical collider geometry, including scale. Query result collections still allocate; no FPS/GC improvement is claimed.
+
+See [ES1 validation and remaining acceptance](ES1_Validation.md).
+
 ## ES0–ES4 — Entity separation roadmap
 
-[EntitySeparationPlan.md](EntitySeparationPlan.md) tracks reusable local crowd separation, species-specific Resource profiles, optional engagement positioning, and five-skeleton validation. **ES0 source audit and limited five-skeleton headless baseline are complete**; [findings and ES1 proposal](ES0_Audit.md). No steering implementation has been added. AC body blocking remains independent and C3.2 knockback/stagger must retain movement priority.
+[EntitySeparationPlan.md](EntitySeparationPlan.md) tracks reusable local crowd separation, species-specific Resource profiles, optional engagement positioning, and five-skeleton validation. **ES0 source audit and limited five-skeleton headless baseline are complete**; [findings and ES1 proposal](ES0_Audit.md). ES1 local steering is implemented; Windows feel/performance acceptance remains pending. AC body blocking remains independent and C3.2 knockback/stagger must retain movement priority.

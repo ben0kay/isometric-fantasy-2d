@@ -20,6 +20,8 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     private Sprite2D _sprite;
     private CollisionShape2D _collision;
     private GroundChase _chase;
+    public Vector2 FeetCenter => _collision.GlobalPosition;
+    public float FeetRadius => (_collision.Shape as CircleShape2D)?.Radius * Mathf.Max(_collision.GlobalScale.Abs().X,_collision.GlobalScale.Abs().Y) ?? 9f;
     private float _flashTimer, _deathTimer;
 
 

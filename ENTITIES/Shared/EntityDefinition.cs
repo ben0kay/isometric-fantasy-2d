@@ -23,6 +23,8 @@ public partial class EntityDefinition : Resource
     [Export(PropertyHint.Range, "12,70,1")] public float StopDistance { get; set; } = 26f;
     [Export(PropertyHint.Range, "0.15,2,0.05")] public float RepathSeconds { get; set; } = 0.45f;
 
+    [Export] public SeparationProfile Separation { get; set; }
+
     [Export] public CombatStatProfile CombatStats { get; set; }
     [ExportGroup("Melee (requires pursuit intent)")]
     [Export] public CombatFaction Faction { get; set; } = CombatFaction.Hostile;
