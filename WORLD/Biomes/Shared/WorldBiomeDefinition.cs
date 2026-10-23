@@ -15,6 +15,14 @@ public partial class WorldBiomeDefinition : Resource
     [Export] public Color OverviewColour { get; set; } = new(0.3f, 0.6f, 0.3f);
     [ExportGroup("Local content")]
     [Export] public BiomeEnvironmentProfile Environment { get; set; }
-    [Export] public GroundSurfaceProfile Surface { get; set; }
+    [ExportGroup("Ground stack")]
+    [Export] public BiomeGroundStack GroundStack { get; set; }
+    [ExportGroup("Legacy surface - fallback only when no stack")]
+    [Export] public GroundSurfaceProfile Surface
+    {
+        get => GroundStack != null ? GroundStack.ResolveBaseSurface() : _legacySurface;
+        set => _legacySurface = value;
+    }
+    private GroundSurfaceProfile _legacySurface;
     [Export] public Godot.Collections.Array<BiomePopulation> Populations { get; set; } = new();
 }

@@ -1,5 +1,5 @@
 # WORLD/Terrain
 
-Reusable terrain domain: ground-tile visuals, cliff visual rules, layers and terrain transitions. Terrain **generation algorithms** live under `WORLD/Generation/Terrain/`.
+Production ground surface profiles/shaders and streamed palette rendering live under Ground/Surfaces; transitions live under Transitions. Cliffs/elevation remain scaffolding. Terrain generation algorithms belong under WORLD/Generation/Terrain.
 
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+GS1 adds explicit biome ground stacks without renderer changes. See [audit and validation](Ground/Surfaces/GS0_GS1_Validation.md) and [phase plan](Ground/Surfaces/LAYERED_GROUND_IMPLEMENTATION.md). Graphical/performance baseline and GS1 local validation remain pending.

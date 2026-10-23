@@ -1,6 +1,6 @@
 # Layered Ground Surfaces — Production Implementation Plan
 
-> **Status: PROPOSED / NOT IMPLEMENTED.** Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
+> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2–GS6 not implemented.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
 >
 > **Absolute priority: DO NOT change how Oak Forest currently looks by default.** First extract its existing ground behaviour into a reusable layered architecture; only later offer optional, individually enabled layers for dirt and rock breakup. The supplied illustrated Oak Forest scene is art-direction inspiration, not an exact terrain shader replacement.
 >

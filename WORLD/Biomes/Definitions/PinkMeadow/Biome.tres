@@ -6,6 +6,19 @@
 [ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/PinkMeadowGrass.tres" id="surface"]
 [ext_resource type="Resource" uid="uid://f8to0shc3mpx" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossom.tres" id="tree"]
 
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundLayer.cs" id="ground_layer"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundStack.cs" id="ground_stack"]
+
+[sub_resource type="Resource" id="base_ground"]
+script = ExtResource("ground_layer")
+Id = "base"
+Label = "Pink meadow grass"
+Surface = ExtResource("surface")
+
+[sub_resource type="Resource" id="ground"]
+script = ExtResource("ground_stack")
+DefiningBaseGround = SubResource("base_ground")
+
 [sub_resource type="Resource" id="trees"]
 script = ExtResource("population")
 Content = ExtResource("tree")
@@ -28,5 +41,5 @@ Id = "biome.pink_meadow"
 DisplayName = "Pink Meadow"
 GenerationWeight = 40.0
 OverviewColour = Color(0.85, 0.48, 0.66, 1)
-Surface = ExtResource("surface")
+GroundStack = SubResource("ground")
 Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks")])

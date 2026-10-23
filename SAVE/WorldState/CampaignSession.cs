@@ -34,9 +34,12 @@ public static class CampaignSession
     // Narrow SO2 compatibility bridge: only the previously shipped scene text is substituted.
     // =========================================================
     internal static string LegacySO1ContentFingerprint() => BuildContentFingerprint("res://SAVE/Migrations/References/SO1WorldScene.txt");
-    // Compare the full dependency set; the sole optional substitution is frozen scene-layout text.
+    // Explicit GS1 migration fingerprint retains every unrelated dependency.
     // =========================================================
-    private static string BuildContentFingerprint(string previousWorldScene)
+    internal static string LegacyGS1ContentFingerprint() => BuildContentFingerprint(null,true);
+    // Compare the full dependency set with only explicitly requested frozen substitutions.
+    // =========================================================
+    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false)
     {
         if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
             throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
@@ -46,6 +49,16 @@ public static class CampaignSession
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
+            if (previousGround)
+            {
+                string reference = path switch
+                {
+                    "res://WORLD/Biomes/Definitions/OakForest/Biome.tres" => "res://SAVE/Migrations/References/GS1OakForest.txt",
+                    "res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres" => "res://SAVE/Migrations/References/GS1PinkMeadow.txt",
+                    _ => null
+                };
+                if (reference != null) source = Godot.FileAccess.GetFileAsString(reference).Replace("\r\n","\n");
+            }
             string normalized = string.Join("\n",source.Split('\n').Where(line => !line.StartsWith("RandomSeedOnLoad = ",StringComparison.Ordinal) && !line.StartsWith("FixedSeed = ",StringComparison.Ordinal)));
             files.Add(path,normalized);
             foreach (Match match in Regex.Matches(source,"path=\"(res://[^\"]+\\.(?:tres|tscn))\"")) Visit(match.Groups[1].Value);
@@ -55,11 +68,18 @@ public static class CampaignSession
         foreach (var pair in files) text.Append(pair.Key).Append('\n').Append(pair.Value).Append('\n');
         return CheckpointFiles.Digest(Encoding.UTF8.GetBytes(text.ToString()));
     }
+    // Only the exact shipped biome conversion may use frozen pre-GS1 resource text.
+    // =========================================================
+    internal static bool CanMigrateGround() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "A351B0A6BEB3A2E5EEC862993F5DD80A6A1F1F16B11823AA86DC1A98FBF49FBD" &&
+            CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "76D21299E1AE93C37A37E50F567AFA89F1EA09950CB2E0A16035F2C544C942E4";
+
     // Reject changed content rather than moving old trees or rerolling geography behind the player's back.
     // =========================================================
     public static void RequireContent(CampaignSnapshot snapshot)
     {
         if (snapshot.ContentFingerprint == ContentFingerprint()) return;
+        // Exact GS1 data conversion only; all other current dependency text still participates.
+        if (CanMigrateGround() && snapshot.ContentFingerprint == LegacyGS1ContentFingerprint()) return;
         // This bridge is valid only for the exact shipped SO2 layout, not arbitrary future scene edits.
         string scene = Godot.FileAccess.GetFileAsString("res://SCENES/World/World.tscn").Replace("\r\n","\n");
         if (CheckpointFiles.Digest(Encoding.UTF8.GetBytes(scene)) == SaveCompatibility.SO2SceneSourceHash

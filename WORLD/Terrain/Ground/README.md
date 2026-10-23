@@ -2,7 +2,7 @@
 
 **Implemented:** reusable profile-driven surface rendering extracted from DEBUG Oak Forest. See Surfaces/README.md. Other ground systems below remain plans.
 
-> **Status:** Production folder foundation only; no ground-surface renderer or runtime terrain has been promoted from DEBUG.
+> **Status:** Production profile-driven rendering exists in streamed and compatibility-preview paths. GS1 adds an explicit base stack; overlays are not rendered yet. See [GS0/GS1 evidence and remaining checks](Surfaces/GS0_GS1_Validation.md).
 
 ## Responsibilities
 
@@ -36,7 +36,7 @@
 
 Paths above are from `WORLD/Terrain/Ground/`: `../../../DEBUG/` points to the repository-level DEBUG folder.
 
-## Promotion guidelines
+## Historical promotion guidelines
 
 - First reproduce the current Oak Forest ground look **without visual changes** in a small production-world scene.
 - Copy/adapt only the required shaders, noise assets, Resources and material wiring from DEBUG, replacing debug-specific names and paths. Keep DEBUG working until a production replacement is tested.
@@ -44,4 +44,4 @@ Paths above are from `WORLD/Terrain/Ground/`: `../../../DEBUG/` points to the re
 - Preserve a single source of truth for each setting and clear separation between ground rendering, biome selection, transitions and decoration placement.
 - Read the root `README.md` and `CodePreferences.md` before implementation.
 
-**No runtime code, scenes, shaders or .tres profiles have been added by this documentation pass.**
+The original documentation-only pass predates production ground rendering.
