@@ -49,6 +49,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget
         {
             ResetActions();
         }
+        GetNodeOrNull<CollisionShape2D>("Collision")?.SetDeferred("disabled", !HealthState.IsAlive);
         SetPhysicsProcess(HealthState.IsAlive);
         _input?.SetProcessUnhandledInput(HealthState.IsAlive);
     }

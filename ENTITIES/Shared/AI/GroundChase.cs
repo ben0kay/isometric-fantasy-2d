@@ -48,7 +48,11 @@ public partial class GroundChase : Node
     // Process-mode suspension (streaming/scene ownership) invalidates any pending attack.
     // =========================================================
     public override void _Notification(int what)
-    { if (what==NotificationDisabled) Attack?.Cancel(); }
+    {
+        if (what!=NotificationDisabled) return;
+        Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
+        if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero;
+    }
     // Dispose contact-query resources on death cleanup/unload.
     // =========================================================
     public override void _ExitTree() => Attack?.Dispose();
@@ -100,6 +104,9 @@ public partial class GroundChase : Node
             goal = _target.GlobalPosition;
         Vector2 heading = goal - _actor.GlobalPosition;
         _actor.Velocity = heading.LengthSquared() <= 1f ? Vector2.Zero : heading.Normalized() * config.MoveSpeed * _actor.Stats.Values.MovementSpeedMultiplier;
+        Vector2 next=_actor.GlobalPosition+_actor.Velocity*(float)delta;
+        if (!_navigation.Contains(next) || (_target is PlayerMovement player && player.Streaming!=null && !player.Streaming.IsPositionLoaded(next)))
+            _actor.Velocity=Vector2.Zero;
         _actor.MoveAndSlide();
     }
     #endregion

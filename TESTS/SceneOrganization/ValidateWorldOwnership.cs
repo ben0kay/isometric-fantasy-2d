@@ -29,7 +29,7 @@ public partial class ValidateWorldOwnership : Node
         Check(world.SceneryPlacement.GetParent() == world.GetNode("SystemsRoot") && world.GetNode("SystemsRoot/SceneryPlacement") is not Node2D,"Generator still owns live scenery");
         Check(world.SceneryPlacement.GetChildCount()==0,"Generator has live actor children");
         Check(world.Player.GetParent()==world.EntitiesRoot,"Player belongs to a disposable root");
-        Check(world.EntitiesRoot.GetChildren().OfType<Entity>().Count()==1,"Authored entity destination incorrect");
+        Check(world.TestActorsRoot.GetChildren().OfType<Entity>().Count()==5,"Authored entity destination incorrect");
         Check(world.PropsRoot.GetNodeOrNull("Torch")!=null,"Original torch missing from persistent props");
         Check(world.PropsRoot.GetChildCount()==3,"Comparison torches missing or duplicated");
         foreach (var root in new[] { world.ActorsRoot,world.EntitiesRoot,world.PropsRoot,world.ChunkActorsRoot,world.PreviewSceneryRoot })

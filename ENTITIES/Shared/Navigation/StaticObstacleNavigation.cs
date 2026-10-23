@@ -97,6 +97,10 @@ public sealed class StaticObstacleNavigation
     }
     #endregion
 
+    // Movement remains within the navigation area currently supplied by the location.
+    // =========================================================
+    public bool Contains(Vector2 point) => point.IsFinite() && _bounds.HasPoint(point);
+
     #region Lookup
     // Map world coordinates to bounded grid cells without relying on active scenes.
     // =========================================================

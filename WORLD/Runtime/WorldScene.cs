@@ -19,6 +19,7 @@ public partial class WorldScene : Node2D
     // Explicit ownership destinations are cached once, not rediscovered during frame callbacks.
     public Node2D ActorsRoot { get; private set; }
     public Node2D EntitiesRoot { get; private set; }
+    public Node2D TestActorsRoot { get; private set; }
     public Node2D PropsRoot { get; private set; }
     public Node2D ChunkActorsRoot { get; private set; }
     public Node2D PreviewSceneryRoot { get; private set; }
@@ -35,6 +36,7 @@ public partial class WorldScene : Node2D
     {
         ActorsRoot = GetNode<Node2D>("WorldActorsRoot");
         EntitiesRoot = ActorsRoot.GetNode<Node2D>("PersistentEntitiesRoot");
+        TestActorsRoot = EntitiesRoot.GetNodeOrNull<Node2D>("DebugActorsRoot") ?? EntitiesRoot;
         PropsRoot = ActorsRoot.GetNode<Node2D>("PersistentPropsRoot");
         ChunkActorsRoot = ActorsRoot.GetNode<Node2D>("ChunkActorsRoot");
         PreviewSceneryRoot = ActorsRoot.GetNode<Node2D>("PreviewSceneryRoot");
@@ -137,7 +139,7 @@ public partial class WorldScene : Node2D
         }
         else placement.Generate(Config, ActiveSeed,PreviewSceneryRoot);
         // Build entity navigation only after the seeded tree/rock colliders exist.
-        EntityPlacement.Populate(EntitiesRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity);
+        EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null);
         var environment = Environment;
         environment.Initialize(Config,ActorsRoot,PropsRoot,Player);
         if (environment != null) Fire.Initialize(ActorsRoot,environment);

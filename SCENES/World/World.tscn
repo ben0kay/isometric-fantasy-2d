@@ -15,6 +15,7 @@
 [ext_resource type="Resource" path="res://SYSTEMS/WorldInteractions/Fire/DefaultFireConfig.tres" id="fire_config"]
 [ext_resource type="Script" path="res://DEBUG/UI/Fire/WorldFireDebugPanel.cs" id="fire_debug"]
 [ext_resource type="Script" path="res://DEBUG/UI/Generation/MacroMapDebugPanel.cs" id="macro_debug"]
+[ext_resource type="Script" path="res://DEBUG/World/DebugActorRoot.cs" id="debug_actors"]
 [node name="World" type="Node2D"]
 script = ExtResource("world")
 Config = ExtResource("config")
@@ -64,3 +65,21 @@ script = ExtResource("fire_debug")
 
 [node name="MacroMapDebugPanel" type="CanvasLayer" parent="DebugUIRoot"]
 script = ExtResource("macro_debug")
+
+[node name="DebugActorsRoot" type="Node2D" parent="WorldActorsRoot/PersistentEntitiesRoot"]
+y_sort_enabled = true
+metadata/world_actor_container = true
+script = ExtResource("debug_actors")
+
+[node name="NorthWest" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(-180, -170)
+metadata/world_actor_container = true
+[node name="NorthEast" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(180, -170)
+metadata/world_actor_container = true
+[node name="West" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(-260, 80)
+metadata/world_actor_container = true
+[node name="East" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(260, 80)
+metadata/world_actor_container = true

@@ -30,7 +30,7 @@ public partial class ValidateChunkStreaming : Node
         Check(initialActors.FindChildren("*","",true,false).OfType<FantasyGame.World.Trees.Tree>()
             .Any(t => t.GlobalPosition.DistanceTo(world.Config.PlayerSpawn) < 700),"Spawn clearing hides all nearby trees");
         var stream = world.Stream; var player = world.Player;
-        Check(world.EntitiesRoot.GetChildren().OfType<IWorldNavigationAgent>().Count() == 1,"Shared enemy did not load/spawn");
+        Check(world.TestActorsRoot.GetChildren().OfType<IWorldNavigationAgent>().Count() == 5,"Shared enemies did not load/spawn");
         Check(stream != null && stream.LoadedCount == 25,"Initial active square missing");
         Check(ChunkCoord.At(new Vector2(-0.1f,-512.1f),512) == new ChunkCoord(-1,-2),"Negative coordinate floor failed");
         var data = new ChunkSceneryData(world.MacroMap,world.FeaturePlan,world.Config.Streaming,world.Config.Generation.Biomes,world.Config.ExtraSpacing);

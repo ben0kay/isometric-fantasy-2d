@@ -154,6 +154,11 @@ public partial class WorldChunkStream : Node
         }
         return true;
     }
+    // Non-player actors need loaded collision at their destination, not the player's camera preload ring.
+    // =========================================================
+    public bool IsPositionLoaded(Vector2 point) => point.IsFinite() && _world.MacroMap.Bounds.HasPoint(point)
+        && _chunks.TryGetValue(ChunkCoord.At(point,_settings.ChunkSize),out var chunk) && chunk.State==WorldChunkState.Loaded;
+
     // Deterministic nearest-first enumeration works at clipped edges and negative chunk coordinates.
     // =========================================================
     private IEnumerable<ChunkCoord> Desired(int radius, ChunkCoord? around = null)

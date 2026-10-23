@@ -5,3 +5,5 @@
 `EntityDefinition.ChasePlayer` activates pursuit through explicit target/navigation injection. `MeleeEnabled` independently enables attack requests; optional `MeleeAttack` overrides `COMBAT/Weapons/DefaultEnemyMelee.tres`. Passive actors have neither combat callbacks nor an executor. Active pursuit retains its existing physics callback, but distant/idle decisions perform no contact queries. Scene process-mode suspension cancels stale wind-ups, and death stops pursuit/attacks together. Unload disposes query resources.
 
 Roaming, fleeing, guarding, populations and simulation LOD remain future work; this is not an A-Life system or a dedicated skeleton controller.
+
+AC2: suspension additionally clears velocity/cached pursuit route. Moving enemies check the active navigation rectangle and loaded destination chunk before their existing MoveAndSlide. They do not request the player camera preload ring. One navigation grid is shared by the authored test actors; rebuild cadence stays with the existing streamer. Runtime acceptance remains pending.

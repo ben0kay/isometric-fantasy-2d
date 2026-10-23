@@ -1,6 +1,6 @@
 # Actor-to-actor collision — implementation plan
 
-> **Status: AC0 source audit complete (2026-10-23); AC1 implemented, awaiting runtime validation; AC2–AC4 pending.** AC0 was documentation only; AC1 now changes layers and masks. Runtime blocking and performance acceptance remain unverified.
+> **Status: AC0 source audit complete (2026-10-23); AC1 implemented, awaiting runtime validation; AC2 implemented, awaiting runtime validation; AC3–AC4 pending.** AC0 was documentation only; AC1 now changes layers and masks. Runtime blocking and performance acceptance remain unverified.
 
 ## Intent
 
@@ -24,13 +24,13 @@ The player, generic enemies and future wildlife should physically block each oth
 
 ## Implementation phases (AC0–AC4)
 
-AC0 is complete as a source audit; AC1 is implemented awaiting validation; AC2–AC4 remain pending. AC means **Actor Collision** and is distinct from combat C3.
+AC0 is complete as a source audit; AC1 is implemented awaiting validation; AC2 is implemented awaiting validation; AC3–AC4 remain pending. AC means **Actor Collision** and is distinct from combat C3.
 
 | Phase | Objective | Deliverable |
 | --- | --- | --- |
 | **AC0 — Audit — COMPLETE (source)** | Inventory existing physics layer/masks across actors, solids and melee hit queries | Matrix, migration and affected-file inventory below; no runtime acceptance implied |
 | **AC1 — Actor blocking — implemented, validation pending** | Physically block player, enemies and future wildlife using shared feet colliders | Player and shared Entity scene layer/mask configuration |
-| **AC2 — Lifecycle integration** | Ensure death, dodge, sprint, streaming and despawn work with collision | No ghost colliders or movement bypass |
+| **AC2 — Lifecycle integration — implemented, validation pending** | Ensure death, dodge, sprint, streaming and despawn work with collision | No ghost colliders or movement bypass |
 | **AC3 — Crowd checks** | Evaluate groups of pursuing actors and narrow pathways | Performance and clumping findings; optional small follow-up only |
 | **AC4 — Validation** | Verify combat, save and physics regression tests | Recorded test results and completion status |
 
@@ -164,3 +164,12 @@ godot --headless --path . res://TESTS/SceneOrganization/ValidateWorldOwnership.t
 Expect exit 0 and fixture PASS messages (AC1 expects 11 checks); record any native-shutdown failures separately using the existing C2 baseline evidence. Run separate-process P4 write/read per `SAVE/P4_Copilot_Handoff.md` using isolated test storage; verify ordinary old-fingerprint refusal preserves campaign data. Player/Entity/scenery text changes intentionally change the content fingerprint; no migration/bypass was introduced. Use F6 World or a new test campaign, not an existing campaign assumed compatible.
 
 Manual F6 with Debug → Visible Collision Shapes: walk/sprint/dodge into skeleton/tree/rock/torch; slide around edges; verify skeleton contact and LMB/MMB/sword/enemy hits, including walls and tree chopping. Test two shared Entities blocking each other and Y sorting. Crowd navigation, death/disabled ownership and streaming cleanup require AC2–AC4 evidence before knockback. No visual test room or custom debug panel is added in this slice.
+
+
+## AC2 implementation — 23 October 2026
+
+Player death disables its feet collider; explicit health restoration restores it. Actor bodies explicitly use DisableMode.Remove, so disabling an ancestor removes blocking until reenabled. GroundChase suspension cancels contacts, clears the cached path and zeros velocity. Movement remains through the existing motor and is constrained to the active navigation bounds and loaded destination chunk. Entity death retains its existing deferred collider removal/fade lifecycle; dead-player blocking is now explicitly off.
+
+The original test skeleton now lives under WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot. F6 adds four nearby marker-authored skeletons using a bounded safe-position search and the same shared grid. The root's Enabled switch suspends/hides existing actors; disabling before startup skips placement. New/Continue retains the single persisted skeleton contract and excludes all four extras. Updated source-discovery/ownership/save fixture paths; no campaign schema migration or fingerprint bypass.
+
+See [AC2 validation](AC2_Validation.md). Static review and diff whitespace checks passed; Godot/.NET runtime checks could not run here. AC2 is **implemented, awaiting local validation**, not accepted. AC3/AC4 and C3.2 remain pending.

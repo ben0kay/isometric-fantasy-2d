@@ -36,7 +36,7 @@ public partial class ValidateCampaignSaves : Node
         string removed = trees[0].GetMeta("world_instance_id").AsString();
         string burnt = trees[1].GetMeta("world_instance_id").AsString();
         trees[1].GetNode<Burnable>("Burnable").RestoreProgress(1); trees[0].QueueFree(); await Frames(2);
-        foreach (var entity in a.EntitiesRoot.GetChildren().OfType<Entity>()) entity.TakeDamage(entity.Health);
+        foreach (var entity in a.TestActorsRoot.GetChildren().OfType<Entity>()) entity.TakeDamage(entity.Health);
         player.ReceiveDamage(new DamageRequest(13),EffectiveStats.Neutral);
         string aWorld = a.Blueprint.WorldId;
         Check(await a.Saves.SaveAsync(),"A save failed");
@@ -58,7 +58,7 @@ public partial class ValidateCampaignSaves : Node
         var bClock = b.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Clock; bClock.Config.Paused = true; bClock.SetHour(17);
         Check(Props(b).Any(p => Id(p)==removed),"A removal leaked into B");
         Check(Props(b).First(p => Id(p)==burnt).GetNode<Burnable>("Burnable").State == BurnState.Healthy,"A fire leaked into B");
-        foreach (var entity in b.EntitiesRoot.GetChildren().OfType<Entity>()) entity.TakeDamage(1);
+        foreach (var entity in b.TestActorsRoot.GetChildren().OfType<Entity>()) entity.TakeDamage(1);
         b.Player.ReceiveDamage(new DamageRequest(1000000),EffectiveStats.Neutral);
         Check(await b.Saves.SaveAsync(),"B save failed"); await Remove(b);
         var store = CampaignSession.Store();
@@ -102,7 +102,7 @@ public partial class ValidateCampaignSaves : Node
             Check(world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment").Clock.Hour == (profile==A ? 3 : 17),"Inactive clock advanced");
             Check(Props(world).Any(p => Id(p)==expected[0]) == (profile==B),"Wrong per-profile removed state");
             Check(Props(world).First(p => Id(p)==expected[1]).GetNode<Burnable>("Burnable").State == (profile==A ? BurnState.Burnt : BurnState.Healthy),"Wrong per-profile fire state");
-            var actors = world.EntitiesRoot.GetChildren().OfType<Entity>().ToArray();
+            var actors = world.TestActorsRoot.GetChildren().OfType<Entity>().ToArray();
             Check(profile==A ? actors.Length==0 : actors.Length==1 && actors[0].Health==loaded.Snapshot.TestEntity.Health,"Test actor death/health did not persist");
             Check(world.Stream.WorldId == loaded.Snapshot.WorldId && world.Stream.LoadedCount <= 81,"Wrong stream identity or bounds");
             await Remove(world);
