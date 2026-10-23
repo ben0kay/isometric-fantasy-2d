@@ -1,7 +1,7 @@
 // Production CharacterBody2D movement: shared stats plus sprint and held-direction dodge physics.
 using Godot;
 
-public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionTarget
+public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionTarget, ICombatImpactTarget
 {
     [ExportGroup("References")]
     [Export] public PlayerMasterConfig Config { get; set; }
@@ -17,6 +17,11 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     public ActorStats Stats { get; private set; }
     public PlayerActions Actions { get; private set; }
     public DirectionalGuard Guard { get; private set; }
+    private HitFeedback _hitFeedback;
+    public HitFeedback ImpactVisual => _hitFeedback;
+    // Authoritative confirmed contact only; generic damage/healing/restoration never infer an impact.
+    // =========================================================
+    public void ReceiveImpact(AttackContact contact) => _hitFeedback=HitFeedback.Emit(this,_hitFeedback,Config.ImpactFeedback,contact);
     public Knockback Reaction { get; } = new();
     public bool IsDodging => _dodgeRemaining>0;
     public bool IsHopping => _hopRemaining>0;

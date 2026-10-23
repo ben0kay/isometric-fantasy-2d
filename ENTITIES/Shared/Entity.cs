@@ -2,13 +2,18 @@
 // Behaviour modules handle locomotion/AI; no DEBUG dependencies.
 using Godot;
 
-public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatTarget, IReactionTarget
+public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatTarget, IReactionTarget, ICombatImpactTarget
 {
     [Export] public EntityDefinition Config { get; set; }
     public ActorHealth HealthState { get; private set; }
     public ActorStats Stats { get; private set; }
     public Node2D CombatNode => this;
     public CombatFaction Faction => Config.Faction;
+    private HitFeedback _hitFeedback;
+    public HitFeedback ImpactVisual => _hitFeedback;
+    // Authoritative confirmed contact only; generic damage/healing/restoration never infer an impact.
+    // =========================================================
+    public void ReceiveImpact(AttackContact contact) => _hitFeedback=HitFeedback.Emit(this,_hitFeedback,Config.ImpactFeedback,contact);
     public Knockback Reaction { get; } = new();
     public int Health => HealthState.Current;
 

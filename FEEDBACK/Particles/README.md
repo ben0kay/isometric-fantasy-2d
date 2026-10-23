@@ -1,6 +1,6 @@
 # Shared lightweight particles — C3.3a+b
 
-`ParticleEmitter` is a plain C# helper, not a Node or physics driver. It owns a lazy, reusable slot array (1–256 capacity), bounded emission, motion and drawing. `ParticleProfile` is Inspector-authorable data; `Snapshot()` clamps invalid/excessive settings into immutable values once per burst. `ParticleShapes` shares leaf/shard geometry and simple droplet/spark primitives. Material-specific profiles and combat hit wiring remain C3.3c/d.
+`ParticleEmitter` is a plain C# helper, not a Node or physics driver. It owns a lazy, reusable slot array (1–256 capacity), bounded emission, motion and drawing. `ParticleProfile` is Inspector-authorable data; `Snapshot()` clamps invalid/excessive settings into immutable values once per burst. `ParticleShapes` shares leaf/shard geometry and simple droplet/spark primitives. [C3.3c/d material profiles and confirmed hit wiring](../HitFeedback/README.md) now consume this core.
 
 ## Ownership and use
 
@@ -21,3 +21,5 @@ TreeDefinition still owns FoliageColour and HasFoliage. TreeHitConfig retains Le
 Never-hit/zero-leaf trees allocate no emitter/slot array. First eligible hit allocates once, later hits reuse slots. No per-particle Nodes, rigid bodies, timers, queries, effects manager, actor scans or per-hit child creation. Counts cap at capacity and round-robin replace slots rather than growing. Only active leaves are advanced/drawn, with at most capacity slots examined. Wind is read once per active tree frame. Wobble/shadow updates stop independently. Final clear redraw removes stale canvas commands; settled trees stop processing. Target-PC frame time, GPU cost and allocations have not been measured.
 
 [Validation and local commands](../../COMBAT/C3_3ab_Validation.md). This is a leaf-preserving foundation, not permission to migrate ambient particles or implement combat material effects.
+
+C3.3c/d adds optional `Draw(canvas, worldSpace:true)`: slots retain world coordinates and inverse draw transforms cancel actor translation/rotation/scale while preserving canvas ownership. Default local-space tree drawing is unchanged.

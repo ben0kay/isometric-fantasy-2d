@@ -9,7 +9,7 @@ Read `CodePreferences.md`, root README, `COMBAT/COMBAT_IMPLEMENTATION.md`, `COMB
 | --- | --- | --- | --- |
 | **C3.1** | [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) | World-space numbers for **actual HP removed**; configurable single-label pop/float/fade/rapid-hit merge; independent event-driven presentation | Code added; build/visual tests pending |
 | **C3.2** | `ENTITIES/Shared/Movement` + `COMBAT/Weapons` | Shared, collision-safe knockback/stagger response from confirmed attacks. Axe prod stronger than swipe; integrate with existing actor movement/chase and P3 bounds | Implemented; Windows feel acceptance pending; [validation](C3_2_Validation.md) |
-| **C3.3a–d** | `FEEDBACK/Particles` + `FEEDBACK/HitFeedback` | Shared slot-based particles → migrate tree-hit leaves → material profiles → confirmed combat impact integration | a+b implemented; Windows visual/performance acceptance pending; c+d planned |
+| **C3.3a–d** | `FEEDBACK/Particles` + `FEEDBACK/HitFeedback` | Shared slot-based particles → migrate tree-hit leaves → material profiles → confirmed combat impact integration | a–d implemented; Windows visual/performance acceptance pending |
 | **C3.4** | `FEEDBACK/HitFeedback` + defense event contracts | Different responses to normal hit, blocked damage, guard break/parry if introduced, misses; only results from authoritative C2/C2.5 rules | Planned |
 | **C3.5** | `FEEDBACK/CameraShake` + audio module | Optional subtle camera impulse and attack/impact sounds, centralized tunable defaults with strong caps | Planned |
 
@@ -84,7 +84,7 @@ ENTITIES/
 
 ## C3.3 — Reusable particle foundation, tree-leaf migration and hit feedback
 
-> **Status: C3.3a+b IMPLEMENTED — awaiting Windows visual/performance acceptance.** See [C3.3a+b validation](C3_3ab_Validation.md). C3.3c/d remain planned. The following sections retain their implementation contracts. Execute in order **C3.3a → C3.3b → C3.3c → C3.3d**. Recommend asking Codex to implement **a+b together** as one scoped job, then assess the proven shared system before authoring material-specific combat effects. Do not inadvertently rebuild existing tree leaf behaviour or implement later subphases without authorization.
+> **Status: C3.3a–d IMPLEMENTED — awaiting Windows visual/performance acceptance.** See [C3.3a+b validation](C3_3ab_Validation.md). C3.3c/d results: [material impact validation](C3_3cd_Validation.md). The following sections retain their implementation contracts. Execute in order **C3.3a → C3.3b → C3.3c → C3.3d**. Recommend asking Codex to implement **a+b together** as one scoped job, then assess the proven shared system before authoring material-specific combat effects. Do not inadvertently rebuild existing tree leaf behaviour or implement later subphases without authorization.
 
 ### Architecture and folder ownership
 
@@ -129,7 +129,7 @@ Existing reference: `TreeHitResponse.cs` uses **24 reused Leaf slots**, `LeafSha
 
 **C3.3a+b acceptance:** production oak/blossom trees retain indistinguishable hit-leaf look and wobble, including tree-colour variants and burnt/no-foliage state; no duplicate leaves, per-hit node allocations, lingering processing, stale wind/tree references or new P3 streaming stalls. Record any intentional visual deviations before considering complete. Pine currently has staged artwork only, so it is not a production acceptance prerequisite.
 
-### C3.3c — Material-specific combat impact profiles (later)
+### C3.3c — Material-specific combat impact profiles (implemented)
 
 Use the shared particle core for visual profiles such as:
 - **Bone:** angular pale fragments; outward burst, short life, quick spin.
@@ -140,7 +140,7 @@ Use the shared particle core for visual profiles such as:
 
 Species/objects select a shared **material impact profile**, not individual particle controllers. Use configurable colour, shapes, count, trajectory, lifetime, gravity and optional per-spawn overrides. Start with only material types the production game actually needs. Skeletons can reference a shared Bone profile; future zombies/trolls use a Flesh profile. This phase authors profiles and verifies the renderer can produce distinct visuals; do not implement attack integration until d.
 
-### C3.3d — Confirmed-combat-hit wiring and validation (later)
+### C3.3d — Confirmed-combat-hit wiring and validation (implemented)
 
 - Emit impact particles only from **authoritative C2/C2.5 confirmed contact/result data**, once per valid contact, positioned at real impact/closest hit point with meaningful strike direction. Do not infer damage from HP deltas or perform duplicate physics contact queries.
 - Decide and document treatment of blocked/immune/missed hits; C3.4 retains distinct guard/block and miss outcome feedback. Do not emit blood or bone shards on a miss.
@@ -148,10 +148,12 @@ Species/objects select a shared **material impact profile**, not individual part
 - Test player/enemy contacts, multiple skeletons, corpse unload, camera zoom/Y-sort/world-space transforms and rapid strikes; cap effects during battles and streaming.
 - Run Godot Mono/.NET build, headless import, targeted tree hit/fire, C1/C2/C2.5/C3.2, P3/SO2/P4 regression suites where affected. Document observed results and known shutdown-baseline failures separately from acceptance. Perform manual Windows visual/performance checks.
 
-### Codex handoff — first job
+### Historical Codex handoff — first job (a+b completed)
 
 **Implement C3.3a + C3.3b only.** Before coding read `CodePreferences.md`, root README, `TreeHitResponse.cs`, `TreeHitConfig.cs`, `TreeDefinition.cs`, tree fire/foliage interactions, and current `FEEDBACK/` conventions. Create the shared lightweight particle engine under `FEEDBACK/Particles/` and migrate **hit-generated tree leaves only** to use it without visual or gameplay regressions. Keep wobble tree-owned; do not touch ambient leaves. Do not implement bone/flesh/stone/metal combat effects yet. Update this document and new `FEEDBACK/Particles/README.md` with actual test evidence after the implementation. Keep a single implementation job/commit and preserve P4 content-fingerprint constraints.
 
 ## C3.4–C3.5 — Later presentation work
 
 Impacts, block feedback, camera/audio should reuse the same confirmed contact/results without introducing feedback-specific damage computations. Use caps and explicit settings defaults to keep gameplay performance stable.
+
+**C3.3c+d implementation:** Bone/Flesh shared profiles, optional actor configuration, confirmed contact geometry/provenance and lazy bounded actor canvases are implemented. Positive applied damage (including chip/lethal hits) emits once; zero damage/miss/restoration do not. See [results, compatibility and manual acceptance](C3_3cd_Validation.md). Stone/metal profiles, trails, C3.4 and C3.5 remain future work.

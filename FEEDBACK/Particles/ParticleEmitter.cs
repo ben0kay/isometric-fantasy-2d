@@ -63,16 +63,24 @@ public sealed class ParticleEmitter
     }
     // The owner calls this from _Draw only; all particle fields, including colour, are burst snapshots.
     // =========================================================
-    public void Draw(Node2D canvas)
+    public void Draw(Node2D canvas,bool worldSpace=false)
     {
         if (_particles==null) return;
+        Transform2D worldToLocal=worldSpace ? canvas.GlobalTransform.AffineInverse() : Transform2D.Identity;
         for(int i=0;i<Capacity;i++)
         {
             ref Particle p=ref _particles[i];
             if (p.Life<=0 || p.Age>=p.Life) continue;
             float fade=Mathf.Clamp((p.Life-p.Age)/p.Values.FadeSeconds,0,1);
             float stretch=p.Values.StretchMin+Mathf.Abs(Mathf.Sin(p.Age*p.Values.StretchFrequency))*(1-p.Values.StretchMin);
-            canvas.DrawSetTransform(p.Position,p.Phase+p.Age*p.Values.Spin,new Vector2(1,stretch)*p.Values.Size);
+            float angle=p.Phase+p.Age*p.Values.Spin;
+            Vector2 scale=new Vector2(1,stretch)*p.Values.Size;
+            if (worldSpace)
+            {
+                var pose=new Transform2D(angle,p.Position); pose.X*=scale.X; pose.Y*=scale.Y;
+                canvas.DrawSetTransformMatrix(worldToLocal*pose);
+            }
+            else canvas.DrawSetTransform(p.Position,angle,scale);
             ParticleShapes.Draw(canvas,p.Values.Shape,new Color(p.Colour,p.Colour.A*fade));
         }
         canvas.DrawSetTransform(Vector2.Zero);

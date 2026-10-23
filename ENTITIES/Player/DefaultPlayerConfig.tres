@@ -1,6 +1,9 @@
-[gd_resource type="Resource" script_class="PlayerMasterConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PlayerMasterConfig" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://ENTITIES/Player/PlayerMasterConfig.cs" id="1_config"]
 
+[ext_resource type="Resource" path="res://FEEDBACK/HitFeedback/Profiles/Flesh.tres" id="impact"]
+
 [resource]
 script = ExtResource("1_config")
+ImpactFeedback = ExtResource("impact")

@@ -4,6 +4,8 @@ using Godot;
 [GlobalClass]
 public partial class PlayerMasterConfig : Resource
 {
+    [ExportGroup("Impact feedback")]
+    [Export] public HitFeedbackProfile ImpactFeedback { get; set; }
     [ExportGroup("Hit reaction resistance")]
     [Export] public bool ReactionImmune { get; set; }
     [Export(PropertyHint.Range,"0,1,0.05")] public float KnockbackResistance { get; set; }

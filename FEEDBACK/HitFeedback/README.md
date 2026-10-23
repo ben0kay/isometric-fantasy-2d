@@ -1,0 +1,21 @@
+# Material hit feedback — C3.3c+d
+
+Shared `HitFeedbackProfile` Resources select a ParticleProfile, colour, count and visual offset. `Profiles/Bone.tres` supplies short pale angular fragments for Skeleton Basic; `Profiles/Flesh.tres` supplies smaller red droplets for the player and future living creatures. Choose another shared profile through EntityDefinition / PlayerMasterConfig → Impact feedback. A null/disabled profile or zero count disables new bursts. No per-species controllers or new per-species effect Resources are needed.
+
+## Confirmed contact contract
+
+`MeleeHitQuery` captures the selected closest hurt point **before** damage/death/recoil, then produces an AttackContact containing target, actual DamageResult, source actor, world position and locked attack aim. It notifies ICombatImpactTarget once from that confirmed contact, without another query or damage calculation. Existing attack listeners retain Target/Damage compatibility; prop contacts carry geometry/provenance but retain their existing tree hit handler.
+
+Actual positive HP loss emits one material burst, including killing blows and reduced but positive guard chip damage. Zero damage (including armour absorption/full guard), misses and ineligible/dead targets emit none. Knockback/stagger immunity does not suppress an otherwise damaging material hit. Generic damage, heals and saved-health restoration do not infer combat particles. Distinct guard/miss outcomes remain C3.4; wood hit leaves remain tree-owned. Existing red flash, damage numbers, knockback and attack timing/damage remain independent.
+
+## Canvas and lifetime
+
+The first eligible hit lazily creates one cached HitFeedback child on the actor. It reuses a 32-slot ParticleEmitter; each burst is capped at 12, replacing slots rather than growing. Already-struck actors retain the dormant canvas for reuse; never-hit/profile-disabled actors allocate no canvas. There are no per-particle/per-hit Nodes, overlap queries, global scans, unmanaged timers or world manager.
+
+Particle positions/motion are snapshotted in **world space**. ParticleEmitter.Draw's optional worldSpace mode applies the inverse current canvas transform at draw time, keeping particles independent of root recoil/scale while retaining the actor's normal canvas/Y-sort ownership. Trees retain default local-space drawing unchanged. Whole bursts inherit actor sorting/visibility; individual fragments are not independently Y-sorted. Camera zoom remains normal canvas rendering.
+
+VisualOffset is a configurable world-space presentation lift from the real hurt point (default -14px vertically), bounded to ±64 per axis. It does not change contact geometry. Profiles use ~0.15–0.30s lifetimes; normal Entity's 0.4s death fade lets the final burst finish. Immediate retirement or a deliberately shorter death fade can truncate effects: they never outlive their owner/chunk.
+
+Only active particles wake `_Process`; expiry queues one final clearing redraw and sleeps. Suspension/unload clears transient slots and never replays them. No effects are saved. Profile edits affect new bursts; toggling a profile off does not poll/clear an existing short burst. No target-PC performance gain or rendered feel is claimed without profiling.
+
+**Compatibility:** production player/skeleton Resource references changed, so existing campaigns may fail the conservative content fingerprint check. Use F6 World or a new campaign. No schema migration/fingerprint bypass was added. See [validation and commands](../../COMBAT/C3_3cd_Validation.md).

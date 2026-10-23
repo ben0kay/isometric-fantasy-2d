@@ -20,3 +20,5 @@ Shared combat resolution for player, creatures, enemies and NPCs: damage, hit te
 - Folder names and documentation are navigation aids, not a promise that gameplay is already implemented.
 
 **C2.5:** Shared equipped-item definitions, forward slash/thrust, starter axe/sword selection, directional shield guard and visual hop are implemented. [Results and handoff](C2_5_Validation.md) distinguish headless checks, container build limits and target-PC visual acceptance. C3.2 shared knockback/stagger is implemented; see [tuning and validation](C3_2_Validation.md).
+
+**C3.3c+d:** Shared Bone/Flesh profiles now receive authoritative contact source, world point, direction and DamageResult. Actor-owned impact canvases are lazy, bounded and dormant when settled. [Material feedback and validation](C3_3cd_Validation.md).

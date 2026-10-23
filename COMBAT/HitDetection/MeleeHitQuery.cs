@@ -1,7 +1,8 @@
 // Contact-window physics broad phase, directional hurt geometry and obstruction test; dormant between attacks.
 using Godot;
 using System;
-public readonly record struct AttackContact(Node2D Target, DamageResult? Damage);
+public readonly record struct AttackContact(Node2D Target, DamageResult? Damage, Node2D Source=null, Vector2 Position=default, Vector2 Direction=default);
+public interface ICombatImpactTarget { void ReceiveImpact(AttackContact contact); }
 public sealed class MeleeHitQuery : IDisposable
 {
     private const int CandidateLimit=256;
@@ -38,6 +39,7 @@ public sealed class MeleeHitQuery : IDisposable
         var candidates=space.IntersectShape(_overlap,CandidateLimit); QueryCount++;
         if (candidates.Count==CandidateLimit) { OverflowCount++; return false; }
         Node2D selected=null; ICombatTarget actor=null; IToolHitTarget tool=null;
+        Vector2 selectedPoint=Vector2.Zero;
         float best=attack.Reach*attack.Reach; ulong bestId=ulong.MaxValue;
         foreach (var entry in candidates)
         {
@@ -68,18 +70,20 @@ public sealed class MeleeHitQuery : IDisposable
             _ray.To=point;
             var obstruction=space.IntersectRay(_ray);
             if (obstruction.Count!=0 && obstruction["collider"].AsGodotObject()!=body) continue;
-            best=distance; bestId=id; selected=receiver; actor=candidateActor; tool=candidateTool;
+            best=distance; bestId=id; selectedPoint=point; selected=receiver; actor=candidateActor; tool=candidateTool;
         }
         if (selected==null || selected.IsQueuedForDeletion() || !selected.IsInsideTree()) return false;
         if (actor!=null)
         {
             if (!CombatTargeting.Eligible(source,actor,attack.Targets)) return false;
             var result=actor.ReceiveDamage(new DamageRequest(attack.Damage,origin),stats);
-            contact=new(selected,result);
+            contact=new(selected,result,source.CombatNode,selectedPoint,aim);
+            // Includes lethal contacts before deferred retirement, but excludes zero damage/immune blocks.
+            if (result.AppliedDamage>0 && actor is ICombatImpactTarget impactTarget) impactTarget.ReceiveImpact(contact);
             if (result.AppliedDamage>0 && !result.Killed && CombatTargeting.Active(actor) && actor is IReactionTarget reactionTarget)
                 reactionTarget.ReceiveReaction(attack,aim);
         }
-        else { tool.ReceiveHit(aim); contact=new(selected,null); }
+        else { tool.ReceiveHit(aim); contact=new(selected,null,source.CombatNode,selectedPoint,aim); }
         return true;
     }
     // Native shapes/parameters are owned by this query, never shared with actor movement colliders.
