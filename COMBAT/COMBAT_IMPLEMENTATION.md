@@ -74,6 +74,8 @@ See [C2.5 Codex implementation handoff](C2_5_PlayerActions.md). Adds primary LMB
 
 ## C3 — Combat feedback and perceived impact
 
+**C3.2 Codex handoff expanded:** [C3 Implementation Notes](C3_Implementation.md#c32--shared-knockback-and-stagger-codex-implementation-handoff) now specifies shared recoil/stagger contracts, folder ownership, attack profile values, actor collision prerequisites, integration with existing motors and validation. Documentation only; C3.2 has not been implemented.
+
 **Codex execution plan:** [C3 Implementation Notes](C3_Implementation.md) breaks this phase into C3.1 damage numbers, C3.2 knockback/stagger, C3.3 particles/hit reactions, C3.4 block outcomes, and C3.5 camera/audio. **C3.1 source folder/requirements:** [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) (scaffold only; no runtime code).
 
 **Early health-bar slice (headless integration checked; visual acceptance pending):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
