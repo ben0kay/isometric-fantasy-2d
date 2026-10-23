@@ -74,6 +74,8 @@ See [C2.5 Codex implementation handoff](C2_5_PlayerActions.md). Adds primary LMB
 
 ## C3 — Combat feedback and perceived impact
 
+**Codex execution plan:** [C3 Implementation Notes](C3_Implementation.md) breaks this phase into C3.1 damage numbers, C3.2 knockback/stagger, C3.3 particles/hit reactions, C3.4 block outcomes, and C3.5 camera/audio. **C3.1 source folder/requirements:** [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) (scaffold only; no runtime code).
+
 **Early health-bar slice (headless integration checked; visual acceptance pending):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
 
 **Scope:** Resource-tunable enemy hit flash, bounded physical recoil/knockback, small impact particles, floating damage text, conditional temporary health bar; optional audio/camera impulse with settings OFF. Separation: `DamageResult` produces presentation events, presentation never changes resolved HP.
