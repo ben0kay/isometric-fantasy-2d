@@ -1,4 +1,4 @@
-// Central player controls: movement, mouse tool aim, RShift sprint and double-tap cursor dodge.
+// Central player controls: movement, mouse tool aim, RShift sprint and double-tap movement-direction dodge.
 using Godot;
 
 public partial class PlayerInput : Node
@@ -36,10 +36,9 @@ public partial class PlayerInput : Node
         _lastShiftPressMs = now;
         if (!doubleTap) return;
         _lastShiftPressMs = -100000;
-        var playerNode = GetParent<Node2D>();
-        Vector2 aimDirection = playerNode.GetGlobalMousePosition() - playerNode.GlobalPosition;
-        if (aimDirection.LengthSquared() > 1f)
-            EmitSignal(SignalName.DodgeRequested, aimDirection.Normalized());
+        Vector2 movementDirection = ReadMovement();
+        if (movementDirection.LengthSquared() > 0.01f)
+            EmitSignal(SignalName.DodgeRequested, movementDirection.Normalized());
     }
 
     // Clear held sprint/tap history when player dies or input becomes unavailable.
