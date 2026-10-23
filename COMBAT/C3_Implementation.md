@@ -9,7 +9,7 @@ Read `CodePreferences.md`, root README, `COMBAT/COMBAT_IMPLEMENTATION.md`, `COMB
 | --- | --- | --- | --- |
 | **C3.1** | [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) | World-space numbers for **actual HP removed**; configurable single-label pop/float/fade/rapid-hit merge; independent event-driven presentation | Code added; build/visual tests pending |
 | **C3.2** | `ENTITIES/Shared/Movement` + `COMBAT/Weapons` | Shared, collision-safe knockback/stagger response from confirmed attacks. Axe prod stronger than swipe; integrate with existing actor movement/chase and P3 bounds | Implemented; Windows feel acceptance pending; [validation](C3_2_Validation.md) |
-| **C3.3** | `FEEDBACK/HitFeedback` | Small impact bursts, adjustable flash and target material/type feedback (bones, wood, metal), optional trail; do not mix gameplay damage into FX | Planned |
+| **C3.3a–d** | `FEEDBACK/Particles` + `FEEDBACK/HitFeedback` | Shared slot-based particles → migrate tree-hit leaves → material profiles → confirmed combat impact integration | Planned; a+b together first |
 | **C3.4** | `FEEDBACK/HitFeedback` + defense event contracts | Different responses to normal hit, blocked damage, guard break/parry if introduced, misses; only results from authoritative C2/C2.5 rules | Planned |
 | **C3.5** | `FEEDBACK/CameraShake` + audio module | Optional subtle camera impulse and attack/impact sounds, centralized tunable defaults with strong caps | Planned |
 
@@ -82,6 +82,76 @@ ENTITIES/
 
 **Explicitly out of scope:** C3.3 particles, C3.4 block VFX, C3.5 camera shake/audio, crowd steering, ragdolls, inventory, full boss behavior, automatic combat rebalance or save-schema migration.
 
-## C3.3–C3.5 — Later presentation work
+## C3.3 — Reusable particle foundation, tree-leaf migration and hit feedback
+
+> **Status: PLANNED — no C3.3 implementation yet.** Execute in order **C3.3a → C3.3b → C3.3c → C3.3d**. Recommend asking Codex to implement **a+b together** as one scoped job, then assess the proven shared system before authoring material-specific combat effects. Do not inadvertently rebuild existing tree leaf behaviour or implement later subphases without authorization.
+
+### Architecture and folder ownership
+
+```text
+FEEDBACK/
+├── Particles/
+│   ├── README.md
+│   ├── ParticleEmitter.cs         # shared, bounded particle state, animation and draw
+│   ├── ParticleProfile.cs         # data-driven properties with optional spawn overrides
+│   └── ParticleShapes.cs          # reusable simple 2D polygon/primitive shapes
+└── HitFeedback/
+    ├── README.md                  # C3.3c/d consumer of shared particles
+    └── HitFeedback.cs             # proposed only when combat integration needs it
+WORLD/Content/Vegetation/Trees/Shared/HitResponse/
+├── TreeHitResponse.cs             # retains hit registration and trunk wobble
+└── TreeHitConfig.cs               # retains tree-specific wobble and burst tuning
+```
+
+The generic engine lives under `FEEDBACK/Particles/`, **not inside `FEEDBACK/HitFeedback/`**, because tree hits, mining, footstep dust, environmental effects and future magic may all consume it. Avoid scaffolding unused scripts or creating per-species `.tres` files by default. A small `Resource` profile may be shared by many species; emitter calls can override colour, count, direction or origin without duplicating profiles.
+
+### C3.3a — Shared particle mechanics (first)
+
+Extract the proven bounded-slot pattern from `WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitResponse.cs` rather than introducing a competing GPU/CPU particle framework. Shared emitter responsibilities:
+
+- Spawn a limited count into reusable slots; no per-particle Nodes, rigid bodies or collision queries. Cap counts per burst and total capacity, and choose predictable overflow/replacement behavior.
+- Per-particle position, velocity, age/lifetime, gravity/acceleration, optional wind and sideways flutter, angular rotation/spin, size/stretch, opacity/fade and configurable directional spread.
+- Render lightweight reusable shapes (leaf, angular shard, circle/droplet, spark/chip), with colour/size/profile support; keep sprite-backed particles optional and only if needed later.
+- Support a reusable `ParticleProfile` plus optional per-spawn parameters (e.g. foliage colour sampled from existing tree definition; source position and hit direction). Validate/clamp nonfinite or excessive profile values.
+- Idle cost: do not process or redraw while empty; bounded loops while active; clear on scene/chunk retirement; never scan all actors or the world. Prefer local lightweight emitters initially rather than an always-on global manager.
+- Keep particle rendering visual-only; it must never decide damage, combat hit eligibility, HP, tree resource yield, or physical knockback.
+
+### C3.3b — Migrate **tree-hit** leaves (together with a)
+
+Existing reference: `TreeHitResponse.cs` uses **24 reused Leaf slots**, `LeafShape` polygon draw, `DrawColoredPolygon`, leaf ages, rotation/stretch, wind from `WorldWeather`, and sleeps after its wobble/leaves finish. `TreeHitConfig` exposes `LeavesPerHit` and wobble; `TreeDefinition.FoliageColour` and `HasFoliage` determine leaf appearance/eligibility, including burnt foliage suppression.
+
+- Make the shared emitter animate and draw **tree-hit falling leaves** while `TreeHitResponse` continues to own trunk wobble, existing tree `IToolHitTarget`, event `VisualTransformChanged`, hit count and tree-specific eligibility.
+- **Preserve exact existing default visual feel**: polygon size/shape, colour inheritance, spawn zone on the tree artwork, ~18–29 downward initial velocity, ±12 sideways drift plus hit direction, wind response, flutter/spin/stretch, 2.4–3.8 s lifetime and approximately 10 configured leaves per hit (maximum 24 reusable slots). Do not change positions unintentionally through transform or coordinate-space migration.
+- Preserve `TreeDefinition.FoliageColour` and `HasFoliage`; fire/burnt trees must suppress healthy leaf bursts correctly. **Do not create one hit-colour Resource per tree species**. Keep optional embedded `TreeHitConfig` overrides, not duplicate data.
+- **Do not migrate ambient falling leaves yet**: hit-triggered tree leaves and ambient weather/wind leaves are separate features; evaluate ambient reuse later only if useful.
+- Do not regress wobble, snow/wetness appearance, tree shadow update notifications, hit mechanics, tool harvesting, streamed tree lifetime or existing art.
+- Accept a small adapter if needed to let the tree feed its local wind and foliage settings without coupling generic `FEEDBACK/Particles` directly to `WorldWeather` or tree classes.
+
+**C3.3a+b acceptance:** production oak/pine/blossom trees retain indistinguishable hit-leaf look and wobble, including tree-colour variants and burnt/no-foliage state; no duplicate leaves, per-hit node allocations, lingering processing, stale wind/tree references or new P3 streaming stalls. Record any intentional visual deviations before considering complete.
+
+### C3.3c — Material-specific combat impact profiles (later)
+
+Use the shared particle core for visual profiles such as:
+- **Bone:** angular pale fragments; outward burst, short life, quick spin.
+- **Flesh:** small coloured droplets; directional spray and shorter fade.
+- **Stone:** heavier chips/dust; stronger downward acceleration and less drift.
+- **Metal:** tiny spark lines; quick outward streak/fade.
+- **Wood:** existing tree-hit leaves continue unchanged; optional splinters are distinct if desired later.
+
+Species/objects select a shared **material impact profile**, not individual particle controllers. Use configurable colour, shapes, count, trajectory, lifetime, gravity and optional per-spawn overrides. Start with only material types the production game actually needs. Skeletons can reference a shared Bone profile; future zombies/trolls use a Flesh profile. This phase authors profiles and verifies the renderer can produce distinct visuals; do not implement attack integration until d.
+
+### C3.3d — Confirmed-combat-hit wiring and validation (later)
+
+- Emit impact particles only from **authoritative C2/C2.5 confirmed contact/result data**, once per valid contact, positioned at real impact/closest hit point with meaningful strike direction. Do not infer damage from HP deltas or perform duplicate physics contact queries.
+- Decide and document treatment of blocked/immune/missed hits; C3.4 retains distinct guard/block and miss outcome feedback. Do not emit blood or bone shards on a miss.
+- Preserve existing entity red flash and C3.1 damage numbers; no duplicate flash or extra damage/knockback. Optional subtle weapon trail is a later separately tunable presentation addition, not a prerequisite for particle foundation.
+- Test player/enemy contacts, multiple skeletons, corpse unload, camera zoom/Y-sort/world-space transforms and rapid strikes; cap effects during battles and streaming.
+- Run Godot Mono/.NET build, headless import, targeted tree hit/fire, C1/C2/C2.5/C3.2, P3/SO2/P4 regression suites where affected. Document observed results and known shutdown-baseline failures separately from acceptance. Perform manual Windows visual/performance checks.
+
+### Codex handoff — first job
+
+**Implement C3.3a + C3.3b only.** Before coding read `CodePreferences.md`, root README, `TreeHitResponse.cs`, `TreeHitConfig.cs`, `TreeDefinition.cs`, tree fire/foliage interactions, and current `FEEDBACK/` conventions. Create the shared lightweight particle engine under `FEEDBACK/Particles/` and migrate **hit-generated tree leaves only** to use it without visual or gameplay regressions. Keep wobble tree-owned; do not touch ambient leaves. Do not implement bone/flesh/stone/metal combat effects yet. Update this document and new `FEEDBACK/Particles/README.md` with actual test evidence after the implementation. Keep a single implementation job/commit and preserve P4 content-fingerprint constraints.
+
+## C3.4–C3.5 — Later presentation work
 
 Impacts, block feedback, camera/audio should reuse the same confirmed contact/results without introducing feedback-specific damage computations. Use caps and explicit settings defaults to keep gameplay performance stable.
