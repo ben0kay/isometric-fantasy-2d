@@ -6,4 +6,4 @@ script = ExtResource("config")
 Id = "undead.skeleton.basic"
 Sprite = ExtResource("sprite")
 ChasePlayer = true
-MaxHealth = 3
+MaxHealth = 50

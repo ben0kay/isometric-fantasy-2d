@@ -51,7 +51,7 @@ public partial class ValidatePlayerActions : Node2D
         _input.EmitSignal(PlayerInput.SignalName.ToolUseRequested,Vector2.Right*100);
         await Wait(0.65); Check(_target.Health==11,"Flat defense lost"); _target.Stats.RemoveModifier("armor");
         Check(!_tool.IsPhysicsProcessing(),"Settled attack callback");
-        Check(GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres").MaxHealth==3,"Production skeleton changed");
+        Check(GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres").MaxHealth==50,"Basic skeleton must have 50 HP");
     }
     // Shield state is independent of main-hand selection; frontal reduction follows armor and rounds once.
     // =========================================================

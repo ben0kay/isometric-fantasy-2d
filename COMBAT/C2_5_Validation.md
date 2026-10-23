@@ -1,5 +1,7 @@
 # C2.5 — implementation, validation and local handoff
 
+**Later balance update:** the user requested Skeleton Basic itself at 50 HP. Its canonical Resource and fixture expectation now use 50, including the regular World. The original C2.5 results below describe the earlier 3-HP revision. Existing campaign fingerprints may reject this intentional content change; no migration bypass was added.
+
 Implemented the agreed forward slash/thrust, starter axe/sword selection, separate shield flag, slower directional block overriding sprint, dodge cancelling guard, and visual-only hop. Physical knockback remains C3. No inventory, shield art, additional physics mover, production skeleton rebalance or world/schema change.
 
 Baseline: `19f38f1` (C2 + C2.5 handoff). Concurrent Markdown-only C3 scaffold `733727f` was incorporated without executing C3. One GitHub commit for this job. Target-PC graphical/feel acceptance and a final normal SDK build remain open; the full regression suite is not clean.

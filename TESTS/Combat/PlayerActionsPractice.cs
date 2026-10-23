@@ -16,7 +16,7 @@ public partial class PlayerActionsPractice : Node2D
         _navigation.Build(this,new Rect2(-800,-544,2560,1728));
         var ui=new CanvasLayer(); AddChild(ui);
         var column=new VBoxContainer { Position=new Vector2(24,24) }; ui.AddChild(column);
-        column.AddChild(new Label { Text="C2.5 DISPOSABLE PRACTICE — LMB slash · MMB thrust · 1 axe · 2 temporary sword · 3 shield\nRMB hop / hold with shield to block · arrows move · RShift sprint / double-tap dodge\nTarget: 50 HP. Production skeleton remains 3 HP. No saves. Blue arc is a debug guard marker." });
+        column.AddChild(new Label { Text="C2.5 DISPOSABLE PRACTICE — LMB slash · MMB thrust · 1 axe · 2 temporary sword · 3 shield\nRMB hop / hold with shield to block · arrows move · RShift sprint / double-tap dodge\nTarget: 50 HP, matching Skeleton Basic. No saves. Blue arc is a debug guard marker." });
         _status=new Label(); column.AddChild(_status);
         var reset=new Button { Text="Reset target and player health",FocusMode=Control.FocusModeEnum.None }; column.AddChild(reset); reset.Pressed+=ResetTarget;
         ResetTarget(); QueueRedraw();
