@@ -15,3 +15,7 @@ Stagger blocks new attacks/actions. Only an attack profile explicitly enabling I
 Death, disabled ownership and unloading discard transient state; it is never saved. Passive entities wake their existing GroundChase motor only for a reaction/recovery window, then sleep. Active pursuers and the player use existing physics callbacks; no extra world scans, allocations per reaction or per-species loops. No target-PC performance measurement is claimed.
 
 See [C3.2 validation and tuning](../../../COMBAT/C3_2_Validation.md).
+
+## ES0–ES4 — Entity separation roadmap (planned)
+
+[EntitySeparationPlan.md](EntitySeparationPlan.md) tracks reusable local crowd separation, species-specific Resource profiles, optional engagement positioning, and five-skeleton validation. This is **documentation only**; no steering implementation has been added. AC body blocking remains independent and C3.2 knockback/stagger must retain movement priority.
