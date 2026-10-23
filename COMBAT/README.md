@@ -1,17 +1,17 @@
 # COMBAT
 
-> **Status:** C0/C1 implemented: shared actor health, cached stats and damage results. [Validation](C1_Validation.md) records checks and remaining manual work. [C2–C5](COMBAT_IMPLEMENTATION.md) remain planned.
+> **Status:** C0–C2 implemented: shared health/stats/damage plus player/enemy attack execution and contact validation. See [C1](C1_Validation.md), [C2 results and limitations](C2_Validation.md), and [remaining C3–C5 plan](COMBAT_IMPLEMENTATION.md).
 
 Shared combat resolution for player, creatures, enemies and NPCs: damage, hit testing, projectiles, weapons and defense. Player input/weapon usage stays in ENTITIES/Player/Combat. Timed generic conditions belong in SYSTEMS/Effects.
 
 ## Folder map
 
 - [Damage/](Damage/README.md): Implemented shared damage request/result/resolver; damage categories and resistances remain future work.
-- [HitDetection/](HitDetection/README.md): Reusable melee hitboxes, collision/hurtbox detection, impact validation and range checks..
+- [HitDetection/](HitDetection/README.md): Implemented contact-window broad phase, receiving geometry and obstruction checks.
 - [Projectiles/](Projectiles/README.md): Common arrows, spells, thrown objects and collision/lifetime helpers; weapon item definitions belong in ITEMS/Weapons..
 - [Weapons/](Weapons/README.md): Shared combat attack profiles, cooldowns, swing rules and hit handling.
 - [Defense/](Defense/README.md): Armor mitigation, blocks, shields, dodge rules and defense modifiers used by all combat-capable actors..
-- [Targeting/](Targeting/README.md): Generic targeting, visibility, hostile/neutral relations and range queries where needed by creatures, NPCs and player abilities..
+- [Targeting/](Targeting/README.md): Implemented minimal receiving factions/liveness/geometry; richer AI relations remain planned.
 
 ## Conventions
 

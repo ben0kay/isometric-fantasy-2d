@@ -4,6 +4,8 @@ using System;
 public partial class GroundChase : Node
 {
     public bool Enabled { get; set; }
+    public AttackExecution Attack { get; private set; }
+    private AttackProfile _defaultAttack;
     private Entity _actor;
     private CharacterBody2D _target;
     private StaticObstacleNavigation _navigation;
@@ -11,7 +13,7 @@ public partial class GroundChase : Node
     private int _index;
     private float _repathTimer;
     #region Setup
-    // Do not tick passive entities or entities without navigation.
+    // Passive entities sleep; navigation injection explicitly activates pursuit/nearby attack intent.
     // =========================================================
     public override void _Ready()
     {
@@ -24,14 +26,32 @@ public partial class GroundChase : Node
         _target = target;
         _navigation = navigation;
         _repathTimer = 0f;
-        SetPhysicsProcess(Enabled && target != null && navigation != null);
+        Attack?.Cancel();
+        if (Enabled && _actor.Config.MeleeEnabled) EnsureAttack();
+        SetPhysicsProcess(Enabled && target != null);
     }
+    // Optional melee allocates one executor only when enabled, including later config reactivation.
+    // =========================================================
+    private void EnsureAttack()
+    {
+        if (Attack!=null) return;
+        Attack=new AttackExecution(_actor); _defaultAttack=GD.Load<AttackProfile>("res://COMBAT/Weapons/DefaultEnemyMelee.tres");
+    }
+    // Stop pursuit and pending contact together on death.
     // =========================================================
     public void Stop()
     {
+        Attack?.Cancel();
         SetPhysicsProcess(false);
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity = Vector2.Zero;
     }
+    // Process-mode suspension (streaming/scene ownership) invalidates any pending attack.
+    // =========================================================
+    public override void _Notification(int what)
+    { if (what==NotificationDisabled) Attack?.Cancel(); }
+    // Dispose contact-query resources on death cleanup/unload.
+    // =========================================================
+    public override void _ExitTree() => Attack?.Dispose();
     #endregion
     #region Pursuit
     // Cached static-obstacle route, equivalent to the original Basic Skeleton chasing.
@@ -39,10 +59,24 @@ public partial class GroundChase : Node
     public override void _PhysicsProcess(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("GroundChase.PhysicsProcess");
-        if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !GodotObject.IsInstanceValid(_target) || _navigation == null) return;
+        if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !_actor.HealthState.IsAlive
+            || !GodotObject.IsInstanceValid(_target) || !_target.IsInsideTree() || _target.IsQueuedForDeletion()
+            || (_target is ICombatTarget dead && !CombatTargeting.Active(dead)))
+        { Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
+        if (!_actor.Config.MeleeEnabled) Attack?.Cancel();
+        else { EnsureAttack(); Attack.Advance(delta); }
         EntityDefinition config = _actor.Config;
         float distanceSquared = _actor.GlobalPosition.DistanceSquaredTo(_target.GlobalPosition);
-        if (distanceSquared > config.DetectionRadius * config.DetectionRadius ||
+        if (Attack?.IsSwinging==true) { _actor.Velocity=Vector2.Zero; return; }
+        // Pursuit supplies intent only; the same executor as the player owns contacts and cooldown.
+        var profile=config.MeleeAttack ?? _defaultAttack;
+        if (config.MeleeEnabled && Attack!=null && !Attack.Busy && profile!=null && _target is ICombatTarget target
+            && distanceSquared<=config.DetectionRadius*config.DetectionRadius
+            && CombatTargeting.Eligible(_actor,target,profile.TargetFactions)
+            && _actor.GlobalPosition.DistanceSquaredTo(target.ClosestHitPoint(_actor.GlobalPosition))<=profile.HitReach*profile.HitReach
+            && Attack.TryStart(profile,_target.GlobalPosition-_actor.GlobalPosition))
+        { _actor.Velocity=Vector2.Zero; return; }
+        if (_navigation==null || distanceSquared > config.DetectionRadius * config.DetectionRadius ||
             distanceSquared <= config.StopDistance * config.StopDistance)
         {
             _actor.Velocity = Vector2.Zero;

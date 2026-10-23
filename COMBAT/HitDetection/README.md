@@ -1,5 +1,7 @@
-# COMBAT/HitDetection
+# Melee contact queries
 
-Reusable melee hitboxes, collision/hurtbox detection, impact validation and range checks.
+C2 `MeleeHitQuery` uses the current physics world's overlap broad phase only during an active contact window. There is no group/world scan or idle Area2D. A cached circle/parameters excludes the source body. Radius adds a 64-unit conservative margin; actor hurt radii clamp to 3–60 independently from existing movement colliders. Nearby candidates then pass current hurt-point reach, locked-aim arc, faction/liveness and obstruction-ray checks. The nearest eligible actor or enabled tool helper receives one contact; equal-distance ties use instance ID.
 
-> **Status:** Folder planning only — no implementation or gameplay assets have been added.
+Only immediate tool-helper children of nearby physics bodies are examined. This reuses tree `IToolHitTarget` feedback without sending actor damage to trees. Collision layers/masks, trunk shapes and scene ownership stay unchanged. Non-colliding props are not melee candidates. Walls, rocks and intervening bodies block contact.
+
+At most 256 bodies are returned. A saturated query fails closed, increments `OverflowCount` and damages nothing; it never chooses an arbitrary truncated subset. `QueryCount` supports idle/active diagnostics. Cached native shapes/query parameters are disposed with the owner; active Godot query result arrays/dictionaries still allocate, so this is bounded active work, not a claim of allocation-free contact. Query cost depends on nearby physics density, not world size. See [C2 validation](../C2_Validation.md).

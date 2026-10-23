@@ -1,3 +1,5 @@
-# Player / Equipment
+# Player equipment
 
-EquippedTool.cs temporarily attaches and animates the default axe through PlayerInput.ToolUseRequested. No inventory or slot system is needed. Tool scene/art/config live in ITEMS/Tools/Axes; shared hit query under Player/Interaction and tree response under WORLD/Content/Vegetation/Trees/Shared/HitResponse. All button input is centralized in PlayerInput.cs.
+`EquippedTool` adapts `PlayerInput.ToolUseRequested` into shared C2 `AttackExecution` requests and renders the existing axe sweep/facing. Successful requests wake its attack physics callback, which sleeps after recovery/cooldown or cancellation. Its pre-existing continuous mouse-facing render callback remains. Death cancels/hides the tool; disabled scene ownership cancels pending contact; exit unsubscribes and disposes native query objects.
+
+Tool scene/art/config stay in ITEMS/Tools/Axes. `AxeConfig` inherits shared `AttackProfile`; there is no inventory/slot system. Contact geometry, target policy and actor damage live under COMBAT, while tree feedback stays with WORLD tree helpers. The old HitQuery child/API is retained for compatibility callers/tests and is not the production swing executor.

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AttackProfile" format=3]
+[ext_resource type="Script" path="res://COMBAT/Weapons/AttackProfile.cs" id="script"]
+[resource]
+script = ExtResource("script")
+AttackSeconds = 0.9
+ContactProgress = 0.45
+ContactWindow = 0.08
+CooldownSeconds = 0.35
+BaseDamage = 6.0
+HitReach = 36.0
+HitHalfAngleDegrees = 55.0
+TargetFactions = 1

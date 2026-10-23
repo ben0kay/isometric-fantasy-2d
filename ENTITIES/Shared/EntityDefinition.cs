@@ -18,6 +18,10 @@ public partial class EntityDefinition : Resource
     [Export(PropertyHint.Range, "0.15,2,0.05")] public float RepathSeconds { get; set; } = 0.45f;
 
     [Export] public CombatStatProfile CombatStats { get; set; }
+    [ExportGroup("Melee (requires pursuit intent)")]
+    [Export] public CombatFaction Faction { get; set; } = CombatFaction.Hostile;
+    [Export] public bool MeleeEnabled { get; set; } = true;
+    [Export] public AttackProfile MeleeAttack { get; set; }
     [ExportGroup("Health and feedback")]
     [Export(PropertyHint.Range, "1,30,1")] public int MaxHealth { get; set; } = 3;
     [Export(PropertyHint.Range, "0.1,1,0.05")] public float HitFlashSeconds { get; set; } = 0.18f;

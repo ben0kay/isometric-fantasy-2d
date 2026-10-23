@@ -1,0 +1,4 @@
+[gd_scene format=3]
+[ext_resource type="Script" path="res://TESTS/Combat/ValidateMeleeExecution.cs" id="script"]
+[node name="ValidateMeleeExecution" type="Node2D"]
+script = ExtResource("script")
