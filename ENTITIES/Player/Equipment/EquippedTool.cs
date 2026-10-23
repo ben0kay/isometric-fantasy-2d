@@ -12,6 +12,8 @@ public partial class EquippedTool : Node2D
     private PlayerInput _input;
     private PlayerMovement _owner;
     private float _angle, _attackStart, _poseStartAngle, _contactProgress, _sweepDegrees, _sweepWindupFraction, _thrustPixels;
+    private float _poseStartOrbit, _returnRemaining, _returnAngle, _returnOrbit;
+    private const float ReturnSeconds=0.12f;
     private bool _visualSwing, _marker;
     private AttackPresentation _presentation;
 
@@ -46,7 +48,7 @@ public partial class EquippedTool : Node2D
         _thrustPixels=profile.ThrustPixels;
         _presentation=profile.Presentation; _contactProgress=profile.ContactProgress; _sweepDegrees=profile.SweepDegrees;
         _sweepWindupFraction=profile.SweepWindupFraction;
-        _poseStartAngle=_angle; _attackStart=Attack.Aim.Angle(); _visualSwing=true; SetPhysicsProcess(true);
+        _poseStartAngle=_angle; _poseStartOrbit=_toolSprite.Position.X; _returnRemaining=0; _attackStart=Attack.Aim.Angle(); _visualSwing=true; SetPhysicsProcess(true);
     }
     // Shield release is unconditional; a rejected press is never queued for later activation.
     // =========================================================
@@ -81,7 +83,7 @@ public partial class EquippedTool : Node2D
     // =========================================================
     private void CancelAttack()
     {
-        Attack?.Cancel(); _visualSwing=false; _owner?.Actions.End(PlayerAction.Attack); _owner?.StopGuard(); SetPhysicsProcess(false);
+        Attack?.Cancel(); _visualSwing=false; _returnRemaining=0; _owner?.Actions.End(PlayerAction.Attack); _owner?.StopGuard(); SetPhysicsProcess(false);
         if (_marker) { _marker=false; QueueRedraw(); }
     }
     // Release intent/health subscriptions and native contact objects on unload.
@@ -109,7 +111,7 @@ public partial class EquippedTool : Node2D
         if (!Attack.IsSwinging) _owner.Actions.End(PlayerAction.Attack);
         SetPhysicsProcess(Attack.Busy);
     }
-    // Sweep eases from the current held pose into a brief wind-up before crossing contact; thrust snaps forward and retracts.
+    // Continuous sweep through impact, anticipated thrust and smooth recovery share the existing render callback.
     // =========================================================
     public override void _Process(double delta)
     {
@@ -119,36 +121,50 @@ public partial class EquippedTool : Node2D
         Position=Config.HandAnchor+_playerSprite.Position+new Vector2(0,-_owner.HopHeight);
         Vector2 aim=_input.ReadToolAim(_owner.GlobalPosition);
         float orbit=Mathf.Max(4,Config.OrbitRadius);
+        if (_visualSwing && !Attack.IsSwinging)
+        {
+            // Finish or interruption returns from the last displayed pose, never a forced end pose.
+            _visualSwing=false; _returnRemaining=ReturnSeconds; _returnAngle=_angle; _returnOrbit=_toolSprite.Position.X;
+        }
         if (_visualSwing)
         {
             float p=Attack.Progress, c=Mathf.Clamp(_contactProgress,0.001f,0.999f);
             if (_presentation==AttackPresentation.Thrust)
             {
-                float t=Mathf.Clamp(p<=c ? p/c : (p-c)/(1-c),0f,1f);
-                // Fast ease-out extension reads as a jab; smoothly retract after the contact peak.
-                float extension=p<=c ? 1f-(1f-t)*(1f-t)*(1f-t) : 1f-t*t*(3f-2f*t);
-                _angle=_attackStart; orbit+=extension*_thrustPixels;
+                float windup=Mathf.Min(0.08f,c*0.25f);
+                _angle=Mathf.LerpAngle(_poseStartAngle,_attackStart,Ease(p/Mathf.Max(0.001f,windup)));
+                // Brief anticipation, accelerated extension, then a softer withdrawal; peak still matches contact.
+                if (p<windup) orbit=Mathf.Lerp(_poseStartOrbit,orbit-2f,Ease(p/windup));
+                else if (p<=c) orbit+=Mathf.Lerp(-2f,_thrustPixels,Ease((p-windup)/(c-windup)));
+                else orbit+=_thrustPixels*(1-Ease((p-c)/(1-c)));
             }
             else
             {
-                // Only cosmetic: finish the wind-up before the authoritative contact progress.
                 float windup=Mathf.Min(_sweepWindupFraction,c*0.4f);
-                float start=_attackStart-Mathf.DegToRad(_sweepDegrees*0.5f);
+                float half=Mathf.DegToRad(_sweepDegrees*0.5f);
                 if (windup>0f && p<windup)
                 {
-                    float t=Mathf.Clamp(p/windup,0f,1f);
-                    t=t*t*(3f-2f*t);
-                    _angle=Mathf.LerpAngle(_poseStartAngle,start,t);
+                    float t=Ease(p/windup);
+                    _angle=Mathf.LerpAngle(_poseStartAngle,_attackStart-half,t);
+                    orbit=Mathf.Lerp(_poseStartOrbit,orbit,t);
                 }
                 else
                 {
-                    float t=Mathf.Clamp(p<=c ? (p-windup)/(c-windup) : (p-c)/(1f-c),0f,1f);
-                    t=t*t*(3f-2f*t);
-                    float offset=p<=c ? Mathf.Lerp(-_sweepDegrees*0.5f,0f,t) : Mathf.Lerp(0f,_sweepDegrees*0.5f,t);
-                    _angle=_attackStart+Mathf.DegToRad(offset);
+                    // Matching tangents carry angular momentum through contact instead of stopping there.
+                    float speed=2f*half/Mathf.Max(0.001f,1-windup)*1.35f;
+                    float offset=p<=c ? Hermite(-half,0,0,speed*(c-windup),(p-windup)/(c-windup))
+                        : Hermite(0,half,speed*(1-c),0,(p-c)/(1-c));
+                    _angle=_attackStart+offset;
+                    orbit+=3f*Mathf.Sin(Mathf.Pi*Mathf.Clamp((p-windup)/(1-windup),0,1));
                 }
             }
-            if (p>=1) _visualSwing=false;
+        }
+        else if (_returnRemaining>0)
+        {
+            _returnRemaining=Mathf.Max(0,_returnRemaining-(float)delta);
+            float t=Ease(1-_returnRemaining/ReturnSeconds);
+            float resting=aim.LengthSquared()>0.01f ? aim.Angle() : _attackStart;
+            _angle=Mathf.LerpAngle(_returnAngle,resting,t); orbit=Mathf.Lerp(_returnOrbit,orbit,t);
         }
         else if (aim.LengthSquared()>0.01f)
             _angle=Mathf.LerpAngle(_angle,aim.Angle(),1-Mathf.Exp(-Mathf.Max(1,Config.AimSpeed)*(float)delta));
@@ -156,6 +172,16 @@ public partial class EquippedTool : Node2D
         Rotation=_angle; _toolSprite.Position=new Vector2(orbit,0); ZIndex=Mathf.Sin(_angle)<-0.15f ? -1 : 1;
         bool marker=_owner.Guard.Active && _owner.Guard.Profile.ShowDebugMarker;
         if (_marker!=marker) { _marker=marker; QueueRedraw(); }
+    }
+    // Shared bounded cosmetic easing; no timers, allocations or changes to authoritative attack timing.
+    // =========================================================
+    private static float Ease(float t) { t=Mathf.Clamp(t,0,1); return t*t*(3-2*t); }
+    // Cubic pose interpolation with explicit endpoint tangents, expressed in normalized segment time.
+    // =========================================================
+    private static float Hermite(float a,float b,float startTangent,float endTangent,float t)
+    {
+        t=Mathf.Clamp(t,0,1); float t2=t*t,t3=t2*t;
+        return (2*t3-3*t2+1)*a+(t3-2*t2+t)*startTangent+(-2*t3+3*t2)*b+(t3-t2)*endTangent;
     }
     // Optional debug guard indicator, not shield artwork; changes only when guard state changes.
     // =========================================================

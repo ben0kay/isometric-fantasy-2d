@@ -73,3 +73,9 @@ godot --headless --max-fps 60 --path . res://TESTS/Generation/ValidateChunkStrea
 Use a disposable Godot user-data directory for save fixtures; do not target real profiles. Expected targeted counts are above; broader known failures must be reported separately from assertion passes.
 
 Open World.tscn and press F6. Compare LMB light shove against MMB stronger prod/interruption on the five debug skeletons. Test diagonals, backs, trees/rocks, other skeletons and loaded-area edges; verify chase resumes, tools retain their pose transitions and HP changes remain 11/5. Check receiving hits during sprint/dodge/hop/guard, rapid hits from several enemies, death/unload/reload and settled idle profiler callbacks. No F9 panel or custom debug drawing was needed; use Godot's Visible Collision Shapes and existing disposable practice setup. C3.3–C3.5 remain separate work.
+
+## Subsequent local animation/scale polish
+
+C3.2's results above belong to `b003e07`. A later local presentation pass removes the sweep's contact pause using matching Hermite tangents, replaces thrust's instant direction change with a brief alignment/2px anticipation, and adds a 0.12s return from the last displayed pose on completion/interruption. Axe SpriteScale changes from 0.16 to 0.144; other attack/gameplay values are unchanged. No new Node, Timer, Tween or callback; the existing held-item render path owns cosmetic recovery.
+
+Static whitespace and curve/scale numerical checks passed. **Build/runtime/visual checks for this later pass are pending:** the temporary Godot/.NET tools used above no longer exist in this session, and neither executable is on PATH. Run `dotnet build`, the C2.5 and C3.2 fixture commands above, then F6 World: check LMB through-impact motion, MMB alignment/extension, quick repeated attacks, abrupt aim changes, interrupted swings, and the smaller axe grip. Prior C3.2 results do not certify these subsequent edits.

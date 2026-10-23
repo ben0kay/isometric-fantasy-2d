@@ -11,5 +11,5 @@ PrimaryAttack = ExtResource("primary")
 SecondaryAttack = ExtResource("secondary")
 Texture = ExtResource("art")
 GripOffset = Vector2(-90, -270)
-SpriteScale = Vector2(0.16, 0.16)
+SpriteScale = Vector2(0.144, 0.144)
 SpriteRotationDegrees = 70.0
