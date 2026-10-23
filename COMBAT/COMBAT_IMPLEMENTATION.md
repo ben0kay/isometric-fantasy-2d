@@ -76,7 +76,7 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 ## C4 — Movement and attack feel
 
-**Scope:** Tune acceleration/deceleration, aim/facing, sprint, optional dodge with its own cooldown/possible invulnerability decision, attack movement penalties, hit-stun/knockback blending, control buffering if useful. Use `PlayerMovement` as the existing authoritative CharacterBody2D mover; common impulses where enemy chase also moves. Defer full survival stamina unless the user explicitly authorizes integration.
+**Pre-C4 movement mini-pass:** Right Shift sprint and double-tap right Shift cursor dodge have been added to `PlayerInput` + `PlayerMovement` with Resource tuning (see Player Movement README). Build/manual acceptance still pending; C4 must **refine and reuse**, not reimplement a second sprint/dodge controller. No sprite animation, stamina or invulnerability is included.\n\n**Scope:** Tune acceleration/deceleration, aim/facing, existing sprint/dodge with its own cooldown/possible invulnerability decision, attack movement penalties, hit-stun/knockback blending, control buffering if useful. Use `PlayerMovement` as the existing authoritative CharacterBody2D mover; common impulses where enemy chase also moves. Defer full survival stamina unless the user explicitly authorizes integration.
 
 **Pass:** No diagonal speed exploit, no movement through unready chunks or obstacles, no permanently locked input, predictable dash/collision and balanced hit timing; baseline exploration speed and camera usability retained.
 
