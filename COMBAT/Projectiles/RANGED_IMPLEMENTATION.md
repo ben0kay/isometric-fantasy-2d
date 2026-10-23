@@ -1,6 +1,6 @@
 # R0–R2 — Shared Projectiles and Skeleton Archer (Codex roadmap)
 
-> **Status: PLANNED, documentation only.** Implement in requested slices, one job/commit at a time. **R** means Ranged Combat; independent from C3 combat feedback and ES entity separation. Current code has shared C2/C2.5 melee and C3.2 reactions, but no production projectile runtime yet.
+> **Status: R0 IMPLEMENTED (23 October 2026); R1/R2 PLANNED.** See [R0 validation](R0_Validation.md). Implement in requested slices, one job/commit at a time. **R** means Ranged Combat; independent from C3 combat feedback and ES entity separation. Current code has shared C2/C2.5 melee and C3.2 reactions, and the R0 shared straight-projectile runtime. No production archer is wired yet.
 
 ## Desired first encounter
 
