@@ -1,6 +1,6 @@
 # ES0–ES4 — Shared Entity Separation and Engagement Positioning
 
-> **Status: PLANNED, documentation only (23 October 2026).** No steering, AI, scene or Resource code is implemented by this plan. **ES** means Entity Separation, distinct from AC actor collision and C3 combat feedback. Implement only the user-requested slice; update status after real validation.
+> **Status: ES0 audit COMPLETE (23 October 2026); ES1–ES4 PLANNED.** See [ES0 findings and ES1 proposal](ES0_Audit.md). No steering, AI, scene or Resource code is implemented by this plan. **ES** means Entity Separation, distinct from AC actor collision and C3 combat feedback. Implement only the user-requested slice; update status after real validation.
 
 ## Problem and goals
 
@@ -30,7 +30,7 @@ File names are proposals, not requirements to add unused placeholders. Shared be
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| **ES0 — Audit** | Inspect pursuit, actor/query indexing, existing collisions, C3.2 priority, streaming limits | Planned |
+| **ES0 — Audit** | Inspect pursuit, actor/query indexing, existing collisions, C3.2 priority, streaming limits | Complete: source audit + limited five-skeleton headless baseline; Windows profiling pending |
 | **ES1 — Local separation** | Bounded nearby-actor steering blended with existing chase velocity | Planned |
 | **ES2 — Species profiles** | Resource-driven distance/strength/personality with optional opt-out | Planned |
 | **ES3 — Engagement positioning** | Optional distributed approach/attack positions around target | Planned |
@@ -99,3 +99,7 @@ File names are proposals, not requirements to add unused placeholders. Shared be
 **Job C: ES4** final stress tests and validation handoff. Record real test results after each job; don't label all phases complete because one fixture passes.
 
 **Out of scope:** new skeletal attack animations, full group tactics, squad leaders, advanced navmesh crowd simulation, adding physics push by simply walking into enemies, per-species scripts, wholesale combat rebalance, and changes to AC collision-layer setup without a demonstrated reason.
+
+## ES0 result
+
+[ES0_Audit.md](ES0_Audit.md) records the inspected revision, index/lifecycle inventory, actual five-skeleton baseline, query allocation caveat, proposed bounded neighbor sampling and minimal ES1 integration. The baseline shows tight packing without sampled body penetration; all five reached attack-range positions by 10 seconds on the tested open-terrain seed. ES1 should be a modest pursuit adjustment, not a tactical surrounding guarantee. No ES1/ES2/ES3 runtime work was implemented by this audit.

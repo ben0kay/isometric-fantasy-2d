@@ -16,6 +16,6 @@ Death, disabled ownership and unloading discard transient state; it is never sav
 
 See [C3.2 validation and tuning](../../../COMBAT/C3_2_Validation.md).
 
-## ES0–ES4 — Entity separation roadmap (planned)
+## ES0–ES4 — Entity separation roadmap
 
-[EntitySeparationPlan.md](EntitySeparationPlan.md) tracks reusable local crowd separation, species-specific Resource profiles, optional engagement positioning, and five-skeleton validation. This is **documentation only**; no steering implementation has been added. AC body blocking remains independent and C3.2 knockback/stagger must retain movement priority.
+[EntitySeparationPlan.md](EntitySeparationPlan.md) tracks reusable local crowd separation, species-specific Resource profiles, optional engagement positioning, and five-skeleton validation. **ES0 source audit and limited five-skeleton headless baseline are complete**; [findings and ES1 proposal](ES0_Audit.md). No steering implementation has been added. AC body blocking remains independent and C3.2 knockback/stagger must retain movement priority.
