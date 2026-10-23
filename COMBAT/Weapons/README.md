@@ -7,3 +7,9 @@ C2 implemented. `AttackExecution` is a plain C# state machine shared by `Equippe
 `AxeConfig` inherits the profile, retaining existing serialized timing/reach/aim fields and its existing `.tres`. It enables tool targets; default damage stays 1 and duration 0.38s, contact 85%. `DefaultEnemyMelee.tres` supplies generic pursuing-entity defaults: 6 damage, 36 reach, 0.9s swing, contact at 45% for an 8%-long window, then 0.35s extra cooldown. `EntityDefinition.MeleeAttack` can override it; `MeleeEnabled=false` disables attack intent while preserving chase. Non-pursuing entities do not gain AI or an executor. No species ID branching.
 
 `Contact` reports a target and nullable `DamageResult` (null for prop feedback). Actor HP/feedback remains with the receiving actor. No telegraph artwork, knockback, invulnerability, death/retry UI or C3–C5 polish is introduced. Item identity/art stays in ITEMS. See [validation](../C2_Validation.md).
+
+## C2.5 dual attacks
+
+The player adapter now selects independent item PrimaryAttack/SecondaryAttack references through the same executor and shared busy/cooldown. AxeConfig's old 1-damage profile API remains for compatibility tests/callers; the actual starter axe uses separate 11/5-damage Resources. `AttackProfile.Presentation`, `SweepDegrees` and `ThrustPixels` configure generic sweep/thrust rendering; the adapter snapshots them at request. They never calculate damage. Enemy defaults/execution are unchanged.
+
+Physical knockback is deliberately C3 work. Current integration points are `AttackExecution.Contact` (target + resolved DamageResult), `DamageRequest.Origin`, and locked `AttackExecution.Aim`. C3 should add authored `AttackProfile.KnockbackDistance` (suggested axe primary 15 / alternate 55 world units), capture it in AttackValues, and submit a collision-respecting impulse through the target's existing movement owner. Those fields/impulses do not exist in C2.5; no teleport or second mover is added.

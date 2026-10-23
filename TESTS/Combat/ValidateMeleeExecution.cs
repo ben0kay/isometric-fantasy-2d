@@ -164,8 +164,8 @@ public partial class ValidateMeleeExecution : Node2D
         input.EmitSignal(PlayerInput.SignalName.ToolUseRequested,Vector2.Right*100);
         Check(tool.IsAttacking && tool.IsPhysicsProcessing(),"Input did not start shared attack");
         input.EmitSignal(PlayerInput.SignalName.ToolUseRequested,Vector2.Right*100);
-        await ToSignal(GetTree().CreateTimer(0.5),SceneTreeTimer.SignalName.Timeout);
-        Check(_enemy.Health==hp-1 && !tool.Attack.Busy && !tool.IsPhysicsProcessing(),"Player adapter hit count/shutdown");
+        await ToSignal(GetTree().CreateTimer(0.65),SceneTreeTimer.SignalName.Timeout);
+        Check(_enemy.Health==hp-(int)tool.EquippedItem.PrimaryAttack.BaseDamage && !tool.Attack.Busy && !tool.IsPhysicsProcessing(),"Player adapter hit count/shutdown");
         input.EmitSignal(PlayerInput.SignalName.ToolUseRequested,Vector2.Right*100);
         _player.ProcessMode=ProcessModeEnum.Disabled;
         Check(!tool.Attack.Busy && !tool.IsPhysicsProcessing(),"Suspension retained player wind-up");

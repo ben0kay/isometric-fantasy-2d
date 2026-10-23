@@ -4,25 +4,54 @@ using Godot;
 public partial class PlayerInput : Node
 {
     [Signal] public delegate void ToolUseRequestedEventHandler(Vector2 worldAim);
+    [Signal] public delegate void AlternateUseRequestedEventHandler(Vector2 worldAim);
+    [Signal] public delegate void UtilityRequestedEventHandler(bool held, Vector2 worldAim);
+    [Signal] public delegate void StarterSelectionRequestedEventHandler(int selection);
     [Signal] public delegate void DodgeRequestedEventHandler(Vector2 worldDirection);
 
     public bool SprintHeld { get; private set; }
     public float DodgeDoubleTapSeconds { get; set; } = 0.28f;
     private long _lastShiftPressMs = -100000;
     private bool _shiftDown;
+    private Window _window;
+    // Release held controls even when focus/UI consumes the corresponding release event.
+    // =========================================================
+    public override void _Ready() { _window=GetWindow(); _window.FocusExited+=ResetMovementActions; }
+    // Unsubscribe window events with the input owner.
+    // =========================================================
+    public override void _ExitTree() { if (GodotObject.IsInstanceValid(_window)) _window.FocusExited-=ResetMovementActions; }
+    // Pausing must not retain a guard/sprint after an RMB/key release was consumed by the pause UI.
+    // =========================================================
+    public override void _Notification(int what) { if (what==NotificationPaused) ResetMovementActions(); }
+    // Releases never start gameplay actions and must work over UI controls.
+    // =========================================================
+    public override void _Input(InputEvent input)
+    {
+        if (input is InputEventMouseButton m && m.ButtonIndex==MouseButton.Right && !m.Pressed)
+            EmitSignal(SignalName.UtilityRequested,false,Vector2.Zero);
+        if (input is InputEventKey k && !k.Pressed && k.Location==KeyLocation.Right && (k.Keycode==Key.Shift || k.PhysicalKeycode==Key.Shift))
+        { _shiftDown=false; SprintHeld=false; }
+    }
 
     #region Input events
     // Mouse requests remain centralized; right Shift handles sprint and an optional dodge request.
     // =========================================================
     public override void _UnhandledInput(InputEvent input)
     {
-        if (input is InputEventMouseButton mouse && mouse.ButtonIndex == MouseButton.Left && mouse.Pressed)
+        if (input is InputEventMouseButton mouse && mouse.Pressed)
         {
-            var player = GetParent<Node2D>();
-            Vector2 aim = player.GetGlobalMousePosition() - player.GlobalPosition;
-            EmitSignal(SignalName.ToolUseRequested, aim);
-            GetViewport().SetInputAsHandled();
-            return;
+            var player=GetParent<Node2D>(); Vector2 aim=player.GetGlobalMousePosition()-player.GlobalPosition;
+            if (mouse.ButtonIndex==MouseButton.Left) EmitSignal(SignalName.ToolUseRequested,aim);
+            else if (mouse.ButtonIndex==MouseButton.Middle) EmitSignal(SignalName.AlternateUseRequested,aim);
+            else if (mouse.ButtonIndex==MouseButton.Right) EmitSignal(SignalName.UtilityRequested,true,aim);
+            else return;
+            GetViewport().SetInputAsHandled(); return;
+        }
+        if (input is InputEventKey select && select.Pressed && !select.Echo)
+        {
+            Key code=select.PhysicalKeycode==Key.None ? select.Keycode : select.PhysicalKeycode;
+            int slot=code==Key.Key1 ? 0 : code==Key.Key2 ? 1 : code==Key.Key3 ? 2 : -1;
+            if (slot>=0) { EmitSignal(SignalName.StarterSelectionRequested,slot); GetViewport().SetInputAsHandled(); return; }
         }
         if (input is not InputEventKey key || key.Echo
             || (key.Keycode != Key.Shift && key.PhysicalKeycode != Key.Shift)
@@ -44,7 +73,7 @@ public partial class PlayerInput : Node
     // Clear held sprint/tap history when player dies or input becomes unavailable.
     // =========================================================
     public void ResetMovementActions()
-    { SprintHeld = false; _shiftDown = false; _lastShiftPressMs = -100000; }
+    { SprintHeld = false; _shiftDown = false; _lastShiftPressMs = -100000; EmitSignal(SignalName.UtilityRequested,false,Vector2.Zero); }
     #endregion
 
     #region Read intents

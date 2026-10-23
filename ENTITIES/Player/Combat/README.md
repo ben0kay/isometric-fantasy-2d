@@ -1,7 +1,7 @@
-# Player combat adapter
+# Player combat actions
 
-C1/C2 player receiving uses `PlayerMovement`'s existing shared HP/stats and `ICombatTarget`; input stays centralized in `PlayerInput`. `EquippedTool` is the current attack-request/presentation adapter, using the same COMBAT/Weapons executor as enemy pursuit. No duplicate player-only timing, damage engine, HP or physics motor belongs here.
+C2.5 `PlayerActions` is the single small action gate shared by the existing equipment adapter and PlayerMovement: Idle / Attack / Block / Dodge / Hop. It is plain state, not a new Node or mover. Actions are not queued. An attack stays committed through its swing/recovery; blocking/hopping/dodging cannot cancel it. Its extra cooldown still prevents another attack or weapon switch. Guard/hop may begin once the swing has finished; no waiting press is replayed automatically.
 
-Current sprint/dodge and health bars are preserved. C3–C5 will add feedback, movement tuning, telegraphs and a complete encounter/retry loop. See [combat plan](../../../COMBAT/COMBAT_IMPLEMENTATION.md).
+A successful dodge cancels blocking, then excludes attack/block/hop during its active duration. A held RMB does not automatically re-enter guard after that cancellation: release and press again. Blocking overrides sprint with the configured slower speed; releasing restores normal held sprint. Death/suspension discards transient state.
 
-**Next planned slice:** [C2.5 player actions, dual attacks and starter equipment](../../../COMBAT/C2_5_PlayerActions.md) (Codex handoff; no implementation yet).
+PlayerMovement owns authoritative movement/HP/shared guard and the visual hop. EquippedTool owns main-hand selection, shield-equipped flag, intent routing and one C2 attack executor. Input owns all mappings. No second HP, damage engine, inventory or physics mover. [C2.5 validation](../../../COMBAT/C2_5_Validation.md).

@@ -1,9 +1,14 @@
 // Shared melee timing and contact data; AxeConfig inherits these fields to preserve existing resource values.
 using Godot;
 using System;
+public enum AttackPresentation { Sweep, Thrust }
 [GlobalClass]
 public partial class AttackProfile : Resource
 {
+    [ExportGroup("Presentation")]
+    [Export] public AttackPresentation Presentation { get; set; }
+    [Export(PropertyHint.Range,"10,160,1")] public float SweepDegrees { get; set; } = 110;
+    [Export(PropertyHint.Range,"0,40,1")] public float ThrustPixels { get; set; } = 14;
     [ExportGroup("Timing")]
     [Export(PropertyHint.Range,"0.05,3,0.01")] public float AttackSeconds { get; set; } = 0.38f;
     [Export(PropertyHint.Range,"0,1,0.01")] public float ContactProgress { get; set; } = 0.85f;
@@ -21,7 +26,8 @@ public partial class AttackProfile : Resource
     // =========================================================
     public AttackValues Snapshot(float speed)
     {
-        if (!float.IsFinite(speed) || speed < 0.05f || speed > 20 || !float.IsFinite(AttackSeconds) || AttackSeconds < 0.05f || AttackSeconds > 10
+        if (!Enum.IsDefined(Presentation) || !float.IsFinite(SweepDegrees) || SweepDegrees<10 || SweepDegrees>160
+            || !float.IsFinite(ThrustPixels) || ThrustPixels<0 || ThrustPixels>40 || !float.IsFinite(speed) || speed < 0.05f || speed > 20 || !float.IsFinite(AttackSeconds) || AttackSeconds < 0.05f || AttackSeconds > 10
             || !float.IsFinite(ContactProgress) || ContactProgress < 0 || ContactProgress > 1
             || !float.IsFinite(ContactWindow) || ContactWindow < 0 || ContactProgress+ContactWindow > 1
             || !float.IsFinite(CooldownSeconds) || CooldownSeconds < 0 || CooldownSeconds > 10

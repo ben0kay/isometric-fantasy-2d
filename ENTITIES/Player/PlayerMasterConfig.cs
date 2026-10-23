@@ -13,6 +13,14 @@ public partial class PlayerMasterConfig : Resource
     [Export(PropertyHint.Range, "100,900,10")] public float DodgeSpeed { get; set; } = 480f;
     [Export(PropertyHint.Range, "0.05,0.5,0.01")] public float DodgeSeconds { get; set; } = 0.16f;
     [Export(PropertyHint.Range, "0.1,2,0.05")] public float DodgeCooldownSeconds { get; set; } = 0.6f;
+    [ExportGroup("Visual hop")]
+    [Export] public float HopHeight { get; set; } = 12;
+    [Export] public float HopSeconds { get; set; } = 0.35f;
+    [Export] public float HopCooldownSeconds { get; set; } = 0.45f;
+    [ExportGroup("Starter equipment")]
+    [Export] public EquippedItemDefinition StarterAxe { get; set; }
+    [Export] public EquippedItemDefinition StarterSword { get; set; }
+    [Export] public GuardProfile ShieldGuard { get; set; }
     [ExportGroup("Combat foundation")]
     [Export] public int MaxHealth { get; set; } = 100;
     [Export] public CombatStatProfile CombatStats { get; set; }

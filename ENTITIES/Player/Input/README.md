@@ -1,5 +1,17 @@
-# Player input
+# Central player input — C2.5
 
-`PlayerInput.cs` is the **single player-controls script**: arrows supply normalized movement, left mouse requests tool use, and **right Shift** holds sprint. Release and press **right Shift twice within 0.28s** (configurable on `PlayerMasterConfig`) to emit `DodgeRequested` in the currently held arrow-key movement direction on the second press (including normalized diagonals). With no arrow direction held, double-tap does not dodge. Key auto-repeat is ignored; left Shift does not trigger these actions. Gameplay/UI input is handled through `_UnhandledInput`.
+`PlayerInput` owns all mappings and emits intent; it never moves actors or computes damage.
 
-Input **emits intentions only**; it doesn't move the player or calculate attack damage. The `PlayerMovement` motor owns speed, dodge cooldown, duration and physics collisions. No animation or dodge invulnerability is added. Current limitations: focus loss may leave a held key state until release; future input rebinding/gamepad support requires expanding this script without duplicating controls.
+| Control | Intent |
+| --- | --- |
+| Arrows | Normalized movement |
+| LMB | Equipped primary forward slash |
+| MMB | Equipped alternate forward thrust |
+| RMB | No shield: tap for visual hop; shield equipped: hold directional guard |
+| 1 / 2 | Select starter axe / temporary sword |
+| 3 | Toggle shield-equipped flag (starts OFF) |
+| Right Shift | Hold sprint; double-tap within 0.28s while holding arrows to dodge in movement direction |
+
+No arrow direction means no dodge; repeats/left Shift do not trigger the shift action. UI-consumed presses do not start gameplay actions. Right-button/right-Shift releases are handled separately so UI cannot trap an active guard/sprint; pause/window focus loss clears held state and tap history. The input script unsubscribes its window event on exit.
+
+Equipment/action owner rejects invalid overlaps with no input queue. After a dodge cancels guard or a guard press is rejected during attack, release/repress RMB to guard. Key bindings are temporary direct test controls, not a hotbar or rebind UI.

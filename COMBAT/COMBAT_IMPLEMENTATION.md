@@ -68,9 +68,9 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 
 **Implementation:** Shared plain `AttackExecution`, `AttackProfile` (inherited by existing AxeConfig), contact-window physics broad phase, receiving geometry/faction/obstruction policy and generic pursuit intent. No scene changes in C2. See [results, baseline comparisons and manual handoff](C2_Validation.md); broader headless shutdown failures are not represented as clean passes.
 
-## C2.5 — Player actions and starter equipment (planned)
+## C2.5 — Player actions and starter equipment — implemented, visual acceptance pending
 
-See [C2.5 Codex implementation handoff](C2_5_PlayerActions.md). Adds primary LMB sweep, alternate MMB prod, starter axe/sword switch, shield-equipped RMB block vs no-shield RMB visual jump, and data-driven attack profiles. No inventory. Preserve C2/shared damage and P4 saves; implement and validate before claiming complete. C3 should use the resulting attack/contact/block outcomes for feedback.
+See [C2.5 Codex implementation handoff](C2_5_PlayerActions.md). Adds primary LMB sweep, alternate MMB prod, starter axe/sword switch, shield-equipped RMB block vs no-shield RMB visual jump, and data-driven attack profiles. No inventory. C2/shared damage and existing P4 scene/resource fingerprints are preserved; see [C2.5 results and outstanding checks](C2_5_Validation.md). C3 should use the resulting attack/contact/block outcomes for feedback.
 
 ## C3 — Combat feedback and perceived impact
 

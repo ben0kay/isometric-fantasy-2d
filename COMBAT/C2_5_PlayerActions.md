@@ -1,6 +1,6 @@
 # C2.5 — Player actions, dual attacks and starter equipment (Codex handoff)
 
-> **Status: PLANNED, NOT IMPLEMENTED.** Complete C2 first; this is a scoped implementation task for Codex before C3 feedback. Do not mark complete without build and tests.
+> **Status: IMPLEMENTED; headless validation and remaining checks recorded in [C2_5_Validation.md](C2_5_Validation.md).** Target-PC visual/feel acceptance and a final normal SDK build remain separate. The design brief below is retained as the requested scope, not further work to implement automatically.
 > **Intent:** Keep the production player responsive with one script owning controls, shared combat execution, swappable starter axe/sword, optional shield blocking and an RMB jump when no shield is equipped. No inventory or authored sprite animations required.
 
 ## Read before touching production
@@ -77,3 +77,7 @@ Player starts with **axe, sword and shield available for immediate testing**, bu
 - Update `COMBAT/COMBAT_IMPLEMENTATION.md` status to implemented **only when verified**, and link from appropriate player/equipment READMEs. Add `COMBAT/C2_5_Validation.md` recording actual checks, limitations and manual handoff.
 
 **Out of scope:** inventory, crafting, shield sprite, fully animated body, animation trees, parry/perfect block, stamina or durability, sophisticated jump physics/ledge crossing, shield bash, new enemy species, C3 full hit FX/health UI and complete rebalance of existing save campaigns.
+
+## Agreed choices applied
+
+Forward slash instead of full spin; slower blocking overrides sprint; visual-only hop; successful dodge cancels guard; committed attacks finish before other actions. Keys 1/2/3 select axe/sword/toggle shield; start axe/shield off. Production skeleton remains unchanged; a disposable 50-HP practice target exercises 11/5 balance. Physical knockback waits for C3. Requests rejected during another action are not queued; release/repress RMB after cancellation. See validation for actual checks, not blanket acceptance.
