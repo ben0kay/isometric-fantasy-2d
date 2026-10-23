@@ -20,14 +20,17 @@ public partial class ValidateArcherWorld : Node
             practice.QueueFree(); await Frames(4);
             var world=GD.Load<PackedScene>("res://SCENES/World/World.tscn").Instantiate<WorldScene>();
             world.Config=(WorldMasterConfig)world.Config.Duplicate(); world.Config.RandomSeedOnLoad=false;
-            // Test-only opt-in; default World's authored Basic resource and scene text stay untouched.
-            world.GetNode<WorldEntityPlacement>("SystemsRoot/EntityPlacement").EntityDefinition=GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Archer/SkeletonArcher.tres");
+            // Default F6 World mixes the authored Basic practice group with three Archer markers.
             AddChild(world); await Frames(120);
             Check(world.StartupError==null && world.Stream!=null,"Streamed archer World failed");
-            var arrows=world.GetProjectileSpawner(); Check(arrows==world.GetProjectileSpawner() && arrows.GetParent()==world.ActorsRoot,"Duplicate/wrong projectile owner");
+            var arrows=world.ActorsRoot.GetNodeOrNull<ProjectileSpawner>("Projectiles");
+            Check(arrows!=null && arrows==world.GetProjectileSpawner() && arrows.GetParent()==world.ActorsRoot,"Missing/duplicate/wrong projectile owner");
             Check(!arrows.IsPhysicsProcessing() && !arrows.IsProcessing(),"World projectile owner ticks");
             var actors=world.TestActorsRoot.GetChildren().OfType<Entity>().ToArray();
-            Check(actors.Length==5 && actors.All(e=>e.GetNode<GroundChase>("GroundChase").Ranged!=null),"Placement failed ranged injection");
+            Check(actors.Length==8 && actors.Count(e=>e.Config.Ranged==null)==5
+                && actors.Count(e=>e.Config.Ranged!=null)==3
+                && actors.Where(e=>e.Config.Ranged!=null).All(e=>e.GetNode<GroundChase>("GroundChase").Ranged!=null),
+                "Mixed practice skeletons or ranged injection failed");
             Vector2 point=world.Player.GlobalPosition;
             Check(world.Stream.IsSegmentLoaded(point+new Vector2(-64,-64),point+new Vector2(64,64)),"Loaded diagonal failed");
             Check(world.Stream.IsSegmentLoaded(point,point),"Loaded zero-length segment");

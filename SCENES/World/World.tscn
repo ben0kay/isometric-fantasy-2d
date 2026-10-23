@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bdfa4qnwlw6fw"]
 
 [ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres" id="basic_definition"]
+[ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Archer/SkeletonArcher.tres" id="archer_definition"]
 [ext_resource type="Resource" path="res://WORLD/DefaultWorldConfig.tres" id="config"]
 [ext_resource type="Script" uid="uid://b3v8h2kf0ac21" path="res://DEBUG/World/DebugActorRoot.cs" id="debug_actors"]
 [ext_resource type="PackedScene" path="res://DEBUG/UI/Environment/EnvironmentDebugPanel.tscn" id="debug_ui"]
@@ -41,6 +42,7 @@ script = ExtResource("placement")
 script = ExtResource("entity_placement")
 EntityScene = ExtResource("skeleton_basic")
 EntityDefinition = ExtResource("basic_definition")
+MaxPracticeActors = 7
 
 [node name="Environment" type="Node2D" parent="SystemsRoot" unique_id=697960373]
 script = ExtResource("environment")
@@ -91,6 +93,21 @@ metadata/world_actor_container = true
 [node name="East" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot" unique_id=479322690]
 position = Vector2(260, 80)
 metadata/world_actor_container = true
+
+[node name="ArcherNorthWest" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(-420, -300)
+metadata/world_actor_container = true
+metadata/entity_definition = ExtResource("archer_definition")
+
+[node name="ArcherNorthEast" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(420, -300)
+metadata/world_actor_container = true
+metadata/entity_definition = ExtResource("archer_definition")
+
+[node name="ArcherSouth" type="Marker2D" parent="WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot"]
+position = Vector2(90, 460)
+metadata/world_actor_container = true
+metadata/entity_definition = ExtResource("archer_definition")
 
 [node name="PersistentPropsRoot" type="Node2D" parent="WorldActorsRoot" unique_id=574937771]
 y_sort_enabled = true

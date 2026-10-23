@@ -151,7 +151,7 @@ public partial class WorldScene : Node2D
         }
         else placement.Generate(Config, ActiveSeed,PreviewSceneryRoot);
         // Build entity navigation only after the seeded tree/rock colliders exist.
-        EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null,projectiles: EntityPlacement.EntityDefinition?.Ranged!=null ? GetProjectileSpawner() : null);
+        EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null,projectileFactory:GetProjectileSpawner);
         var environment = Environment;
         environment.Initialize(Config,ActorsRoot,PropsRoot,Player);
         if (environment != null) Fire.Initialize(ActorsRoot,environment);

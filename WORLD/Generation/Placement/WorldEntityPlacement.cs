@@ -1,6 +1,7 @@
 // Optional authored test-actor placement, after scenery generation.
 // This stays separate from biome populations until an entity-spawning system exists.
 using Godot;
+using System;
 using System.Collections.Generic;
 
 public partial class WorldEntityPlacement : Node
@@ -10,6 +11,9 @@ public partial class WorldEntityPlacement : Node
     [Export] public PackedScene EntityScene { get; set; }
     [Export] public EntityDefinition EntityDefinition { get; set; }
     [Export] public Vector2 SpawnOffsetFromPlayer { get; set; } = new(0, -210);
+
+    [ExportGroup("F6 practice actors")]
+    [Export(PropertyHint.Range, "0,16,1")] public int MaxPracticeActors { get; set; } = 4;
 
     [ExportGroup("Static navigation")]
     [Export(PropertyHint.Range, "12,48,2")] public int GridCellSize { get; set; } = 24;
@@ -22,7 +26,7 @@ public partial class WorldEntityPlacement : Node
     #region Placement
     // Use the existing random forest's actual obstacles, never a separately randomized map.
     // =========================================================
-    public void Populate(Node2D destination, Node2D navigationSource, CharacterBody2D player, Rect2 bounds, SavedTestEntity restored = null, bool includePractice = false, ProjectileSpawner projectiles = null)
+    public void Populate(Node2D destination, Node2D navigationSource, CharacterBody2D player, Rect2 bounds, SavedTestEntity restored = null, bool includePractice = false, ProjectileSpawner projectiles = null, Func<ProjectileSpawner> projectileFactory = null)
     {
         if (!destination.CanProcess() || restored?.Exists == false) return;
         if (!Enabled || EntityScene == null) return;
@@ -53,21 +57,30 @@ public partial class WorldEntityPlacement : Node
         instance.Position = destination.ToLocal(safeSpawn);
         destination.AddChild(instance);
         agent.ConfigureNavigation(player, navigation);
-        if(instance is Entity rangedEntity && rangedEntity.Config.Ranged!=null) rangedEntity.ConfigureRanged(projectiles);
+        if(instance is Entity rangedEntity && rangedEntity.Config.Ranged!=null) rangedEntity.ConfigureRanged(projectiles ??= projectileFactory?.Invoke());
         if (restored != null && instance is Entity savedEntity) savedEntity.RestoreHealth(restored.Health);
         if (instance is Entity tracked) _actors.Add(tracked);
         instance.ProcessMode = bounds.HasPoint(instance.GlobalPosition) ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
         // Optional authored markers belong to a removable practice root; additional actors are never saved.
         if (includePractice && EntityDefinition!=null)
+        {
+            int spawned=0;
             foreach (Node child in destination.GetChildren())
             {
-                if (child is not Marker2D marker || _actors.Count>=5) continue;
+                if (child is not Marker2D marker || spawned>=MaxPracticeActors) continue;
+                // Only explicitly tagged markers override the standard skeleton definition.
+                var definition=marker.HasMeta("entity_definition")
+                    ? marker.GetMeta("entity_definition").AsGodotObject() as EntityDefinition : EntityDefinition;
+                if (definition==null) { GD.PushWarning("Practice actor skipped: missing definition on "+marker.Name); continue; }
                 if (!TryPracticePoint(player.GlobalPosition+marker.Position,player.GlobalPosition,bounds,out Vector2 point))
                 { GD.PushWarning("Practice actor skipped: no separated walkable marker position: "+marker.Name); continue; }
-                var extra=EntityScene.Instantiate<Entity>(); extra.Configure(EntityDefinition);
+                var extra=EntityScene.Instantiate<Entity>(); extra.Configure(definition);
                 extra.Name=marker.Name+"Skeleton"; extra.Position=destination.ToLocal(point); destination.AddChild(extra);
-                extra.ConfigureNavigation(player,navigation); if(extra.Config.Ranged!=null) extra.ConfigureRanged(projectiles); _actors.Add(extra);
+                extra.ConfigureNavigation(player,navigation);
+                if(extra.Config.Ranged!=null) extra.ConfigureRanged(projectiles ??= projectileFactory?.Invoke());
+                _actors.Add(extra); spawned++;
             }
+        }
         GD.Print($"World entity: spawned {instance.Name} at {safeSpawn}.");
     }
     // Bound startup-only search when scenery maps several markers onto one free cell.

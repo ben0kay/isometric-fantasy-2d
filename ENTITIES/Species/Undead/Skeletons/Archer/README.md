@@ -19,6 +19,6 @@ Archer/
 - `ArrowProjectile.tres`: 240px/s, maximum700px/4s,6 damage,5px push/0.06s stagger. Contact data is an embedded shared AttackProfile, not a separate damage engine.
 - `Equipment/Bow/SkeletonBow.tres`: references local artwork and stores presentation scale/hand/grip/hold settings only. This is enemy equipment, separate from player ITEMS.
 
-Open `TESTS/Projectiles/ArcherPractice.tscn`, F6. Move to dodge released arrows, use cover, approach and attack, or equip shield with3 and hold RMB. Reset restores player/archer and removes arrows. Default production World retains five Basic melee skeletons. Mixed encounters and F9 ranged widgets remain R2.
+Open `TESTS/Projectiles/ArcherPractice.tscn`, F6. Move to dodge released arrows, use cover, approach and attack, or equip shield with3 and hold RMB. Reset restores player/archer and removes arrows. Production World F6 now includes three disposable Archer practice markers farther from spawn alongside five Basic melee skeletons, all controlled by `DebugActorsRoot.Enabled`. They share one lazily created projectile spawner and are not campaign-persisted. Broader mixed encounter spawning and F9 ranged widgets remain R2.
 
 [Validation and performance handoff](../../../../../COMBAT/Projectiles/R1_Validation.md).
