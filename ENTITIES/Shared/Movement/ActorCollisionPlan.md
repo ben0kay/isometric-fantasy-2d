@@ -1,6 +1,6 @@
 # Actor-to-actor collision — implementation plan
 
-> **Status: PLANNED; documentation only.** No code, collision masks or scene files have been changed by this plan.
+> **Status: AC0 source audit complete (2026-10-23); AC1–AC4 pending.** Documentation only. No code, collision masks or scene files changed. Runtime blocking and performance acceptance remain unverified.
 
 ## Intent
 
@@ -24,11 +24,11 @@ The player, generic enemies and future wildlife should physically block each oth
 
 ## Implementation phases (AC0–AC4)
 
-All five phases are planned, not implemented. AC means **Actor Collision** and is distinct from combat C3.
+AC0 is complete as a source audit; AC1–AC4 remain pending. AC means **Actor Collision** and is distinct from combat C3.
 
 | Phase | Objective | Deliverable |
 | --- | --- | --- |
-| **AC0 — Audit** | Inventory existing physics layer/masks across actors, solids and melee hit queries | Verified collision matrix and compatibility notes |
+| **AC0 — Audit — COMPLETE (source)** | Inventory existing physics layer/masks across actors, solids and melee hit queries | Matrix, migration and affected-file inventory below; no runtime acceptance implied |
 | **AC1 — Actor blocking** | Physically block player, enemies and future wildlife using shared feet colliders | Player and shared Entity scene layer/mask configuration |
 | **AC2 — Lifecycle integration** | Ensure death, dodge, sprint, streaming and despawn work with collision | No ghost colliders or movement bypass |
 | **AC3 — Crowd checks** | Evaluate groups of pursuing actors and narrow pathways | Performance and clumping findings; optional small follow-up only |
@@ -72,6 +72,68 @@ All five phases are planned, not implemented. AC means **Actor Collision** and i
 - Update individual phase statuses only after evidence; make one implementation commit per requested job.
 
 ## Dependencies
+
+## AC0 findings — 23 October 2026
+
+**Audited revision:** `71eaeb7f0274e3c9b3925dd3b7e7136ec9a9c030`. Searched all 365 tracked `.cs`, `.tscn` and `.tres` files plus `project.godot`; inspected body definitions, scene instancing, query consumers, movement, navigation, death, streaming retirement and campaign fingerprint code. No `AGENTS.md` was present. This is static evidence, not a Godot physics test.
+
+### Current collision matrix
+
+Numeric values below are bitmasks: `1` = physics layer 1; `2` = layer 2; `3` = layers 1 and 2.
+
+| Owner / consumer | Layer | Mask | Verified source behavior |
+| --- | --- | --- | --- |
+| `ENTITIES/Player/Player.tscn` | 1 (implicit) | 1 (implicit) | CharacterBody2D, 14×10 rectangle at (0,-5) |
+| `ENTITIES/Shared/Entity.tscn` | 1 (implicit) | 1 (implicit) | CharacterBody2D, radius-9 circle at (0,-5); Entity duplicates/configures radius at readiness |
+| Shared Tree, Rock01, production Torch | 1 (implicit) | 1 (implicit) | StaticBody2D; tree/rock polygons and torch rectangle; tree footprint may disable when invalid |
+| `WorldScene.AddBounds` / runtime Bounds body | 1 (implicit) | 1 (implicit) | StaticBody2D with four rectangle walls |
+| DEBUG player, skeleton, trees, rocks, torch and bounds | 1 (implicit) | 1 (implicit) | Independent scenes/controllers; no production migration assumed |
+| Test-created static bodies | 1 (implicit) | 1 (implicit) | Includes melee wall and broad-phase saturation fixtures |
+| `AttackProfile` / snapshotted `AttackValues` | — | 1 default | No authored resource override found |
+| `MeleeHitQuery` overlap **and** obstruction ray | — | attack mask | Bodies only, source RID excluded; nearby candidate filtering and actor hurt geometry remain separate from feet collision |
+| `CampaignSaveController.Initialize` arrival overlap | — | player mask | Excludes player RID, detects blocked saved arrival after physics synchronization |
+| `StaticObstacleNavigation.Build` | — | no physics mask | Rasterizes StaticBody2D polygon/rectangle children; ignores moving actors by body type |
+
+No explicit body layer/mask assignment, per-bit setter, scene-instance collision override, or layer-2 allocation was found. No layer names are configured in `project.godot`. No authored Area2D/RigidBody2D bodies were found. All current solid bodies share default layer 1. Therefore player/entity and entity/entity movement are **already configured to block**; AC1 must verify behavior rather than describe blocking as wholly absent. This does not prove non-overlap at spawn, under large steps, or in crowds.
+
+### Movement and lifetime findings for AC2
+
+- Player walking, sprint and dodge feed the same `Velocity` / `MoveAndSlide()` path. `Streaming.CanMoveTo` checks the proposed position before movement. Hop modifies sprite offset only, leaving the body/collider intact. No collision-bypassing movement teleport was found in these action paths.
+- GroundChase owns the enemy's `MoveAndSlide()`. Navigation avoids static scenery, not actors; bunching is possible and belongs to AC3. GroundChase does not directly call `Streaming.CanMoveTo`; placement refresh suspends the persistent test entity outside active bounds. C3.2 must not assume that player boundary guard exists on enemies.
+- Entity death cancels pursuit/attack, zeros velocity and defers collision-shape disabling; fade completion queues deletion. Player death stops movement/actions but currently leaves its collider enabled. AC2 must explicitly decide/test dead-player blocking rather than assume both actors share cleanup.
+- Chunk release removes its actors subtree and queues freeing, while the authored skeleton is persistent and suspended through placement refresh. Process suspension must not be treated as evidence that every physics collider has disappeared; test disabled ownership, reactivation and same-frame retirement.
+- Normal spawn/restore assigns actor position directly. This is initialization, not locomotion. New skeleton placement uses static navigation free-space checks; restored entity positions are retained. Arrival overlap uses the player's mask, so any layer change must retain detection of both scenery and actors.
+
+### Recommended AC1 migration and affected files
+
+Use the plan's explicit classification: **world solids layer 1, actor bodies layer 2, actor movement mask 3**. This is an authoring/query distinction, not a new blocking algorithm. Keep existing feet shapes, combat hurt geometry and single movers. Keep DEBUG independent. Do not place actors on both layers merely to hide missing query updates.
+
+| File / area | Required follow-up |
+| --- | --- |
+| `ENTITIES/Player/Player.tscn`, `ENTITIES/Shared/Entity.tscn` | Explicit actor layer 2 / movement mask 3, verified in production instances |
+| `COMBAT/Weapons/AttackProfile.cs` | Default contact mask 3 so attacks still see actors **and** scenery |
+| `COMBAT/HitDetection/MeleeHitQuery.cs` | Preserve shared overlap/ray visibility of both layers; retain source exclusion, friendly-body obstruction, faction and tool filtering |
+| `project.godot` | Name WorldSolids and Actors layers if adopting the split |
+| Shared Tree/Rock/Torch scenes and runtime bounds | Explicitly document/configure world layer 1; static-body movement masks need no new actor-detection algorithm |
+| `SAVE/WorldState/CampaignSaveController.cs` | Verify arrival query still catches actor and static-solid overlaps using mask 3; change only if tests expose a defect |
+| Combat fixtures / new collision fixture under `TESTS/` | Audit custom masks and test actor/actor, actor/world, obstruction, trees and blocked arrival; keep synthetic static blockers on layer 1 |
+| PlayerMovement, GroundChase, Entity, placement and chunk retirement | AC2 lifecycle/boundary review above; no speculative manager or extra idle loop |
+
+Alternate minimal route: make the current layer-1 setup explicit and validate it without a split. That is sufficient for basic blocking, but gives no actor/solid query classification. The split is recommended for clear authoring; it must be delivered atomically with combat mask updates. Neither route is implemented by AC0.
+
+### Save compatibility
+
+`CampaignSession.BuildContentFingerprint` recursively hashes text of referenced `.tscn` and `.tres` dependencies from World.tscn and DefaultWorldConfig.tres; C# files are **not** part of that traversal. Player/Entity scene changes therefore change the fingerprint even when only making defaults explicit. The existing SO1/SO2 bridge cannot be presumed to accept changed dependency text. AC1 must record the incompatibility and use disposable F6/new test campaigns, or supply a separately justified narrowly verified migration. Never bypass RequireContent or rewrite existing campaign files. AC0 edits Markdown only and leaves the fingerprint unchanged.
+
+### Checks performed and remaining acceptance
+
+- Repository-wide source searches completed for physics bodies, layer/mask fields and setters, overlap/ray queries, movement calls, scene overrides, death and unload paths. Reviewed C2/C2.5 test coverage; existing combat tests do not establish the full AC actor-blocking matrix.
+- No runtime behavior changed, no added callbacks/allocations, no performance claim. Godot and dotnet were not available on PATH in this environment; build, import, physics scenes, campaign read/write and graphical profiling were **not run**. They remain AC4 acceptance work, with focused runtime checks also required for AC1/AC2.
+- Required next evidence: player/skeleton and skeleton/skeleton stop/slide; wall/tree/torch contact; dodge and hop; dead-player/dead-enemy policy; disabled/re-enabled ownership; unload ghost checks; contact/ray regressions; blocked saved arrival; two/five/many-actor bottlenecks. Include large-step/boundary tests before C3.2 strong displacement.
+
+**AC0 complete:** collision matrix, migration approach and affected files documented. **AC1–AC4 and C3.2 remain unimplemented/unaccepted by this audit.**
+
+## Execution order
 
 Recommended order: **AC0 → AC1 → AC2 → AC4**, with **AC3 optional** when crowd issues justify it. Combat **C3.2 knockback/stagger** should follow validated AC1 and AC2 actor/obstacle collision, rather than assuming it is safe to displace actors.
 
