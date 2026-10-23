@@ -4,6 +4,10 @@ using Godot;
 [GlobalClass]
 public partial class PlayerMasterConfig : Resource
 {
+    [ExportGroup("Hit reaction resistance")]
+    [Export] public bool ReactionImmune { get; set; }
+    [Export(PropertyHint.Range,"0,1,0.05")] public float KnockbackResistance { get; set; }
+    [Export(PropertyHint.Range,"0,1,0.05")] public float StaggerResistance { get; set; }
     [ExportGroup("Movement")]
     [Export(PropertyHint.Range, "20,400,5")] public float WalkSpeed { get; set; } = 150f;
     [Export(PropertyHint.Range, "1,3,0.05")] public float SprintMultiplier { get; set; } = 1.55f;

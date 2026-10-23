@@ -11,3 +11,7 @@ AC1: `ValidateActorCollision.tscn` checks canonical player/entity masks, swept p
 AC2: `ValidateActorLifecycle.tscn` adds 17 intended checks for living/dead blocking, disabled-root physics removal/reactivation, stale enemy velocity, player death/restoration, retirement, hop invariants, and real walk/sprint/dodge into a wall. Added but not executed here; see [commands and limitations](../../ENTITIES/Shared/Movement/AC2_Validation.md).
 
 AC4 follow-up: AC1 11 and AC2 17 checks now pass headless, as do C1 10037, C2 46 and updated C2.5 44. See [AC4 evidence and broader shutdown limitations](../../ENTITIES/Shared/Movement/AC4_Validation.md); earlier not-executed notes describe the initial implementation.
+
+## C3.2 hit reactions
+
+Run `res://TESTS/Combat/ValidateHitReactions.tscn` headlessly for helper integration, bounded refresh/recovery, resistance/immunity, real melee eligibility/direction, passive motor wake/sleep, solid collision, player priorities, interruption cooldown, suspension and death. The C2.5 action/damage fixture deliberately uses a reaction-immune stationary target so successive weapon checks remain in reach; this fixture independently covers actual displacement. See [C3.2 results](../../COMBAT/C3_2_Validation.md).

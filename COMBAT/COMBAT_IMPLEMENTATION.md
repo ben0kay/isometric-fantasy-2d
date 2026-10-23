@@ -1,6 +1,6 @@
 # Combat implementation — C0–C5 Codex plan
 
-> **Status (2026-10-22): C0–C2 implemented; see C2 validation limitations.** Shared player/entity health, lazy effective stats and deterministic damage results are live. See [C0 audit](C0_Audit.md) and [C1 validation](C1_Validation.md). [C2](C2_Validation.md) adds shared player/enemy execution and contact validation. C3–C5 encounter polish remains planned.
+> **Status (2026-10-23): C0–C2.5 and C3.2 implemented; see C2 validation limitations.** Shared player/entity health, lazy effective stats and deterministic damage results are live. See [C0 audit](C0_Audit.md) and [C1 validation](C1_Validation.md). [C2](C2_Validation.md) adds shared player/enemy execution and contact validation. Further C3–C5 encounter polish remains planned.
 > **Purpose:** Make one player-versus-skeleton encounter responsive and satisfying while establishing reusable player/enemy/wildlife combat and clean integration with future caves/interiors.
 > **Authorization:** Codex should review the plan and suggest improvements before structural changes. Implement only the phase explicitly requested by the user; one commit per approved job. Never auto-implement C0–C5 as one pass.
 
@@ -16,7 +16,7 @@ Read root `README.md`, `CodePreferences.md`, `SCENES/World/scene organize.md`, `
 - `DEBUG/TopDownTest/Weapons/README.md`: older axe and tree-hit contact tests; DEBUG stays independent.
 - `FEEDBACK/README.md`, `COMBAT/*/README.md`, `ENTITIES/Player/Combat/README.md`, `ENTITIES/Player/Survival/Health/README.md`: present organizational intentions.
 
-**Existing, not yet polished:** player can swing an axe and hit registered tree/entity targets; skeleton can chase, lose health, flash and fade on death. C1 now supplies shared actor/player HP and cached effective stats. C2 supplies shared attack execution and basic enemy attacks. Shared health bars and a sprint/dodge mini-pass also exist; preserve them. Knockback, damage numbers, impact particles and encounter polish remain future work. CombatMasterConfig remains a placeholder. Confirm live behavior and current sources before modifying.
+**Existing, not yet polished:** player can swing an axe and hit registered tree/entity targets; skeleton can chase, lose health, flash and fade on death. C1 now supplies shared actor/player HP and cached effective stats. C2 supplies shared attack execution and basic enemy attacks. Shared health bars and a sprint/dodge mini-pass also exist; preserve them. C3.1 damage-number code exists and C3.2 knockback/stagger is implemented; impact particles and further encounter polish remain future work. CombatMasterConfig remains a placeholder. Confirm live behavior and current sources before modifying.
 
 ## Architecture contract: responsibilities, not one enormous combat node
 
@@ -74,9 +74,9 @@ See [C2.5 Codex implementation handoff](C2_5_PlayerActions.md). Adds primary LMB
 
 ## C3 — Combat feedback and perceived impact
 
-**C3.2 Codex handoff expanded:** [C3 Implementation Notes](C3_Implementation.md#c32--shared-knockback-and-stagger-codex-implementation-handoff) now specifies shared recoil/stagger contracts, folder ownership, attack profile values, actor collision prerequisites, integration with existing motors and validation. Documentation only; C3.2 has not been implemented.
+**C3.2 Codex handoff expanded:** [C3 Implementation Notes](C3_Implementation.md#c32--shared-knockback-and-stagger-codex-implementation-handoff) now specifies shared recoil/stagger contracts, folder ownership, attack profile values, actor collision prerequisites, integration with existing motors and validation. C3.2 is now implemented; see [results and tuning](C3_2_Validation.md).
 
-**Codex execution plan:** [C3 Implementation Notes](C3_Implementation.md) breaks this phase into C3.1 damage numbers, C3.2 knockback/stagger, C3.3 particles/hit reactions, C3.4 block outcomes, and C3.5 camera/audio. **C3.1 source folder/requirements:** [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) (scaffold only; no runtime code).
+**Codex execution plan:** [C3 Implementation Notes](C3_Implementation.md) breaks this phase into C3.1 damage numbers, C3.2 knockback/stagger, C3.3 particles/hit reactions, C3.4 block outcomes, and C3.5 camera/audio. **C3.1 source folder/requirements:** [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) (runtime code exists; visual acceptance remains separate).
 
 **Early health-bar slice (headless integration checked; visual acceptance pending):** Shared `FEEDBACK/HealthBars` bars have been added to player and generic entity using C1 `ActorHealth`, adapting the older project's event-driven bar design. Do not duplicate this in C3; validate and polish it with knockback, particles and floating damage numbers. No actual defense/armor meter was added.
 

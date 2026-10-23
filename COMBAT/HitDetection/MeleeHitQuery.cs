@@ -74,7 +74,10 @@ public sealed class MeleeHitQuery : IDisposable
         if (actor!=null)
         {
             if (!CombatTargeting.Eligible(source,actor,attack.Targets)) return false;
-            contact=new(selected,actor.ReceiveDamage(new DamageRequest(attack.Damage,origin),stats));
+            var result=actor.ReceiveDamage(new DamageRequest(attack.Damage,origin),stats);
+            contact=new(selected,result);
+            if (result.AppliedDamage>0 && !result.Killed && CombatTargeting.Active(actor) && actor is IReactionTarget reactionTarget)
+                reactionTarget.ReceiveReaction(attack,aim);
         }
         else { tool.ReceiveHit(aim); contact=new(selected,null); }
         return true;

@@ -20,7 +20,8 @@ public partial class ValidatePlayerActions : Node2D
             _input=_player.GetNode<PlayerInput>("Input"); _tool=_player.GetNode<EquippedTool>("EquippedAxe");
             _target=GD.Load<PackedScene>("res://ENTITIES/Shared/Entity.tscn").Instantiate<Entity>();
             var definition=(EntityDefinition)GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres").Duplicate();
-            definition.MaxHealth=50; definition.ChasePlayer=false; _target.Configure(definition); _target.Position=new Vector2(40,0); AddChild(_target);
+            // Keep this damage/action fixture stationary; C3.2 exercises physical reactions separately.
+            definition.ReactionImmune=true; definition.MaxHealth=50; definition.ChasePlayer=false; _target.Configure(definition); _target.Position=new Vector2(40,0); AddChild(_target);
             await Frames(3); await Attacks(); await GuardAndMovement(); await HopAndPriority(); await Cleanup();
             _player.QueueFree(); if (GodotObject.IsInstanceValid(_target)) _target.QueueFree(); await Frames(3);
             GD.Print($"C2.5 PASS: {_checks} checks"); GetTree().Quit();

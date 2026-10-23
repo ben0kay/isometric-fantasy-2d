@@ -10,6 +10,11 @@ public partial class AttackProfile : Resource
     [Export(PropertyHint.Range,"10,160,1")] public float SweepDegrees { get; set; } = 110;
     [Export(PropertyHint.Range,"0,0.3,0.01")] public float SweepWindupFraction { get; set; } = 0.16f;
     [Export(PropertyHint.Range,"0,40,1")] public float ThrustPixels { get; set; } = 14;
+    [ExportGroup("Hit reaction")]
+    [Export(PropertyHint.Range,"0,120,1")] public float KnockbackDistance { get; set; }
+    [Export(PropertyHint.Range,"0.05,0.5,0.01")] public float KnockbackSeconds { get; set; } = 0.18f;
+    [Export(PropertyHint.Range,"0,0.6,0.01")] public float StaggerSeconds { get; set; }
+    [Export] public bool InterruptAttack { get; set; }
     [ExportGroup("Timing")]
     [Export(PropertyHint.Range,"0.05,3,0.01")] public float AttackSeconds { get; set; } = 0.38f;
     [Export(PropertyHint.Range,"0,1,0.01")] public float ContactProgress { get; set; } = 0.85f;
@@ -38,8 +43,11 @@ public partial class AttackProfile : Resource
             || (TargetFactions & ~(CombatFaction.Player|CombatFaction.Hostile|CombatFaction.Neutral)) != 0 || CollisionMask == 0)
             throw new ArgumentException("Invalid melee attack profile.");
         return new(AttackSeconds/speed,CooldownSeconds/speed,ContactProgress,ContactProgress+ContactWindow,
-            BaseDamage,HitReach,Mathf.Cos(Mathf.DegToRad(HitHalfAngleDegrees)),TargetFactions,HitTools,CollisionMask);
+            BaseDamage,HitReach,Mathf.Cos(Mathf.DegToRad(HitHalfAngleDegrees)),TargetFactions,HitTools,CollisionMask,Bound(KnockbackDistance,0,120),Bound(KnockbackSeconds,0.05f,0.5f),Bound(StaggerSeconds,0,0.6f),InterruptAttack);
     }
+    // Reject non-finite authored values and bound extreme reaction tuning at snapshot time.
+    // =========================================================
+    private static float Bound(float value, float min, float max) => float.IsFinite(value) ? Mathf.Clamp(value,min,max) : throw new ArgumentException("Invalid reaction value.");
 }
 public readonly record struct AttackValues(float Duration, float Cooldown, float ContactStart, float ContactEnd,
-    float Damage, float Reach, float MinimumDot, CombatFaction Targets, bool HitTools, uint CollisionMask);
+    float Damage, float Reach, float MinimumDot, CombatFaction Targets, bool HitTools, uint CollisionMask, float KnockbackDistance=0, float KnockbackSeconds=0.18f, float StaggerSeconds=0, bool InterruptAttack=false);

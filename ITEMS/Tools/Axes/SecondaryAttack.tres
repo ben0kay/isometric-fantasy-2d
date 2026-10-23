@@ -11,3 +11,6 @@ CooldownSeconds = 0.45
 HitHalfAngleDegrees = 12.0
 HitTools = true
 ThrustPixels = 28.0
+KnockbackDistance = 55.0
+StaggerSeconds = 0.3
+InterruptAttack = true

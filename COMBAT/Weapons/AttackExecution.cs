@@ -9,10 +9,10 @@ public sealed class AttackExecution : IDisposable
     private AttackValues _values;
     private EffectiveStats _stats;
     private float _elapsed;
-    private bool _contacted, _disposed;
+    private bool _contacted, _disposed, _interrupted;
     public bool Busy { get; private set; }
-    public bool IsSwinging => Busy && _elapsed<_values.Duration;
-    public float Progress => Busy ? Mathf.Clamp(_elapsed/_values.Duration,0,1) : 1;
+    public bool IsSwinging => Busy && !_interrupted && _elapsed<_values.Duration;
+    public float Progress => Busy && !_interrupted ? Mathf.Clamp(_elapsed/_values.Duration,0,1) : 1;
     public Vector2 Aim { get; private set; }
     public int QueryCount => _query.QueryCount;
     public int OverflowCount => _query.OverflowCount;
@@ -33,7 +33,7 @@ public sealed class AttackExecution : IDisposable
     {
         if (_disposed || Busy || profile==null || !CombatTargeting.Active(_source) || !aim.IsFinite() || aim.LengthSquared()<0.0001f) return false;
         _stats=_source.Stats.Values; _values=profile.Snapshot(_stats.AttackSpeedMultiplier);
-        Aim=aim.Normalized(); _elapsed=0; _contacted=false; Busy=true; return true;
+        Aim=aim.Normalized(); _elapsed=0; _contacted=false; _interrupted=false; Busy=true; return true;
     }
     // Advance only while active, on the owner's physics path. Crossing a tiny window still gets one contact sample.
     // =========================================================
@@ -49,6 +49,9 @@ public sealed class AttackExecution : IDisposable
         { _contacted=true; Contact?.Invoke(hit); }
         if (_elapsed>=_values.Duration+_values.Cooldown) Busy=false;
     }
+    // Interrupt windup/contact/recovery without refunding the remaining attack or cooldown.
+    // =========================================================
+    public void Interrupt() { if (Busy) { _contacted=true; _interrupted=true; } }
     // Death, disabled owners, equipment shutdown and scene exit cancel pending contact immediately.
     // =========================================================
     public void Cancel() { Busy=false; _contacted=false; _elapsed=0; }

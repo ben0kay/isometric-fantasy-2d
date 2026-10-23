@@ -2,13 +2,14 @@
 // Behaviour modules handle locomotion/AI; no DEBUG dependencies.
 using Godot;
 
-public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatTarget
+public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTarget, ICombatTarget, IReactionTarget
 {
     [Export] public EntityDefinition Config { get; set; }
     public ActorHealth HealthState { get; private set; }
     public ActorStats Stats { get; private set; }
     public Node2D CombatNode => this;
     public CombatFaction Faction => Config.Faction;
+    public Knockback Reaction { get; } = new();
     public int Health => HealthState.Current;
 
     private Sprite2D _sprite;
@@ -86,6 +87,17 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     public DamageResult ReceiveDamage(DamageRequest request, EffectiveStats attacker)
         => DamageResolver.Apply(HealthState,request,attacker,Stats.Values);
 
+    // Confirmed living contacts activate the existing movement owner, including passive creatures.
+    // =========================================================
+    public void ReceiveReaction(AttackValues attack, Vector2 direction)
+    {
+        if (!CombatTargeting.Active(this) || !Reaction.Apply(attack,direction,Config.ReactionImmune,Config.KnockbackResistance,Config.StaggerResistance)) return;
+        if (attack.InterruptAttack && Reaction.Staggered) _chase?.Attack?.Interrupt();
+        _chase?.WakeReaction();
+    }
+    // Disabled ownership must never reactivate stale recoil.
+    // =========================================================
+    public override void _Notification(int what) { if (what==NotificationDisabled) Reaction.Clear(); }
     // Wake feedback only after actual damage; restored state never replays hit effects.
     // =========================================================
     private void OnHealthChanged(HealthChange change)
@@ -95,6 +107,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
         SetProcess(true);
         if (HealthState.IsAlive) return;
         RemoveFromGroup("world_tool_targets");
+        Reaction.Clear();
         Velocity = Vector2.Zero;
         _chase?.Stop();
         _collision.SetDeferred("disabled", true);

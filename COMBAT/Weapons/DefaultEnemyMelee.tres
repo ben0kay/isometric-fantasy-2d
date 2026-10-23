@@ -10,3 +10,5 @@ BaseDamage = 6.0
 HitReach = 36.0
 HitHalfAngleDegrees = 55.0
 TargetFactions = 1
+KnockbackDistance = 12.0
+StaggerSeconds = 0.12

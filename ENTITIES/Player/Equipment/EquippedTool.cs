@@ -40,7 +40,7 @@ public partial class EquippedTool : Node2D
     // =========================================================
     private void BeginSwing(AttackProfile profile, Vector2 aim)
     {
-        if (!Config.Enabled || Attack.Busy || !_owner.HealthState.IsAlive || !_owner.Actions.Begin(PlayerAction.Attack)) return;
+        if (!Config.Enabled || _owner.Reaction.Active || Attack.Busy || !_owner.HealthState.IsAlive || !_owner.Actions.Begin(PlayerAction.Attack)) return;
         if (aim.LengthSquared()<0.01f) aim=Vector2.FromAngle(_angle);
         if (!Attack.TryStart(profile,aim)) { _owner.Actions.End(PlayerAction.Attack); return; }
         _thrustPixels=profile.ThrustPixels;

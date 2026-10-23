@@ -28,7 +28,7 @@ public partial class GroundChase : Node
         _repathTimer = 0f;
         Attack?.Cancel();
         if (Enabled && _actor.Config.MeleeEnabled) EnsureAttack();
-        SetPhysicsProcess(Enabled && target != null);
+        SetPhysicsProcess((Enabled && target != null) || _actor.Reaction.NeedsUpdate);
     }
     // Optional melee allocates one executor only when enabled, including later config reactivation.
     // =========================================================
@@ -37,11 +37,14 @@ public partial class GroundChase : Node
         if (Attack!=null) return;
         Attack=new AttackExecution(_actor); _defaultAttack=GD.Load<AttackProfile>("res://COMBAT/Weapons/DefaultEnemyMelee.tres");
     }
+    // Reuse this motor for event-driven passive recoil; sleep again when it expires.
+    // =========================================================
+    public void WakeReaction() => SetPhysicsProcess(true);
     // Stop pursuit and pending contact together on death.
     // =========================================================
     public void Stop()
     {
-        Attack?.Cancel();
+        Attack?.Cancel(); _actor?.Reaction.Clear();
         SetPhysicsProcess(false);
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity = Vector2.Zero;
     }
@@ -50,7 +53,7 @@ public partial class GroundChase : Node
     public override void _Notification(int what)
     {
         if (what!=NotificationDisabled) return;
-        Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
+        _actor?.Reaction.Clear(); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero;
     }
     // Dispose contact-query resources on death cleanup/unload.
@@ -63,6 +66,23 @@ public partial class GroundChase : Node
     public override void _PhysicsProcess(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("GroundChase.PhysicsProcess");
+        if (_actor.Reaction.NeedsUpdate && _actor.HealthState.IsAlive)
+        {
+            bool staggered=_actor.Reaction.Staggered;
+            Vector2 recoil=_actor.Reaction.Advance((float)delta);
+            if (staggered || recoil!=Vector2.Zero)
+            {
+                if (_actor.Config.MeleeEnabled) Attack?.Advance(delta); else Attack?.Cancel();
+                Vector2 reactionNext=_actor.GlobalPosition+recoil*(float)delta;
+                if ((_navigation==null || _navigation.Contains(reactionNext)) && !(_target is PlayerMovement p && p.Streaming!=null && !p.Streaming.IsPositionLoaded(reactionNext)))
+                { _actor.Velocity=recoil; _actor.MoveAndSlide(); }
+                else _actor.Velocity=Vector2.Zero;
+                _repathTimer=0;
+                if (!_actor.Reaction.NeedsUpdate && !Enabled) SetPhysicsProcess(false);
+                return;
+            }
+        }
+        if (!Enabled && !_actor.Reaction.NeedsUpdate) SetPhysicsProcess(false);
         if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !_actor.HealthState.IsAlive
             || !GodotObject.IsInstanceValid(_target) || !_target.IsInsideTree() || _target.IsQueuedForDeletion()
             || (_target is ICombatTarget dead && !CombatTargeting.Active(dead)))

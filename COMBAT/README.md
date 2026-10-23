@@ -1,6 +1,6 @@
 # COMBAT
 
-> **Status:** C0–C2 implemented: shared health/stats/damage plus player/enemy attack execution and contact validation. See [C1](C1_Validation.md), [C2 results and limitations](C2_Validation.md), and [remaining C3–C5 plan](COMBAT_IMPLEMENTATION.md).
+> **Status:** C0–C2.5 and C3.2 implemented: shared health/stats/damage plus player/enemy attack execution and contact validation. See [C1](C1_Validation.md), [C2 results and limitations](C2_Validation.md), and [remaining C3–C5 plan](COMBAT_IMPLEMENTATION.md).
 
 Shared combat resolution for player, creatures, enemies and NPCs: damage, hit testing, projectiles, weapons and defense. Player input/weapon usage stays in ENTITIES/Player/Combat. Timed generic conditions belong in SYSTEMS/Effects.
 
@@ -19,4 +19,4 @@ Shared combat resolution for player, creatures, enemies and NPCs: damage, hit te
 - Use shared logic and data-driven definitions when it reduces duplication; keep clearly specialized systems in their own modules.
 - Folder names and documentation are navigation aids, not a promise that gameplay is already implemented.
 
-**C2.5:** Shared equipped-item definitions, forward slash/thrust, starter axe/sword selection, directional shield guard and visual hop are implemented. [Results and handoff](C2_5_Validation.md) distinguish headless checks, container build limits and target-PC visual acceptance. Physical knockback remains C3.
+**C2.5:** Shared equipped-item definitions, forward slash/thrust, starter axe/sword selection, directional shield guard and visual hop are implemented. [Results and handoff](C2_5_Validation.md) distinguish headless checks, container build limits and target-PC visual acceptance. C3.2 shared knockback/stagger is implemented; see [tuning and validation](C3_2_Validation.md).

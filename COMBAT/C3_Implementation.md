@@ -1,6 +1,6 @@
 # C3 — Combat feedback implementation notes
 
-> **Status: PLANNED.** The existing C1/C2 combat framework and shared `FEEDBACK/HealthBars` already exist; health-bar visual acceptance remains open. These C3 slices are proposed tasks for Codex, not completed work.
+> **Status: C3.2 implemented; other slices retain their individual status.** The existing C1/C2 combat framework and shared `FEEDBACK/HealthBars` already exist; health-bar visual acceptance remains open. The table below distinguishes implemented slices from later planned work.
 > **Goal:** Make hits readable and satisfying without duplicating combat calculations, requiring an inventory, or adding idle costs to many streamed actors.
 
 Read `CodePreferences.md`, root README, `COMBAT/COMBAT_IMPLEMENTATION.md`, `COMBAT/C2_Validation.md`, **C2.5 notes/results at HEAD**, `ENTITIES/Shared/Health/ActorHealth.cs`, `COMBAT/Damage/DamageResolver.cs`, `FEEDBACK/HealthBars/` and reference `ben0kay/isometric-new-2d/VISUALS/Feedback/` before coding.
@@ -8,7 +8,7 @@ Read `CodePreferences.md`, root README, `COMBAT/COMBAT_IMPLEMENTATION.md`, `COMB
 | Phase | Module location | Scope | State |
 | --- | --- | --- | --- |
 | **C3.1** | [FEEDBACK/DamageNumbers](../FEEDBACK/DamageNumbers/README.md) | World-space numbers for **actual HP removed**; configurable single-label pop/float/fade/rapid-hit merge; independent event-driven presentation | Code added; build/visual tests pending |
-| **C3.2** | `ENTITIES/Shared/Movement` + `COMBAT/Weapons` | Shared, collision-safe knockback/stagger response from confirmed attacks. Axe prod stronger than swipe; integrate with existing actor movement/chase and P3 bounds | Planned |
+| **C3.2** | `ENTITIES/Shared/Movement` + `COMBAT/Weapons` | Shared, collision-safe knockback/stagger response from confirmed attacks. Axe prod stronger than swipe; integrate with existing actor movement/chase and P3 bounds | Implemented; Windows feel acceptance pending; [validation](C3_2_Validation.md) |
 | **C3.3** | `FEEDBACK/HitFeedback` | Small impact bursts, adjustable flash and target material/type feedback (bones, wood, metal), optional trail; do not mix gameplay damage into FX | Planned |
 | **C3.4** | `FEEDBACK/HitFeedback` + defense event contracts | Different responses to normal hit, blocked damage, guard break/parry if introduced, misses; only results from authoritative C2/C2.5 rules | Planned |
 | **C3.5** | `FEEDBACK/CameraShake` + audio module | Optional subtle camera impulse and attack/impact sounds, centralized tunable defaults with strong caps | Planned |
@@ -30,7 +30,7 @@ Implement `FEEDBACK/DamageNumbers/` per its README, adapting the **older project
 
 ## C3.2 — Shared knockback and stagger (Codex implementation handoff)
 
-> **Status: PLANNED, not implemented.** Build on C2/C2.5 attack contacts and C1 health/stats. C3.1 damage numbers are independent. Implement this slice only; C3.3–C3.5 remain later work.
+> **Status: IMPLEMENTED — 23 October 2026.** See [C3.2 results and tuning](C3_2_Validation.md). The following handoff is retained as the implementation contract. AC is closed for its agreed scope; optional corridor testing and known native shutdown faults remain separate. Build on C2/C2.5 attack contacts and C1 health/stats. C3.1 damage numbers are independent. Implement this slice only; C3.3–C3.5 remain later work.
 
 ### Goal and player-facing behavior
 

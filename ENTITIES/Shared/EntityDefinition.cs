@@ -9,6 +9,10 @@ public partial class EntityDefinition : Resource
     [Export] public Vector2 SpriteScale { get; set; } = Vector2.One;
     [Export(PropertyHint.Range, "3,60,1")] public float CollisionRadius { get; set; } = 9f;
     [Export(PropertyHint.Range, "3,60,1")] public float HitRadius { get; set; } = 12f;
+    [ExportGroup("Hit reaction resistance")]
+    [Export] public bool ReactionImmune { get; set; }
+    [Export(PropertyHint.Range,"0,1,0.05")] public float KnockbackResistance { get; set; }
+    [Export(PropertyHint.Range,"0,1,0.05")] public float StaggerResistance { get; set; }
     [ExportGroup("Ground pursuit (optional)")]
     [Export] public bool ChasePlayer { get; set; } = false;
     [ExportGroup("Detection and chase")]

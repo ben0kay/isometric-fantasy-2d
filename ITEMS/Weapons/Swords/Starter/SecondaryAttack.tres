@@ -11,3 +11,5 @@ ContactProgress = 0.65
 CooldownSeconds = 0.3
 HitHalfAngleDegrees = 10.0
 HitTools = false
+KnockbackDistance = 30.0
+StaggerSeconds = 0.2
