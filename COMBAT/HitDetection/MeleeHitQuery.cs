@@ -111,7 +111,7 @@ public sealed class MeleeHitQuery : IDisposable
                 if (_ray.CollisionMask!=rayMask) _ray.CollisionMask=rayMask;
                 _ray.To=point;
                 var obstruction=space.IntersectRay(_ray);
-                if (obstruction.Count!=0 && (actor!=null || obstruction["collider"].AsGodotObject()!=body)) continue;
+                if (obstruction.Count!=0 && obstruction["collider"].AsGodotObject()!=body) continue;
             }
             Selection found=new() { Receiver=receiver,Actor=actor,Tool=tool,Point=point,Distance=distance,Id=id };
             if (tool!=null)
