@@ -1,6 +1,6 @@
 # Resource-driven production trees
 
-**Implemented:** every production tree uses `Shared/Tree.tscn` and the same `Shared/Tree.cs`. Species and artwork variants are Resources; adding content requires no species scene or C# script. Oak and Pink Blossom are migrated. Their obsolete production scenes were removed after a reference audit and runtime checks; independent DEBUG trees remain unchanged.
+**Implemented:** every production tree uses `Shared/Tree.tscn` and the same `Shared/Tree.cs`. Species and artwork variants are Resources; adding content requires no species scene or C# script. Oak and Pink Blossom are migrated. Their obsolete production scenes were removed after a reference audit and runtime checks; independent DEBUG trees remain unchanged. **Pine is artwork-only** at [Pine/](Pine/README.md): two imported sprites are staged but there is no Pine TreeDefinition or biome population, so Pine is not generated.
 
 ## Content contract
 

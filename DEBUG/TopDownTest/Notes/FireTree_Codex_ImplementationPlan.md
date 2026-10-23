@@ -3,7 +3,7 @@
 **Status:** DEBUG **FIRE1/FIRE2 implemented**; FIRE3 (lightning ignition) and FIRE4 (further polish/ecology) remain proposed. Production FIRE1/FIRE2 are also implemented ([Fire module](../../../SYSTEMS/WorldInteractions/Fire/README.md)). Earlier planned-step wording for FIRE1/FIRE2 is historical, not an instruction to redo them.  
 **Project:** 2D top-down fantasy survival prototype (Godot .NET / C#).  
 **Scope:** `DEBUG/TopDownTest/` only. No production code changes in FIRE1.  
-**Art choice:** Use **`Charred Leafless Oak Sprite.png`** currently uploaded at repository root. **Do not use** `Charred Oak Tree Sprite.png` for this initial prototype. Keep the unused file unchanged.  
+**Historical art choice (FIRE1):** The original root `Charred Leafless Oak Sprite.png` was selected rather than the alternate charred image. The identical root copy has since been removed; active production artwork is `WORLD/Content/Vegetation/Trees/Oak/Sprites/oak_charred.png` and the independent DEBUG copy remains in `DEBUG/TopDownTest/Fire/Artwork/`. The unused alternate was moved into [the source-art archive](../../../Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/Unused_Sprite_Source/README.md).  
 **Agreement:** Codex should implement **FIRE1 only**, commit once, and leave an exact handoff for later FIRE2–FIRE4 implementation in ordinary ChatGPT. Do not quietly implement later passes.
 
 ## 0. What the final prototype should eventually show

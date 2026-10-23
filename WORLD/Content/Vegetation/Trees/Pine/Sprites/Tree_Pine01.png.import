@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cy2y58441d0bk"
-path="res://.godot/imported/Charred Oak Tree Sprite.png-65093fcdffff52f57dc1694995071334.ctex"
+uid="uid://byb8woxprvyji"
+path="res://.godot/imported/Tree_Pine01.png-93d675dffdd4ea07a779fc4ef0cae291.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Charred Oak Tree Sprite.png"
-dest_files=["res://.godot/imported/Charred Oak Tree Sprite.png-65093fcdffff52f57dc1694995071334.ctex"]
+source_file="res://WORLD/Content/Vegetation/Trees/Pine/Sprites/Tree_Pine01.png"
+dest_files=["res://.godot/imported/Tree_Pine01.png-93d675dffdd4ea07a779fc4ef0cae291.ctex"]
 
 [params]
 

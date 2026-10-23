@@ -10,6 +10,8 @@
 | [NATURAL_TERRAIN.md](NATURAL_TERRAIN.md) | **Retired:** former 3D terrain F5 instructions. F5 now opens Boot; old test scene remains separate |
 | [performance_refactor.md](performance_refactor.md) | **Completed P0/P1/P2 implementation handoffs:** original measurements are historical; Windows visual/FPS profiling is still open. Current: [streaming](../../WORLD/Runtime/Streaming/README.md) |
 
+The [unused sprite source archive](Unused_Sprite_Source/README.md) preserves three formerly root-level PNGs for reference. Its `.gdignore` prevents Godot from importing or exporting them; these are not gameplay assets.
+
 **Deliberately not archived:** [combat C2–C5 plan](../../COMBAT/COMBAT_IMPLEMENTATION.md), [SO3/SO4 + GL scene planning](../../SCENES/World/scene%20organize.md), [P5/P6 world phases](../../WORLD/Generation_Implementation.md), and [future geography design](../World_Generation_Direction.md) still contain unimplemented/undecided work. Earlier P0/P1 audit stays with [generation](../../WORLD/Generation/World/P0_P1_Audit.md) as validation history.
 
 The original snow experiment brief is a `.txt` file, so it has **not been moved or modified** by this Markdown-only cleanup; its original DEBUG implementation is complete. `Notes/work.md` was an empty scratch file and was removed.

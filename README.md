@@ -180,7 +180,7 @@ A **fully 2D, top-down medieval / high-fantasy survival sandbox**: an ordinary p
 - Richer, more mature, semi-realistic-feeling **pixel art** rather than bright/cartoon styling. **Drova: Forsaken Kin** and **Stoneshard** are visual references for atmosphere, foliage, grounded palettes, stonework and readable characters.
 - Sprite/tile size, final resolution and animation workflow **are not locked**. Reuse modular art, variation, lighting and shader effects instead of requiring an enormous bespoke animation library.
 - Aim for atmospheric but efficient dynamic sun/day-night light, projected tree shadows, wind, rain, snow, cloud shade, mist, particles, water, seasons and environmental reactions. Many visual effects now also run in production; seasons and several gameplay consequences remain future work.
-- Loose art at repository root is not automatically usable content. Production FIRE1/FIRE2 include charred transformation and P4 saves supported burn state. Fire spread, survival damage and offscreen combustion remain future work.
+- Former loose root sprites have been reorganized: [Pine artwork](WORLD/Content/Vegetation/Trees/Pine/README.md) is staged but not yet configured as a species; [unused source artwork](Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/Unused_Sprite_Source/README.md) is archived and excluded from Godot imports. Production FIRE1/FIRE2 use canonical charred art and P4 saves supported burn state. Fire spread, survival damage and offscreen combustion remain future work.
 
 ## Gameplay pillars — intended direction (most mechanics still planned)
 

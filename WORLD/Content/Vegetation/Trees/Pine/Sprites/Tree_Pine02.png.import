@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://3mw5ps20jol4"
-path="res://.godot/imported/Pixel-Art Mossy Boulder Sprite.png-3d1a70c72fdd96a1a44206b04611f17a.ctex"
+uid="uid://b0tt5qb170y5l"
+path="res://.godot/imported/Tree_Pine02.png-77f3d2f13cfb35a85a15df08f3e247ec.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Pixel-Art Mossy Boulder Sprite.png"
-dest_files=["res://.godot/imported/Pixel-Art Mossy Boulder Sprite.png-3d1a70c72fdd96a1a44206b04611f17a.ctex"]
+source_file="res://WORLD/Content/Vegetation/Trees/Pine/Sprites/Tree_Pine02.png"
+dest_files=["res://.godot/imported/Tree_Pine02.png-77f3d2f13cfb35a85a15df08f3e247ec.ctex"]
 
 [params]
 
