@@ -8,6 +8,7 @@ public partial class AttackProfile : Resource
     [ExportGroup("Presentation")]
     [Export] public AttackPresentation Presentation { get; set; }
     [Export(PropertyHint.Range,"10,160,1")] public float SweepDegrees { get; set; } = 110;
+    [Export(PropertyHint.Range,"0,0.3,0.01")] public float SweepWindupFraction { get; set; } = 0.16f;
     [Export(PropertyHint.Range,"0,40,1")] public float ThrustPixels { get; set; } = 14;
     [ExportGroup("Timing")]
     [Export(PropertyHint.Range,"0.05,3,0.01")] public float AttackSeconds { get; set; } = 0.38f;
@@ -27,6 +28,7 @@ public partial class AttackProfile : Resource
     public AttackValues Snapshot(float speed)
     {
         if (!Enum.IsDefined(Presentation) || !float.IsFinite(SweepDegrees) || SweepDegrees<10 || SweepDegrees>160
+            || !float.IsFinite(SweepWindupFraction) || SweepWindupFraction<0 || SweepWindupFraction>0.3f
             || !float.IsFinite(ThrustPixels) || ThrustPixels<0 || ThrustPixels>40 || !float.IsFinite(speed) || speed < 0.05f || speed > 20 || !float.IsFinite(AttackSeconds) || AttackSeconds < 0.05f || AttackSeconds > 10
             || !float.IsFinite(ContactProgress) || ContactProgress < 0 || ContactProgress > 1
             || !float.IsFinite(ContactWindow) || ContactWindow < 0 || ContactProgress+ContactWindow > 1

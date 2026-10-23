@@ -33,13 +33,19 @@ public partial class ValidatePlayerActions : Node2D
     {
         Check(_tool.EquippedItem.Id=="starteraxe" && !_tool.ShieldEquipped,"Startup selection");
         Check(!_tool.IsPhysicsProcessing(),"Idle attack physics");
+        float heldAngle=_tool.Rotation;
         _input.EmitSignal(PlayerInput.SignalName.ToolUseRequested,Vector2.Right*100);
         Check(_tool.IsAttacking,"Primary request");
+        _tool._Process(0); // Capture the first attack pose before advancing physics.
+        Check(Vector2.FromAngle(_tool.Rotation).DistanceTo(Vector2.FromAngle(heldAngle))<0.0001f,
+            "Slash jumped directly to the backward sweep start");
         _input.EmitSignal(PlayerInput.SignalName.AlternateUseRequested,Vector2.Right*100);
         Select(1); Check(_tool.EquippedItem.Id=="starteraxe","Switch bypassed committed attack");
         await Wait(0.65); Check(_target.Health==39 && !_tool.Attack.Busy,"Primary damage/duplicate contact");
         _input.EmitSignal(PlayerInput.SignalName.AlternateUseRequested,Vector2.Right*100);
         await Wait(0.12); Check(Mathf.Abs(_tool.Rotation)<0.01f,"Thrust rotated away from aim");
+        Check(_tool.GetNode<Sprite2D>("ToolSprite").Position.X>_tool.Config.OrbitRadius+16f,
+            "Axe thrust lost its pronounced forward extension");
         await Wait(0.7); Check(_target.Health==34,"Alternate damage");
         Select(1); Check(_tool.EquippedItem.Id=="startersword","Sword selection");
         Check(!_tool.EquippedItem.PrimaryAttack.HitTools && !_tool.EquippedItem.SecondaryAttack.HitTools,"Sword chops props");

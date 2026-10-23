@@ -11,7 +11,7 @@ public partial class EquippedTool : Node2D
     private Sprite2D _playerSprite, _toolSprite;
     private PlayerInput _input;
     private PlayerMovement _owner;
-    private float _angle, _attackStart, _contactProgress, _sweepDegrees, _thrustPixels;
+    private float _angle, _attackStart, _poseStartAngle, _contactProgress, _sweepDegrees, _sweepWindupFraction, _thrustPixels;
     private bool _visualSwing, _marker;
     private AttackPresentation _presentation;
 
@@ -45,7 +45,8 @@ public partial class EquippedTool : Node2D
         if (!Attack.TryStart(profile,aim)) { _owner.Actions.End(PlayerAction.Attack); return; }
         _thrustPixels=profile.ThrustPixels;
         _presentation=profile.Presentation; _contactProgress=profile.ContactProgress; _sweepDegrees=profile.SweepDegrees;
-        _attackStart=Attack.Aim.Angle(); _visualSwing=true; SetPhysicsProcess(true);
+        _sweepWindupFraction=profile.SweepWindupFraction;
+        _poseStartAngle=_angle; _attackStart=Attack.Aim.Angle(); _visualSwing=true; SetPhysicsProcess(true);
     }
     // Shield release is unconditional; a rejected press is never queued for later activation.
     // =========================================================
@@ -108,7 +109,7 @@ public partial class EquippedTool : Node2D
         if (!Attack.IsSwinging) _owner.Actions.End(PlayerAction.Attack);
         SetPhysicsProcess(Attack.Busy);
     }
-    // Sweep crosses forward aim at contact; thrust reaches maximum extension at its own contact sample.
+    // Sweep eases from the current held pose into a brief wind-up before crossing contact; thrust snaps forward and retracts.
     // =========================================================
     public override void _Process(double delta)
     {
@@ -121,14 +122,31 @@ public partial class EquippedTool : Node2D
         if (_visualSwing)
         {
             float p=Attack.Progress, c=Mathf.Clamp(_contactProgress,0.001f,0.999f);
-            float phase=p<=c ? p/c : 1-(p-c)/(1-c);
-            if (_presentation==AttackPresentation.Thrust) { _angle=_attackStart; orbit+=Mathf.Clamp(phase,0,1)*_thrustPixels; }
+            if (_presentation==AttackPresentation.Thrust)
+            {
+                float t=Mathf.Clamp(p<=c ? p/c : (p-c)/(1-c),0f,1f);
+                // Fast ease-out extension reads as a jab; smoothly retract after the contact peak.
+                float extension=p<=c ? 1f-(1f-t)*(1f-t)*(1f-t) : 1f-t*t*(3f-2f*t);
+                _angle=_attackStart; orbit+=extension*_thrustPixels;
+            }
             else
             {
-                float t=p<=c ? p/c : (p-c)/(1-c);
-                t=t*t*(3-2*t);
-                float offset=p<=c ? Mathf.Lerp(-_sweepDegrees*0.5f,0,t) : Mathf.Lerp(0,_sweepDegrees*0.5f,t);
-                _angle=_attackStart+Mathf.DegToRad(offset);
+                // Only cosmetic: finish the wind-up before the authoritative contact progress.
+                float windup=Mathf.Min(_sweepWindupFraction,c*0.4f);
+                float start=_attackStart-Mathf.DegToRad(_sweepDegrees*0.5f);
+                if (windup>0f && p<windup)
+                {
+                    float t=Mathf.Clamp(p/windup,0f,1f);
+                    t=t*t*(3f-2f*t);
+                    _angle=Mathf.LerpAngle(_poseStartAngle,start,t);
+                }
+                else
+                {
+                    float t=Mathf.Clamp(p<=c ? (p-windup)/(c-windup) : (p-c)/(1f-c),0f,1f);
+                    t=t*t*(3f-2f*t);
+                    float offset=p<=c ? Mathf.Lerp(-_sweepDegrees*0.5f,0f,t) : Mathf.Lerp(0f,_sweepDegrees*0.5f,t);
+                    _angle=_attackStart+Mathf.DegToRad(offset);
+                }
             }
             if (p>=1) _visualSwing=false;
         }

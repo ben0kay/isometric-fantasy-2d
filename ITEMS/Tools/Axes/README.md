@@ -8,6 +8,6 @@ Axe.tscn is currently auto-equipped on the player for testing, without inventory
 
 ## C2.5 starter axe
 
-`StarterAxe.tres` is a generic `EquippedItemDefinition` referencing `PrimaryAttack.tres` (11 damage, 52 reach, 0.38s + 0.15s cooldown) and `SecondaryAttack.tres` (5 damage, 60 reach, 0.28s + 0.45s cooldown). Both retain prop hits. Primary is a forward slash, not the old full spin; alternate is a narrower linear prod. Both use C2 execution and independent Resource tuning.
+`StarterAxe.tres` is a generic `EquippedItemDefinition` referencing `PrimaryAttack.tres` (11 damage, 52 reach, 0.38s + 0.15s cooldown) and `SecondaryAttack.tres` (5 damage, 60 reach, 0.28s + 0.45s cooldown). Both retain prop hits. Primary is a forward slash, not the old full spin; alternate is a narrower linear prod. Both use C2 execution and independent Resource tuning. **Presentation polish:** LMB has a smooth, brief wind-up rather than snapping to the sweep start; MMB has a snappier 28px visual forward jab rather than the earlier 8px. Physical reach, contact timing, damage, and knockback policy are unchanged.
 
 PNG art/grip is reused unchanged. `DefaultAxeConfig.tres` still supplies compatibility hand/aim settings; edit starter attack Resources for actual new damage/timing. No production skeleton/resource/scene text is changed: the 50-HP test target lives in TESTS/Combat/PlayerActionsPractice.tscn. Physical knockback is deferred to C3; a prod currently does not displace targets.

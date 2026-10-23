@@ -3,6 +3,7 @@
 [resource]
 script = ExtResource("script")
 Presentation = 1
+ThrustPixels = 32.0
 BaseDamage = 6.0
 HitReach = 62.0
 AttackSeconds = 0.24

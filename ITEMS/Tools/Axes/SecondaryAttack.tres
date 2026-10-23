@@ -10,4 +10,4 @@ ContactProgress = 0.65
 CooldownSeconds = 0.45
 HitHalfAngleDegrees = 12.0
 HitTools = true
-ThrustPixels = 8.0
+ThrustPixels = 28.0
