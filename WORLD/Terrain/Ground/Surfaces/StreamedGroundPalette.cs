@@ -9,6 +9,8 @@ public static class StreamedGroundPalette
     public static ShaderMaterial Build(MacroWorldMap map, IEnumerable<WorldBiomeDefinition> definitions)
     {
         var profiles = definitions.Where(b => b != null && b.EnabledForGeneration).ToDictionary(b => b.Id, b => b.Surface);
+        var tints = definitions.Where(b => b != null && b.EnabledForGeneration).ToDictionary(b => b.Id,b => b.GroundTint);
+        bool hasTint = tints.Values.Any(tint => tint != Colors.White);
         var material = new ShaderMaterial { Shader = GD.Load<Shader>("res://WORLD/Terrain/Ground/Surfaces/Shaders/StreamedGround.gdshader") };
         int atlasColumns = Mathf.CeilToInt(Mathf.Sqrt(map.Biomes.Count));
         using (var atlas = Image.CreateEmpty(atlasColumns*32,atlasColumns*32,false,Image.Format.Rgba8))
@@ -24,7 +26,10 @@ public static class StreamedGroundPalette
         }
         material.SetShaderParameter("art_columns",(float)atlasColumns);
         material.SetShaderParameter("ground_noise",GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres"));
-        string[] names = { "map_base","map_shade","map_fresh","map_dry","map_settings" };
+        material.SetShaderParameter("has_ground_tint",hasTint);
+        string[] names = hasTint
+            ? new[] { "map_base","map_shade","map_fresh","map_dry","map_settings","map_tint" }
+            : new[] { "map_base","map_shade","map_fresh","map_dry","map_settings" };
         for (int channel = 0; channel < names.Length; channel++)
         {
             using var image = Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf);
@@ -32,7 +37,7 @@ public static class StreamedGroundPalette
             {
                 var p = profiles[map.Biomes[map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex].Id];
                 if (p == null) throw new System.ArgumentException("Every streamed biome requires a surface profile.");
-                Color value = channel switch { 0 => p.BaseColour, 1 => p.ShadeColour, 2 => p.FreshColour, 3 => p.DryColour, _ => new Color(p.Variation,p.PatchSize,p.DetailStrength,map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex) };
+                Color value = channel switch { 0 => p.BaseColour, 1 => p.ShadeColour, 2 => p.FreshColour, 3 => p.DryColour, 5 => tints[map.Biomes[map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex].Id], _ => new Color(p.Variation,p.PatchSize,p.DetailStrength,map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex) };
                 image.SetPixel(x,y,value);
             }
             material.SetShaderParameter(names[channel],ImageTexture.CreateFromImage(image));

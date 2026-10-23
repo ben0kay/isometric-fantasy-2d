@@ -24,5 +24,9 @@ public partial class WorldBiomeDefinition : Resource
         set => _legacySurface = value;
     }
     private GroundSurfaceProfile _legacySurface;
+
+    // Per-biome modulation belongs to the layer, never to the shared source profile.
+    // =========================================================
+    public Color GroundTint => GroundStack?.DefiningBaseGround?.Tint ?? Colors.White;
     [Export] public Godot.Collections.Array<BiomePopulation> Populations { get; set; } = new();
 }

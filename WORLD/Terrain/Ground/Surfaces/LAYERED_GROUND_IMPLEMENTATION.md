@@ -6,6 +6,10 @@
 >
 > **Project rules:** Read root `README.md`, `CodePreferences.md`, relevant feature READMEs and actual HEAD code before edits. Production Godot C#, low idle cost, modular Resource-driven authoring, one GitHub commit per approved job, and separate visual/performance validation.
 
+## Pre-GS2 addition — biome-owned tint
+
+Implemented: BiomeGroundLayer.Tint (opaque RGB, white default), applied to the completed base appearance by both existing renderers. Production biome/profile Resources remain unchanged. Streamed tint uses a shared coarse RGB map only when any biome is tinted; all-white skips that upload/sample. No per-frame CPU work. Overlay tint becomes effective with GS3, since overlays remain unsupported now. This is an explicitly authorized tint extension, not completion of GS2. See TINT_Validation.md for local checks and limitations.
+
 ## 1. Intent and desired layer stack
 
 The author wants an obvious **defining basis ground layer** in each biome Resource, rather than an ambiguous generic surface. Examples: Grass, Sand, Dirt, Rock/Stone. That base fills 100% of the biome's ground, can be colour-toned per biome, and remains visible when all optional layers are disabled.

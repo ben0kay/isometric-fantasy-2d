@@ -42,3 +42,5 @@ Require zero exit status and explicit PASS output; report native shutdown failur
 ## Performance contract
 
 Activation: Resource resolution during setup only. Shutdown: returns immediately; no callbacks or persistent simulation. Idle CPU work: none added. Scaling: bounded two-overlay validation and one stack/base Resource per biome, no per-chunk materials or nodes. Graphical and timing parity remain unverified until the local checks above.
+
+Subsequent authorized pre-GS2 tint addition changes the two surface shaders and setup wiring; unchanged-renderer statements above describe the original GS1 revision. See TINT_Validation.md. Original GS0 graphical/performance and GS1 local acceptance remain pending.

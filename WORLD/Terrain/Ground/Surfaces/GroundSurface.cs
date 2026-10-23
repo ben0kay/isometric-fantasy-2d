@@ -5,7 +5,7 @@ public partial class GroundSurface : Sprite2D
 {
     // Tile the original artwork across the configured world and preserve debug palette/detail math.
     // =========================================================
-    public void Configure(Rect2 bounds, GroundSurfaceProfile profile, AdjacentBiomeLayout biomes = null)
+    public void Configure(Rect2 bounds, GroundSurfaceProfile profile, AdjacentBiomeLayout biomes = null, Color? tint = null)
     {
         Texture = profile.Texture;
         TextureRepeat = TextureRepeatEnum.Enabled;
@@ -13,6 +13,8 @@ public partial class GroundSurface : Sprite2D
         Position = bounds.Position;
         RegionRect = new Rect2(Vector2.Zero, bounds.Size);
         var material = (ShaderMaterial)profile.Material.Duplicate();
+        material.SetShaderParameter("surface_tint",tint ?? biomes?.Primary?.GroundTint ?? Colors.White);
+        material.SetShaderParameter("secondary_surface_tint",biomes?.Secondary?.GroundTint ?? tint ?? Colors.White);
         material.SetShaderParameter("base_colour", profile.BaseColour);
         material.SetShaderParameter("shade_colour", profile.ShadeColour);
         material.SetShaderParameter("fresh_colour", profile.FreshColour);

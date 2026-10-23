@@ -9,6 +9,8 @@ public partial class BiomeGroundLayer : Resource
     [Export] public string Id { get; set; } = "";
     [Export] public string Label { get; set; } = "";
     [Export] public GroundSurfaceProfile Surface { get; set; }
+    [ExportGroup("Biome tint - white preserves the surface")]
+    [Export] public Color Tint { get; set; } = Colors.White;
     [ExportGroup("Optional overlay only - reserved for GS3")]
     [Export] public bool Enabled { get; set; } = false;
     [Export(PropertyHint.Range,"0,1")] public float Coverage { get; set; } = 0.25f;
@@ -26,6 +28,9 @@ public partial class BiomeGroundLayer : Resource
             throw new ArgumentException("Ground layers require an ID, label and surface.");
         if (Surface.Texture == null || Surface.Material == null)
             throw new ArgumentException("Ground layer surfaces require texture and material.");
+        RequireRange(Tint.R,0,1); RequireRange(Tint.G,0,1); RequireRange(Tint.B,0,1);
+        if (!float.IsFinite(Tint.A) || Tint.A != 1f)
+            throw new ArgumentException("Ground tint must be opaque; it changes colour, not ground coverage.");
         if (isBase) return; // Base always fills 100%; overlay fields never affect it.
         RequireRange(Coverage,0,1); RequireRange(Opacity,0,1); RequireRange(PatchSize,80,8192);
         RequireRange(EdgeSoftness,0,1); RequireRange(WarpStrength,0,1);

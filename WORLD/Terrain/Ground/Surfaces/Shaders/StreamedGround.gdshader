@@ -8,6 +8,8 @@ uniform sampler2D map_shade : filter_linear, repeat_disable;
 uniform sampler2D map_fresh : filter_linear, repeat_disable;
 uniform sampler2D map_dry : filter_linear, repeat_disable;
 uniform sampler2D map_settings : filter_linear, repeat_disable;
+uniform bool has_ground_tint = false;
+uniform sampler2D map_tint : filter_linear, repeat_disable;
 uniform vec2 map_origin;
 uniform vec2 map_grid_size;
 uniform float map_cell_size;
@@ -33,5 +35,6 @@ void fragment() {
     float detail = texture(ground_noise,pixel/48.0+vec2(0.23,0.59)).r;
     float grain = texture(ground_noise,pixel/13.0+vec2(0.71,0.19)).r;
     surface *= 1.0 + ((smoothstep(0.48,0.78,detail)-0.5)+(grain-0.5)*0.45)*settings.b;
+    if (has_ground_tint) surface *= texture(map_tint,lookup).rgb;
     COLOR = vec4(surface,1.0) * ground_tint;
 }

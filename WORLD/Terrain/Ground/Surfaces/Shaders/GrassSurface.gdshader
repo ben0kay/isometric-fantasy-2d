@@ -5,6 +5,8 @@ shader_type canvas_item;
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/PatchColours.gdshaderinc"
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/FineDetail.gdshaderinc"
 uniform bool natural_grass = true;
+uniform vec4 surface_tint = vec4(1.0);
+uniform vec4 secondary_surface_tint = vec4(1.0);
 varying vec2 ground_world;
 varying vec4 ground_tint;
 
@@ -22,5 +24,6 @@ void fragment() {
         artwork.rgb = grass_fine_detail(surface, ground_world);
     }
     else artwork.rgb *= mix(base_colour.rgb, secondary_base.rgb, biome_weight(ground_world)) / authored_base;
+    artwork.rgb *= mix(surface_tint.rgb,secondary_surface_tint.rgb,biome_weight(ground_world));
     COLOR = artwork * ground_tint;
 }
