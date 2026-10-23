@@ -6,6 +6,7 @@ public partial class ProjectileSpawner : Node2D
     [Export(PropertyHint.Range,"1,256,1")] public int MaximumActive { get; set; } = 64;
     [Export] public Rect2 Bounds { get; set; }
     public Func<Vector2,bool> IsPositionLoaded { get; set; }
+    public Func<Vector2,Vector2,bool> IsSegmentLoaded { get; set; }
     public int ActiveCount { get; private set; }
     // Match the world's Y-sort chain; no sensors, physics bodies or timers are added.
     // =========================================================
@@ -31,8 +32,9 @@ public partial class ProjectileSpawner : Node2D
     {
         if(!from.IsFinite() || !to.IsFinite()) return false;
         int steps=Mathf.Max(1,Mathf.CeilToInt(from.DistanceTo(to)/16));
-        if(steps>64) return false;
-        for(int i=0;i<=steps;i++) if(!Allows(from.Lerp(to,(float)i/steps))) return false;
+        if(steps>64 || !Allows(from) || !Allows(to)) return false;
+        if(IsSegmentLoaded!=null) return IsSegmentLoaded(from,to);
+        for(int i=1;i<steps;i++) if(!Allows(from.Lerp(to,(float)i/steps))) return false;
         return true;
     }
     // Each shot releases its slot once, including disable/remove/unload paths.

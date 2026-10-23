@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EntityEquipmentDefinition" load_steps=3 format=3]
+[ext_resource type="Script" path="res://ENTITIES/Shared/Equipment/EntityEquipmentDefinition.cs" id="script"]
+[ext_resource type="Texture2D" path="res://ENTITIES/Species/Undead/Skeletons/Archer/Equipment/Bow/Sprites/skeleton_bow.svg" id="sprite"]
+[resource]
+script = ExtResource("script")
+Sprite = ExtResource("sprite")
+SpriteScale = Vector2(0.75, 0.75)
+HandOffset = Vector2(0, -16)
+HoldDistance = 12.0

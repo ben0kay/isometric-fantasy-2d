@@ -23,6 +23,7 @@ public partial class EntityDefinition : Resource
     [Export(PropertyHint.Range, "12,70,1")] public float StopDistance { get; set; } = 26f;
     [Export(PropertyHint.Range, "0.15,2,0.05")] public float RepathSeconds { get; set; } = 0.45f;
 
+    [Export] public RangedCombatProfile Ranged { get; set; }
     [Export] public SeparationProfile Separation { get; set; }
     [Export] public EngagementProfile Engagement { get; set; }
 

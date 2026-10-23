@@ -213,4 +213,6 @@ A **fully 2D, top-down medieval / high-fantasy survival sandbox**: an ordinary p
 
 **ES3 / combat tuning:** Shared Direct/Spread engagement positioning now reserves stable reachable approach points with bounded fallback; real attacks and recoil retain priority. F9 switches between Environment (including tree-fire commands) and Combat (independent movement/combat masters and ES3 sliders). See [implementation, evidence and remaining visual acceptance](ENTITIES/Shared/Movement/ES3_Validation.md).
 
-**R0 projectiles:** Shared straight arrows now have swept point collision, immutable contact/stat snapshots, directional guard, bounded scene-local spawning and transient cleanup. No archer/World encounter is wired yet; R1/R2 remain planned. [R0 results and integration](COMBAT/Projectiles/R0_Validation.md).
+**R0 projectiles:** Shared straight arrows now have swept point collision, immutable contact/stat snapshots, directional guard, bounded scene-local spawning and transient cleanup. R1 now adds the shared archer/practice room; mixed encounters remain R2. [R0 results and integration](COMBAT/Projectiles/R0_Validation.md).
+
+**R1 archer:** Open `TESTS/Projectiles/ArcherPractice.tscn` and press F6 for a playable bow skeleton, cover and reset. Enemy bow definition/art live under `Skeletons/Archer/Equipment/Bow/`, separate from player ITEMS. Shared ranged intent uses the existing motor and R0 arrows; default World still has five melee skeletons. [Settings, validation and remaining visual checks](COMBAT/Projectiles/R1_Validation.md).

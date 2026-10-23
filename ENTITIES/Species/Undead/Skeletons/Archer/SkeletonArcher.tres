@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EntityDefinition" load_steps=5 format=3]
+[ext_resource type="Script" path="res://ENTITIES/Shared/EntityDefinition.cs" id="script"]
+[ext_resource type="Texture2D" path="res://ENTITIES/Species/Undead/Skeletons/Basic/Sprites/skeleton_basic.svg" id="sprite"]
+[ext_resource type="Resource" path="res://FEEDBACK/HitFeedback/Profiles/Bone.tres" id="bone"]
+[ext_resource type="Resource" path="res://ENTITIES/Species/Undead/Skeletons/Archer/ArcherRangedProfile.tres" id="ranged"]
+[resource]
+script = ExtResource("script")
+Id = "undead.skeleton.archer"
+Sprite = ExtResource("sprite")
+ChasePlayer = true
+MeleeEnabled = false
+MaxHealth = 50
+DetectionRadius = 600.0
+Ranged = ExtResource("ranged")
+ImpactFeedback = ExtResource("bone")

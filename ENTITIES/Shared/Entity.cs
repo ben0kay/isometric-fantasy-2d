@@ -65,6 +65,9 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     {
         _chase?.ConfigureNavigation(target, navigation);
     }
+    // Explicit scene-local projectile ownership; navigation injection can happen before or after this.
+    // =========================================================
+    public void ConfigureRanged(ProjectileSpawner spawner) => _chase?.ConfigureRanged(spawner);
     #endregion
 
     // Restore validated living state without replaying damage effects or death transitions.
@@ -101,7 +104,7 @@ public partial class Entity : CharacterBody2D, IWorldNavigationAgent, IToolHitTa
     public void ReceiveReaction(AttackValues attack, Vector2 direction)
     {
         if (!CombatTargeting.Active(this) || !Reaction.Apply(attack with { KnockbackDistance=_combatConfig.KnockbackEnabled ? attack.KnockbackDistance : 0, StaggerSeconds=_combatConfig.StaggerEnabled ? attack.StaggerSeconds : 0 },direction,Config.ReactionImmune,Config.KnockbackResistance,Config.StaggerResistance)) return;
-        if (attack.InterruptAttack && Reaction.Staggered) _chase?.Attack?.Interrupt();
+        if (attack.InterruptAttack && Reaction.Staggered) { _chase?.Attack?.Interrupt(); _chase?.Ranged?.Interrupt(); }
         _chase?.WakeReaction();
     }
     // Disabled ownership must never reactivate stale recoil.

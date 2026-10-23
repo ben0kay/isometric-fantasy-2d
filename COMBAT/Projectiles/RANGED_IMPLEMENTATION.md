@@ -1,6 +1,6 @@
 # R0–R2 — Shared Projectiles and Skeleton Archer (Codex roadmap)
 
-> **Status: R0 IMPLEMENTED (23 October 2026); R1/R2 PLANNED.** See [R0 validation](R0_Validation.md). Implement in requested slices, one job/commit at a time. **R** means Ranged Combat; independent from C3 combat feedback and ES entity separation. Current code has shared C2/C2.5 melee and C3.2 reactions, and the R0 shared straight-projectile runtime. No production archer is wired yet.
+> **Status: R0 IMPLEMENTED (23 October 2026); R1 IMPLEMENTED; R2 PLANNED.** See [R0 validation](R0_Validation.md). Implement in requested slices, one job/commit at a time. **R** means Ranged Combat; independent from C3 combat feedback and ES entity separation. Current code has shared C2/C2.5 melee and C3.2 reactions, and the R0 shared straight-projectile runtime. R1 adds the shared archer variant, World service injection and a disposable practice scene. See [R1 validation](R1_Validation.md).
 
 ## Desired first encounter
 
@@ -31,10 +31,10 @@ ENTITIES/
         ├── SkeletonArcher.tres          # shared EntityDefinition variant
         ├── ArcherRangedProfile.tres     # optional shared RangedCombatProfile
         └── Sprites/                    # placeholder archer sprite if needed
-ITEMS/Weapons/
-└── Bows/
-    ├── README.md
-    └── Starter/                         # use only minimal bow data/art needed
+ENTITIES/Species/Undead/Skeletons/Archer/
+└── Equipment/Bow/
+    ├── SkeletonBow.tres                 # enemy presentation definition
+    └── Sprites/skeleton_bow.svg         # artwork referenced by the definition
 FEEDBACK/                                # optional visual events, not damage authority
 ```
 
@@ -56,7 +56,7 @@ FEEDBACK/                                # optional visual events, not damage au
 1. Use one **shared ranged combat AI** behavior with optional `RangedCombatProfile` for range minimum/maximum, preferred distance, aim lock time, windup, cooldown, firing line of sight, projectile profile and spawn offset. Avoid special-case skeleton-only ranged controllers.
 2. Reuse the existing EntityDefinition, ActorHealth, faction/stats, damage numbers, resistances, AC collision, C3.2 stagger/knockback and GroundChase movement owner. Expose ranged behavior opt-in without silently enabling existing melee profile. Ensure ranged and melee intents cannot concurrently own the same attack state.
 3. AI approaches until inside firing distance, checks line of sight against scenery/actors, halts or slows to visibly aim, **locks fire direction shortly before launch**, fires straight shot and respects cooldown. Prefer clear readable shots over perfect homing/prediction.
-4. Ranged skeleton variant goes under `ENTITIES/Species/Undead/Skeletons/Archer/`. Use temporary readable bow and arrow visuals; bow equipment art/data lives in `ITEMS/Weapons/Bows/` when genuinely reusable by player equipment. Don't copy AI into the bow Resource. Keep existing Basic skeleton's data and F6 five-melee setup intact unless an explicitly scoped practice addition is requested.
+4. Ranged skeleton variant goes under `ENTITIES/Species/Undead/Skeletons/Archer/`. Use temporary readable bow and arrow visuals; enemy bow data/art lives in `Archer/Equipment/Bow/`, as requested. Player inventory weapons remain separate under `ITEMS/`. Don't copy AI into the bow Resource. Keep existing Basic skeleton's data and F6 five-melee setup intact unless an explicitly scoped practice addition is requested.
 5. Provide opt-in range positioning, not perpetual running away. ES3 position reservations can be reused where appropriate but **ranged firing positions need not equal melee engagement slots**. Respect obstacles and loaded chunks; avoid constantly requesting full A* paths.
 6. R1 acceptance: archer detects player, finds valid firing position, visibly aims, fires on cooldown, arrow can miss when player moves, an obstacle blocks shots, death/stagger cancels wind-up when interruption policy permits, owner unspawn/disable clears pending shots/intent, and multiple archers don't lock each other indefinitely.
 
@@ -82,3 +82,9 @@ A **destructible mystical orb** may opt into real health and combat targeting, b
 **Second job:** “Implement **R1 Skeleton Archer** with a shared ranged AI and data-driven ranged profile, using R0 projectiles and existing `Entity.tscn`; preserve melee skeleton behaviour and collision/ES/knockback. Validate and document.”
 
 **Third job:** “Implement **R2** visual/tuning/practice HUD and regression checks; do not broaden gameplay without approval.”
+
+## R1 ownership decision and current entry point
+
+The user requested the enemy bow remain with this Archer variant, separate from player items: `Archer/Equipment/Bow/SkeletonBow.tres` references `Archer/Equipment/Bow/Sprites/skeleton_bow.svg`. Shared presentation code is under `ENTITIES/Shared/Equipment/`. No player bow definition/art is created by R1.
+
+Open `TESTS/Projectiles/ArcherPractice.tscn` and press F6 to play one archer with real player combat and cover. Default World still spawns its five Basic melee skeletons. A future/explicit ranged EntityDefinition in World placement receives the lazy scene-local projectile service. R2 mixed encounters/F9 ranged controls remain planned.

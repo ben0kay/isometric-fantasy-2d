@@ -1,6 +1,6 @@
 # Shared projectiles — R0 foundation
 
-> **Status: R0 IMPLEMENTED.** Shared straight point-arrow runtime, Resource snapshots and scene-local shot budgets are implemented; [validation and integration contract](R0_Validation.md). R1/R2 and production encounter wiring remain planned. See [Ranged Combat Implementation Plan](RANGED_IMPLEMENTATION.md) for R0–R2 and the Skeleton Archer handoff.
+> **Status: R0 IMPLEMENTED.** Shared straight point-arrow runtime, Resource snapshots and scene-local shot budgets are implemented; [validation and integration contract](R0_Validation.md). R1 adds a shared archer and practice scene; R2 mixed encounters/extra controls remain planned. See [Ranged Combat Implementation Plan](RANGED_IMPLEMENTATION.md) for R0–R2 and the Skeleton Archer handoff.
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Ownership:
 - **COMBAT/Damage/** and **COMBAT/Targeting/** — authoritative damage and eligibility; do not duplicate.
 - **ENTITIES/Shared/AI/** — generic ranged decision-making and range/LOS selection; existing chase/movement remains authoritative.
 - **ENTITIES/Species/Undead/Skeletons/Archer/** — species definition, sprite and ranged configuration.
-- **ITEMS/Weapons/Bows/** — bow identity/equipment and its presentation; reusable by future player equipment.
+- **ENTITIES/Species/Undead/Skeletons/Archer/Equipment/Bow/** — this enemy bow definition and artwork; player inventory weapons stay under ITEMS/.
 - **FEEDBACK/** — impact visuals, arrow trails and later audio; presentation never decides damage.
 
 ## Runtime files
@@ -77,3 +77,7 @@ Place one `ProjectileSpawner` under the appropriate scene-local Y-sort actor/eff
 First obstruction stops the arrow, including friendly/ineligible bodies; eligible targets receive one canonical damage call. Solid tool receivers are never chopped. Incoming flight bearing drives directional guard; impact particles and optional reactions reuse existing contracts. Owner death/suspension/free cancels remaining shots. `Finished` exposes impact/expiry/boundary/source-loss/cancellation for future presentation; scene removal emits no late callback. Homing/health/penetration components are not added speculatively.
 
 Default cap64 active arrows per spawner (bounded1–256), one node and reusable ray query per live shot. Spawner has no process callbacks, and retired shots stop immediately and queue-free. Result dictionaries still allocate per cast. A loaded-area predicate is sampled every16px along a step, capped at64 subsegments (65 checks); steps above1024px retire conservatively. World rectangles are exact, while arbitrary tiny holes in custom membership predicates require a stronger segment policy in a future integration. Do not claim continuous membership proof from sampling. Normal512px chunk membership is the intended R1 consumer; no queries force-load chunks.
+
+## R1 integration
+
+WorldScene now lazily creates one projectile owner only when ranged placement needs it. Bounds use the finite world, not an individual scenery chunk; membership delegates observe the current stream without loading it. World-bound arrows and ranged LOS use the exact bounded crossed-chunk check through `ProjectileSpawner.IsSegmentLoaded`. Standalone R0 callers without that delegate retain sampled membership behavior. See [R1 integration and validation](R1_Validation.md).

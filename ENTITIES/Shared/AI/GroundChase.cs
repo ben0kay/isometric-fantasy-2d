@@ -7,6 +7,10 @@ public partial class GroundChase : Node
     public AttackExecution Attack { get; private set; }
     public int ConfirmedMeleeContacts { get; private set; }
     private AttackProfile _defaultAttack;
+    public RangedCombatAI Ranged { get; private set; }
+    private ProjectileSpawner _projectiles;
+    private RangedCombatProfile _rangedProfile;
+    private bool _rangedBound;
     private MovementMasterConfig _movement;
     public EngagementPositioning EngagementState { get; } = new();
     private CombatMasterConfig _combat;
@@ -35,12 +39,28 @@ public partial class GroundChase : Node
     public void ConfigureNavigation(CharacterBody2D target, StaticObstacleNavigation navigation)
     {
         SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0;
+        bool targetChanged=_target!=target;
         _target = target;
         _navigation = navigation;
         _repathTimer = 0f;
-        Attack?.Cancel();
-        if (Enabled && (_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) EnsureAttack();
-        SetPhysicsProcess((Enabled && target != null) || _actor.Reaction.NeedsUpdate);
+        Attack?.Cancel(); if(targetChanged) ResetRanged(); else Ranged?.Cancel();
+        if (_actor.Config.Ranged==null && Enabled && (_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) EnsureAttack();
+        SetPhysicsProcess((Enabled && target != null && (_actor.Config.Ranged==null || GodotObject.IsInstanceValid(_projectiles))) || _actor.Reaction.NeedsUpdate);
+    }
+    // No optional module is allocated until an enabled ranged actor has explicit services.
+    // =========================================================
+    public void ConfigureRanged(ProjectileSpawner spawner)
+    { _projectiles=spawner; ResetRanged(); _repathTimer=0; _actor.Velocity=Vector2.Zero; SetPhysicsProcess((Enabled && _target!=null && (_actor.Config.Ranged==null || GodotObject.IsInstanceValid(spawner))) || _actor.Reaction.NeedsUpdate); }
+    // =========================================================
+    private void ResetRanged() { Ranged?.Dispose(); Ranged=null; _rangedBound=false; }
+    // =========================================================
+    private void EnsureRanged()
+    {
+        if(_actor.Config.Ranged!=_rangedProfile) { ResetRanged(); _rangedProfile=_actor.Config.Ranged; }
+        if(_rangedBound || !GodotObject.IsInstanceValid(_projectiles)) return;
+        _rangedBound=true;
+        try { Ranged=new RangedCombatAI(_actor,_target,_projectiles,_rangedProfile); }
+        catch(ArgumentException error) { GD.PushWarning(error.Message); }
     }
     // Optional melee allocates one executor only when enabled, including later config reactivation.
     // =========================================================
@@ -56,7 +76,7 @@ public partial class GroundChase : Node
     // =========================================================
     public void Stop()
     {
-        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0; Attack?.Cancel(); _actor?.Reaction.Clear();
+        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0; Attack?.Cancel(); Ranged?.Cancel(true); _actor?.Reaction.Clear();
         SetPhysicsProcess(false);
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity = Vector2.Zero;
     }
@@ -65,12 +85,12 @@ public partial class GroundChase : Node
     public override void _Notification(int what)
     {
         if (what!=NotificationDisabled) return;
-        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0; _actor?.Reaction.Clear(); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
+        SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0; _actor?.Reaction.Clear(); Ranged?.Cancel(true); Attack?.Cancel(); _path=Array.Empty<Vector2>(); _index=0; _repathTimer=0;
         if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero;
     }
     // Dispose contact-query resources on death cleanup/unload.
     // =========================================================
-    public override void _ExitTree() { Attack?.Dispose(); SeparationState.Dispose(); EngagementState.Dispose(); }
+    public override void _ExitTree() { Attack?.Dispose(); Ranged?.Dispose(); SeparationState.Dispose(); EngagementState.Dispose(); }
     #endregion
     #region Pursuit
     // Cached static-obstacle route, equivalent to the original Basic Skeleton chasing.
@@ -78,6 +98,7 @@ public partial class GroundChase : Node
     public override void _PhysicsProcess(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("GroundChase.PhysicsProcess");
+        bool pursuitReady=Enabled && (_actor.Config.Ranged==null || (GodotObject.IsInstanceValid(_projectiles) && _projectiles.IsInsideTree()));
         var engagement=_actor.Config.Engagement ?? _movement.EngagementDefaults;
         bool useEngagement=_movement.EngagementEnabled && engagement?.Mode!=EngagementMode.Direct;
         if(useEngagement!=_engagementEnabled || engagement!=_engagementProfile)
@@ -91,36 +112,51 @@ public partial class GroundChase : Node
             if (staggered || recoil!=Vector2.Zero)
             {
                 SeparationState.Clear(); EngagementState.Clear(); _blockedSeconds=0;
-                if ((_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) Attack?.Advance(delta); else Attack?.Cancel();
+                Ranged?.Pause((float)delta);
+                if (_actor.Config.Ranged==null && (_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) Attack?.Advance(delta); else Attack?.Cancel();
                 Vector2 reactionNext=_actor.GlobalPosition+recoil*(float)delta;
                 if ((_navigation==null || _navigation.Contains(reactionNext)) && !(_target is PlayerMovement p && p.Streaming!=null && !p.Streaming.IsPositionLoaded(reactionNext)))
                 { _actor.Velocity=recoil; _actor.MoveAndSlide(); }
                 else _actor.Velocity=Vector2.Zero;
                 _repathTimer=0;
-                if (!_actor.Reaction.NeedsUpdate && !Enabled) SetPhysicsProcess(false);
+                if (!_actor.Reaction.NeedsUpdate && !pursuitReady) SetPhysicsProcess(false);
                 return;
             }
         }
-        if (!Enabled && !_actor.Reaction.NeedsUpdate) SetPhysicsProcess(false);
-        if (!Enabled || !GodotObject.IsInstanceValid(_actor) || !_actor.HealthState.IsAlive
+        if (!pursuitReady && !_actor.Reaction.NeedsUpdate) SetPhysicsProcess(false);
+        if (!pursuitReady || !GodotObject.IsInstanceValid(_actor) || !_actor.HealthState.IsAlive
             || !GodotObject.IsInstanceValid(_target) || !_target.IsInsideTree() || _target.IsQueuedForDeletion()
             || (_target is ICombatTarget dead && !CombatTargeting.Active(dead)))
-        { EngagementState.Clear(); SeparationState.Clear(); Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
-        if (!(_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) Attack?.Cancel();
-        else { EnsureAttack(); Attack.Advance(delta); }
-        EntityDefinition config = _actor.Config;
-        float distanceSquared = _actor.GlobalPosition.DistanceSquaredTo(_target.GlobalPosition);
-        if (Attack?.IsSwinging==true) { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
-        // Pursuit supplies intent only; the same executor as the player owns contacts and cooldown.
-        var profile=config.MeleeAttack ?? _defaultAttack;
-        if ((config.MeleeEnabled && _combat.EnemyMeleeEnabled) && Attack!=null && !Attack.Busy && profile!=null && _target is ICombatTarget target
-            && distanceSquared<=config.DetectionRadius*config.DetectionRadius
-            && CombatTargeting.Eligible(_actor,target,profile.TargetFactions)
-            && _actor.GlobalPosition.DistanceSquaredTo(target.ClosestHitPoint(_actor.GlobalPosition))<=profile.HitReach*profile.HitReach
-            && Attack.TryStart(profile,_target.GlobalPosition-_actor.GlobalPosition))
-        { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
+        { Ranged?.Cancel(); EngagementState.Clear(); SeparationState.Clear(); Attack?.Cancel(); if (GodotObject.IsInstanceValid(_actor)) _actor.Velocity=Vector2.Zero; return; }
+        EntityDefinition config=_actor.Config;
+        float distanceSquared=_actor.GlobalPosition.DistanceSquaredTo(_target.GlobalPosition);
+        bool ranged=config.Ranged!=null;
+        AttackProfile profile=null;
+        if(ranged)
+        {
+            Attack?.Cancel(); EngagementState.Clear();
+            if(distanceSquared>config.DetectionRadius*config.DetectionRadius) { Ranged?.Cancel(); _actor.Velocity=Vector2.Zero; return; }
+            EnsureRanged();
+            if(Ranged==null || Ranged.Advance((float)delta,_navigation,config.Ranged.Enabled && _combat.EnemyRangedEnabled))
+            { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; _repathTimer=0; return; }
+        }
+        else
+        {
+            if(Ranged!=null) ResetRanged();
+            if (!(_actor.Config.MeleeEnabled && _combat.EnemyMeleeEnabled)) Attack?.Cancel();
+            else { EnsureAttack(); Attack.Advance(delta); }
+            if (Attack?.IsSwinging==true) { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
+            // Pursuit supplies intent only; the same executor as the player owns contacts and cooldown.
+            profile=config.MeleeAttack ?? _defaultAttack;
+            if ((config.MeleeEnabled && _combat.EnemyMeleeEnabled) && Attack!=null && !Attack.Busy && profile!=null && _target is ICombatTarget target
+                && distanceSquared<=config.DetectionRadius*config.DetectionRadius
+                && CombatTargeting.Eligible(_actor,target,profile.TargetFactions)
+                && _actor.GlobalPosition.DistanceSquaredTo(target.ClosestHitPoint(_actor.GlobalPosition))<=profile.HitReach*profile.HitReach
+                && Attack.TryStart(profile,_target.GlobalPosition-_actor.GlobalPosition))
+            { SeparationState.Clear(); _actor.Velocity=Vector2.Zero; return; }
+        }
         if (_navigation==null || distanceSquared > config.DetectionRadius * config.DetectionRadius ||
-            distanceSquared <= config.StopDistance * config.StopDistance)
+            (!ranged && distanceSquared <= config.StopDistance * config.StopDistance))
         {
             if(_navigation==null || distanceSquared>config.DetectionRadius*config.DetectionRadius) EngagementState.Clear();
             SeparationState.Clear();
@@ -131,7 +167,7 @@ public partial class GroundChase : Node
         _repathTimer -= (float)delta;
         if (_repathTimer <= 0f)
         {
-            _destination=useEngagement ? EngagementState.Select(_actor,_target,_navigation,engagement,profile?.HitReach ?? config.StopDistance) : _target.GlobalPosition;
+            _destination=ranged ? Ranged.Destination : useEngagement ? EngagementState.Select(_actor,_target,_navigation,engagement,profile?.HitReach ?? config.StopDistance) : _target.GlobalPosition;
             _path = _navigation.FindPath(_actor.GlobalPosition, _destination);
             _index = 0;
             _repathTimer = Mathf.Max(0.15f, config.RepathSeconds);
@@ -147,7 +183,7 @@ public partial class GroundChase : Node
         Vector2 heading = goal - _actor.GlobalPosition;
         _actor.Velocity = heading.LengthSquared() <= 1f ? Vector2.Zero : heading.Normalized() * config.MoveSpeed * _actor.Stats.Values.MovementSpeedMultiplier;
         Vector2 intent=_actor.Velocity;
-        float fade=Mathf.Clamp((Mathf.Sqrt(distanceSquared)-Mathf.Max(config.StopDistance,(config.MeleeEnabled && _combat.EnemyMeleeEnabled) ? profile?.HitReach ?? 0 : 0))/24f,0,1);
+        float fade=ranged ? 1 : Mathf.Clamp((Mathf.Sqrt(distanceSquared)-Mathf.Max(config.StopDistance,(config.MeleeEnabled && _combat.EnemyMeleeEnabled) ? profile?.HitReach ?? 0 : 0))/24f,0,1);
         _actor.Velocity=SeparationState.Blend(_actor,_target,intent,(float)delta,_movement.Enabled && _blockedSeconds<0.5f,fade);
         Vector2 before=_actor.GlobalPosition;
         Vector2 next=_actor.GlobalPosition+_actor.Velocity*(float)delta;

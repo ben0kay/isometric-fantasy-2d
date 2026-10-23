@@ -159,6 +159,37 @@ public partial class WorldChunkStream : Node
     public bool IsPositionLoaded(Vector2 point) => point.IsFinite() && _world.MacroMap.Bounds.HasPoint(point)
         && _chunks.TryGetValue(ChunkCoord.At(point,_settings.ChunkSize),out var chunk) && chunk.State==WorldChunkState.Loaded;
 
+    // Bounded conservative grid traversal: every crossed chunk must already be loaded, including corner neighbors.
+    // =========================================================
+    public bool IsSegmentLoaded(Vector2 from,Vector2 to)
+    {
+        if(!IsPositionLoaded(from) || !IsPositionLoaded(to)) return false;
+        int size=_settings.ChunkSize;
+        var cell=ChunkCoord.At(from,size); var end=ChunkCoord.At(to,size);
+        Vector2 motion=to-from;
+        int sx=Math.Sign(motion.X),sy=Math.Sign(motion.Y);
+        float tx=sx==0 ? float.PositiveInfinity : ((cell.X+(sx>0 ? 1 : 0))*size-from.X)/motion.X;
+        float ty=sy==0 ? float.PositiveInfinity : ((cell.Y+(sy>0 ? 1 : 0))*size-from.Y)/motion.Y;
+        float dx=sx==0 ? float.PositiveInfinity : size/Mathf.Abs(motion.X);
+        float dy=sy==0 ? float.PositiveInfinity : size/Mathf.Abs(motion.Y);
+        bool edgeX=sx==0 && Mathf.IsEqualApprox(from.X,cell.X*size),edgeY=sy==0 && Mathf.IsEqualApprox(from.Y,cell.Y*size);
+        for(int steps=0;steps<64;steps++)
+        {
+            if(!LoadedCell(cell) || (edgeX && !LoadedCell(new ChunkCoord(cell.X-1,cell.Y))) || (edgeY && !LoadedCell(new ChunkCoord(cell.X,cell.Y-1)))) return false;
+            if(cell==end) return true;
+            if(Mathf.IsEqualApprox(tx,ty))
+            {
+                if(!LoadedCell(new ChunkCoord(cell.X+sx,cell.Y)) || !LoadedCell(new ChunkCoord(cell.X,cell.Y+sy))) return false;
+                cell=new ChunkCoord(cell.X+sx,cell.Y+sy); tx+=dx; ty+=dy;
+            }
+            else if(tx<ty) { cell=new ChunkCoord(cell.X+sx,cell.Y); tx+=dx; }
+            else { cell=new ChunkCoord(cell.X,cell.Y+sy); ty+=dy; }
+        }
+        return false;
+    }
+    // =========================================================
+    private bool LoadedCell(ChunkCoord coord) => _chunks.TryGetValue(coord,out var chunk) && chunk.State==WorldChunkState.Loaded;
+
     // Deterministic nearest-first enumeration works at clipped edges and negative chunk coordinates.
     // =========================================================
     private IEnumerable<ChunkCoord> Desired(int radius, ChunkCoord? around = null)

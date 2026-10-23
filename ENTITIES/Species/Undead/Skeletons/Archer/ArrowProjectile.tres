@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ProjectileProfile" load_steps=4 format=3]
+[ext_resource type="Script" path="res://COMBAT/Projectiles/ProjectileProfile.cs" id="script"]
+[ext_resource type="Script" path="res://COMBAT/Weapons/AttackProfile.cs" id="impact_script"]
+[sub_resource type="Resource" id="contact"]
+script = ExtResource("impact_script")
+BaseDamage = 6.0
+TargetFactions = 1
+KnockbackDistance = 5.0
+StaggerSeconds = 0.06
+[resource]
+script = ExtResource("script")
+Impact = SubResource("contact")
+Speed = 240.0
+MaximumDistance = 700.0
+Lifetime = 4.0
+VisualHeight = 12.0

@@ -1,9 +1,24 @@
-# Skeleton Archer — planned R1 variant
+# Skeleton Archer — R1
 
-> **Status: PLANNED, documentation only.** No skeleton archer sprite, Resource or runtime AI is implemented here yet.
+Uses the canonical `ENTITIES/Shared/Entity.tscn`, shared GroundChase motor and RangedCombatAI. No SkeletonArcher controller or duplicate health/collision scene. The body reuses Basic’s placeholder SVG; no duplicate body artwork is introduced.
 
-Use canonical `ENTITIES/Shared/Entity.tscn` and `EntityDefinition`; opt into the proposed shared `ENTITIES/Shared/AI/RangedCombatAI.cs` and `RangedCombatProfile.cs`. Do **not** subclass or copy shared Entity health/movement/collision/feedback.
+```text
+Archer/
+    SkeletonArcher.tres
+    ArcherRangedProfile.tres
+    ArrowProjectile.tres
+    Equipment/
+        Bow/
+            SkeletonBow.tres
+            Sprites/
+                skeleton_bow.svg
+```
 
-Proposed authored data: `SkeletonArcher.tres`, optional `ArcherRangedProfile.tres`, sprite assets only when needed. Ranged AI should choose a viable firing range, check line of sight, visibly wind up, lock aim shortly before release and shoot a simple arrow via `COMBAT/Projectiles/`. The player must be able to dodge a released arrow. Keep the existing Basic melee skeleton intact.
+- `SkeletonArcher.tres`: 50 HP, hostile, detection600, ranged opt-in; melee disabled.
+- `ArcherRangedProfile.tres`: references bow and arrow; shared defaults are min24 / preferred200 / max320px, wind-up0.75s, final aim lock0.2s, cooldown1.2s, muzzle offset10px.
+- `ArrowProjectile.tres`: 240px/s, maximum700px/4s,6 damage,5px push/0.06s stagger. Contact data is an embedded shared AttackProfile, not a separate damage engine.
+- `Equipment/Bow/SkeletonBow.tres`: references local artwork and stores presentation scale/hand/grip/hold settings only. This is enemy equipment, separate from player ITEMS.
 
-Read [R0–R2 implementation plan](../../../../../COMBAT/Projectiles/RANGED_IMPLEMENTATION.md) before coding. Bow item/art can live in `ITEMS/Weapons/Bows/`, preserving eventual player-bow reuse. **No bespoke SkeletonArcher.cs is intended unless a species-specific mechanic later justifies it.**
+Open `TESTS/Projectiles/ArcherPractice.tscn`, F6. Move to dodge released arrows, use cover, approach and attack, or equip shield with3 and hold RMB. Reset restores player/archer and removes arrows. Default production World retains five Basic melee skeletons. Mixed encounters and F9 ranged widgets remain R2.
+
+[Validation and performance handoff](../../../../../COMBAT/Projectiles/R1_Validation.md).

@@ -22,7 +22,7 @@ public partial class WorldEntityPlacement : Node
     #region Placement
     // Use the existing random forest's actual obstacles, never a separately randomized map.
     // =========================================================
-    public void Populate(Node2D destination, Node2D navigationSource, CharacterBody2D player, Rect2 bounds, SavedTestEntity restored = null, bool includePractice = false)
+    public void Populate(Node2D destination, Node2D navigationSource, CharacterBody2D player, Rect2 bounds, SavedTestEntity restored = null, bool includePractice = false, ProjectileSpawner projectiles = null)
     {
         if (!destination.CanProcess() || restored?.Exists == false) return;
         if (!Enabled || EntityScene == null) return;
@@ -53,6 +53,7 @@ public partial class WorldEntityPlacement : Node
         instance.Position = destination.ToLocal(safeSpawn);
         destination.AddChild(instance);
         agent.ConfigureNavigation(player, navigation);
+        if(instance is Entity rangedEntity && rangedEntity.Config.Ranged!=null) rangedEntity.ConfigureRanged(projectiles);
         if (restored != null && instance is Entity savedEntity) savedEntity.RestoreHealth(restored.Health);
         if (instance is Entity tracked) _actors.Add(tracked);
         instance.ProcessMode = bounds.HasPoint(instance.GlobalPosition) ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
@@ -65,7 +66,7 @@ public partial class WorldEntityPlacement : Node
                 { GD.PushWarning("Practice actor skipped: no separated walkable marker position: "+marker.Name); continue; }
                 var extra=EntityScene.Instantiate<Entity>(); extra.Configure(EntityDefinition);
                 extra.Name=marker.Name+"Skeleton"; extra.Position=destination.ToLocal(point); destination.AddChild(extra);
-                extra.ConfigureNavigation(player,navigation); _actors.Add(extra);
+                extra.ConfigureNavigation(player,navigation); if(extra.Config.Ranged!=null) extra.ConfigureRanged(projectiles); _actors.Add(extra);
             }
         GD.Print($"World entity: spawned {instance.Name} at {safeSpawn}.");
     }

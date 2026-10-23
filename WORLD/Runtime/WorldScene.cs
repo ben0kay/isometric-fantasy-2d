@@ -29,6 +29,18 @@ public partial class WorldScene : Node2D
     public WorldEntityPlacement EntityPlacement { get; private set; }
     public EnvironmentRuntime Environment { get; private set; }
     public FireRuntime Fire { get; private set; }
+    private ProjectileSpawner _projectiles;
+    // Lazily share one world budget; shots are not scenery-chunk children and never request generation.
+    // =========================================================
+    public ProjectileSpawner GetProjectileSpawner()
+    {
+        if(GodotObject.IsInstanceValid(_projectiles)) return _projectiles;
+        _projectiles=new ProjectileSpawner { Name="Projectiles",Bounds=MacroMap?.Bounds ?? Config.Bounds };
+        _projectiles.IsPositionLoaded=point=>Stream==null || Stream.IsPositionLoaded(point);
+        _projectiles.IsSegmentLoaded=(from,to)=>Stream==null || Stream.IsSegmentLoaded(from,to);
+        _projectiles.SetMeta("world_actor_container",true);
+        ActorsRoot.AddChild(_projectiles); return _projectiles;
+    }
 
     // PackedScene children exist before tree entry; cache before child debug panels run Ready.
     // =========================================================
@@ -139,7 +151,7 @@ public partial class WorldScene : Node2D
         }
         else placement.Generate(Config, ActiveSeed,PreviewSceneryRoot);
         // Build entity navigation only after the seeded tree/rock colliders exist.
-        EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null);
+        EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null,projectiles: EntityPlacement.EntityDefinition?.Ranged!=null ? GetProjectileSpawner() : null);
         var environment = Environment;
         environment.Initialize(Config,ActorsRoot,PropsRoot,Player);
         if (environment != null) Fire.Initialize(ActorsRoot,environment);

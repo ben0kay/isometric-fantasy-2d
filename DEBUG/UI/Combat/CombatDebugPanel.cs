@@ -77,7 +77,7 @@ public partial class CombatDebugPanel : VBoxContainer
     }
     // =========================================================
     private void RestoreCombat()
-    { _combat.EnemyMeleeEnabled=_originalCombat.EnemyMeleeEnabled; _combat.KnockbackEnabled=_originalCombat.KnockbackEnabled; _combat.StaggerEnabled=_originalCombat.StaggerEnabled; _combat.ImpactFeedbackEnabled=_originalCombat.ImpactFeedbackEnabled; }
+    { _combat.EnemyRangedEnabled=_originalCombat.EnemyRangedEnabled; _combat.EnemyMeleeEnabled=_originalCombat.EnemyMeleeEnabled; _combat.KnockbackEnabled=_originalCombat.KnockbackEnabled; _combat.StaggerEnabled=_originalCombat.StaggerEnabled; _combat.ImpactFeedbackEnabled=_originalCombat.ImpactFeedbackEnabled; }
     // =========================================================
     public override void _ExitTree()
     {
