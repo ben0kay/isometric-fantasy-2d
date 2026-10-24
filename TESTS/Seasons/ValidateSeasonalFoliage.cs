@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using FantasyGame.WorldInteractions.Fire;
 using Tree = FantasyGame.World.Trees.Tree;
+using ProductionFireErosionAdapter = FantasyGame.WorldInteractions.Fire.FireErosionAdapter;
 
 public partial class ValidateSeasonalFoliage : Node
 {
@@ -73,18 +74,18 @@ public partial class ValidateSeasonalFoliage : Node
         Check(snowy.GetShaderParameter("seasonal_state").AsGodotObject() == palette, "Snow lost shared season texture");
         wetness.StartAt(0.45f);
         Check(Mathf.Abs(snowy.GetShaderParameter("wet_coverage").AsSingle() - 0.45f) < 0.001f, "Snow copy lost changing wetness");
-        int fireCache = FireErosionAdapter.CachedShaderCount;
-        var erosionA = new FireErosionAdapter(); var erosionB = new FireErosionAdapter();
+        int fireCache = ProductionFireErosionAdapter.CachedShaderCount;
+        var erosionA = new ProductionFireErosionAdapter(); var erosionB = new ProductionFireErosionAdapter();
         var noise = GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres");
         Check(erosionA.Attach(sprite, noise) && erosionB.Attach(second.GetNode<Sprite2D>("Sprite"), noise), "Fire erosion did not compose");
-        Check(FireErosionAdapter.CachedShaderCount == fireCache + 1, "Active fires did not share composed shader");
+        Check(ProductionFireErosionAdapter.CachedShaderCount == fireCache + 1, "Active fires did not share composed shader");
         seasons.SetYearPosition(0.76f);
         Check(((ShaderMaterial)sprite.Material).GetShaderParameter("seasonal_state").AsGodotObject() == palette, "Fire lost live season atlas");
         snow.Update(0f, Colors.White);
         Check(erosionA.Update(0.4f, 1f, Colors.Black) && erosionB.Update(0.4f, 1f, Colors.Black), "Snow-off during burning lost composition");
-        Check(FireErosionAdapter.CachedShaderCount == fireCache + 1, "Snow swap retained old fire shader cache entries");
+        Check(ProductionFireErosionAdapter.CachedShaderCount == fireCache + 1, "Snow swap retained old fire shader cache entries");
         erosionA.Restore(); erosionB.Restore();
-        Check(FireErosionAdapter.CachedShaderCount == fireCache, "Fire completion retained composed shaders");
+        Check(ProductionFireErosionAdapter.CachedShaderCount == fireCache, "Fire completion retained composed shaders");
         snow.Update(0.7f, Colors.White);
         seasons.SetEnabled(false);
         Check(palette.GetImage().GetPixel(0, 0).A == 0, "Disable did not propagate through material copies");
