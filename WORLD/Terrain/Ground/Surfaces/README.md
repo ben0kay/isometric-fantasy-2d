@@ -1,5 +1,8 @@
 # Shared ground surfaces
 
+Current GS5 tuning: Dirt and Rock share Dirt01_gs.png at a finer 128-unit repeat; Oak supplies warm brown / dull grey tints. Dirt retains the Dust mask family; grayscale Rock retains mineral patch placement. Narrow edges are slightly softer. [Authoring and validation](GS5_PNG_DIRT.md).
+
+
 Current colour authoring: edit **Biome → Identity → Colour** for the base-ground tone and map swatch. Both renderers resolve the same biome tint; leave base-layer Tint white for one colour authority. Dirt/rock retain independent tints. [Details and validation](../../../Biomes/IDENTITY_COLOUR.md).
 Implemented: GroundSurface applies a GroundSurfaceProfile once, tiles the original ground artwork and configures one private material per ground region. Profiles supply palette, variation and fine detail. Noise and shaders are shared. No per-frame C# material updates.
 

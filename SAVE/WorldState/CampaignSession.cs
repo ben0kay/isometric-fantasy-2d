@@ -39,10 +39,11 @@ public static class CampaignSession
     internal static string LegacyGS1ContentFingerprint() => BuildContentFingerprint(null,true);
     // Compare the full dependency set with only explicitly requested frozen substitutions.
     // =========================================================
-    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false, bool previousDirtEdges = false, IReadOnlyDictionary<string, string> seasonalReferences = null, bool previousIdentity = false)
+    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false, bool previousDirtEdges = false, IReadOnlyDictionary<string, string> seasonalReferences = null, bool previousIdentity = false, bool previousFineGround = false)
     {
         if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
             throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
+        bool fineGround=(previousFineGround || previousIdentity || previousDirtEdges || previousPng || previousRecipes || previousOakExtras || previousPatches || previousGround) && CanMigrateFineGround();
         bool identity=(previousIdentity || previousDirtEdges || previousPng || previousRecipes || previousOakExtras || previousPatches || previousGround) && CanMigrateIdentity();
         var files = new SortedDictionary<string,string>(StringComparer.Ordinal);
         void Visit(string path)
@@ -50,6 +51,15 @@ public static class CampaignSession
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
+            if(fineGround)
+            {
+                string reference=path switch {
+                    "res://WORLD/Biomes/Definitions/OakForest/Biome.tres" => "res://SAVE/Migrations/References/FineGroundOakBefore.txt",
+                    "res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres" => "res://SAVE/Migrations/References/FineGroundDirtBefore.txt",
+                    "res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres" => "res://SAVE/Migrations/References/FineGroundRockBefore.txt",
+                    _ => null };
+                if(reference!=null) source=Godot.FileAccess.GetFileAsString(reference).Replace("\r\n","\n");
+            }
             // Remove this identity-only schema change before reconstructing any older terrain layout.
             if(identity)
             {
@@ -160,7 +170,7 @@ public static class CampaignSession
     // Exact shipped colour relocation only; all other dependency text still participates.
     // =========================================================
     internal static string LegacyIdentityFingerprint() => BuildContentFingerprint(null,previousIdentity:true);
-    internal static bool CanMigrateIdentity() =>
+    internal static bool CanMigrateIdentity() => CanMigrateFineGround() ||
         IdentitySourceMatches("OakForest","IdentityOakBefore.txt","OverviewColour = Color(0.22, 0.49, 0.25, 1)","Colour = Color(0.2196, 0.2745, 0.2078, 1)") &&
         IdentitySourceMatches("PinkMeadow","IdentityPinkBefore.txt","OverviewColour = Color(0.85, 0.48, 0.66, 1)","Colour = Color(0.43, 0.265, 0.35, 1)") &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "420883184A259F63C067AF1207BD8585FCA6FB67C78BB4D1DB455E9EAE8D6288" &&
@@ -176,6 +186,14 @@ public static class CampaignSession
             source.Replace(current+"\n","")==before.Replace(previous+"\n","");
     }
 
+    // Exact appearance tuning only; preserve all unrelated campaign dependencies.
+    // =========================================================
+    internal static string LegacyFineGroundFingerprint() => BuildContentFingerprint(null,previousFineGround:true);
+    internal static bool CanMigrateFineGround() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "7CCF1D5DC9F6C6AD1C3676ABED637ADB8ADA9FA50FAF04F054CA6C2A41160BF4" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "E8427A7BB1C375788721C0F4045C79F75219598CACFF1AE11BB0FC716955A5E6" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "31DE6B2CD89001DAB8358592A25E4ECC3372D30EFDA5DE3D098ADE1693B08CF4" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "2514FAF9C8428FD29DC24A73D0BFA24B797D45EF2E4566230EEDA2B49FEFD838";
+
     // Compose exact seasonal substitutions with already gated terrain/layout bridges.
     // This work runs only while opening incompatible campaigns, never during world simulation.
     // =========================================================
@@ -185,6 +203,7 @@ public static class CampaignSession
         foreach (var references in SeasonalSaveCompatibility.ReferenceSets())
         {
             yield return BuildContentFingerprint(null, seasonalReferences: references);
+            if (CanMigrateFineGround()) yield return BuildContentFingerprint(null, seasonalReferences: references, previousFineGround:true);
             if (CanMigrateIdentity()) yield return BuildContentFingerprint(null, seasonalReferences: references, previousIdentity:true);
             if (CanMigrateDirtEdges()) yield return BuildContentFingerprint(null, previousDirtEdges: true, seasonalReferences: references);
             if (CanMigrateDirtPng()) yield return BuildContentFingerprint(null, previousPng: true, seasonalReferences: references);
@@ -203,6 +222,7 @@ public static class CampaignSession
     public static void RequireContent(CampaignSnapshot snapshot)
     {
         if (snapshot.ContentFingerprint == ContentFingerprint()) return;
+        if(CanMigrateFineGround() && snapshot.ContentFingerprint==LegacyFineGroundFingerprint()) return;
         if(CanMigrateIdentity() && snapshot.ContentFingerprint==LegacyIdentityFingerprint()) return;
         if(CanMigrateDirtEdges() && snapshot.ContentFingerprint==LegacyDirtEdgesFingerprint()) return;
         if(CanMigrateDirtPng() && snapshot.ContentFingerprint==LegacyDirtPngFingerprint()) return;

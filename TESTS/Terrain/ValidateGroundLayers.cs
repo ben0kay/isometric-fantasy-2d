@@ -32,6 +32,11 @@ public partial class ValidateGroundLayers : Node
                 original.Convert(Image.Format.Rgba8);
                 Check(uploaded.GetWidth()==256 && uploaded.GetHeight()==256 && uploaded.GetData().SequenceEqual(original.GetData()),"Native dirt artwork must preserve every pixel");
             }
+            using(var lookup=Texture(current,"overlay_table").GetImage())
+            {
+                int oakIndex=Enumerable.Range(0,map.Biomes.Count).First(i=>map.Biomes[i].Id=="biome.oak_forest");
+                Check(lookup.GetPixel(8,oakIndex*2).R==lookup.GetPixel(8,oakIndex*2+1).R,"Dirt/rock reuse one uploaded artwork tile");
+            }
             var oakPreview=new GroundSurfacePreview(current,true);
             Check(!oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1),"Oak extras must start off");
             var packed=Texture(current,"overlay_table");
@@ -70,7 +75,10 @@ public partial class ValidateGroundLayers : Node
         Check(rejected,"Duplicate accompanying/base ID accepted"); duplicate.Dispose();
         var dirt=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres");
         var rock=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres");
-        Check(dirt.Texture!=null && dirt.Texture.GetWidth()==256 && dirt.Texture.GetHeight()==256 && dirt.Recipe==GroundMaterialRecipe.GrayscaleArtwork && rock.Texture==null && rock.Recipe==GroundMaterialRecipe.Basalt,"Dirt requires native PNG; rock retains Basalt");
+        Check(dirt.Texture!=null && dirt.Texture.GetWidth()==256 && dirt.Texture.GetHeight()==256 && dirt.Recipe==GroundMaterialRecipe.GrayscaleArtwork && rock.Texture==dirt.Texture && rock.Recipe==GroundMaterialRecipe.GrayscaleMineral,"Dirt and grey rock share native artwork");
+        Check(dirt.MaterialFeatureSize==128 && rock.MaterialFeatureSize==128,"Finer world-space artwork scale");
+        var stoneTint=oak.GroundStack.OverlayLayers[1].Tint;
+        Check(Mathf.Abs(stoneTint.R-stoneTint.B)<0.03f && stoneTint.R>0.3f,"Rock tint must remain dull grey");
         dirt.Validate(); rock.Validate();
         var fixture=GroundLayerFixture.Definitions(); var f=GroundLayerFixture.Map();
         using var both=StreamedGroundPalette.Build(f,fixture);

@@ -1,4 +1,7 @@
 # Surface profiles
+
+Current GS5 tuning: Dirt and Rock share Dirt01_gs.png at a finer 128-unit repeat; Oak supplies warm brown / dull grey tints. Dirt retains the Dust mask family; grayscale Rock retains mineral patch placement. Narrow edges are slightly softer. [Authoring and validation](../GS5_PNG_DIRT.md).
+
 GroundSurfaceProfile owns texture, material, palette and surface detail values. ForestGrass.tres matches the DEBUG Oak Forest palette. Biomes reference profiles; shader code has no species/biome identity.
 
 PinkMeadowGrass.tres preserves the debug pink palette with the same shared ground artwork/material/noise. Both profiles can tune palette, patch scale, variation and fine-detail strength independently.

@@ -28,7 +28,7 @@ public static class StreamedGroundPalette
         for(int i=0;i<compiled.Length;i++) for(int slot=0;slot<compiled[i].Overlays.Length;slot++)
         {
             var layer=compiled[i].Overlays[slot];
-            if(!GroundOverlayPalette.CanCompile(layer) || layer.Surface.Recipe!=GroundMaterialRecipe.GrayscaleArtwork) continue;
+            if(!GroundOverlayPalette.CanCompile(layer) || !layer.Surface.UsesGrayscaleArtwork) continue;
             int index=grayscale.IndexOf(layer.Surface.Texture);
             if(index<0) { index=grayscale.Count; grayscale.Add(layer.Surface.Texture); }
             overlayArt[i,slot]=index;

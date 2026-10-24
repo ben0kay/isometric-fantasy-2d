@@ -174,6 +174,15 @@ v={'preview_overlay_visibility':(1,0)}
 result=render(new,flags,(-1024,-1024),(256,256),256,vectors=v)
 expected=gray.copy();expected[:,:,:3]*=np.array((1,.72,.44))
 assert np.max(np.abs(result-expected))<2e-6,'Native grayscale sampling/tint lost detail'
+# Repeat distance is independent of native upload size: 128 world units samples the same tile twice as densely.
+table[0,8,3]=128;maps['overlay_table']=texture(table)
+finer=render(new,flags,(-1024,-1024),(128,128),128,vectors=v)
+assert np.max(np.abs(finer-expected[1::2,1::2]))<2e-6,'128-unit dirt repeat not applied'
+table[0,8,2]=4;table[0,5]=(.36,.37,.38,1);maps['overlay_table']=texture(table)
+stone=render(new,flags,(-1024,-1024),(128,128),128,vectors=v)
+stone_expected=gray[1::2,1::2].copy();stone_expected[:,:,:3]*=np.array((.72,.74,.76))
+assert np.max(np.abs(stone-stone_expected))<2e-6,'Shared artwork lost grey rock tint'
+table[0,8,2]=3;table[0,8,3]=256
 # Constant white material isolates coverage for the new broken dirt boundary.
 # Alpha must remain opaque.
 white=np.ones((256,256,4),np.float32);white[:,:,:3]=.5;maps['grayscale_art']=texture(white)
@@ -203,4 +212,29 @@ for iy in range(4):
         piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors=v)
         assert np.max(np.abs(piece-png[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'PNG mask chunk seam'
 print('PASS: native 256px grayscale detail, brown tint, solid dirt and narrower interlocking edges, zero-opacity grass parity and PNG mask seams')
+# Slightly wider than the last sharp edge, while still far narrower than the original broad fade.
+prior_source=load(ROOT/'WORLD/Terrain/Ground/Surfaces/Shaders/StreamedGround.gdshader').replace('mask.a*0.20','mask.a*0.12')
+with tempfile.NamedTemporaryFile(mode='w',suffix='.glsl') as f:
+    f.write(prior_source);f.flush();prior_edges=program(f.name)
+prior=render(prior_edges,flags,resolution=256,vectors=v)
+softened=render(new,flags,resolution=256,vectors=v)
+under_large=render(new,{'blend_ground_art':True},resolution=256)
+prior_alpha=(prior[:,:,0]-under_large[:,:,0])/(1-under_large[:,:,0])
+soft_alpha=(softened[:,:,0]-under_large[:,:,0])/(1-under_large[:,:,0])
+assert ((soft_alpha>.01)&(soft_alpha<.99)).sum()>((prior_alpha>.01)&(prior_alpha<.99)).sum(),'Edge softness did not increase'
+# Recipe 4 uses the original mineral threshold family, not the Dirt threshold.
+constant_source=re.sub(r'vec3 material=procedural_ground\([^;]+;', 'vec3 material=vec3(1.0);',source)
+with tempfile.NamedTemporaryFile(mode='w',suffix='.glsl') as f:
+    f.write(constant_source);f.flush();constant_reference=program(f.name)
+table[0,6]=(.38,.7,280,.08);table[0,8,2]=4;maps['overlay_table']=texture(table)
+rock_mask=render(smooth_reference,flags,vectors=v)
+rock_current=render(new,flags,vectors=v)
+table[0,8,2]=2;maps['overlay_table']=texture(table)
+assert np.max(np.abs(rock_mask-render(constant_reference,flags,vectors=v)))<1e-6,'Grey rock changed mineral broad mask'
+table[0,8,2]=4;maps['overlay_table']=texture(table)
+for iy in range(4):
+    for ix in range(4):
+        piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors=v)
+        assert np.max(np.abs(piece-rock_current[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'Grey rock chunk seam'
+print('PASS: finer 128-unit repeat, dull grey shared artwork, slight narrow edge softening and preserved mineral mask/seams')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')

@@ -8,5 +8,5 @@ Material = ExtResource("material")
 Texture = ExtResource("art")
 BaseColour = Color(1, 1, 1, 1)
 Recipe = 3
-MaterialFeatureSize = 256.0
+MaterialFeatureSize = 128.0
 ArtworkInfluence = 1.0

@@ -32,14 +32,15 @@ vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     vec4 noise=layer_data(row,7.0);
     // Independent authored salt and slot offset remain deterministic at negative coordinates.
     bool grayscale=info.b>2.5;
-    bool procedural=info.b>0.5; // Grayscale dirt deliberately retains the existing Dust mask family.
+    bool mineral=(info.b>1.5 && info.b<2.5) || info.b>3.5;
+    bool procedural=info.b>0.5; // Grayscale variants retain the respective Dust/Basalt broad masks.
     vec2 uv=world/mask.b*(procedural ? 0.065 : 0.18)+noise.gb+vec2(0.137,0.293)*mod(row,2.0);
     vec2 warp=vec2(0.0);
     if(noise.r>0.0) warp=vec2(texture(ground_noise,uv*0.63+vec2(0.17,0.43)).r,
         texture(ground_noise,uv*0.63+vec2(0.71,0.29)).r)-vec2(0.5);
     float n=texture(ground_noise,uv+warp*noise.r).r;
     float threshold=1.0-mask.r;
-    if(procedural) threshold=(info.b<1.5 || grayscale) ? mix(0.85,0.30,mask.r) : mix(0.88,0.38,mask.r);
+    if(procedural) threshold=mineral ? mix(0.88,0.38,mask.r) : mix(0.85,0.30,mask.r);
     float soft=max(mask.a,0.0001);
     // Grayscale soil has solid islands, with small world-space bites along the broad boundary.
     // Full coverage skips edge noise; other material recipes retain their original masks.
@@ -51,7 +52,7 @@ vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
             float flecks=texture(ground_noise,pixel/96.0+noise.bg+vec2(0.37,0.61)).r-0.5;
             n+=(clumps*0.11+flecks*0.05)*edge;
         }
-        soft=max(mask.a*0.12,0.0001);
+        soft=max(mask.a*0.20,0.0001);
     }
     float coverage=mask.r>=1.0 ? 1.0 : smoothstep(threshold-soft,threshold+soft,n);
     float amount=coverage*mask.g;

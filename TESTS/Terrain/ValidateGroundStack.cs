@@ -62,6 +62,8 @@ public partial class ValidateGroundStack : Node
                 && loaded.GroundStack.AccompanyingPatches.Strength==patches.Strength,"Accompanying layer serialized separately");
             DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(temporary));
             third.Colour=surface.BaseColour;
+            Check(CampaignSession.CanMigrateFineGround(),"Exact fine ground migration gate");
+            CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyFineGroundFingerprint(),"",null,null,null,null,null));
             Check(CampaignSession.CanMigrateIdentity(),"Exact identity relocation migration gate");
             CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyIdentityFingerprint(),"",null,null,null,null,null));
             Check(CampaignSession.CanMigrateGround(),"Exact shipped conversion migration gate");

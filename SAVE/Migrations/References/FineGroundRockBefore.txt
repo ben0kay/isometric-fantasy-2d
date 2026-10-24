@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="GroundSurfaceProfile" format=3]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/GroundSurfaceProfile.cs" id="script"]
+[ext_resource type="Material" path="res://WORLD/Terrain/Ground/Surfaces/GrassMaterial.tres" id="material"]
+[resource]
+script = ExtResource("script")
+Material = ExtResource("material")
+BaseColour = Color(0.075, 0.086, 0.098, 1)
+FreshColour = Color(0.135, 0.148, 0.157, 1)
+Recipe = 2
+MaterialFeatureSize = 32.0
+ArtworkInfluence = 0.0
