@@ -8,6 +8,10 @@ public partial class PlayerInput : Node
     [Signal] public delegate void UtilityRequestedEventHandler(bool held, Vector2 worldAim);
     [Signal] public delegate void StarterSelectionRequestedEventHandler(int selection);
     [Signal] public delegate void DodgeRequestedEventHandler(Vector2 worldDirection);
+    [Signal] public delegate void InventoryToggleRequestedEventHandler();
+    [Signal] public delegate void InventoryCloseRequestedEventHandler();
+    [Signal] public delegate void CommandSuppressionChangedEventHandler(bool suppressed);
+    public bool InventoryOpen { get; private set; }
 
     public bool SprintHeld { get; private set; }
     public float DodgeDoubleTapSeconds { get; set; } = 0.28f;
@@ -27,6 +31,13 @@ public partial class PlayerInput : Node
     // =========================================================
     public override void _Input(InputEvent input)
     {
+        if (!GetTree().Paused && input is InputEventKey toggle && toggle.Pressed && !toggle.Echo)
+        {
+            if (input.IsActionPressed("player_inventory"))
+            { EmitSignal(SignalName.InventoryToggleRequested); GetViewport().SetInputAsHandled(); return; }
+            if (InventoryOpen && toggle.Keycode==Key.Escape)
+            { EmitSignal(SignalName.InventoryCloseRequested); GetViewport().SetInputAsHandled(); return; }
+        }
         if (input is InputEventMouseButton m && m.ButtonIndex==MouseButton.Right && !m.Pressed)
             EmitSignal(SignalName.UtilityRequested,false,Vector2.Zero);
         if (input is InputEventKey k && !k.Pressed && k.Location==KeyLocation.Right && (k.Keycode==Key.Shift || k.PhysicalKeycode==Key.Shift))
@@ -38,6 +49,7 @@ public partial class PlayerInput : Node
     // =========================================================
     public override void _UnhandledInput(InputEvent input)
     {
+        if (InventoryOpen) return;
         if (input is InputEventMouseButton mouse && mouse.Pressed)
         {
             var player=GetParent<Node2D>(); Vector2 aim=player.GetGlobalMousePosition()-player.GlobalPosition;
@@ -76,6 +88,14 @@ public partial class PlayerInput : Node
     { SprintHeld = false; _shiftDown = false; _lastShiftPressMs = -100000; EmitSignal(SignalName.UtilityRequested,false,Vector2.Zero); }
     #endregion
 
+    // Inventory transitions explicitly release held controls and notify the existing movement owner.
+    // =========================================================
+    public void SetInventoryOpen(bool open)
+    {
+        if (InventoryOpen==open) return;
+        InventoryOpen=open; ResetMovementActions(); EmitSignal(SignalName.CommandSuppressionChanged,open);
+    }
+
     #region Read intents
     // Cursor reads remain centralized; combat/tool code does not poll mouse independently.
     // =========================================================
@@ -84,6 +104,6 @@ public partial class PlayerInput : Node
 
     // Normalize diagonals so they are not faster than cardinal movement.
     // =========================================================
-    public Vector2 ReadMovement() => Input.GetVector("player_left", "player_right", "player_up", "player_down");
+    public Vector2 ReadMovement() => InventoryOpen ? Vector2.Zero : Input.GetVector("player_left", "player_right", "player_up", "player_down");
     #endregion
 }

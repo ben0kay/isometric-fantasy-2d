@@ -19,6 +19,8 @@
 [ext_resource type="PackedScene" path="res://ENTITIES/Shared/Entity.tscn" id="skeleton_basic"]
 [ext_resource type="Script" uid="uid://8oefrcon0irx" path="res://WORLD/Runtime/WorldScene.cs" id="world"]
 
+[ext_resource type="PackedScene" path="res://UI/HUD/Gameplay/GameplayHUD.tscn" id="gameplay_ui"]
+
 [node name="World" type="Node2D" unique_id=277013086]
 script = ExtResource("world")
 Config = ExtResource("config")
@@ -120,3 +122,5 @@ metadata/world_actor_container = true
 [node name="PreviewSceneryRoot" type="Node2D" parent="WorldActorsRoot" unique_id=206184698]
 y_sort_enabled = true
 metadata/world_actor_container = true
+
+[node name="GameplayUIRoot" parent="." instance=ExtResource("gameplay_ui")]

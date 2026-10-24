@@ -4,3 +4,8 @@
 
 [resource]
 script = ExtResource("1")
+HotbarSlots = 9
+SlotSize = 62.0
+SlotSpacing = 7
+BottomMargin = 26.0
+InventorySize = Vector2(760, 560)
