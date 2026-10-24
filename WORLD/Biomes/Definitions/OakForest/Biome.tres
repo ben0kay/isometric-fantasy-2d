@@ -11,15 +11,24 @@
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundLayer.cs" id="ground_layer"]
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundStack.cs" id="ground_stack"]
 
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/GroundPatchLayer.cs" id="accompanying_script"]
+
 [sub_resource type="Resource" id="base_ground"]
 script = ExtResource("ground_layer")
 Id = "base"
 Label = "Forest grass"
 Surface = ExtResource("surface")
 
+[sub_resource type="Resource" id="accompanying_patches"]
+script = ExtResource("accompanying_script")
+Id = "accompanying"
+Label = "Forest grass patches"
+Enabled = true
+
 [sub_resource type="Resource" id="ground"]
 script = ExtResource("ground_stack")
 DefiningBaseGround = SubResource("base_ground")
+AccompanyingPatches = SubResource("accompanying_patches")
 
 [sub_resource type="Resource" id="trees"]
 script = ExtResource("population")

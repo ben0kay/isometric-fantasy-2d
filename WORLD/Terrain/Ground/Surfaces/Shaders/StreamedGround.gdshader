@@ -13,7 +13,7 @@ uniform sampler2D map_tint : filter_linear, repeat_disable;
 uniform vec2 map_origin;
 uniform vec2 map_grid_size;
 uniform float map_cell_size;
-uniform bool preview_base_variation = true;
+uniform bool preview_accompanying_patches = true;
 uniform bool preview_base_detail = true;
 uniform bool preview_optional_layers = true;
 uniform vec2 preview_overlay_visibility = vec2(1.0);
@@ -33,7 +33,7 @@ void fragment() {
     vec2 lookup = (ground_world - map_origin) / (map_grid_size * map_cell_size);
     vec3 settings = texture(map_settings,lookup).rgb;
     vec3 surface = texture(map_base,lookup).rgb;
-    if (preview_base_variation) {
+    if (preview_accompanying_patches && settings.r > 0.0) {
         vec2 uv = ground_world / max(settings.g,80.0) * 0.18;
         vec2 warp = vec2(texture(ground_noise,uv*0.63+vec2(0.17,0.43)).r,texture(ground_noise,uv*0.63+vec2(0.71,0.29)).r)-vec2(0.5);
         float broad = texture(ground_noise,uv+warp*0.05).r;

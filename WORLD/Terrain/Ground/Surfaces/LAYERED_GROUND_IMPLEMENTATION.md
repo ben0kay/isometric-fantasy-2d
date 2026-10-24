@@ -10,27 +10,15 @@
 
 Implemented: BiomeGroundLayer.Tint (opaque RGB, white default), applied to the completed base appearance by both existing renderers. Production biome/profile Resources remain unchanged. Streamed tint uses a shared coarse RGB map only when any biome is tinted; all-white skips that upload/sample. No per-frame CPU work. Overlay tint becomes effective with GS3, since overlays remain unsupported now. This is an explicitly authorized tint extension, not completion of GS2. See TINT_Validation.md for local checks and limitations.
 
-## 1. Intent and desired layer stack
+## 1. Current clarified stack — author request supersedes the original base-mottling design
 
-The author wants an obvious **defining basis ground layer** in each biome Resource, rather than an ambiguous generic surface. Examples: Grass, Sand, Dirt, Rock/Stone. That base fills 100% of the biome's ground, can be colour-toned per biome, and remains visible when all optional layers are disabled.
+1. **Defining Base Ground:** one full-coverage source texture and base colour/tint, plus artwork fine detail.
+2. **Accompanying Patch Layer:** optional, independently authored and toggled GroundPatchLayer for underlying flavour (Oak's existing greener/drier patches). It is not hidden inside the base and does not use an extra slot.
+3. **Extra Patch Layers:** at most two optional ordered surface overlays, e.g. dirt and rock later.
 
-Optional layers blend organically on top:
+This separation is implemented for Oak/Pink while preserving their existing enabled appearance. Both extra slots remain empty; GS5 dirt/rock is not implemented. See [accompanying extraction evidence and local check](ACCOMPANYING_PATCH_LAYER.md). Earlier GS0–GS4 implementation received user-reported World/practice functional checks; the extraction itself awaits local validation, and target performance evidence remains separate.
 
-- **Layer 0 — Defining Base Ground:** required full-coverage grass/sand/dirt/rock. Retain the present internal shade/fresh/dry colour variation, patch size, 32px artwork influence and fine grain of the Oak grass surface.
-- **Layer 1 — Broad Organic Overlay:** optional patches, e.g. exposed soil/dirt among grass, different grass tones, darker sand or mud. Use broad world-space noise, distortion/warp and soft edge masks.
-- **Layer 2 — Local Organic Overlay:** optional, generally smaller/sparser fragments such as stone/gravel, moss or worn areas. Separate controls from Layer 1; composited above it. Start with **at most two overlay slots**, not unlimited layering.
-- **Separate decoration/scenery:** grass tufts, fallen leaves, small rocks, flowers, roots and authored trails are not automatically surface pixel layers. Use canonical scenery placement or future chunk-owned decals where appropriate.
-- **Atmosphere/weather above the terrain:** haze, moving cloud shade, snow, rain/wetness, day/night and shadows remain owned by ENVIRONMENT and existing visual systems. Never make them subtypes of `BiomeGroundLayer`.
-
-**Base surface internal colour mottling is NOT Layer 1.** It is already part of the defining base. Overlay OFF means the entire existing base appearance remains — not flat green pixels.
-
-Target Oak example after optional authoring:
-- Base: existing ForestGrass with its unchanged palette and subtle greener/drier variations.
-- Overlay A: restrained, warped exposed dirt/soil patches.
-- Overlay B: sparse softened rocky/gravel breakup.
-- Top of everything: existing lighting, weather, snow, haze and cloud shadows.
-
-A future desert should similarly pick Sand as its defining base and reuse the same mechanics with different overlay Resource references/parameters, with no Desert-specific C# class.
+Decoration/scenery and ENVIRONMENT weather/lighting remain independent. Reusable grass/sand/soil/stone profiles and biome-owned tint remain the data-driven material source; no biome-specific renderer classes.
 
 ## 2. Historical pre-GS1 repository findings — verified 23 October 2026
 
@@ -45,7 +33,7 @@ A future desert should similarly pick Sand as its defining base and reuse the sa
 - `WORLD/Generation/Terrain/` remains primarily future terrain generation scaffolding, not an existing cliffs/roads/heightfield implementation.
 - Some terrain READMEs still incorrectly label all of production terrain as scaffolding; correct those when authorized coding phases land.
 
-## 3. Proposed data contracts and file ownership
+## 3. Original phase data contracts and file ownership (see current clarified stack above)
 
 **Do not delete, rename or reinterpret the existing Oak/Pink .tres profiles in GS1.** Reuse established Resources before adding types.
 

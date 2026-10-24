@@ -9,7 +9,8 @@ public sealed class GroundSurfacePreview
     private readonly float[] _visible={1,1}, _coverage={1,1}, _opacity={1,1};
     private readonly bool _originalVariation, _originalDetail;
     public bool SupportsOverlays { get; }
-    public bool ShowBaseVariation { get=>_variation; set=>SetFlag(ref _variation,value,_variationUniform); }
+    public bool ShowAccompanyingPatches { get=>_variation; set=>SetFlag(ref _variation,value,_variationUniform); }
+    public bool ShowBaseVariation { get=>ShowAccompanyingPatches; set=>ShowAccompanyingPatches=value; }
     public bool ShowBaseDetail { get=>_detail; set=>SetFlag(ref _detail,value,_detailUniform); }
     public bool ShowOptionalLayers { get=>_optional; set { if(SupportsOverlays) SetFlag(ref _optional,value,"preview_optional_layers"); } }
 
@@ -18,7 +19,7 @@ public sealed class GroundSurfacePreview
     public GroundSurfacePreview(ShaderMaterial material,bool streamed)
     {
         _material=material ?? throw new ArgumentNullException(nameof(material)); SupportsOverlays=streamed;
-        _variationUniform=streamed ? "preview_base_variation" : "colour_patches";
+        _variationUniform=streamed ? "preview_accompanying_patches" : "colour_patches";
         _detailUniform=streamed ? "preview_base_detail" : "fine_detail";
         _originalVariation=_variation=OriginalFlag(_variationUniform);
         _originalDetail=_detail=OriginalFlag(_detailUniform);

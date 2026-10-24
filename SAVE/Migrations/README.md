@@ -10,3 +10,5 @@ SO2 reorganizes only scene ownership and retains durable schema 1 / blueprint sc
 SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and relevant headless regressions, including real old-layout disk checkpoint restoration. All passed; P4 write/read now pass 39/33 checks after adding committed-migration assertions. See SCENES/World/SO2_Validation.md. Earlier automated-pending wording is historical; rendered seam/Y-sort and target-PC performance checks remain open.
 
 GS1 ground-schema conversion: exact converted Oak/Pink text hashes gate substitution of frozen previous biome resources while all other dependencies retain strict fingerprint checks. Ordinary save checkpoints then use current fingerprint. See WORLD/Terrain/Ground/Surfaces/GS0_GS1_Validation.md; local disk-restore validation pending.
+
+Accompanying-patch extraction: exact converted Oak/Pink text hashes gate frozen pre-extraction biome substitution, preserving strict checks for all other dependencies. Previous GS1 compatibility remains narrowly supported. See WORLD/Terrain/Ground/Surfaces/ACCOMPANYING_PATCH_LAYER.md; disk restoration still needs local verification.

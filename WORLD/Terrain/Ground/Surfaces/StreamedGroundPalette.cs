@@ -47,7 +47,12 @@ public static class StreamedGroundPalette
                 int biomeIndex=map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex;
                 var p=compiled[biomeIndex].Base;
                 if (p == null) throw new System.ArgumentException("Every streamed biome requires a surface profile.");
-                Color value = channel switch { 0 => p.BaseColour, 1 => p.ShadeColour, 2 => p.FreshColour, 3 => p.DryColour, 5 => compiled[biomeIndex].Tint, _ => new Color(p.Variation,p.PatchSize,p.DetailStrength,biomeIndex) };
+                var patches=compiled[biomeIndex].Patches;
+                if(patches?.Enabled!=true || patches.Strength<=0) patches=null;
+                float strength=patches?.Strength ?? 0f;
+                Color value = channel switch { 0 => p.BaseColour, 1 => patches?.ShadeColour ?? p.BaseColour,
+                    2 => patches?.FreshColour ?? p.BaseColour, 3 => patches?.DryColour ?? p.BaseColour,
+                    5 => compiled[biomeIndex].Tint, _ => new Color(strength,patches?.PatchSize ?? 320f,p.DetailStrength,biomeIndex) };
                 image.SetPixel(x,y,value);
             }
             material.SetShaderParameter(names[channel],ImageTexture.CreateFromImage(image));

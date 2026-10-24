@@ -7,7 +7,8 @@ public partial class GroundSurfaceDebugPanel : VBoxContainer
     private readonly Dictionary<string,WorldBiomeDefinition> _biomes=new();
     private WorldScene _world;
     private GroundSurfacePreview _preview;
-    private Label _status;
+    private Label _status, _patchStatus;
+    private CheckButton _patchToggle;
     private readonly Label[] _slotLabels=new Label[2];
     private readonly CheckButton[] _slotToggles=new CheckButton[2];
     private readonly HSlider[,] _sliders=new HSlider[2,2];
@@ -32,12 +33,15 @@ public partial class GroundSurfaceDebugPanel : VBoxContainer
         AddChild(new Label { Text="Session preview only — changes are not saved.",AutowrapMode=TextServer.AutowrapMode.WordSmart });
         _status=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_status);
         AddChild(new HSeparator()); AddChild(new Label { Text="Base appearance" });
-        _widgets.Toggle(this,"Base colour variation",()=>_preview.ShowBaseVariation,v=>_preview.ShowBaseVariation=v);
         _widgets.Toggle(this,"Base fine detail",()=>_preview.ShowBaseDetail,v=>_preview.ShowBaseDetail=v);
+        AddChild(new HSeparator()); AddChild(new Label { Text="Accompanying patch layer" });
+        _patchStatus=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_patchStatus);
+        _widgets.Toggle(this,"Show accompanying patches",()=>_preview.ShowAccompanyingPatches,v=>_preview.ShowAccompanyingPatches=v);
+        _patchToggle=(CheckButton)GetChild(GetChildCount()-1);
         if(_preview.SupportsOverlays)
         {
-            AddChild(new HSeparator()); AddChild(new Label { Text="Optional overlays — global comparisons" });
-            _widgets.Toggle(this,"Show optional layers",()=>_preview.ShowOptionalLayers,v=>_preview.ShowOptionalLayers=v);
+            AddChild(new HSeparator()); AddChild(new Label { Text="Extra patch layers — global comparisons" });
+            _widgets.Toggle(this,"Show extra patch layers",()=>_preview.ShowOptionalLayers,v=>_preview.ShowOptionalLayers=v);
             for(int i=0;i<2;i++) BuildSlot(i);
             AddChild(new Label { Text="Multipliers affect compiled active layers across all biomes. Unconfigured or authored-off layers stay off. The base always remains visible.",AutowrapMode=TextServer.AutowrapMode.WordSmart });
         }
@@ -91,6 +95,11 @@ public partial class GroundSurfaceDebugPanel : VBoxContainer
         string profileName=profile==null ? "none" : string.IsNullOrEmpty(profile.ResourcePath) ? $"{profile.DetailStyle} surface" : System.IO.Path.GetFileNameWithoutExtension(profile.ResourcePath);
         string label=stack?.DefiningBaseGround?.Label ?? "Legacy base";
         _status.Text=$"Biome: {biome?.DisplayName ?? "Outside world"}\nID: {key}\nBase Ground: {label} ({profileName})";
+        var accompanying=stack?.AccompanyingPatches;
+        bool hasPatches=stack!=null ? accompanying?.Enabled==true && accompanying.Strength>0 : profile?.Variation>0;
+        _patchStatus.Text=stack==null ? "Legacy accompanying patches" : accompanying==null ? "Not configured — base only"
+            : $"{accompanying.Label} ({(hasPatches ? "authored on" : "authored off / zero strength")})";
+        _patchToggle.Disabled=!hasPatches;
         if(!_preview.SupportsOverlays) return;
         for(int i=0;i<2;i++)
         {

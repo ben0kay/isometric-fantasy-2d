@@ -33,10 +33,10 @@ public partial class ValidateDebugHud : Node
             menu.SelectCategory("Ground Surfaces"); await Frames(3);
             Check(ground.IsVisibleInTree() && !environment.IsVisibleInTree() && !combat.IsVisibleInTree() && !diagnostics.Visible,"Third category exclusivity");
             var groundToggles=ground.FindChildren("*","CheckButton",true,false).OfType<CheckButton>().ToArray();
-            groundToggles.Single(t=>t.Text=="Base colour variation").ButtonPressed=false;
+            groundToggles.Single(t=>t.Text=="Show accompanying patches").ButtonPressed=false;
             groundToggles.Single(t=>t.Text=="Base fine detail").ButtonPressed=false;
-            groundToggles.Single(t=>t.Text=="Show optional layers").ButtonPressed=false;
-            Check(!world.GroundPreview.ShowBaseVariation && !world.GroundPreview.ShowBaseDetail && !world.GroundPreview.ShowOptionalLayers,"Ground widgets reach production preview");
+            groundToggles.Single(t=>t.Text=="Show extra patch layers").ButtonPressed=false;
+            Check(!world.GroundPreview.ShowAccompanyingPatches && !world.GroundPreview.ShowBaseDetail && !world.GroundPreview.ShowOptionalLayers,"Ground widgets reach production preview");
             groundToggles.Single(t=>t.Text=="Show overlay A").ButtonPressed=false;
             Check(!world.GroundPreview.ShowOverlay(0) && world.GroundPreview.ShowOverlay(1),"Independent ground toggles");
             ground.FindChildren("*","HSlider",true,false).OfType<HSlider>().First().Value=0.4;
@@ -45,11 +45,11 @@ public partial class ValidateDebugHud : Node
             owner._UnhandledInput(new InputEventKey { Keycode=Key.F9,Pressed=true }); await Frames(2);
             int refreshes=groundPanel.RefreshCount; await Frames(30);
             Check(!groundPanel.IsProcessing() && groundPanel.RefreshCount==refreshes,"Hidden Ground still polls");
-            Check(!world.GroundPreview.ShowBaseVariation && !world.GroundPreview.ShowOverlay(0),"F9 hide reset ground overrides");
+            Check(!world.GroundPreview.ShowAccompanyingPatches && !world.GroundPreview.ShowOverlay(0),"F9 hide reset ground overrides");
             owner._UnhandledInput(new InputEventKey { Keycode=Key.F9,Pressed=true }); await Frames(2);
             Check(menu.ActiveCategory=="Ground Surfaces" && ground.IsVisibleInTree() && !diagnostics.Visible,"Ground F9 selection persistence");
             ground.FindChildren("*","Button",true,false).OfType<Button>().Single(b=>b.Text=="Reset Ground Preview").EmitSignal(BaseButton.SignalName.Pressed);
-            Check(world.GroundPreview.ShowBaseVariation && world.GroundPreview.ShowBaseDetail && world.GroundPreview.ShowOptionalLayers
+            Check(world.GroundPreview.ShowAccompanyingPatches && world.GroundPreview.ShowBaseDetail && world.GroundPreview.ShowOptionalLayers
                 && world.GroundPreview.ShowOverlay(0) && world.GroundPreview.ShowOverlay(1) && world.GroundPreview.Coverage(0)==1,"Ground reset incomplete");
             Check(originalContent==CampaignSession.ContentFingerprint(),"Ground preview mutated authored content");
             menu.SelectCategory("Combat"); await Frames(2);

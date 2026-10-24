@@ -5,6 +5,7 @@ public sealed class CompiledGroundBiome
 {
     public GroundSurfaceProfile Base { get; }
     public Color Tint { get; }
+    public GroundPatchLayer Patches { get; }
     public BiomeGroundLayer[] Overlays { get; }
 
     // Resolve explicit stacks first; the old Surface property is only a legacy fallback.
@@ -13,14 +14,14 @@ public sealed class CompiledGroundBiome
     {
         if (biome.GroundStack is { } stack)
         {
-            Base=stack.ResolveBaseSurface(); Tint=stack.DefiningBaseGround.Tint;
+            Base=stack.ResolveBaseSurface(); Tint=stack.DefiningBaseGround.Tint; Patches=stack.AccompanyingPatches;
             Overlays=new BiomeGroundLayer[stack.OverlayLayers.Count];
             for(int i=0;i<Overlays.Length;i++) Overlays[i]=stack.OverlayLayers[i];
         }
         else
         {
             Base=biome.Surface ?? throw new ArgumentException("A streamed biome requires base ground.");
-            Base.Validate(); Tint=Colors.White; Overlays=Array.Empty<BiomeGroundLayer>();
+            Base.Validate(); Tint=Colors.White; Patches=GroundPatchLayer.FromLegacy(Base); Overlays=Array.Empty<BiomeGroundLayer>();
         }
         RequireSupportedMaterial(Base);
         foreach(var layer in Overlays) RequireSupportedMaterial(layer.Surface);

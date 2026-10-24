@@ -129,7 +129,7 @@ public partial class WorldScene : Node2D
             foreach (var biome in Config.Generation.Biomes) if (biome.Id == biomeId) Config.Biomes.Primary = biome;
             GetNode<GroundSurface>("TerrainRoot/Ground").Visible = false;
         }
-        else GetNode<GroundSurface>("TerrainRoot/Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes, Config.Biome.GroundTint);
+        else GetNode<GroundSurface>("TerrainRoot/Ground").Configure(Config.Bounds, Config.Biome.Surface, Config.Biomes, Config.Biome.GroundTint, Config.Biome.GroundStack);
         CharacterBody2D player = Player;
         player.Position = restore == null ? Config.PlayerSpawn : new Vector2(restore.Player.X,restore.Player.Y);
         Camera2D camera = player.GetNode<Camera2D>("Camera");

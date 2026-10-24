@@ -16,3 +16,5 @@ P3: streamed populations use explicit InstancesPerMillionUnits; Count/cluster se
 GS1: Oak/Pink now author inline GroundStack Resources with a clearly labelled required base and empty optional overlays. Surface remains a compatibility adapter; renderers are unchanged. See [GS0/GS1 validation](../Terrain/Ground/Surfaces/GS0_GS1_Validation.md).
 
 GS2/GS3: streamed setup reads GroundStack directly (legacy Surface remains fallback). Biomes may author at most two ordered enabled organic overlays; existing production arrays stay empty. Ground surfaces/overlays belong in WORLD/Terrain, decorative grass objects remain Content. See ../Terrain/Ground/Surfaces/GS2_GS3_Validation.md.
+
+Base/patch clarification: each explicit stack may author AccompanyingPatches separately from DefiningBaseGround and the two extra OverlayLayers. Oak/Pink own inline accompanying grass variation with the original colours/scale; production extra arrays remain empty. See ../Terrain/Ground/Surfaces/ACCOMPANYING_PATCH_LAYER.md.

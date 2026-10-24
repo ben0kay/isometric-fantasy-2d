@@ -28,6 +28,23 @@ public partial class ValidateGroundLayers : Node
                 Check(!current.GetShaderParameter(name).AsBool(),"Original production fast path: "+name);
             Check(map.Hash==MacroWorldBuilder.Build(config,seed).Hash,"Geography stable");
         }
+        var oak=GD.Load<WorldBiomeDefinition>("res://WORLD/Biomes/Definitions/OakForest/Biome.tres");
+        var pink=GD.Load<WorldBiomeDefinition>("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres");
+        Check(oak.GroundStack.AccompanyingPatches!=null && oak.GroundStack.AccompanyingPatches.Enabled,"Oak accompanying layer missing");
+        Check(pink.GroundStack.AccompanyingPatches!=null && oak.GroundStack.OverlayLayers.Count==0,"Accompanying consumes no extra slots");
+        using var explicitBase=new WorldBiomeDefinition { Id="base.only",GroundStack=new BiomeGroundStack {
+            DefiningBaseGround=new BiomeGroundLayer { Id="base",Label="Flat base",Surface=oak.Surface } } };
+        Check(new CompiledGroundBiome(explicitBase).Patches==null,"Explicit base inferred hidden patches");
+        var duplicate=(WorldBiomeDefinition)oak.Duplicate(true);
+        duplicate.GroundStack.AccompanyingPatches.Enabled=false;
+        Check(new CompiledGroundBiome(duplicate).Patches.Enabled==false && oak.GroundStack.AccompanyingPatches.Enabled,"Disabled accompanying layer mutated source");
+        bool rejected=false; duplicate.GroundStack.AccompanyingPatches.Strength=float.NaN;
+        try { new CompiledGroundBiome(duplicate); } catch(ArgumentException) { rejected=true; }
+        Check(rejected,"Nonfinite accompanying strength accepted");
+        duplicate.GroundStack.AccompanyingPatches.Strength=0.7f;
+        duplicate.GroundStack.AccompanyingPatches.Id="base"; rejected=false;
+        try { new CompiledGroundBiome(duplicate); } catch(ArgumentException) { rejected=true; }
+        Check(rejected,"Duplicate accompanying/base ID accepted"); duplicate.Dispose();
         var fixture=GroundLayerFixture.Definitions(); var f=GroundLayerFixture.Map();
         using var both=StreamedGroundPalette.Build(f,fixture);
         using var repeat=StreamedGroundPalette.Build(f,fixture.Reverse());
@@ -42,11 +59,11 @@ public partial class ValidateGroundLayers : Node
         Check(table.GetPixel(7,0)!=table.GetPixel(7,1),"Independent mask salts");
         var preview=new GroundSurfacePreview(both,true);
         preview.SetShowOverlay(0,false); preview.SetCoverage(1,0.4f); preview.SetOpacity(0,0.2f);
-        preview.ShowBaseVariation=false; preview.ShowBaseDetail=false; preview.ShowOptionalLayers=false;
+        preview.ShowAccompanyingPatches=false; preview.ShowBaseDetail=false; preview.ShowOptionalLayers=false;
         Check(!preview.ShowOverlay(0) && preview.ShowOverlay(1),"Preview slot independence");
         Check(fixture[0].GroundStack.OverlayLayers[0].Enabled && fixture[0].GroundStack.OverlayLayers[0].Coverage==0.6f,"Preview changed authored layer");
         preview.Reset();
-        Check(preview.ShowBaseVariation && preview.ShowBaseDetail && preview.ShowOptionalLayers && preview.ShowOverlay(0)
+        Check(preview.ShowAccompanyingPatches && preview.ShowBaseDetail && preview.ShowOptionalLayers && preview.ShowOverlay(0)
             && preview.Coverage(1)==1 && preview.Opacity(0)==1,"Preview reset preserves authored state");
         Check(both.GetShaderParameter("preview_overlay_visibility").AsVector2()==Vector2.One,"Reset visibility uniform");
         using var fresh=StreamedGroundPalette.Build(f,fixture);
@@ -57,8 +74,8 @@ public partial class ValidateGroundLayers : Node
         using var legacyMaterial=(ShaderMaterial)GD.Load<ShaderMaterial>("res://WORLD/Terrain/Ground/Surfaces/GrassMaterial.tres").Duplicate();
         legacyMaterial.SetShaderParameter("colour_patches",false);
         var legacyPreview=new GroundSurfacePreview(legacyMaterial,false);
-        legacyPreview.ShowBaseVariation=true; legacyPreview.Reset();
-        Check(!legacyPreview.ShowBaseVariation && !legacyPreview.SupportsOverlays,"Legacy preview reset lost authored flags");
+        legacyPreview.ShowAccompanyingPatches=true; legacyPreview.Reset();
+        Check(!legacyPreview.ShowAccompanyingPatches && !legacyPreview.SupportsOverlays,"Legacy preview reset lost authored flags");
         var layers=fixture[0].GroundStack.OverlayLayers;
         layers[0].Enabled=false;
         using var onlyB=StreamedGroundPalette.Build(f,fixture);

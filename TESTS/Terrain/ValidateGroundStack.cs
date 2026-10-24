@@ -23,6 +23,8 @@ public partial class ValidateGroundStack : Node
             using var layer = new BiomeGroundLayer { Id="base",Label="Third base",Surface=surface };
             Check(layer.Tint == Colors.White,"Neutral default tint");
             using var stack = new BiomeGroundStack { DefiningBaseGround=layer };
+            using var patches=new GroundPatchLayer { Label="Third accompanying layer" };
+            stack.AccompanyingPatches=patches;
             third.GroundStack=stack; third.Surface=null;
             Check(third.Surface == surface,"Stack takes precedence over legacy setter");
             var originalBase = surface.BaseColour;
@@ -44,6 +46,8 @@ public partial class ValidateGroundStack : Node
             Check(ResourceSaver.Save(third,temporary)==Error.Ok,"Save authored stack");
             var loaded=ResourceLoader.Load<WorldBiomeDefinition>(temporary,"",ResourceLoader.CacheMode.Ignore);
             Check(loaded.GroundTint==layer.Tint && loaded.GroundStack.DefiningBaseGround.Id=="base" && loaded.Surface.ResourcePath==surface.ResourcePath,"Serialized stack round trip");
+            Check(loaded.GroundStack.AccompanyingPatches.Label==patches.Label
+                && loaded.GroundStack.AccompanyingPatches.Strength==patches.Strength,"Accompanying layer serialized separately");
             DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(temporary));
             Check(CampaignSession.CanMigrateGround(),"Exact shipped conversion migration gate");
             var config=GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres");
@@ -56,6 +60,11 @@ public partial class ValidateGroundStack : Node
             Check(tinted.GetShaderParameter("has_ground_tint").AsBool(),"Tinted world enables map");
             var tintTexture=tinted.GetShaderParameter("map_tint").AsGodotObject() as Texture2D;
             Check(tintTexture != null && tintTexture.GetWidth()==map.Columns,"Shared coarse tint map");
+            Check(CampaignSession.CanMigratePatches(),"Exact accompanying extraction migration gate");
+            string patchPrevious=CampaignSession.LegacyPatchLayerFingerprint();
+            var patchSnapshot=new CampaignSnapshot(2,"","","",patchPrevious,"",null,null,null,null,null);
+            CampaignSession.RequireContent(patchSnapshot);
+            Check(patchPrevious!=CampaignSession.ContentFingerprint(),"Previous stack layout deliberately migrated");
             string previous = CampaignSession.LegacyGS1ContentFingerprint();
             Check(previous != CampaignSession.ContentFingerprint(),"Migration actually changes fingerprint");
             var snapshot = new CampaignSnapshot(2,"","","",previous,"",null,null,null,null,null);

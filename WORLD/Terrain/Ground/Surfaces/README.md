@@ -13,3 +13,5 @@ Pre-GS2 tint addition: biome-owned base Tint now works in streamed and preview r
 GS2/GS3: streamed rendering now compiles GroundStack directly and supports two opt-in ordered organic overlays, distinct-art biome blending and reusable detail styles. Production Oak/Pink remain base-only. Preview retains its original base-only path. See [validation and practice fixture](GS2_GS3_Validation.md); engine/Windows/performance acceptance pending.
 
 GS4: F9 Ground Surfaces now offers session-only base/layer toggles, global coverage/opacity multipliers and reset. GroundSurfacePreview writes only changed uniforms, with no map rebuilding or idle CPU callbacks. See [combined local testing checklist](GS4_Validation.md); previous phase runtime/visual acceptance remains pending.
+
+Current clarified structure: full-coverage base + a separately authored accompanying patch layer + up to two extra surface patches. Oak/Pink grass variation now lives in AccompanyingPatches and preserves the original look when enabled. F9 exposes that distinction; no dirt/rock added. [Contract, save bridge and local checks](ACCOMPANYING_PATCH_LAYER.md).
