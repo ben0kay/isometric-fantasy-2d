@@ -4,6 +4,7 @@ uniform sampler2D foliage_mask : repeat_disable, filter_nearest;
 uniform bool seasonal_profile_enabled = false;
 uniform sampler2D seasonal_state : repeat_disable, filter_nearest;
 instance uniform bool foliage_healthy = true;
+instance uniform float seasonal_bucket = 0.0;
 
 // Explicit masks replace heuristics; source alpha remains owned by the final sprite output.
 // =========================================================
@@ -17,16 +18,21 @@ float foliage_selection(vec3 original, vec2 uv, float profile, vec2 crown_range)
         * (1.0 - smoothstep(crown_range.x, crown_range.y, uv.y));
 }
 
-// Palette hue replaces green while retaining source luminance and cluster shading.
+// Palette controls colour, saturation and optional winter lift while retaining cluster shading.
 // Summer/disabled alpha zero returns the exact original RGB, with no tint arithmetic.
 // =========================================================
 vec3 seasonal_foliage_colour(vec3 original, vec2 uv) {
     if (!seasonal_profile_enabled || !foliage_healthy) return original;
-    vec4 state = texture(seasonal_state, vec2(0.5));
+    float bucket_u = (clamp(floor(seasonal_bucket + 0.5), 0.0, 15.0) + 0.5) / 16.0;
+    vec4 state = texture(seasonal_state, vec2(bucket_u, 0.25));
     if (state.a <= 0.0) return original;
     float selection = foliage_selection(original, uv, 0.0, vec2(0.60, 0.79));
     float light = dot(original, vec3(0.3, 0.6, 0.1));
+    vec2 tone = texture(seasonal_state, vec2(bucket_u, 0.75)).rg;
     float target_light = max(dot(state.rgb, vec3(0.3, 0.6, 0.1)), 0.001);
-    vec3 recoloured = clamp(state.rgb * light / target_light, vec3(0.0), vec3(1.0));
+    vec3 target = mix(vec3(target_light), state.rgb, tone.x);
+    // Lift dark foliage gently without making true black pixels white or erasing shading.
+    float winter_light = light + tone.y * sqrt(max(light, 0.0)) * (1.0 - light);
+    vec3 recoloured = clamp(target * winter_light / target_light, vec3(0.0), vec3(1.0));
     return mix(original, recoloured, selection * state.a);
 }

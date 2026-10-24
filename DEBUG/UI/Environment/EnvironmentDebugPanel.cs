@@ -47,11 +47,20 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Slider(time, "Seconds per day", 5, 3600, 1, () => _environment.Clock.Config.CycleSeconds, v => _environment.Clock.Config.CycleSeconds = (float)v);
         var seasons = Section(controls, "Seasonal foliage", false);
         Toggle(seasons, "Enable seasonal foliage", () => _environment.Seasons.Enabled, v => _environment.Seasons.SetEnabled(v));
-        var seasonLabel = new Label { Text = _environment.Seasons.SeasonName }; seasons.AddChild(seasonLabel);
-        Slider(seasons, "Year position", 0, 1, 0.001, () => _environment.Seasons.YearPosition,
-            v => { _environment.Seasons.SetYearPosition((float)v); seasonLabel.Text = _environment.Seasons.SeasonName; });
-        _refresh.Add(() => seasonLabel.Text = _environment.Seasons.SeasonName);
-        seasons.AddChild(new Label { Text = "Oak palette preview; snow is controlled separately.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        var seasonLabel = new Label { Text = _environment.Seasons.DateLabel }; seasons.AddChild(seasonLabel);
+        var seasonDate = new HSlider { MinValue = 0, MaxValue = 365, Step = 1,
+            Value = _environment.Seasons.PreviewDay, FocusMode = Control.FocusModeEnum.None };
+        seasons.AddChild(seasonDate);
+        seasonDate.ValueChanged += value => {
+            if (!_syncing) _environment.Seasons.SetYearPosition((float)value / 365f);
+            seasonLabel.Text = _environment.Seasons.DateLabel;
+        };
+        _refresh.Add(() => { seasonDate.Value = _environment.Seasons.PreviewDay; seasonLabel.Text = _environment.Seasons.DateLabel; });
+        Slider(seasons, "Foliage colour strength (%)", 0, 100, 1, () => _environment.Seasons.ColourStrength * 100f,
+            v => _environment.Seasons.SetColourStrength((float)v / 100f));
+        Slider(seasons, "Early / late variation (± days)", 0, 45, 1, () => _environment.Seasons.TimingVariationDays,
+            v => _environment.Seasons.SetTimingVariationDays((float)v));
+        seasons.AddChild(new Label { Text = "January–December preview. Winter foliage tint and snow are separate.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
         var wind = Section(controls, "Shared wind", true);
         Slider(wind, "Left / calm / right", -3, 3, 0.05, () => s.Wind.Strength, v => s.Wind.Strength = (float)v);
         var lighting = Section(controls, "Lighting and clouds", false);

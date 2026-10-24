@@ -1,18 +1,20 @@
 // World-owned seasonal palette textures and chunk-local material groups; no frame callbacks.
 using Godot;
+using System;
 using System.Collections.Generic;
 using Tree = FantasyGame.World.Trees.Tree;
 
 public partial class SeasonalFoliageAdapter : Node
 {
+    public const int TimingGroups = 16;
     public SeasonController Seasons { get; set; }
     public WindController Wind { get; set; }
     private sealed class PaletteState
     {
-        public readonly Image Image = Godot.Image.CreateEmpty(1, 1, false, Godot.Image.Format.Rgbaf);
+        public readonly Image Image = Godot.Image.CreateEmpty(TimingGroups, 2, false, Godot.Image.Format.Rgbaf);
         public ImageTexture Texture;
         public int Users;
-        public Color Last;
+        public readonly Color[] Last = new Color[TimingGroups * 2];
         public bool Written;
     }
     private sealed class ChunkState
@@ -50,6 +52,9 @@ public partial class SeasonalFoliageAdapter : Node
             Texture2D mask = AcquireMask(variant); state.Variants.Add(variant);
             SeasonalFoliageProfile profile = tree.Definition.SeasonalFoliage;
             if (mask == null && profile == null) continue;
+            string identity = tree.HasMeta("world_instance_id") ? tree.GetMeta("world_instance_id").AsString()
+                : FormattableString.Invariant($"{tree.Definition.Id}/{tree.GlobalPosition.X:R}/{tree.GlobalPosition.Y:R}");
+            sprite.SetInstanceShaderParameter("seasonal_bucket", (float)TimingBucket(identity));
             var key = (source, mask, profile);
             if (!groups.TryGetValue(key, out ShaderMaterial material))
             {
@@ -97,16 +102,39 @@ public partial class SeasonalFoliageAdapter : Node
     private void Refresh()
     { foreach (var pair in _palettes) WritePalette(pair.Key, pair.Value); }
 
-    // Alpha stores blend influence; preserve HDR data without sRGB conversion on the sampler.
+    // Fill a fixed 16x2 atlas: row 0 target RGB/influence, row 1 saturation/brightness.
+    // Every material copy shares this texture; uploads happen once per changed profile.
     // =========================================================
     private void WritePalette(SeasonalFoliageProfile profile, PaletteState state)
     {
-        Color colour = profile.Palette?.Sample(Seasons.YearPosition) ?? new Color(1, 1, 1, 0);
-        colour.A = Seasons.Enabled ? Mathf.Clamp(colour.A, 0f, 1f) : 0f;
-        if (colour.A == 0f) colour = new Color(1, 1, 1, 0);
-        if (state.Written && state.Last == colour) return;
-        state.Last = colour; state.Written = true; state.Image.SetPixel(0, 0, colour);
-        state.Texture?.Update(state.Image);
+        bool dirty = !state.Written;
+        for (int bucket = 0; bucket < TimingGroups; bucket++)
+        {
+            float offset = (bucket * 2f / (TimingGroups - 1) - 1f) * Seasons.TimingVariationDays
+                * Mathf.Clamp(profile.TimingVariationScale, 0f, 2f) / 365f;
+            float year = Mathf.PosMod(Seasons.YearPosition + offset, 1f);
+            Color colour = profile.Palette?.Sample(year) ?? new Color(1, 1, 1, 0);
+            colour.A = Seasons.Enabled ? Mathf.Clamp(colour.A, 0f, 1f) * Seasons.ColourStrength : 0f;
+            Color tone = profile.ToneControls?.Sample(year) ?? new Color(1, 0, 0, 0);
+            tone = new Color(Mathf.Clamp(tone.R, 0f, 1f), Mathf.Clamp(tone.G, 0f, 0.5f), 0, 0);
+            if (colour.A == 0f) { colour = new Color(1, 1, 1, 0); tone = new Color(1, 0, 0, 0); }
+            if (!state.Written || state.Last[bucket] != colour || state.Last[bucket + TimingGroups] != tone)
+            {
+                state.Last[bucket] = colour; state.Last[bucket + TimingGroups] = tone;
+                state.Image.SetPixel(bucket, 0, colour); state.Image.SetPixel(bucket, 1, tone); dirty = true;
+            }
+        }
+        state.Written = true;
+        if (dirty) state.Texture?.Update(state.Image);
+    }
+
+    // Explicit FNV-1a avoids randomized string hashes, runtime IDs and reload-dependent RNG.
+    // =========================================================
+    public static int TimingBucket(string identity)
+    {
+        uint hash = 2166136261;
+        foreach (char character in identity) hash = unchecked((hash ^ character) * 16777619);
+        return (int)(hash % TimingGroups);
     }
 
     // Release exact chunk registrations after weather overlays detach; no unbounded static cache.
