@@ -66,6 +66,7 @@ public partial class TreeFireAppearance : Node
     private void ResetAppearance()
     {
         _foliageErosion = false;
+        _sprite.SetInstanceShaderParameter("foliage_healthy", true);
         RemoveOverlay(); _sprite.Texture = _healthy; _sprite.Offset = _healthyOffset; _sprite.SelfModulate = _healthyTint;
 
         _hits?.SetHealthyLeaves(true); SetProcess(false);
@@ -111,6 +112,7 @@ public partial class TreeFireAppearance : Node
     // =========================================================
     private void OnCompleted()
     {
+        _sprite.SetInstanceShaderParameter("foliage_healthy", false);
         if (Config?.BurntTexture == null) return;
         _sprite.Texture = Config.BurntTexture; _sprite.Offset = BurntOffset(); _sprite.SelfModulate = _healthyTint;
         _foliageErosion = false;

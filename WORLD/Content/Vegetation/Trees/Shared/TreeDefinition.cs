@@ -9,6 +9,7 @@ public partial class TreeDefinition : SceneryDefinition
     [ExportGroup("Tree artwork variants")]
     [Export] public Godot.Collections.Array<TreeVisualVariant> VisualVariants { get; set; } = new();
     [ExportGroup("Foliage shared by ambient and hit leaves")]
+    [Export] public SeasonalFoliageProfile SeasonalFoliage { get; set; }
     [Export] public bool HasFoliage { get; set; } = true;
     [Export] public Color FoliageColour { get; set; } = new(0.58f, 0.57f, 0.24f);
     [ExportGroup("Visibility feedback")]

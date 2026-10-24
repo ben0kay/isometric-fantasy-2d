@@ -51,7 +51,7 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Slider(seasons, "Year position", 0, 1, 0.001, () => _environment.Seasons.YearPosition,
             v => { _environment.Seasons.SetYearPosition((float)v); seasonLabel.Text = _environment.Seasons.SeasonName; });
         _refresh.Add(() => seasonLabel.Text = _environment.Seasons.SeasonName);
-        seasons.AddChild(new Label { Text = "State preview only; tree colours arrive in SE1.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        seasons.AddChild(new Label { Text = "Oak palette preview; snow is controlled separately.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
         var wind = Section(controls, "Shared wind", true);
         Slider(wind, "Left / calm / right", -3, 3, 0.05, () => s.Wind.Strength, v => s.Wind.Strength = (float)v);
         var lighting = Section(controls, "Lighting and clouds", false);

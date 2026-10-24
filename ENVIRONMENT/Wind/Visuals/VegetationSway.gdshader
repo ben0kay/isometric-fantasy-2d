@@ -1,6 +1,7 @@
 // Resolution-independent, row-weighted foliage sway with a wind-sized transparent draw margin.
 // Crown pixels move in world units; roots stay steady and texture dimensions do not set wind strength.
 shader_type canvas_item;
+#include "res://WORLD/Content/Vegetation/Shared/Seasonal/SeasonalFoliage.gdshaderinc"
 
 uniform float strength_world_pixels : hint_range(0.0, 20.0, 0.1) = 1.6;
 uniform float speed : hint_range(0.0, 3.0, 0.05) = 0.8;
@@ -47,6 +48,8 @@ void fragment() {
 
     float inside = step(0.0, sample_uv.x) * step(sample_uv.x, 1.0);
     vec4 pixel = texture(TEXTURE, clamp(sample_uv, vec2(0.0), vec2(1.0)));
+    vec3 original_foliage_rgb = pixel.rgb;
+    if (!shadow_only) pixel.rgb = seasonal_foliage_colour(pixel.rgb, sample_uv);
     if (shadow_only) {
         pixel.rgb = vec3(0.055, 0.075, 0.09);
         float radius = softness_uv * (1.0 - smoothstep(0.12, 0.9, UV.y));

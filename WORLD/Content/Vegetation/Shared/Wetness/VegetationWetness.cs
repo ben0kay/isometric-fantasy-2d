@@ -48,13 +48,13 @@ public partial class VegetationWetness : Node
             Sprite2D sprite = tree.GetNodeOrNull<Sprite2D>("Sprite");
             if (sprite?.Material is not ShaderMaterial source || source.Shader == null) continue;
             string code = source.Shader.Code;
-            if (!code.Contains(Anchor) || !code.Contains("shader_type canvas_item;")) continue;
+            if (!code.Contains(Anchor) || !code.Contains("SeasonalFoliage.gdshaderinc")) continue;
             if (!shaders.TryGetValue(source.Shader, out Shader shader))
             {
-                code = code.Replace("shader_type canvas_item;",
-                    "shader_type canvas_item;\n#include \"" + Include + "\"");
+                code = code.Replace("#include \"res://WORLD/Content/Vegetation/Shared/Seasonal/SeasonalFoliage.gdshaderinc\"",
+                    "#include \"res://WORLD/Content/Vegetation/Shared/Seasonal/SeasonalFoliage.gdshaderinc\"\n#include \"" + Include + "\"");
                 code = code.Replace(Anchor,
-                    "    if (!shadow_only) pixel.rgb = wet_foliage_colour(pixel.rgb, UV);\n" + Anchor);
+                    "    if (!shadow_only) pixel.rgb = wet_foliage_colour(pixel.rgb, original_foliage_rgb, sample_uv);\n" + Anchor);
                 shader = new Shader { Code = code };
                 shaders.Add(source.Shader, shader);
             }

@@ -16,6 +16,7 @@ public partial class EnvironmentRuntime : Node2D
     public SceneryArtworkIndex GroundQueries { get; } = new();
     private WorldAtmosphere _atmosphere;
     private VegetationWetness _sharedWetness;
+    private SeasonalFoliageAdapter _seasonalFoliage;
     private readonly System.Collections.Generic.Dictionary<Shader, Shader> _wetnessShaders = new();
     private sealed class ChunkVisuals
     {
@@ -52,6 +53,8 @@ public partial class EnvironmentRuntime : Node2D
         Seasons.Initialize(Config.Seasons); AddChild(Seasons);
         Wind = new WindController { Name = "Wind", Config = Settings.Wind }; AddChild(Wind);
         var vegetation = new VegetationWind { Name = "VegetationWind", Wind = Wind }; AddChild(vegetation); vegetation.Attach(actors);
+        _seasonalFoliage = new SeasonalFoliageAdapter { Name = "SeasonalFoliage", Seasons = Seasons, Wind = Wind };
+        AddChild(_seasonalFoliage); _seasonalFoliage.Attach(actors);
         var torch = GD.Load<PackedScene>("res://WORLD/Content/Props/Torch/Torch.tscn").Instantiate<Node2D>();
         torch.Name = "Torch"; torch.Position = persistentProps.ToLocal(world.PlayerSpawn + Settings.Torch.OffsetFromSpawn); persistentProps.AddChild(torch);
         AddChild(new TorchLight { Name = "TorchLight", Torch = torch, Config = Settings.Torch });
@@ -92,6 +95,7 @@ public partial class EnvironmentRuntime : Node2D
     {
         var wind = new VegetationWind { Name = "ChunkWind", Wind = Wind }; AddChild(wind); wind.Attach(chunk);
         chunk.SetMeta("chunk_wind",wind.GetInstanceId()); yield return 0;
+        _seasonalFoliage.Attach(chunk); yield return 0;
         var wetness = new VegetationWetness { Weather = Weather }; AddChild(wetness); wetness.Attach(chunk, _wetnessShaders);
         wetness.StartAt(_sharedWetness.Coverage);
         chunk.SetMeta("chunk_wetness",wetness.GetInstanceId()); yield return 0;
@@ -107,8 +111,10 @@ public partial class EnvironmentRuntime : Node2D
         if(_chunkVisuals.Remove(chunk,out var state)) { _visualIndex.Remove(state); _activeVisuals.Remove(state); _visualCandidates.Remove(state); }
         CosmeticChunkCount=_activeVisuals.Count;
         Snow.UnregisterChunk(chunk);
-        foreach (string key in new[] { "chunk_shadow","chunk_wetness","chunk_wind" })
+        foreach (string key in new[] { "chunk_shadow","chunk_wetness" })
             if (chunk.HasMeta(key) && GodotObject.InstanceFromId(chunk.GetMeta(key).AsUInt64()) is Node node) node.Free();
+        _seasonalFoliage.Detach(chunk);
+        if (chunk.HasMeta("chunk_wind") && GodotObject.InstanceFromId(chunk.GetMeta("chunk_wind").AsUInt64()) is Node wind) wind.Free();
     }
     // One prop's visual-source lifecycle is shared by trees, rocks and future scenery templates.
     // =========================================================

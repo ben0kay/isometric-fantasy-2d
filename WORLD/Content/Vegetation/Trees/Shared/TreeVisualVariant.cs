@@ -8,6 +8,7 @@ public partial class TreeVisualVariant : Resource
 {
     [Export] public string Id { get; set; } = "";
     [Export] public Texture2D Texture { get; set; }
+    [Export] public Texture2D FoliageMask { get; set; }
     [ExportGroup("Sprite and ground anchor")]
     [Export] public Vector2 SourceAnchor { get; set; }
     [Export] public Vector2 GroundOffset { get; set; }

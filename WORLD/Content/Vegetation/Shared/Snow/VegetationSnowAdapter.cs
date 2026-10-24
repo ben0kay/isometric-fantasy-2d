@@ -25,12 +25,12 @@ public sealed class VegetationSnowAdapter
             Sprite2D sprite = child.GetNodeOrNull<Sprite2D>("Sprite");
             if (sprite?.Material is not ShaderMaterial material) continue;
             Shader original = material.Shader;
-            if (!original.Code.Contains(output)) { GD.PushWarning("Snow adapter skipped an unsupported tree shader."); continue; }
+            if (!original.Code.Contains(output) || !original.Code.Contains("SeasonalFoliage.gdshaderinc")) { GD.PushWarning("Snow adapter skipped an unsupported tree shader."); continue; }
             if (!shaders.TryGetValue(original, out Shader extended))
             {
-                string code = original.Code.Replace("shader_type canvas_item;", "shader_type canvas_item;\n#include \"res://WORLD/Content/Vegetation/Shared/Snow/VegetationSnow.gdshaderinc\"");
+                string code = original.Code.Replace("#include \"res://WORLD/Content/Vegetation/Shared/Seasonal/SeasonalFoliage.gdshaderinc\"", "#include \"res://WORLD/Content/Vegetation/Shared/Seasonal/SeasonalFoliage.gdshaderinc\"\n#include \"res://WORLD/Content/Vegetation/Shared/Snow/VegetationSnow.gdshaderinc\"");
                 code = code.Replace("instance uniform float wind_orientation", "uniform float wind_orientation");
-                code = code.Replace(output, "    if (!shadow_only) pixel.rgb = tree_snow_colour(pixel.rgb, sample_uv);\n" + output);
+                code = code.Replace(output, "    if (!shadow_only) pixel.rgb = tree_snow_colour(pixel.rgb, original_foliage_rgb, sample_uv);\n" + output);
                 extended = new Shader { Code = code }; shaders.Add(original, extended);
             }
             // Per-sprite foliage profiles: 0=green leaves, 1=pink blossoms.

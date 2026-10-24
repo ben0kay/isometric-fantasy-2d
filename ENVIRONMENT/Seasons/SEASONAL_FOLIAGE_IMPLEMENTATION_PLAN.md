@@ -1,6 +1,6 @@
 # SE0–SE4: Seasonal foliage and F9 year-position preview
 
-> **STATUS: SE0 implemented; awaiting local build and visual acceptance. SE1–SE3 remain planned.**
+> **STATUS: SE0 and SE1 implemented; SE1 software-GL checks passed. Godot build/visual acceptance pending. SE2/SE3 remain open.**
 >
 > This is a staged Codex handoff for real-time **Spring → Summer → Autumn → Winter** foliage previews. It is **not** approval to implement every phase at once. Start with SE0, request user acceptance, then continue one small phase at a time.
 >
@@ -97,7 +97,7 @@ These are **manual visual preview controls**. Do not implement a second GameCloc
 
 **Important:** Existing wetness/snow masks classify green/pink **pixel colours**. After turning green leaves orange/red, snow/wetness must **not lose foliage detection**. Codex must compute leaf identity from the author-provided mask when valid, otherwise the untouched original texture, and use that selection through the visual stack. Preserve each weather effect's existing no-mask fallback. Separate leaf identity from snow deposition noise/brightness so a selected leaf need not become uniformly white. A final whole-sprite tint or blindly appending a shader snippet can break existing systems.
 
-Proposed visible order: original texture sampled after wind → compute untouched foliage weight → wetness → seasonal palette → snow (using original foliage weight) → optional active FIRE2 erosion/charred effects. Adapt the real current material/shader owners rather than building an unrelated replacement tree shader.
+Implemented SE1 visible order: original texture sampled after wind → preserve original foliage identity → seasonal palette → wetness → snow (using original foliage identity) → optional active FIRE2 erosion/charred effects. Adapt the real current material/shader owners rather than building an unrelated replacement tree shader.
 
 - **Wind:** mask texture and healthy texture sample the **same wind-adjusted sample_uv**, respecting source alpha, mirror, scale, sprite offset and source anchor. Never use world-space or screen-space UVs for the mask.
 - **Wetness/snow:** preserve live settings and material follower links; orange/red foliage still becomes darker in rain and white when covered by snow. The user intends rain and snow to normally occur separately later; current manually enabled combinations must not corrupt the shader.
@@ -143,11 +143,15 @@ Use the existing Avalonia Oak export to prove mask alignment, dark-leaf inclusio
 | Phase | Current status | Acceptance |
 | --- | --- | --- |
 | SE0: F9 year-position state/preview | IMPLEMENTED; static review only | Local build / F9 acceptance pending |
-| SE1: masked Oak shader + existing maskless fallback | NOT IMPLEMENTED | Pending |
-| SE2: wet/snow/fire/streaming/performance integration | NOT IMPLEMENTED | Pending |
+| SE1: masked Oak shader + existing maskless fallback | IMPLEMENTED; software-GL checks passed | Godot build / Windows acceptance pending |
+| SE2: wet/snow/fire/streaming/performance integration | SE1 composition foundations present; broader checks and save bridge pending | Pending |
 | SE3: mask authoring validation and regression coverage | NOT IMPLEMENTED | Pending |
 | SE4: calendar/P4 integration and gameplay seasons | DEFERRED | Separate future approval |
 
 ## SE0 implementation handoff
 
 See [SE0_Validation.md](SE0_Validation.md). No leaf recolouring, mask binding, weather/fire changes or save-schema changes are implemented by SE0. Continue with SE1 after the F9 controls are accepted.
+
+## SE1 implementation handoff
+
+See [SE1_Validation.md](SE1_Validation.md). Oak mask/profile binding and shared weather selection are implemented; software-GL checks passed. Native Godot validation and SE2 campaign compatibility remain pending. SE1 updates Oak.tres, so the strict fingerprint can reject older campaigns; use F6/new campaign until an explicit SE2 migration is validated. No new fire effect was added.

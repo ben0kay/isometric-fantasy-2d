@@ -8,6 +8,9 @@
 [ext_resource type="Script" uid="uid://borugxxsu2c4d" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeVisualVariant.cs" id="variant_script"]
 [ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/Oak/OakWind.tres" id="wind"]
 
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01_fm.png" id="foliage_mask"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Oak/OakSeasonalFoliage.tres" id="seasonal"]
+
 [sub_resource type="Resource" id="Resource_swc2o"]
 script = ExtResource("2_do4e4")
 
@@ -18,6 +21,7 @@ script = ExtResource("3_sii3d")
 script = ExtResource("variant_script")
 Id = "01"
 Texture = ExtResource("art")
+FoliageMask = ExtResource("foliage_mask")
 SourceAnchor = Vector2(109.6, 258)
 SpriteScale = Vector2(0.575, 0.575)
 TrunkPolygon = PackedVector2Array(-29, -10, -14, -16, 8, -15, 30, -8, 18, 1, 0, 5, -17, 1)
@@ -29,6 +33,7 @@ WindMaterial = ExtResource("wind")
 FireProfile = ExtResource("fire")
 Id = "tree.oak"
 DisplayName = "Oak"
+SeasonalFoliage = ExtResource("seasonal")
 SnowResponse = 1
 ContactShadowRadius = Vector2(25, 9)
 AvoidBiomeTransition = true
