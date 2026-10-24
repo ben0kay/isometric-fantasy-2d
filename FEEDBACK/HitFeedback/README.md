@@ -1,6 +1,6 @@
 # Material hit feedback — C3.3c+d
 
-Shared `HitFeedbackProfile` Resources select a ParticleProfile, colour, count and visual offset. `Profiles/Bone.tres` supplies short pale angular fragments for Skeleton Basic; `Profiles/Flesh.tres` supplies smaller red droplets for the player and future living creatures. Choose another shared profile through EntityDefinition / PlayerMasterConfig → Impact feedback. A null/disabled profile or zero count disables new bursts. No per-species controllers or new per-species effect Resources are needed.
+Shared `HitFeedbackProfile` Resources select a ParticleProfile, colour, count and visual offset. `Profiles/Bone.tres` supplies pale angular fragments for Skeleton Basic and Skeleton Archer; `Profiles/Flesh.tres` supplies smaller red droplets for the player and future living creatures. Choose another shared profile through EntityDefinition / PlayerMasterConfig → Impact feedback. A null/disabled profile or zero count disables new bursts. No per-species controllers or new per-species effect Resources are needed.
 
 ## Confirmed contact contract
 
@@ -14,7 +14,7 @@ The first eligible hit lazily creates one cached HitFeedback child on the actor.
 
 Particle positions/motion are snapshotted in **world space**. ParticleEmitter.Draw's optional worldSpace mode applies the inverse current canvas transform at draw time, keeping particles independent of root recoil/scale while retaining the actor's normal canvas/Y-sort ownership. Trees retain default local-space drawing unchanged. Whole bursts inherit actor sorting/visibility; individual fragments are not independently Y-sorted. Camera zoom remains normal canvas rendering.
 
-VisualOffset is a configurable world-space presentation lift from the real hurt point (default -14px vertically), bounded to ±64 per axis. It does not change contact geometry. Profiles use ~0.15–0.30s lifetimes; normal Entity's 0.4s death fade lets the final burst finish. Immediate retirement or a deliberately shorter death fade can truncate effects: they never outlive their owner/chunk.
+VisualOffset is a configurable world-space presentation lift from the real hurt point (default -14px vertically), bounded to ±64 per axis. It does not change contact geometry. Bone uses 12 shards per damaging hit, directional speed 105, a 25-degree spread and 0.22–0.35s lifetimes; Flesh keeps its own separately authored settings. Normal Entity's 0.4s death fade lets the final burst finish. Immediate retirement or a deliberately shorter death fade can truncate effects: they never outlive their owner/chunk.
 
 Only active particles wake `_Process`; expiry queues one final clearing redraw and sleeps. Suspension/unload clears transient slots and never replays them. No effects are saved. Profile edits affect new bursts; toggling a profile off does not poll/clear an existing short burst. No target-PC performance gain or rendered feel is claimed without profiling.
 
