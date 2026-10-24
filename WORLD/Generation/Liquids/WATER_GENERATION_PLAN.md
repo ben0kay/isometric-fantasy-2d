@@ -11,7 +11,9 @@
 | **WG2** | Render/stream generated lakes using existing liquid behavior; exclude scenery and navigation | Codex | Planned |
 | **WG3** | Generate continuous cross-biome rivers with noise-driven meanders and sensible endpoints | Codex | Planned |
 | **WG4** | Add shoreline, shallows, banks and terrain blending/carving where supported | Codex | Planned |
-| **WG5** | Optional elevation, drainage, tributaries, wetlands and advanced hydrology | Regular Chat plan → Codex | Planned |
+| **WG5** | Elevation-aware drainage, tributaries and wetlands (optional) | Regular Chat → Codex | Planned |
+| **WG6** | Shared directional river/stream currents and surface flow visuals | Codex | Planned |
+| **WG7** | Deep-water swimming, floating and opt-in underwater scene transitions | Codex | Planned |
 
 ## Confirmed foundations and limitations
 
@@ -67,6 +69,18 @@ Illustrative suitability (not actual authored values):
 | Volcanic Wastes | 0.0 | 0.1 | Optional yes |
 | Desert | 0.1 | 0.2 | No; rare oasis possible |
 | Swamp | 0.9 | 0.9 | No |
+
+## Shared water-body data and future gameplay boundaries
+
+Keep one extensible, data-driven water-body record across ponds, lakes, rivers and oceans: stable ID, liquid definition, footprint/path, optional depth profile, flow profile, and optional underwater destination. Only create concrete Resources and classes when their phase needs them. **No per-body temperature setting:** temperature is supplied by the biome/world climate service at a sampled position; for cross-biome rivers it may vary along the river. Climate is gameplay data and should be queried through one shared interface when implemented, not simulated by each liquid body.
+
+- **Geometry:** pond/lake outline or river corridor, deterministic seed, shoreline and depth sampling; no geometry regenerated separately by chunks.
+- **Liquid type:** reusable water/lava/etc. definition; never assume all liquid is freshwater.
+- **Depth/interaction:** separate wading, swimming and eligible diving thresholds; depth does not automatically mean a new scene.
+- **Flow:** still for typical ponds/lakes; rivers/streams carry a directional velocity field with configurable strength, bends and local calm/rapid areas.
+- **Underwater access:** opt-in per body or authored entry zone, with stable destination/return anchor; most bodies have no underwater scene.
+- **Climate:** temperature and humidity originate from biome climate plus future weather/season/time rules; no duplicated water-body temperature.
+- **Persistence:** save world/body identity and transitions without loading underwater scenes until entered.
 
 ## Shape-generation rules
 
@@ -134,6 +148,14 @@ Illustrative suitability (not actual authored values):
 **Pass:** coherent flow graph, no cycles/unreachable outlets unless intentionally endorheic, deterministic save/restore and measured acceptable startup cost.
 **Assistant:** Regular Chat design then Codex after approval.
 
+### WG6 — river and stream flow
+
+**Objective:** Make water visibly move downstream and optionally carry immersed actors. **Dependencies:** WG3 river centerline, existing liquid renderer and player movement integration. **Scope:** deterministic direction and speed samples, adjustable current strength, stream/rapid zones, directional surface animation, optional player drift. **Out of scope:** full fluid physics, individual water-particle simulation, diving. **Performance:** precomputed/cached flow segments; query only for immersed active actors and visible effects; zero flow stays dormant. **Pass:** smooth downstream direction across biomes/chunks, no visual seam, correct player push, calm lakes unaffected, profile changes wake/sleep correctly. **Assistant:** Codex.
+
+### WG7 — swimming, floating and underwater scenes
+
+**Objective:** Enable deep-water traversal and optional separate underwater exploration. **Dependencies:** WG2 depth/immersion, player input mapping, world-scene handoff and SAVE contracts. **Scope:** shallow wade vs deep swim, hold **right mouse button** (existing jump input) to actively stay afloat, **Ctrl** to descend only in eligible dive zones, scene transition to a selected underwater destination, safe return to the same body/location and campaign state. Respect existing land crouch/jump bindings; resolve conflicts in WG0. Most lakes and rivers can remain non-diveable; selected deep ponds and oceans may opt in. **Out of scope:** mandatory underwater scenes, full underwater ecology, finalized oxygen/drowning rules. **Performance:** no per-body input polling; underwater scenes unloaded until entered; dormant when player is away. **Pass:** right mouse affects afloat state, Ctrl does not transition in shallow/non-eligible water, return location and save reload stable, no duplicated surface scene. **Assistant:** Codex.
+
 ## Validation and F9/F7 suggestions
 
 - F7: show planned water polygons/corridors, seed/IDs, biome suitability and blocked placements (debug only).
@@ -147,7 +169,9 @@ Illustrative suitability (not actual authored values):
 - Swamps/marshes, river deltas, waterfalls and underground sinks.
 - Biome-specific water palettes, algae, frozen lakes and lava basins.
 - Shore vegetation, reeds, beaches and resource spawns conditioned on distance to water.
-- Boats, swimming, currents and aquatic wildlife after navigation and entity spawning mature.
+- Boats, aquatic wildlife, oxygen/stamina, underwater lighting and exploration content after core water controls mature.
+- Waterfalls, rapids, water-body connectivity and shoreline vegetation responding to seasonal climate.
+- Wetness, freezing and thawing derived from biome climate rather than per-water-body temperatures.
 
 ## Decisions before WG1
 
@@ -157,4 +181,4 @@ Illustrative suitability (not actual authored values):
 4. What is the minimum size range for the first lake relative to 512-unit chunks?
 5. Should generated water be new-world-only initially, with old P4 saves retaining the previous blueprint until a migration is explicitly designed? **Recommend yes if save contracts cannot safely extend.**
 
-**Handoff:** This document is the only authorized change for this request. Do not begin WG0–WG5 implementation automatically. One commit per job, update owning README/status and record actual validation after authorized work.
+**Handoff:** This document is the only authorized change for this request. Do not begin WG0–WG7 implementation automatically. One commit per job, update owning README/status and record actual validation after authorized work.
