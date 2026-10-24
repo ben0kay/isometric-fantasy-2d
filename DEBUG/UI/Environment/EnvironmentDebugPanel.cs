@@ -45,6 +45,13 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Slider(time, "Hour", 0, 23.999, 0.01, () => _environment.Clock.Hour, v => _environment.Clock.SetHour((float)v));
         Toggle(time, "Pause clock", () => _environment.Clock.Config.Paused, v => _environment.Clock.Config.Paused = v);
         Slider(time, "Seconds per day", 5, 3600, 1, () => _environment.Clock.Config.CycleSeconds, v => _environment.Clock.Config.CycleSeconds = (float)v);
+        var seasons = Section(controls, "Seasonal foliage", false);
+        Toggle(seasons, "Enable seasonal foliage", () => _environment.Seasons.Enabled, v => _environment.Seasons.SetEnabled(v));
+        var seasonLabel = new Label { Text = _environment.Seasons.SeasonName }; seasons.AddChild(seasonLabel);
+        Slider(seasons, "Year position", 0, 1, 0.001, () => _environment.Seasons.YearPosition,
+            v => { _environment.Seasons.SetYearPosition((float)v); seasonLabel.Text = _environment.Seasons.SeasonName; });
+        _refresh.Add(() => seasonLabel.Text = _environment.Seasons.SeasonName);
+        seasons.AddChild(new Label { Text = "State preview only; tree colours arrive in SE1.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
         var wind = Section(controls, "Shared wind", true);
         Slider(wind, "Left / calm / right", -3, 3, 0.05, () => s.Wind.Strength, v => s.Wind.Strength = (float)v);
         var lighting = Section(controls, "Lighting and clouds", false);

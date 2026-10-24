@@ -1,10 +1,10 @@
 # SE0–SE4: Seasonal foliage and F9 year-position preview
 
-> **STATUS: DOCUMENTATION / IMPLEMENTATION PLAN ONLY. NOTHING IN THIS FILE IS CODED YET.**
+> **STATUS: SE0 implemented; awaiting local build and visual acceptance. SE1–SE3 remain planned.**
 >
 > This is a staged Codex handoff for real-time **Spring → Summer → Autumn → Winter** foliage previews. It is **not** approval to implement every phase at once. Start with SE0, request user acceptance, then continue one small phase at a time.
 >
-> **Important user decision:** The user will develop an external **Avalonia Sprite Studio** to generate/refine foliage masks. Godot must offer **optional foliage-mask input** through existing tree Resources and an unmasked fallback; Codex must **not** build the Avalonia app or require masks to exist now.
+> **Important user decision:** The external **Avalonia Sprite Studio** now exports foliage masks; Oak already has `Sprites/tree_01_fm.png`. Godot must offer **optional foliage-mask input** through existing tree Resources and an unmasked fallback; Codex must **not** build the Avalonia app or require masks to exist now.
 
 ## Read existing code and ownership first
 
@@ -41,7 +41,7 @@
 
     WORLD/Content/Vegetation/Trees/Oak/
       Oak.tres                                 SE1: palette opt-in
-      Masks/                                   SE3 / later Avalonia export only
+      Sprites/tree_01_fm.png                    existing Avalonia mask, bind in SE1
 
 The global **season state belongs to ENVIRONMENT**; generic foliage visual logic belongs to **WORLD/Content/Vegetation/Shared/Seasonal**; each species owns palette and leaf-mask references; DEBUG owns removable F9 controls. Do **not** make a separate season copy of a tree scene/PNG, a seasonal biome class, or a per-tree seasonal processor.
 
@@ -78,20 +78,24 @@ These are **manual visual preview controls**. Do not implement a second GameCloc
 
 **Stop and ask for acceptance of F9 controls before SE1.**
 
-## SE1 — Oak recolour with no-mask fallback, data-driven species
+## SE1 — masked Oak recolour with existing no-mask fallback, data-driven species
 
 1. Add SeasonalFoliageProfile Resource and one reusable seasonal foliage shader/adapter, shared across existing Tree.tscn instances. Add an optional seasonal profile to TreeDefinition and optional **FoliageMask Texture2D to TreeVisualVariant**.
-2. For current **unmasked Oak**, detect foliage conservatively from its **original sampled green pixels plus crown region**, similar to the green-leaf logic in current wetness/snow (not a perfect result). Leave brown bark/root/branches untouched. Keep the **healthy PNG and physical footprint unchanged**.
+2. Bind Oak's existing `Sprites/tree_01_fm.png` explicitly on its visual variant. Both this mask and `tree_01.png` are 222×295; the mask is opaque grayscale. Bring the core SE3 import contract and cached dimension validation into SE1. Read its red channel as foliage weight, preserve source alpha, and sample with the artwork's same warped `sample_uv`. An explicit valid mask **replaces** colour detection and the generic crown cutoff: do not multiply those heuristics back into it, which would reject deliberately selected dark/lower leaves. Keep healthy artwork and physical footprint unchanged.
+   - **No mask:** retain current green/pink colour and crown detection for rain/snow, including their existing tuning. Seasonal recolouring can use the same original-colour fallback, preserving its known imperfect coverage. Masks are optional and can be added gradually.
+   - **Invalid mask:** issue a bounded diagnostic and fall back safely, never sample mismatched dimensions silently.
+   - Masks are scalar data, not display colour: sample red without `source_color` conversion, disable repeat/mipmaps, use filtering consistent with the pixel artwork, and validate greys/edges in Godot. Never use mask alpha as foliage weight (this export is fully opaque).
+   - One mask per distinct artwork, shared by all instances and seasons; no runtime filename discovery, duplicate nodes or separate seasonal PNGs.
 3. Recolour using a hue/palette operation that preserves each pixel's brightness/texture/shadows and carries variation across leaf clusters. Summer matches the current source image; autumn progresses through yellows/oranges/reds without abruptly flipping an entire tree.
 4. Opt in Oak through its .tres; Pink Blossom should **stay pink/unchanged by default** unless a separate palette is authored later. Other trees/evergreens can opt out with no extra species scripts.
 5. Update **only cached shared material groups on season change**, not per tree every frame. Shader/material variants may be keyed by source material, selected sprite/mask, flip and species palette as necessary. A slider movement must **not recompile shaders**, regenerate chunks, resample sprite images on CPU or mutate source Resources.
 6. **Acceptance:** green Summer Oak looks the same; Autumn oak leaves shift while trunk/root remain normal; original collision/wind alignment and mirrored variants remain intact; pink blossoms don't turn orange.
 
-**Mask data is optional at this point**; do not require Sprite Studio to exist.
+**Masks remain optional, but masked Oak is the primary SE1 acceptance fixture.** Check both its dark outer leaves and unmasked fallback. Establish shared foliage selection for seasons/rain/snow in SE1 so SE2 validates and completes integration rather than repairing an incompatible recolour path.
 
 ## SE2 — shader composition + P3/P4 compatibility and performance
 
-**Important:** Existing wetness/snow masks classify green/pink **pixel colours**. After turning green leaves orange/red, snow/wetness must **not lose foliage detection**. Codex must compute leaf identity from the untouched original texture (or author-provided mask) and use it through the visual stack. A final whole-sprite tint or blindly appending a shader snippet can break existing systems.
+**Important:** Existing wetness/snow masks classify green/pink **pixel colours**. After turning green leaves orange/red, snow/wetness must **not lose foliage detection**. Codex must compute leaf identity from the author-provided mask when valid, otherwise the untouched original texture, and use that selection through the visual stack. Preserve each weather effect's existing no-mask fallback. Separate leaf identity from snow deposition noise/brightness so a selected leaf need not become uniformly white. A final whole-sprite tint or blindly appending a shader snippet can break existing systems.
 
 Proposed visible order: original texture sampled after wind → compute untouched foliage weight → wetness → seasonal palette → snow (using original foliage weight) → optional active FIRE2 erosion/charred effects. Adapt the real current material/shader owners rather than building an unrelated replacement tree shader.
 
@@ -105,20 +109,20 @@ Proposed visible order: original texture sampled after wind → compute untouche
 
 **Acceptance:** F6 P3 walk across chunks and back, reload when season=Autumn (no green flash), snow/rain toggles, wind -3/0/+3, fire ignite/burn/char/reset, mirrored trees, P4 Continue, optional F9 removal. Run C# compile and Godot runtime tests; report visual/performance checks separately from headless results.
 
-## SE3 — exact mask import contract for the FUTURE Avalonia Sprite Studio
+## SE3 — mask authoring validation and regression coverage
 
-**User will build the external Avalonia Sprite Studio later. Codex builds only the Godot-side optional input/validation, not the editor.**
+**The external Avalonia tool and first Oak mask already exist. Core binding/format validation belongs in SE1; SE3 broadens validation and documents the authoring workflow. Do not build or change the editor.**
 
 Contract for each TreeVisualVariant's optional FoliageMask:
 - Grayscale **PNG exactly the same source pixel width and height as the healthy PNG**, preserving the same canvas origin and any source-image transparent-padding geometry; **NOT** the scaled display size in the game. Prefer an opaque grayscale mask (black in the transparent-padding area) so brightness in the specified channel, not imported alpha, determines foliage weight.
 - Agree on one sampled channel (recommend **red**): **white/1.0 = foliage**, **black/0.0 = trunk/branch/root/background**, greys = fractional/soft-edge foliage. Multiply by the original sprite alpha. The Studio and Godot importer must use the same convention for mask alpha vs channel brightness.
 - Sample the mask at the **same warped sample_uv** as the healthy sprite texture. Sprite mirroring and scaling should need no separate mask node, material transform, or reanchoring.
-- Suggested location: WORLD/Content/Vegetation/Trees/Oak/Masks/tree_01_foliage.png; reference it in TreeVisualVariant.FoliageMask, never as a biome-specific texture.
+- Existing location: WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01_fm.png; keep masks beside their source sprites and reference it in TreeVisualVariant.FoliageMask, never as a biome-specific texture.
 - Missing mask → safe **SE1 foliage-colour heuristic fallback** (no loading error). Wrong dimensions/missing import/invalid reference → validation error or bounded warning, not silently offset leaves. Cache texture/size checks per variant; never scan or read back every tree each frame.
 - The Avalonia editor can eventually **select green pixels, paint/erase the selected leaf region and export the mask and .tres reference**. The healthy source PNG is never destructively changed; a new tree still uses the same Shared/Tree.tscn.
 - **Do not confuse the existing FIRE2 CanopyFireEmissionMask with this mask:** it uses sprite alpha to place flame particles, and does **not** reliably distinguish leaves from brown branches.
 
-SE3 may use one **temporary hand-authored fixture** to prove mask alignment and bark isolation; a finished Studio is **not a prerequisite for SE0–SE2**. Test resized/mirrored/offset trees, antialiased leaf gaps and invalid/missing masks.
+Use the existing Avalonia Oak export to prove mask alignment, dark-leaf inclusion and bark isolation; do not replace it with a temporary mask. Test resized/mirrored/offset trees, antialiased leaf gaps and invalid/missing masks.
 
 ## SE4 — real year/calendar + weather seasons / leaf shedding (DEFERRED)
 
@@ -132,14 +136,18 @@ SE3 may use one **temporary hand-authored fixture** to prove mask alignment and 
 
 ## Copy/paste: first Codex task
 
-> Read root README.md, CodePreferences.md, ENVIRONMENT/Seasons/SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md, ENVIRONMENT/EnvironmentRuntime.cs, DEBUG/UI/Environment/EnvironmentDebugPanel.cs, ENVIRONMENT/Time/Clock/GameClock.cs, and the vegetation wind/wetness/snow/fire implementation. **Implement SE0 only:** one production season-preview state plus small inspector SeasonMasterConfig and a collapsible **Seasonal foliage** section in the existing F9 Environment drawer (Enable default off, continuous Year position 0..1 slider, live Spring/Summer/Autumn/Winter label). No tree tint yet, no real calendar/automatic time-of-year simulation, no P4 saving/schema changes, no per-tree Process, no new F-key, no unrelated scene/folder refactor. Preserve production P3 and running campaigns. Update the owning README and phase table, report precise testing/deferred checks and commit once. **The user will build an external Avalonia Sprite Studio for foliage masks later; don't build or require it.**
+> Read root README.md, CodePreferences.md, ENVIRONMENT/Seasons/SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md, ENVIRONMENT/EnvironmentRuntime.cs, DEBUG/UI/Environment/EnvironmentDebugPanel.cs, ENVIRONMENT/Time/Clock/GameClock.cs, and the vegetation wind/wetness/snow/fire implementation. **Implement SE0 only:** one production season-preview state plus small inspector SeasonMasterConfig and a collapsible **Seasonal foliage** section in the existing F9 Environment drawer (Enable default off, continuous Year position 0..1 slider, live Spring/Summer/Autumn/Winter label). No tree tint yet, no real calendar/automatic time-of-year simulation, no P4 saving/schema changes, no per-tree Process, no new F-key, no unrelated scene/folder refactor. Preserve production P3 and running campaigns. Update the owning README and phase table, report precise testing/deferred checks and commit once. **The Avalonia Oak mask already exists; bind it in SE1, preserving unmasked detection. Do not modify the external tool or extend fire effects.**
 
 ## Phase status (update only after testing/implementation)
 
 | Phase | Current status | Acceptance |
 | --- | --- | --- |
-| SE0: F9 year-position state/preview | NOT IMPLEMENTED | Pending |
-| SE1: data-driven Oak shader + maskless fallback | NOT IMPLEMENTED | Pending |
+| SE0: F9 year-position state/preview | IMPLEMENTED; static review only | Local build / F9 acceptance pending |
+| SE1: masked Oak shader + existing maskless fallback | NOT IMPLEMENTED | Pending |
 | SE2: wet/snow/fire/streaming/performance integration | NOT IMPLEMENTED | Pending |
-| SE3: optional per-variant foliage mask and editor export contract | NOT IMPLEMENTED | Pending |
+| SE3: mask authoring validation and regression coverage | NOT IMPLEMENTED | Pending |
 | SE4: calendar/P4 integration and gameplay seasons | DEFERRED | Separate future approval |
+
+## SE0 implementation handoff
+
+See [SE0_Validation.md](SE0_Validation.md). No leaf recolouring, mask binding, weather/fire changes or save-schema changes are implemented by SE0. Continue with SE1 after the F9 controls are accepted.

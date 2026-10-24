@@ -6,6 +6,7 @@ public partial class EnvironmentRuntime : Node2D
     [Export] public EnvironmentMasterConfig Config { get; set; }
     public BiomeEnvironmentProfile Settings { get; private set; }
     public GameClock Clock { get; private set; }
+    public SeasonController Seasons { get; private set; }
     public WindController Wind { get; private set; }
     public WorldWeather Weather { get; private set; }
     public WorldDayNight DayNight { get; private set; }
@@ -47,6 +48,8 @@ public partial class EnvironmentRuntime : Node2D
         Config = (EnvironmentMasterConfig)Config.Duplicate();
         Settings = (world.Biome.Environment ?? new BiomeEnvironmentProfile()).Resolve(Config.Defaults);
         Clock = new GameClock { Name = "Clock", Config = (ClockMasterConfig)Config.Clock.Duplicate(true) }; AddChild(Clock);
+        Seasons = new SeasonController { Name = "Seasons" };
+        Seasons.Initialize(Config.Seasons); AddChild(Seasons);
         Wind = new WindController { Name = "Wind", Config = Settings.Wind }; AddChild(Wind);
         var vegetation = new VegetationWind { Name = "VegetationWind", Wind = Wind }; AddChild(vegetation); vegetation.Attach(actors);
         var torch = GD.Load<PackedScene>("res://WORLD/Content/Props/Torch/Torch.tscn").Instantiate<Node2D>();

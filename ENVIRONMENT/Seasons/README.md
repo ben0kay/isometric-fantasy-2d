@@ -1,14 +1,11 @@
 # ENVIRONMENT / Seasons
 
-**Status: planning only.** No production season controller, F9 year slider, seasonal tree shader or calendar/year system is implemented yet.
+**SE0 implemented; awaiting local validation.** `EnvironmentRuntime.Seasons` owns one manual, event-driven `SeasonController`. `SeasonMasterConfig` / `DefaultSeasonConfig.tres` supply Inspector defaults through `EnvironmentMasterConfig.Seasons`; initialization copies values into private world state, never edits authored Resources. A missing config safely defaults to disabled / Summer (0.25).
 
-**Codex phase handoff: [SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md](SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md)**:
-- SE0: one shared season-preview state plus a live F9 Spring/Summer/Autumn/Winter year-position slider.
-- SE1: healthy Oak leaves turn autumn yellow/orange/red with data-driven palette and no-mask fallback.
-- SE2: protect existing wind, wetness, snow, fire, shadows, P3 chunks and P4 campaigns.
-- SE3: optional per-artwork exact foliage-mask Resource input for the user's future **external Avalonia Sprite Studio** (do not build Studio in this pass).
-- SE4: a true calendar, weather/temperature season effects, leaf fall and versioned save integration (deferred).
+F9 → Environment → **Seasonal foliage** (collapsed initially) exposes Enable, Year position 0–1 and the nearest seasonal-quarter label. Endpoints both represent Spring. Commands work while the day clock is paused and without F9. The controller publishes `Changed` only when state changes; it has no frame callbacks, shader work or tree scans. The existing visible debug panel refresh remains unchanged.
 
-State belongs to ENVIRONMENT/Seasons; generic foliage colouring belongs under WORLD/Content/Vegetation/Shared/Seasonal; species masks and colour palettes belong to WORLD/Content/Vegetation/Trees; F9 controls belong to DEBUG/UI/Environment. Keep one existing game clock; Time/Calendar is currently a placeholder.
+**SE0 does not recolour trees.** No automatic year/calendar, persistence or weather/fire changes. See [SE0 validation and local checks](SE0_Validation.md).
 
-This plan does not create any runtime scripts/resources. See [Definitions](Definitions/README.md) for historical longer-term season/climate ideas.
+[SE0–SE4 plan](SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md): SE1 binds Oak's existing Avalonia `Sprites/tree_01_fm.png` mask and adds seasonal palettes, retaining automatic detection for unmasked artwork. SE2 completes weather/streaming compatibility; SE3 broadens mask validation. SE4 calendar/gameplay/save integration remains deferred.
+
+State belongs here; generic foliage logic belongs under WORLD/Content/Vegetation/Shared; artwork/masks belong beside species sprites. DEBUG owns only removable controls. Future fire-mask uses are outside this task.
