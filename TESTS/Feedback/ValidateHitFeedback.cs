@@ -14,9 +14,11 @@ public partial class ValidateHitFeedback : Node2D
             var bone=GD.Load<HitFeedbackProfile>("res://FEEDBACK/HitFeedback/Profiles/Bone.tres");
             var flesh=GD.Load<HitFeedbackProfile>("res://FEEDBACK/HitFeedback/Profiles/Flesh.tres");
             Check(bone.Particles.Shape==ParticleShape.Shard && flesh.Particles.Shape==ParticleShape.Droplet,"Material shapes");
-            Check(bone.Colour!=flesh.Colour && bone.Particles.LifetimeMin>=0.4f
-                && bone.Particles.LifetimeMax>=0.65f && bone.Particles.DirectionSpeed==235f
-                && bone.Particles.SpreadDegrees==65f,"Distinct stronger bone material profile");
+            Check(bone.Colour!=flesh.Colour && Mathf.IsEqualApprox(bone.Particles.LifetimeMin,0.32f)
+                && Mathf.IsEqualApprox(bone.Particles.LifetimeMax,0.5f)
+                && Mathf.IsEqualApprox(bone.Particles.DirectionSpeed,195f)
+                && Mathf.IsEqualApprox(bone.Particles.SpreadDegrees,50f)
+                && Mathf.IsEqualApprox(bone.Particles.FadeSeconds,0.3f),"Distinct tuned bone material profile");
             var basic=GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres");
             var archer=GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Archer/SkeletonArcher.tres");
             Check(basic.ImpactFeedback==bone && archer.ImpactFeedback==bone
