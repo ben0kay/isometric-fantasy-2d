@@ -32,6 +32,7 @@ public partial class SeasonalFoliageAdapter : Node
     public int MaskVariantCount => _masks.Count;
     public int MaterialCount { get; private set; }
     public long PaletteUploads { get; private set; }
+    public long MaskValidationChecks { get; private set; }
 
     // Only explicit season changes update tiny shared data textures, including snow/fire copies.
     // =========================================================
@@ -82,9 +83,10 @@ public partial class SeasonalFoliageAdapter : Node
     {
         if (_masks.TryGetValue(variant, out var cached))
         { _masks[variant] = (cached.Mask, cached.Users + 1); return cached.Mask; }
-        Texture2D mask = variant.FoliageMask;
-        if (mask != null && mask.GetSize() != variant.Texture.GetSize())
-        { GD.PushWarning($"Foliage mask for variant {variant.Id} must match source dimensions; using colour detection."); mask = null; }
+        MaskValidationChecks++;
+        Texture2D mask = FoliageMaskValidation.Resolve(variant.Texture, variant.FoliageMask, out string diagnostic);
+        if (diagnostic != null)
+            GD.PushWarning($"Foliage mask for variant {variant.Id}: {diagnostic}; using colour detection.");
         _masks.Add(variant, (mask, 1)); return mask;
     }
 

@@ -26,3 +26,5 @@ The 16×2 atlas stores 16 early/late variants: row 0 target RGB/influence, row 1
 Both normalized endpoints wrap to January 1. The Summer neutral plateau covers the default offsets. See [SE1b validation](../../../../../ENVIRONMENT/Seasons/SE1b_Validation.md). Automatic calendar progression remains deferred.
 
 SE2 adds live MaterialCount/MaskVariantCount/PaletteUploads diagnostics without polling. Expanded fixtures cover weather/fire copies and chunk teardown. Exact older-season resource compatibility is implemented in SAVE/Migrations/SeasonalSaveCompatibility.cs; native disk restore and measured performance acceptance remain pending. See [SE2 validation](../../../../../ENVIRONMENT/Seasons/SE2_Validation.md).
+
+SE3: [Mask authoring guide](MASK_AUTHORING.md) documents full-canvas grayscale PNG export/import/assignment and fallback. FoliageMaskValidation resolves metadata once per loaded variant; atlas regions are deliberately unsupported. Offline image/import audit and actual-Oak GL alignment checks pass; native transform fixture remains pending. Wind motion uses sprite height, not the mask.

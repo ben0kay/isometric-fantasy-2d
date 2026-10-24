@@ -11,3 +11,5 @@ For new species/variants, edit Resources and biome references only. See ../READM
 SE1: tree_01_fm.png is the 222×295 opaque grayscale Avalonia mask. Oak.tres explicitly binds its red channel as foliage weight; OakSeasonalFoliage.tres authors the Gradient (RGB target / alpha influence). Summer around 0.5 is untouched (SE1b January-based year). F9 → Environment → Seasonal foliage enables the preview. This resource change affects the strict campaign fingerprint: use F6/new campaign pending SE2 migration.
 
 SE1b: Oak palette now includes pale winter blue-green and separate saturation/brightness tone controls. F9 adds overall strength and stable early/late timing variation; January is the start/end of the preview year.
+
+SE3 source audit passed for tree_01_fm.png: opaque grayscale, matching 222×295 source canvas, no selected transparent padding. [Export/assignment guide](../../Shared/Seasonal/MASK_AUTHORING.md); masks are explicitly assigned, not discovered by filename.

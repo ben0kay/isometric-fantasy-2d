@@ -1,6 +1,6 @@
 # SE0–SE4: Seasonal foliage and F9 year-position preview
 
-> **STATUS: SE0/SE1 and approved SE1b follow-up implemented. User reported SE1 working; SE1b software-GL checks passed, native Godot/local acceptance pending. SE2 code/source checks implemented; native/runtime acceptance pending. SE3 remains open.**
+> **STATUS: SE0/SE1 and approved SE1b follow-up implemented. User reported SE1 working; SE1b software-GL checks passed, native Godot/local acceptance pending. SE2 code/source checks implemented; native/runtime acceptance pending. SE3 implemented; PNG/GL checks passed, native acceptance pending.**
 >
 > This is a staged Codex handoff for real-time **Spring → Summer → Autumn → Winter** foliage previews. It is **not** approval to implement every phase at once. Start with SE0, request user acceptance, then continue one small phase at a time.
 >
@@ -151,7 +151,7 @@ Use the existing Avalonia Oak export to prove mask alignment, dark-leaf inclusio
 | SE1: masked Oak shader + existing maskless fallback | IMPLEMENTED; software-GL checks passed | Godot build / Windows acceptance pending |
 | SE1b: calendar labels / winter tone / strength / stable tree timing | IMPLEMENTED; software-GL checks passed | Native Godot / Windows pending |
 | SE2: wet/snow/fire/streaming/performance integration | IMPLEMENTED; source/GL checks passed; exact save bridge added | Native Godot / disk restore / Windows profiling pending |
-| SE3: mask authoring validation and regression coverage | NOT IMPLEMENTED | Pending |
+| SE3: mask authoring validation and regression coverage | IMPLEMENTED; PNG audit / 18 actual-Oak GL cases passed | Native Godot / Windows pending |
 | SE4: calendar/P4 integration and gameplay seasons | DEFERRED | Separate future approval |
 
 ## SE0 implementation handoff
@@ -169,3 +169,7 @@ Implemented as an approved SE1 follow-up. See [SE1b_Validation.md](SE1b_Validati
 ## SE2 implementation handoff
 
 See [SE2_Validation.md](SE2_Validation.md). Includes exact seasonal/terrain compatibility composition, fire shader-cache release, no-charred-art cleanup and broader native regression fixtures. Oak is currently the only species with charred art; future missing-art species remain supported and retain original textures. Runtime/build/visual/profiler acceptance is pending. Earlier SE1/SE1b migration warnings are historical; the SE2 bridge is now implemented, awaiting native/disk validation.
+
+## SE3 implementation handoff
+
+See [SE3_Validation.md](SE3_Validation.md) and the [mask authoring guide](../../WORLD/Content/Vegetation/Shared/Seasonal/MASK_AUTHORING.md). Adds cached metadata validation, offline PNG/import audit, actual-Oak wind/mirror/scale GL regression and native transform/cache fixture. Wind remains height/row weighted; it does not use leaf detection to choose motion. No artwork/palette/production Resource/save-schema change. Native acceptance pending; baseline historical fingerprint test failure is documented separately.

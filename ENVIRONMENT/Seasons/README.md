@@ -15,3 +15,5 @@ State belongs here; generic foliage logic belongs under WORLD/Content/Vegetation
 Current follow-up: [SE1b implementation, tests and local checks](SE1b_Validation.md).
 
 **SE2 implemented, local acceptance pending:** exact seasonal resource bridges now reconstruct compatible older fingerprints alongside the existing terrain bridges. No schema/calendar change. Fire cache entries release after their last active user; trees without charred art keep original textures and complete/reset cleanly. Adapter diagnostics expose live counts/uploads. See [SE2 checks and local commands](SE2_Validation.md). Earlier SE1 migration warnings describe those revisions, not the new bridge.
+
+**SE3 implemented:** cached mask diagnostics, offline PNG/import audit, actual-Oak wind/mirror/scale GL checks and native transform regression fixture. [Results/local checks](SE3_Validation.md) and [mask workflow](../../WORLD/Content/Vegetation/Shared/Seasonal/MASK_AUTHORING.md). PNG/GL passed; native validation pending. Wind remains row-weighted, independent of leaf selection.
