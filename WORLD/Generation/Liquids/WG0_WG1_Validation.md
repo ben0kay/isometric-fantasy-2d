@@ -1,6 +1,6 @@
 # WG0 audit and WG1 implementation — 24 October 2026
 
-WG0 is complete. WG1 code is implemented; automated checks are recorded below. Windows graphical/performance acceptance remains open. WG2–WG7 are still planned.
+Historical WG0/WG1 checkpoint: WG0 is complete and WG1 code is implemented. WG2 was subsequently authorized and implemented; see [current WG2 status](../../Liquids/WG2_Validation.md). WG3–WG7 remain planned. Automated WG0/WG1 checks below retain their original scope.
 
 ## WG0: confirmed contracts and decisions
 

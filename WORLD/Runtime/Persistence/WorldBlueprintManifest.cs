@@ -1,4 +1,4 @@
-// P1/P2 value-only handoff contract for SAVE: world identity and frozen coarse geography, no disk I/O.
+// Frozen SAVE handoff: world identity, coarse geography and optional versioned water outcomes; no disk I/O.
 using System;
 using System.Linq;
 

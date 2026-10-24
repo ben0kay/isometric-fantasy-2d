@@ -52,7 +52,7 @@ public partial class GroundRainSplashes : Node2D
                 for (int attempt = 0; attempt < 6; attempt++)
                 {
                     Vector2 p = area.Position + new Vector2(_random.Randf(), _random.Randf()) * area.Size;
-                    if (!Weather.GroundQueries.IsClear(p, player)) continue;
+                    if (!Weather.GroundQueries.IsClear(p, player) || (Weather.LiquidContains?.Invoke(p) ?? false)) continue;
                     _pool[_next] = new Splash { Position = p, Active = true };
                     _next = (_next + 1) % _pool.Length;
                     break;

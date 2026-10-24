@@ -72,7 +72,7 @@ public partial class WorldChunkStream : Node
         if (_settings.ChunkSize*_settings.ActiveRadius < Mathf.Max(halfView.X,halfView.Y)+artMargin+64)
             throw new ArgumentException("Active chunk radius is too small for maximum camera view plus scenery artwork.");
         _data = new ChunkSceneryData(world.MacroMap,world.FeaturePlan,_settings,config.Generation.Biomes,config.ExtraSpacing);
-        if (liquid != null) _data.LiquidBlocked = liquid.Contains;
+        if (liquid != null || world.GeneratedWater != null) _data.LiquidBlocked = (p,r) => (liquid?.Contains(p,r) ?? false) || (world.GeneratedWater?.Contains(p,r) ?? false);
         _ground = StreamedGroundPalette.Build(world.MacroMap,config.Generation.Biomes);
         GroundPreview=new GroundSurfacePreview(_ground,true);
         foreach (var coord in Desired(_settings.ActiveRadius))
@@ -250,6 +250,9 @@ public partial class WorldChunkStream : Node
     // =========================================================
     private void Complete(Chunk chunk)
     {
+        if (!_bound && _world.GeneratedWater != null)
+            foreach (int step in _world.GeneratedWater.PrepareChunkSteps(chunk.Coord,chunk.Coord.Bounds(_settings.ChunkSize).Intersection(_world.MacroMap.Bounds))) { }
+        _world.GeneratedWater?.PublishChunk(chunk.Coord);
         chunk.State = WorldChunkState.Loaded;
         // Runtime binding is stepped while hidden; startup binds once after environment creation.
         chunk.Actors.ResetPhysicsInterpolation();
@@ -263,6 +266,8 @@ public partial class WorldChunkStream : Node
     // =========================================================
     private IEnumerable<int> BindChunkSteps(Chunk chunk)
     {
+        if (_world.GeneratedWater != null)
+            foreach (int step in _world.GeneratedWater.PrepareChunkSteps(chunk.Coord,chunk.Coord.Bounds(_settings.ChunkSize).Intersection(_world.MacroMap.Bounds))) yield return step;
         chunk.AdaptersStarted = true;
         foreach (int step in _environment.RegisterChunkSteps(chunk.Actors)) yield return step;
         foreach (var pair in chunk.Objects)
@@ -335,6 +340,7 @@ public partial class WorldChunkStream : Node
             }
             _environment.UnregisterChunk(chunk.Actors);
         }
+        _world.GeneratedWater?.ReleaseChunk(chunk.Coord);
         _actors.RemoveChild(chunk.Actors); chunk.Actors.QueueFree(); chunk.Ground.QueueFree(); _chunks.Remove(chunk.Coord);
         if (_applying == chunk) _applying = null;
         _navDirty |= chunk.Coord.Distance(PlayerChunk) <= _settings.ActiveRadius;

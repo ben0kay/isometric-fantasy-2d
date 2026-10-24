@@ -1,5 +1,3 @@
-# Liquid Interactions
+# Liquid interactions
 
-**Scaffolding only.** Generic, optional responses applied when an entity enters a region: movement multipliers, wading/immersion, periodic damage, resistance/immunity checks, and surface impacts. A water profile can slow the player; a future lava profile could request damage. Actual health/damage, consumables and enchantment logic belong to the appropriate gameplay systems, not to a hardcoded `if lava` in the shared region or shader.
-
-Player immersion visuals should integrate with `ENTITIES/Player/Visuals/Surfaces/` and coexist with production snow burial. Surface rain splashes consume `ENVIRONMENT/Weather/` rain state and an active liquid's visual settings.
+WorldLiquidWading is the single player immersion/speed/visual owner for authored and generated lakes, integrating with PlayerSnowVisual. WG2 supplies a resident-region selector; no competing wading node is created for each body. One bounded physics lookup remains, while render callbacks sleep after immersion settles. WorldLiquidRainSplashes supplies one bounded impact pool per resident body; it sleeps in dry, disabled and offscreen states and wakes through shared weather/config changes. Ground rain rejects liquid candidates. Health/damage, swimming, oxygen and diving are future separately owned mechanics; WG2 water remains wadeable. See [WG2](../WG2_Validation.md).

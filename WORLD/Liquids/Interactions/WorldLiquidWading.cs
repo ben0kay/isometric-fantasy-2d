@@ -1,8 +1,12 @@
 // Reusable water wading, using the existing production player/snow visual owner.
 using Godot;
+using System;
 public partial class WorldLiquidWading : Node2D
 {
     public WorldLiquidRegion Region { get; set; }
+    public Func<Vector2,WorldLiquidRegion> RegionAt { get; set; }
+    private WorldLiquidRegion _current;
+    private Color _highlight;
     public PlayerMovement Player { get; set; }
     public float Immersion { get; private set; }
     private float _target, _time;
@@ -13,7 +17,7 @@ public partial class WorldLiquidWading : Node2D
     {
         ProcessPriority = 2; ProcessPhysicsPriority = -10;
         PlayerSnowVisual.Ensure(Player).Liquid = this;
-        ZIndex = -4;
+        ZIndex = -4; SetProcess(false);
     }
 
     // The cached region polygon also drives movement slowdown.
@@ -21,9 +25,13 @@ public partial class WorldLiquidWading : Node2D
     public override void _PhysicsProcess(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidWading.PhysicsProcess");
-        float distance = Region.Active ? Region.SignedDistance(Player.GlobalPosition) : -1f;
-        _target = distance <= 0 ? 0f : Mathf.Clamp(distance / Mathf.Max(10f, Region.Definition.DepthDistance), 0f, 1f);
-        Player.SurfaceSpeedMultiplier = Mathf.Lerp(1f, Region.Definition.MovementMultiplier, _target);
+        _current=RegionAt?.Invoke(Player.GlobalPosition) ?? Region;
+        bool active=GodotObject.IsInstanceValid(_current) && _current.Active;
+        float distance = active && _current.SurfaceBounds.HasPoint(Player.GlobalPosition) ? _current.SignedDistance(Player.GlobalPosition) : -1f;
+        _target = distance <= 0 ? 0f : Mathf.Clamp(distance / Mathf.Max(10f, _current.Definition.DepthDistance), 0f, 1f);
+        Player.SurfaceSpeedMultiplier = Mathf.Lerp(1f, active ? _current.Definition.MovementMultiplier : 1f, _target);
+        if (active) _highlight=_current.Definition.HighlightColour;
+        if (_target>0 || Immersion>0) SetProcess(true);
     }
 
     // Draw a pair of small waterline rings without creating extra particle nodes.
@@ -32,9 +40,10 @@ public partial class WorldLiquidWading : Node2D
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldLiquidWading.Process");
         _time += (float)delta;
-        Immersion = Region.Active ? Mathf.MoveToward(Immersion, _target, (float)delta * 3f) : 0f;
+        Immersion = Mathf.MoveToward(Immersion, _target, (float)delta * 3f);
         GlobalPosition = Player.GlobalPosition;
         QueueRedraw();
+        if (Immersion==0 && _target==0) SetProcess(false);
     }
 
     // Reuse the proven DEBUG wading-ring appearance.
@@ -48,7 +57,7 @@ public partial class WorldLiquidWading : Node2D
         {
             float phase = Mathf.PosMod(_time * 0.7f + i * 0.5f, 1f);
             DrawArc(Vector2.Zero, 10f + phase * 8f, 0, Mathf.Tau, 24,
-                new Color(Region.Definition.HighlightColour, (1f - phase) * Immersion * 0.32f), 0.7f, true);
+                new Color(_highlight, (1f - phase) * Immersion * 0.32f), 0.7f, true);
         }
         DrawSetTransform(Vector2.Zero);
     }

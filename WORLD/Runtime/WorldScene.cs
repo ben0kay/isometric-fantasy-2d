@@ -7,6 +7,7 @@ using FantasyGame.WorldInteractions.Fire;
 public partial class WorldScene : Node2D
 {
     [Export] public WorldMasterConfig Config { get; set; }
+    public GeneratedWaterRuntime GeneratedWater { get; private set; }
     public WaterBodyPlan WaterPlan { get; private set; }
     public WorldFeaturePlan FeaturePlan { get; private set; }
     public MacroWorldMap MacroMap { get; private set; }
@@ -115,7 +116,7 @@ public partial class WorldScene : Node2D
                 var fixedPond = GetNodeOrNull<WorldLiquidRegion>("TerrainRoot/Liquids/Pond");
                 WaterPlan = restore == null ? WaterBodyPlanner.Build(Config.Generation,map,features,fixedPond?.SurfaceBounds)
                     : WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
-                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot() };
+                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot(), SchemaVersion = WaterPlan.Bodies.Count > 0 ? 5 : 4 };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);
                 GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
@@ -147,11 +148,18 @@ public partial class WorldScene : Node2D
         var pond = GetNodeOrNull<WorldPond>("TerrainRoot/Liquids");
         var placement = SceneryPlacement;
         placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
+        if (streaming && Blueprint.SchemaVersion == 5)
+        {
+            GeneratedWater=new GeneratedWaterRuntime { Name="GeneratedLiquids" };
+            GetNode("TerrainRoot").AddChild(GeneratedWater);
+            GeneratedWater.Initialize(WaterPlan,placement.ExcludedLiquid?.Config ?? GD.Load<WorldLiquidMasterConfig>("res://WORLD/Liquids/Definitions/Water/PondConfig.tres"));
+            EntityPlacement.LiquidObstacles=WaterPlan.Bodies.Select(b => b.CopyPolygon()).ToArray();
+        }
         if (streaming)
         {
             Stream = new WorldChunkStream { Name = "Streaming" }; GetNode("SystemsRoot").AddChild(Stream);
             Stream.Initialize(this,ChunkActorsRoot,StreamedGroundRoot,ActorsRoot,EntityPlacement,(PlayerMovement)player,Config,placement.ExcludedLiquid,restore?.Chunks);
-            Blueprint = Blueprint with { SchemaVersion = 4,
+            Blueprint = Blueprint with { SchemaVersion = Blueprint.SchemaVersion == 5 ? 5 : 4,
                 MacroRegions = MacroMap.Regions.Select(r => new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray(),
                 MacroBiomes = MacroMap.Biomes.Select(b => new SavedMacroBiome(b.Id,b.Name,b.Colour.R,b.Colour.G,b.Colour.B,b.Colour.A)).ToArray(), LocalGeneratorVersion = ChunkSceneryData.GeneratorVersion,
                 ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };
@@ -163,7 +171,10 @@ public partial class WorldScene : Node2D
         var environment = Environment;
         environment.Initialize(Config,ActorsRoot,PropsRoot,Player);
         if (environment != null) Fire.Initialize(ActorsRoot,environment);
-        if (pond != null && environment?.Weather != null) pond.Initialize(Player, environment.Weather);
+        environment.Weather.LiquidContains=p => (placement.ExcludedLiquid?.Contains(p) ?? false) || (GeneratedWater?.Contains(p) ?? false);
+        GeneratedWater?.Bind(environment.Weather);
+        if (pond != null && environment?.Weather != null) pond.Initialize(Player, environment.Weather,GeneratedWater);
+        else if (GeneratedWater != null) GetNode("TerrainRoot").AddChild(new WorldLiquidWading { Player=Player,RegionAt=GeneratedWater.RegionAt });
         var visibility = new OcclusionController { Name = "Occlusion" };
         GetNode("SystemsRoot").AddChild(visibility);
         visibility.Initialize(player);

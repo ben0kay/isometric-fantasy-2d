@@ -2,6 +2,7 @@
 // World population can reuse one grid; agents request paths only when needed.
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public interface IWorldNavigationAgent
 {
@@ -17,7 +18,7 @@ public sealed class StaticObstacleNavigation
     #region Build
     // Rasterize actual world-space polygons AFTER the scenery placement pass.
     // =========================================================
-    public void Build(Node2D actors, Rect2 bounds, int cellSize = 24, float clearance = 17f, int searchRadius = 8)
+    public void Build(Node2D actors, Rect2 bounds, int cellSize = 24, float clearance = 17f, int searchRadius = 8, IReadOnlyList<Vector2[]> additionalObstacles = null)
     {
         _bounds = bounds;
         _cellSize = Mathf.Clamp(cellSize, 12, 48);
@@ -41,6 +42,7 @@ public sealed class StaticObstacleNavigation
             _grid.SetPointSolid(new Vector2I(_columns - 1, y));
         }
 
+        if (additionalObstacles != null) foreach (var polygon in additionalObstacles) BlockPolygon(polygon,clearance);
         foreach (Node node in actors.FindChildren("*","",true,false))
         {
             if (node is not StaticBody2D body) continue;

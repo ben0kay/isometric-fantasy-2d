@@ -4,6 +4,9 @@ shader_type canvas_item;
 #include "res://WORLD/Liquids/Surfaces/Shaders/LiquidColour.gdshaderinc"
 #include "res://WORLD/Liquids/Surfaces/Shaders/ShoreEdge.gdshaderinc"
 uniform sampler2D distance_field : repeat_disable, filter_linear;
+uniform bool world_distance_field = false;
+uniform vec2 field_origin = vec2(0.0);
+uniform vec2 field_size = vec2(1.0);
 uniform sampler2D surface_noise : repeat_enable, filter_linear;
 uniform vec4 shallow_colour : source_color = vec4(0.22, 0.36, 0.32, 1.0);
 uniform vec4 deep_colour : source_color = vec4(0.075, 0.19, 0.22, 1.0);
@@ -18,7 +21,8 @@ uniform float ripples = 0.35;
 varying vec2 liquid_world;
 void vertex() { liquid_world = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy; }
 void fragment() {
-    float distance = (texture(distance_field, vec2(UV.x, 1.0 - UV.y)).r - 0.5) * 512.0;
+    vec2 field_uv = world_distance_field ? (liquid_world - field_origin) / field_size : vec2(UV.x, 1.0 - UV.y);
+    float distance = (texture(distance_field, field_uv).r - 0.5) * 512.0;
     float noise = texture(surface_noise, liquid_world / 350.0).r;
     vec3 water = liquid_colour(distance, depth_distance, noise, shallow_colour.rgb, deep_colour.rgb);
     float wave = liquid_ripples(liquid_world - wind_drift, surface_time, wind_strength, noise);

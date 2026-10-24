@@ -1,3 +1,3 @@
-# Liquid Regions
+# Liquid regions
 
-**Scaffolding only.** The future `LiquidRegion` component defines each bounded liquid body independently of liquid type. One authoritative polygon or equivalent shape supplies signed shoreline distance, `Contains`, rendering mask, scenery exclusion, depth/wading and impact sampling. Allow a pre-authored or future generated shoreline; don't always generate a fixed pond ellipse. Cache polygon edges and distance-field rendering textures when shape changes, not per frame. DEBUG prototype: `DEBUG/TopDownTest/Liquids/LiquidRegion.cs`.
+Implemented: WorldLiquidRegion owns cached polygon/distance queries and pond-style liquid presentation. The authored pond builds its established 96-point local outline; WG2 supplied PlannedWaterBody geometry uses the full immutable world polygon and chunk-cropped fields. Both share liquid definitions, shaders, rain and wading contracts. Regions do not generate new lake locations or carve terrain. See [WG2](../WG2_Validation.md) and [runtime lifecycle](../Runtime/README.md).

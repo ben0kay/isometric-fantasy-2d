@@ -1,5 +1,3 @@
-# Liquid Surfaces
+# Liquid surfaces
 
-**Scaffolding only.** Reusable appearance rendering, liquid-specific shader compositions and inspector-editable surface profiles live here. Water waves/ripples/wet shore, lava slow molten flow/glow, and future viscous or toxic surfaces may share helper functions but need not share identical compositions. Definition data chooses the profile/shader; no biome or liquid-ID branching in general-purpose renderer.
-
-Initial DEBUG source: `DEBUG/TopDownTest/Liquids/Shaders/`. Inputs may include the existing production Wind/Weather state. Avoid per-pixel CPU shoreline calculations and redundant per-frame mesh rebuilds.
+Implemented pond-style water shaders and WG2 LiquidSurfaceTile fields. The fixed pond retains its original UV sampling; generated tiles sample a world-aligned scalar lattice with halos, preserving one shoreline and wave phase across chunk borders. Each tile owns its field/material/quad and releases them on chunk unload; shader/noise Resources are shared. Depth colour and wet shore reuse canonical definition settings. Detailed banks/carving, other liquid shader families and current flow remain future phases. See [WG2 validation](../WG2_Validation.md).

@@ -17,7 +17,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
         box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
-        box.AddChild(new Label { Text = $"WG1 planned lakes: {world.WaterPlan?.Bodies.Count ?? 0} (blue; geometry only, WG2 renders water)" });
+        box.AddChild(new Label { Text = $"Lakes: {world.WaterPlan?.Bodies.Count ?? 0} (blue; {(world.Blueprint.SchemaVersion == 5 ? "playable" : "metadata only")})" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
         {

@@ -8,6 +8,7 @@ public partial class WorldWeather : Node2D
     public WindController Wind { get; set; }
     public Node2D Actors { get; set; }
     public Rect2 WorldBounds { get; set; }
+    public System.Func<Vector2,bool> LiquidContains { get; set; }
     public SceneryArtworkIndex GroundQueries { get; set; } = new();
     public bool RainActive => Config.RainIntensity > 0f;
     public event System.Action RainStateChanged;
@@ -50,7 +51,7 @@ public partial class WorldWeather : Node2D
         _splashes.SetRainActive(RainActive);
         Lightning.RefreshProcessing(); RainStateChanged?.Invoke();
     }
-    public override void _ExitTree() { Config.Changed -= ApplyRainState; GroundQueries.Clear(); }
+    public override void _ExitTree() { Config.Changed -= ApplyRainState; LiquidContains=null; GroundQueries.Clear(); }
     #endregion
 
     #region Simulation

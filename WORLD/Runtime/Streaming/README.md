@@ -95,3 +95,7 @@ SO2 validation update: Codex completed the Godot 4.7.2/.NET 8 build/import and r
 GS2/GS3 ground: same single quad per chunk and world-owned shared material; direct stack compilation adds optional two-slot overlays and distinct-art boundary blending without changing streaming lifecycle. Production layers are empty. See ../../Terrain/Ground/Surfaces/GS2_GS3_Validation.md for measured software checks, bounded memory/GPU-work accounting and pending target tests.
 
 GS4: the existing shared ground material owns scene-local GroundSurfacePreview overrides. No additional chunk lifecycle, per-frame callbacks or map rebuilding. See ../../Terrain/Ground/Surfaces/GS4_Validation.md for F9 behavior and pending local checks.
+
+## WG2 generated liquids
+
+Opted-in schema-5 worlds use the same chunk prepare/publish/release scheduler for cropped water surfaces. Row-sliced fields stay hidden until the ground/scenery chunk publishes; cancellation and unload release their native resources. Full frozen lake geometry participates in candidate rejection, and local nav receives shared polygons. No water is inserted into schema-4 campaigns. [Lifecycle, limits and validation](../../Liquids/WG2_Validation.md).

@@ -4,10 +4,10 @@ public partial class WorldPond : Node2D
 {
     private WorldWeather _weather;
     public WorldLiquidRegion Region { get; private set; }
-    public void Initialize(PlayerMovement player, WorldWeather weather)
+    public void Initialize(PlayerMovement player, WorldWeather weather, GeneratedWaterRuntime generated = null)
     {
         _weather = weather; Region = GetNode<WorldLiquidRegion>("Pond");
-        AddChild(new WorldLiquidWading { Name = "Wading", Region = Region, Player = player });
+        AddChild(new WorldLiquidWading { Name = "Wading", Region = Region, Player = player, RegionAt = generated == null ? null : generated.RegionAt });
         Region.AddChild(new WorldLiquidRainSplashes {
             Name = "RainSplashes", Region = Region, Weather = weather, Config = Region.Config, ZIndex = -4
         });

@@ -2,7 +2,7 @@
 
 **Production pond integrated:** WorldPond.tscn is present in the world scene. Shared data/region/wading/splash classes use unique WorldLiquid* names to coexist with the original DEBUG test; canonical liquid folders and data-driven water definitions are preserved.
 
-**Current status:** production pond, shared polygon/distance queries, shaders, player wading and rain splashes are implemented. [WG1](../Generation/Liquids/README.md) now plans optional generated lake metadata; generated rendering remains WG2. Historical promotion notes below describe the already completed pond copy, not pending implementation.
+**Current status:** production pond, shared polygon/distance queries, shaders, player wading and rain splashes are implemented. [WG1](../Generation/Liquids/README.md) now plans optional generated lake metadata; [WG2](WG2_Validation.md) now renders nearby schema-5 lake sections with shared wading/rain and streaming exclusions. Historical promotion notes below describe the already completed pond copy, not pending implementation.
 
 Liquid is an extensible domain: water, lava, toxic pools, sludge, quicksand and future types can reuse boundary/region mechanics without being forced to share identical visuals or player effects.
 
@@ -13,7 +13,8 @@ Liquid is an extensible domain: water, lava, toxic pools, sludge, quicksand and 
 - [Regions/](Regions/README.md) — authoritative bounded polygon/shoreline area and cached signed-distance queries shared by rendering, traversal, placement exclusions and precipitation impacts.
 - [Surfaces/](Surfaces/README.md) — liquid appearance and effects, including shader families and profiles. Water ripples and lava movement must be independently configurable; do not force lava through a water-specific shader.
 - [Interactions/](Interactions/README.md) — reusable opt-in gameplay response hooks for movement slowdown, wading/immersion, damage-over-time, resistance/immunity, and impacts. The liquid domain supplies effect requests/settings; player stats, potions, enchantments and damage resolution remain owned by their appropriate entity/combat/equipment systems.
-- `WORLD/Generation/Liquids/` — **future** procedural construction/placement of water bodies, lava lakes, rivers and connected features, not the shaders or type definitions.
+- `Runtime/` — WG2 bounded chunk liquid presentation and cleanup; see Runtime/README.md.
+- `WORLD/Generation/Liquids/` — WG1 procedural construction/placement of water bodies, lava lakes, rivers and connected features, not the shaders or type definitions.
 - `DEBUG/UI/Liquids/` — future developer-only liquid toggles and preview sliders. The runtime must not depend on DEBUG UI.
 - `SCENES/World/World.tscn` — eventually instantiates one or more liquid region instances; scene composition is not liquid implementation.
 

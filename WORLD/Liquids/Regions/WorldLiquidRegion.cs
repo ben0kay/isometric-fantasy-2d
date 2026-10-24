@@ -1,11 +1,16 @@
 // One authoritative polygon supplies rendering distance, placement exclusion and wading depth.
 using Godot;
+using System;
+using System.Collections.Generic;
 
 public partial class WorldLiquidRegion : Node2D
 {
     [Export] public WorldLiquidMasterConfig Config { get; set; }
     [Export] public WorldLiquidDefinition Definition { get; set; }
-    public bool Active => Config.Enabled;
+    public PlannedWaterBody PlannedBody { get; set; }
+    public bool PresentationActive { get; set; } = true;
+    public bool Active => Config?.Enabled == true;
+    private readonly List<LiquidSurfaceTile> _tiles = new();
     public Vector2[] Boundary { get; private set; }
     public Rect2 SurfaceBounds { get; private set; } // World-space rectangle enclosing the fixed lake and its bank.
     private Vector2[] _edgeDelta;
@@ -25,11 +30,11 @@ public partial class WorldLiquidRegion : Node2D
     public override void _Ready()
     {
         Config ??= new WorldLiquidMasterConfig(); Definition ??= new WorldLiquidDefinition();
-        Position = Config.Centre;
-        Boundary = new Vector2[96]; _edgeDelta = new Vector2[96]; _inverseLength = new float[96];
+        Position = PlannedBody == null ? Config.Centre : Vector2.Zero;
+        Boundary = PlannedBody?.CopyPolygon() ?? new Vector2[96]; _edgeDelta = new Vector2[Boundary.Length]; _inverseLength = new float[Boundary.Length];
         float phase = (Config.ShapeSeed % 997) * 0.01f;
         Vector2 radius = Config.Radius.Abs().Max(Vector2.One * 40f);
-        for (int i = 0; i < Boundary.Length; i++)
+        for (int i = 0; PlannedBody == null && i < Boundary.Length; i++)
         {
             float angle = Mathf.Tau * i / Boundary.Length;
             float scale = 1f + 0.12f * Mathf.Sin(angle * 3f + phase) + 0.065f * Mathf.Cos(angle * 5f - phase) + 0.035f * Mathf.Sin(angle * 7f);
@@ -45,6 +50,7 @@ public partial class WorldLiquidRegion : Node2D
         bounds = bounds.Grow(40f);
         // Rain-impact candidates can be sampled in this small region instead of the full world.
         SurfaceBounds = new Rect2(ToGlobal(bounds.Position), ToGlobal(bounds.End) - ToGlobal(bounds.Position)).Abs();
+        if (PlannedBody != null) { SetProcess(false); return; }
         Texture2D field = BuildDistanceField(bounds);
         _material = new ShaderMaterial { Shader = GD.Load<Shader>("res://WORLD/Liquids/Surfaces/Shaders/LiquidSurface.gdshader") };
         _material.SetShaderParameter("distance_field", field);
@@ -76,7 +82,7 @@ public partial class WorldLiquidRegion : Node2D
 
     // Margin reserves ground outside the water too, for tree roots, rock gravel and shoreline grass.
     // =========================================================
-    public bool Contains(Vector2 world, float margin = 0f) => SignedDistance(world) >= -Mathf.Max(0f, margin);
+    public bool Contains(Vector2 world, float margin = 0f) => world.IsFinite() && SurfaceBounds.Grow(Mathf.Max(0f,margin)).HasPoint(world) && SignedDistance(world) >= -Mathf.Max(0f, margin);
 
     // Ray crossings and nearest edge distance share one bounded loop with no query allocations.
     // =========================================================
@@ -106,16 +112,60 @@ public partial class WorldLiquidRegion : Node2D
             _time += (float)delta * Definition.WaveSpeed;
             _windDrift.X += wind * (float)delta * 8f;
         }
-        _material.SetShaderParameter("wind_drift", _windDrift);
-        _material.SetShaderParameter("surface_time", _time);
-        _material.SetShaderParameter("wind_strength", wind);
-        _material.SetShaderParameter("ripples", Config.RippleStrength);
-        _material.SetShaderParameter("shore_width", Config.Shoreline ? Mathf.Clamp(Config.ShoreWidth, 0f, 28f) : 0f);
-        _material.SetShaderParameter("shallow_colour", Definition.ShallowColour);
-        _material.SetShaderParameter("deep_colour", Definition.DeepColour);
-        _material.SetShaderParameter("highlight_colour", Definition.HighlightColour);
-        _material.SetShaderParameter("bank_colour", Definition.BankColour);
-        _material.SetShaderParameter("depth_distance", Mathf.Max(10f, Definition.DepthDistance));
+        if (_material != null) ApplySurface(_material,wind);
+        foreach (var tile in _tiles) ApplySurface((ShaderMaterial)tile.Material,wind);
+    }
+    // Static settings write only on changes; active animation advances one clock per body, not per tile.
+    // =========================================================
+    private readonly Dictionary<ShaderMaterial,Dictionary<string,Variant>> _uniforms = new();
+    private void ApplySurface(ShaderMaterial material,float wind)
+    {
+        if (!_uniforms.TryGetValue(material,out var values)) _uniforms.Add(material,values=new());
+        void Set(string key,Variant value)
+        {
+            if (values.TryGetValue(key,out var previous) && previous.Equals(value)) return;
+            values[key]=value; material.SetShaderParameter(key,value);
+        }
+        Set("wind_drift",_windDrift); Set("surface_time",_time); Set("wind_strength",wind);
+        Set("ripples",Config.RippleStrength); Set("shore_width",Config.Shoreline ? Mathf.Clamp(Config.ShoreWidth,0,28) : 0f);
+        Set("shallow_colour",Definition.ShallowColour); Set("deep_colour",Definition.DeepColour);
+        Set("highlight_colour",Definition.HighlightColour); Set("bank_colour",Definition.BankColour);
+        Set("depth_distance",Mathf.Max(10,Definition.DepthDistance));
+    }
+    // World-aligned 4-unit texels plus a halo make neighboring tile samples identical at their seam.
+    // Yield after eight rows so the existing streamer can budget CPU field work before publication.
+    // =========================================================
+    public IEnumerable<int> PrepareTile(Rect2 bounds,Action<LiquidSurfaceTile> complete)
+    {
+        Vector2 origin=(bounds.Position/4f).Floor()*4f-Vector2.One*4f;
+        Vector2 end=(bounds.End/4f).Ceil()*4f+Vector2.One*4f;
+        var fieldBounds=new Rect2(origin,end-origin);
+        int width=Mathf.RoundToInt(fieldBounds.Size.X/4),height=Mathf.RoundToInt(fieldBounds.Size.Y/4);
+        using var image=Image.CreateEmpty(width,height,false,Image.Format.Rf);
+        for (int y=0;y<height;y++)
+        {
+            for (int x=0;x<width;x++)
+            {
+                float distance=SignedDistance(origin+new Vector2(x+0.5f,y+0.5f)*4f);
+                image.SetPixel(x,y,new Color(Mathf.Clamp(0.5f+distance/512f,0,1),0,0));
+            }
+            if (y%8==7) yield return 0;
+        }
+        var field=ImageTexture.CreateFromImage(image);
+        var material=new ShaderMaterial { Shader=GD.Load<Shader>("res://WORLD/Liquids/Surfaces/Shaders/LiquidSurface.gdshader") };
+        material.SetShaderParameter("distance_field",field);
+        material.SetShaderParameter("world_distance_field",true);
+        material.SetShaderParameter("field_origin",origin); material.SetShaderParameter("field_size",fieldBounds.Size);
+        material.SetShaderParameter("surface_noise",GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Noise/GroundNoise.tres"));
+        var tile=new LiquidSurfaceTile { Position=bounds.GetCenter(),Mesh=new QuadMesh { Size=bounds.Size },Material=material,
+            Field=field,FieldBounds=fieldBounds,TileBounds=bounds,Visible=false,ZIndex=-6,PhysicsInterpolationMode=PhysicsInterpolationModeEnum.Off };
+        _tiles.Add(tile); AddChild(tile); ApplySurface(material,0); complete(tile);
+    }
+    // Release all tile-owned GPU resources and uniform caches at chunk unload.
+    // =========================================================
+    public void ReleaseTile(LiquidSurfaceTile tile)
+    {
+        _tiles.Remove(tile); _uniforms.Remove((ShaderMaterial)tile.Material); tile.Free();
     }
     #endregion
 }

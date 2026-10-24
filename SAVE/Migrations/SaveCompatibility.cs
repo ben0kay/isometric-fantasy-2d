@@ -8,8 +8,9 @@ public static class SaveCompatibility
     // =========================================================
     public static void RequireSupported(int schema, WorldBlueprintManifest b)
     {
-        if ((schema != 1 && schema != CampaignSnapshot.CurrentSchema) || b == null || b.SchemaVersion != 4
+        if ((schema != 1 && schema != CampaignSnapshot.CurrentSchema) || b == null || (b.SchemaVersion != 4 && b.SchemaVersion != 5)
             || b.GeneratorVersion != MacroWorldMap.GeneratorVersion || b.LocalGeneratorVersion != ChunkSceneryData.GeneratorVersion
+            || (b.SchemaVersion == 5 && (b.Water?.Bodies == null || b.Water.Bodies.Length == 0))
             || b.FeaturePlanVersion != WorldFeaturePlan.Version)
             throw new InvalidDataException("Unsupported save/generator version; migration is required. Files were preserved.");
     }

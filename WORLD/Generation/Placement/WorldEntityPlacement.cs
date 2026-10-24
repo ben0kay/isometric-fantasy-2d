@@ -20,6 +20,7 @@ public partial class WorldEntityPlacement : Node
     [Export(PropertyHint.Range, "5,32,1")] public float ColliderClearance { get; set; } = 17f;
     [Export(PropertyHint.Range, "1,16,1")] public int FreeCellSearchRadius { get; set; } = 8;
 
+    public IReadOnlyList<Vector2[]> LiquidObstacles { get; set; }
     private StaticObstacleNavigation _navigation;
     private Node2D _instance;
     private readonly List<Entity> _actors = new();
@@ -31,7 +32,7 @@ public partial class WorldEntityPlacement : Node
         if (!destination.CanProcess() || restored?.Exists == false) return;
         if (!Enabled || EntityScene == null) return;
         var navigation = _navigation = new StaticObstacleNavigation();
-        navigation.Build(navigationSource, bounds, GridCellSize, ColliderClearance, FreeCellSearchRadius);
+        navigation.Build(navigationSource, bounds, GridCellSize, ColliderClearance, FreeCellSearchRadius,LiquidObstacles);
 
         Vector2 wanted = restored == null ? player.GlobalPosition + SpawnOffsetFromPlayer : new Vector2(restored.X,restored.Y);
         Vector2 safeSpawn = wanted;
@@ -119,7 +120,7 @@ public partial class WorldEntityPlacement : Node
             actor.ProcessMode=active ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
             anyActive |= active && actor.HealthState.IsAlive && actor.CanProcess();
         }
-        if (anyActive) _navigation.Build(actors,bounds,GridCellSize,ColliderClearance,FreeCellSearchRadius);
+        if (anyActive) _navigation.Build(actors,bounds,GridCellSize,ColliderClearance,FreeCellSearchRadius,LiquidObstacles);
     }
     // One authored test actor is persisted until population ownership arrives in P6.
     // =========================================================
