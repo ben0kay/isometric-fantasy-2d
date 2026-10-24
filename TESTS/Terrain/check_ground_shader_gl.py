@@ -144,4 +144,23 @@ off=render(new,flags,vectors={'preview_overlay_visibility':(0,0)})
 forced=render(new,flags,vectors={'preview_overlay_visibility':(1,1)})
 assert np.max(np.abs(off-base))<1e-6 and np.max(np.abs(forced-both))<1e-6,'Default-off preview activation failed'
 print('PASS: base/accompanying strength sliders and dormant configured-layer F9 activation')
+# Compare texture-free material branches to frozen actual formulas from the older project.
+reference=program(ROOT/'TESTS/Terrain/References/OldBasaltAndDust.txt')
+for recipe,low,high in [(1,(.112,.105,.094,1),(.177,.158,.130,1)),(2,(.075,.086,.098,1),(.135,.148,.157,1))]:
+    table[:]=saved;table[0,0]=low;table[0,2]=high;table[0,6,:2]=(1,1);table[0,8]=(0,1,recipe,32)
+    maps['overlay_table']=texture(table)
+    result=render(new,flags,vectors={'preview_overlay_visibility':(1,0)})
+    expected=render(reference,{'reference_basalt':recipe==2},vectors={'reference_salt':tuple(table[0,7,1:3])})
+    # Left of the blend band, full opacity isolates the old material recipe from the grass.
+    error=float(np.max(np.abs(result[:,:48]-expected[:,:48])))
+    assert error<2e-6,('Old recipe mismatch',recipe,error)
+    previous_art=maps['ground_art'];maps['ground_art']=texture(np.tile((1,0,1,1),(64,64,1)))
+    changed_art=render(new,flags,vectors={'preview_overlay_visibility':(1,0)})
+    assert np.max(np.abs(result[:,:48]-changed_art[:,:48]))<1e-6,'Procedural recipe still sampled artwork'
+    maps['ground_art']=previous_art
+    for iy in range(4):
+        for ix in range(4):
+            piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors={'preview_overlay_visibility':(1,0)})
+            assert np.max(np.abs(piece-result[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'Procedural chunk seam'
+print('PASS: old Dust/Basalt formula match, no artwork dependence and sixteen-chunk procedural seams')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')

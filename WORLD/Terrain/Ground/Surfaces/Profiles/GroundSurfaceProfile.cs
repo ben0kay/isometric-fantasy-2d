@@ -3,6 +3,7 @@ using Godot;
 using System;
 
 public enum GroundDetailStyle { Organic, Granular, Mineral }
+public enum GroundMaterialRecipe { Artwork, Dust, Basalt }
 
 [GlobalClass]
 public partial class GroundSurfaceProfile : Resource
@@ -23,11 +24,16 @@ public partial class GroundSurfaceProfile : Resource
     [Export] public GroundDetailStyle DetailStyle { get; set; } = GroundDetailStyle.Organic;
     [Export(PropertyHint.Range,"0,1")] public float ArtworkInfluence { get; set; } = 0.22f;
 
+    [ExportGroup("Extra-layer material recipe")]
+    [Export] public GroundMaterialRecipe Recipe { get; set; } = GroundMaterialRecipe.Artwork;
+    [Export(PropertyHint.Range,"1,256")] public float MaterialFeatureSize { get; set; } = 32f;
+
     // Fail during compilation, not after uploading NaN/invalid data to the GPU.
     // =========================================================
     public void Validate()
     {
-        if (Texture == null || Material == null || !Enum.IsDefined(DetailStyle)
+        if ((Recipe==GroundMaterialRecipe.Artwork && Texture==null) || Material == null || !Enum.IsDefined(DetailStyle)
+            || !Enum.IsDefined(Recipe) || !float.IsFinite(MaterialFeatureSize) || MaterialFeatureSize<1 || MaterialFeatureSize>256
             || !float.IsFinite(Variation) || Variation < 0 || Variation > 1
             || !float.IsFinite(PatchSize) || PatchSize < 80 || PatchSize > 8192
             || !float.IsFinite(DetailStrength) || DetailStrength < 0 || DetailStrength > 1

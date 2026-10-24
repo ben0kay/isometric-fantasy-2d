@@ -28,7 +28,7 @@ public static class GroundOverlayPalette
             uint salt=unchecked((uint)layer.SeedSalt*747796405u+2891336453u);
             float offsetX=(salt&65535)/65536f; salt=unchecked(salt*747796405u+2891336453u);
             table.SetPixel(7,row,new Color(layer.WarpStrength,offsetX,(salt&65535)/65536f,(float)p.DetailStyle));
-            table.SetPixel(8,row,new Color(artwork[i,slot],layer.Enabled ? 1f : 2f,0,0));
+            table.SetPixel(8,row,new Color(artwork[i,slot],layer.Enabled ? 1f : 2f,(float)p.Recipe,p.MaterialFeatureSize));
         }
         material.SetShaderParameter("overlay_table",ImageTexture.CreateFromImage(table));
         material.SetShaderParameter("overlay_rows",(float)(biomes.Length*2));

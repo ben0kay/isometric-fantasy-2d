@@ -21,7 +21,7 @@ public static class StreamedGroundPalette
         var artwork=compiled.Select(b=>b.Base.Texture).ToList();
         var overlayArt=new int[compiled.Length,2];
         for(int i=0;i<compiled.Length;i++) for(int slot=0;slot<compiled[i].Overlays.Length;slot++)
-            if(GroundOverlayPalette.CanCompile(compiled[i].Overlays[slot]))
+            if(GroundOverlayPalette.CanCompile(compiled[i].Overlays[slot]) && compiled[i].Overlays[slot].Surface.Recipe==GroundMaterialRecipe.Artwork)
             { overlayArt[i,slot]=artwork.Count; artwork.Add(compiled[i].Overlays[slot].Surface.Texture); }
         int atlasColumns = Mathf.CeilToInt(Mathf.Sqrt(artwork.Count));
         using (var atlas = Image.CreateEmpty(atlasColumns*32,atlasColumns*32,false,Image.Format.Rgba8))

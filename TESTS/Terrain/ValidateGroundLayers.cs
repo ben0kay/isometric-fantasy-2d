@@ -22,7 +22,7 @@ public partial class ValidateGroundLayers : Node
             var map=MacroWorldBuilder.Build(config,seed);
             using var old=PreGS2GroundPalette.Build(map,config.Biomes);
             using var current=StreamedGroundPalette.Build(map,config.Biomes);
-            foreach(string name in new[] {"map_base","map_shade","map_fresh","map_dry","map_settings"})
+            foreach(string name in new[] {"ground_art","map_base","map_shade","map_fresh","map_dry","map_settings"})
                 SameTexture(old,current,name);
             foreach(string name in new[] {"has_ground_tint","has_surface_styles","blend_ground_art"})
                 Check(!current.GetShaderParameter(name).AsBool(),"Original production fast path: "+name);
@@ -51,6 +51,10 @@ public partial class ValidateGroundLayers : Node
         duplicate.GroundStack.AccompanyingPatches.Id="base"; rejected=false;
         try { new CompiledGroundBiome(duplicate); } catch(ArgumentException) { rejected=true; }
         Check(rejected,"Duplicate accompanying/base ID accepted"); duplicate.Dispose();
+        var dirt=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres");
+        var rock=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres");
+        Check(dirt.Texture==null && rock.Texture==null && dirt.Recipe==GroundMaterialRecipe.Dust && rock.Recipe==GroundMaterialRecipe.Basalt,"Optional recipes must not require SVG artwork");
+        dirt.Validate(); rock.Validate();
         var fixture=GroundLayerFixture.Definitions(); var f=GroundLayerFixture.Map();
         using var both=StreamedGroundPalette.Build(f,fixture);
         using var repeat=StreamedGroundPalette.Build(f,fixture.Reverse());

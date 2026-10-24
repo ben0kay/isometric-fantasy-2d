@@ -4,6 +4,8 @@ Oak now references two reusable production profiles: Dirt.tres / Textures/Dirt.s
 
 Both extra Resources have Enabled=false and AllowSessionPreview=true. They are **off by default**, including after reset/restart. Streamed setup preloads only their small shared atlas/table data so F9 can show them immediately without modifying Resources or rebuilding maps. A normal disabled layer without AllowSessionPreview remains unavailable. Current all-off visibility is a uniform fast path that skips optional-layer sampling entirely.
 
+> Appearance revision: the SVG textures described in the original GS5 handoff were rejected and replaced with old-project Dust/Basalt shader recipes. See PROCEDURAL_GROUND_RECIPES.md for current profiles, masks, removed assets and evidence. F9/default-off behavior below remains applicable.
+
 ## Try in regular Oak World
 
 Open SCENES/World/World.tscn, F6 → F9 → Ground Surfaces. In Oak:

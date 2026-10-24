@@ -35,11 +35,11 @@ Label = "Dirt patches"
 Surface = ExtResource("dirt_surface")
 Enabled = false
 AllowSessionPreview = true
-Coverage = 0.48
+Coverage = 0.4
 Opacity = 0.8
-PatchSize = 400.0
-EdgeSoftness = 0.15
-WarpStrength = 0.45
+PatchSize = 500.0
+EdgeSoftness = 0.10
+WarpStrength = 0.0
 SeedSalt = 431
 
 [sub_resource type="Resource" id="rock_patches"]
@@ -49,11 +49,11 @@ Label = "Rocky patches"
 Surface = ExtResource("rock_surface")
 Enabled = false
 AllowSessionPreview = true
-Coverage = 0.3
+Coverage = 0.38
 Opacity = 0.7
-PatchSize = 150.0
-EdgeSoftness = 0.12
-WarpStrength = 0.55
+PatchSize = 280.0
+EdgeSoftness = 0.08
+WarpStrength = 0.0
 SeedSalt = 829
 
 [sub_resource type="Resource" id="ground"]

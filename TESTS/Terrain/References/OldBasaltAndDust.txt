@@ -1,0 +1,30 @@
+// Frozen source formulas from ben0kay/isometric-new-2d.
+// Basalt blob 22f536fff4eeea5f8daa964e66b35a89c083b95a; Dust blob 133e3c1b69e9619dae153cd2060170029c01ed9c.
+shader_type canvas_item;
+uniform sampler2D ground_noise : repeat_enable, filter_linear;
+uniform bool reference_basalt = false;
+uniform vec2 reference_salt = vec2(0.0);
+varying vec2 ground_world;
+varying vec4 ground_tint;
+vec3 basalt_surface(float strata,float detail,float grain) {
+    vec3 stone=mix(vec3(0.075,0.086,0.098),vec3(0.135,0.148,0.157),strata);
+    float fracture=1.0-smoothstep(0.008,0.026,abs(detail-0.49));
+    fracture*=smoothstep(0.59,0.77,strata);
+    stone*=1.0-fracture*0.24;
+    stone+=vec3((detail-0.5)*0.014);
+    stone+=vec3((grain-0.5)*0.018);
+    return stone;
+}
+vec3 dust_surface(float strata,float detail,float grain) {
+    vec3 dust=mix(vec3(0.112,0.105,0.094),vec3(0.177,0.158,0.130),strata);
+    dust+=vec3((detail-0.5)*0.009);
+    dust+=vec3((grain-0.5)*0.012);
+    return dust;
+}
+void fragment() {
+    vec2 p=(floor(ground_world)+vec2(0.5))/32.0+reference_salt*256.0;
+    float strata=texture(ground_noise,p*0.035+vec2(0.31,0.74)).r;
+    float detail=texture(ground_noise,p*0.22+vec2(0.53,0.11)).r;
+    float grain=texture(ground_noise,p*2.7+vec2(0.09,0.62)).r;
+    COLOR=vec4(reference_basalt ? basalt_surface(strata,detail,grain) : dust_surface(strata,detail,grain),1.0);
+}
