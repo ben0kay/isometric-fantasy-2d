@@ -65,15 +65,20 @@ def texture(colour,unit):
     active(0x84C0+unit);ident=c.c_uint();gen(1,c.byref(ident));bind(0x0DE1,ident)
     for p in [0x2801,0x2800]:param(0x0DE1,p,0x2600)
     for p in [0x2802,0x2803]:param(0x0DE1,p,0x812F)
-    data=np.array(colour,dtype=np.float32);texImage(0x0DE1,0,0x8814,1,1,0,0x1908,0x1406,data.ctypes.data)
+    data=np.asarray(colour,dtype=np.float32)
+    if data.ndim==1:data=data.reshape(1,1,4)
+    data=np.ascontiguousarray(data);texImage(0x0DE1,0,0x8814,data.shape[1],data.shape[0],0,0x1908,0x1406,data.ctypes.data)
     return ident.value
 fbo=c.c_uint();gl('glGenFramebuffers',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(fbo));gl('glBindFramebuffer',None,[c.c_uint,c.c_uint])(0x8D40,fbo)
 output=texture((0,0,0,0),7);gl('glFramebufferTexture2D',None,[c.c_uint,c.c_uint,c.c_uint,c.c_uint,c.c_int])(0x8D40,0x8CE0,0x0DE1,output,0)
 vao=c.c_uint();gl('glGenVertexArrays',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(vao));gl('glBindVertexArray',None,[c.c_uint])(vao)
 vec4(loc(prog,b'sprite_tint'),1,1,1,1);vec2(loc(prog,b'TEXTURE_PIXEL_SIZE'),1,1);scalar(loc(prog,b'strength_world_pixels'),0)
 read=gl('glReadPixels',None,[c.c_int,c.c_int,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_void_p])
-def render(rgb,mask=1,enabled=True,amount=1,healthy=True,wetness=0,snowfall=0,hasmask=True):
-    for unit,(name,colour) in enumerate([('TEXTURE',(*rgb,0.7)),('foliage_mask',(mask,mask,mask,1)),('seasonal_state',(.89,.38,.08,amount)),('snow_noise',(1,1,1,1))]):
+def render(rgb,mask=1,enabled=True,amount=1,healthy=True,wetness=0,snowfall=0,hasmask=True,tone=(1,0),bucket=0,atlas=None):
+    if atlas is None:
+        atlas=np.zeros((2,16,4),np.float32);atlas[0,:]=(.89,.38,.08,amount);atlas[1,:]=(tone[0],tone[1],0,0)
+    scalar(loc(prog,b'seasonal_bucket'),bucket)
+    for unit,(name,colour) in enumerate([('TEXTURE',(*rgb,0.7)),('foliage_mask',(mask,mask,mask,1)),('seasonal_state',atlas),('snow_noise',(1,1,1,1))]):
         texture(colour,unit);one(loc(prog,name.encode()),unit)
     for name,value in [('foliage_has_mask',hasmask),('seasonal_profile_enabled',enabled),('foliage_healthy',healthy)]:one(loc(prog,name.encode()),value)
     for name,value in [('wet_coverage',wetness),('snow_coverage',snowfall)]:scalar(loc(prog,name.encode()),value)
@@ -99,3 +104,29 @@ assert np.max(abs(render(dark,snowfall=1)-render(dark)))>.1
 assert np.max(abs(render(bark,mask=0,wetness=1,snowfall=1)-bark))<1e-6
 assert np.max(abs(render(green,enabled=False,hasmask=False,wetness=1)-np.array(green)*.85))<1e-6
 print('PASS: autumn rain darkening, masked dark-leaf snow, weather bark isolation and unmasked rain fallback')
+
+# Real authored gradients exercise calendar remapping and all timing groups, beyond synthetic pixels.
+resource=(ROOT/'WORLD/Content/Vegetation/Trees/Oak/OakSeasonalFoliage.tres').read_text()
+arrays=re.findall(r'PackedFloat32Array\(([^)]+)\)|PackedColorArray\(([^)]+)\)',resource)
+offsets=np.array([float(x) for x in arrays[0][0].split(',')])
+colours=np.array([float(x) for x in arrays[1][1].split(',')]).reshape(-1,4)
+tones=np.array([float(x) for x in arrays[3][1].split(',')]).reshape(-1,4)
+def authored(year,variation=14,strength=1):
+    result=np.zeros((2,16,4),np.float32)
+    for b in range(16):
+        y=(year+(b*2/15-1)*variation/365)%1
+        result[0,b]=[np.interp(y,offsets,colours[:,i]) for i in range(4)]
+        result[0,b,3]*=strength
+        result[1,b,:2]=[np.interp(y,offsets,tones[:,i]) for i in range(2)]
+    return result
+assert np.max(abs(authored(0)-authored(1)))<1e-6
+assert np.max(authored(.5)[0,:,3])==0
+assert np.max(abs(authored(.76,variation=0)[0]-authored(.76,variation=0)[0,0]))<1e-6
+assert np.max(abs(authored(.76)[0,0]-authored(.76)[0,-1]))>.1
+assert np.max(abs(render(green,atlas=authored(.76,strength=0))-green))<1e-6
+full=render(green,atlas=authored(.76,variation=0));half=render(green,atlas=authored(.76,variation=0,strength=.5))
+assert np.max(abs(half-(full+green)*.5))<1e-6
+winter=render(green,atlas=authored(0));assert np.dot(winter,[.3,.6,.1])>np.dot(green,[.3,.6,.1])+.05
+assert winter[2]>winter[0] and winter[1]>winter[0]
+assert np.max(abs(render(green,bucket=0,atlas=authored(.76))-render(green,bucket=15,atlas=authored(.76))))>.05
+print('PASS: authored Jan/Dec wrap, Summer plateau, pale winter lift, strength, synchronized/varied timing and atlas group sampling')

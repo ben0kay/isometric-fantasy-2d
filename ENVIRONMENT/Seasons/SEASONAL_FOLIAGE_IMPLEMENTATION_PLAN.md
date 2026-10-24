@@ -1,6 +1,6 @@
 # SE0–SE4: Seasonal foliage and F9 year-position preview
 
-> **STATUS: SE0 and SE1 implemented; SE1 software-GL checks passed. Godot build/visual acceptance pending. SE2/SE3 remain open.**
+> **STATUS: SE0/SE1 and approved SE1b follow-up implemented. User reported SE1 working; SE1b software-GL checks passed, native Godot/local acceptance pending. SE2/SE3 remain open.**
 >
 > This is a staged Codex handoff for real-time **Spring → Summer → Autumn → Winter** foliage previews. It is **not** approval to implement every phase at once. Start with SE0, request user acceptance, then continue one small phase at a time.
 >
@@ -47,22 +47,27 @@ The global **season state belongs to ENVIRONMENT**; generic foliage visual logic
 
 ## F9 interaction: continuous time of year
 
-Use a **Year position** slider with one normalized cyclic value 0.0–1.0. The screen label follows the nearest seasonal quarter, but visual palettes interpolate smoothly between authored key points:
+**SE1b follow-up:** F9 shows a continuous day slider labelled with an English month/date and Northern Hemisphere season (for example October 5 — Autumn). Internally YearPosition is still 0–1, now explicitly January–December. It is a non-leap 365-day preview, not a running calendar.
 
-| Slider | Season label | Preview expectation |
+| Position | Preview | Appearance |
 | --- | --- | --- |
-| 0.00 | Spring | Fresh/light green |
-| 0.25 | Summer | **Original untouched lush Oak** |
-| 0.50 | Autumn | Leaves becoming golden/yellow/orange/red |
-| 0.75 | Winter | Species-defined dormant colour; existing snow still controls snow |
-| 1.00 | Spring | Same appearance as 0.00 (seamless wrap) |
+| 0.00 / 1.00 | January 1 — Winter | Pale, desaturated blue-green; snow separate |
+| ~0.25 | Early April — Spring | Fresh green |
+| 0.50 | Early July — Summer | Original lush artwork |
+| ~0.70 | September — Autumn | Yellow begins |
+| ~0.76 | October — Autumn | Orange |
+| ~0.815 | Late October — Autumn | Red |
+| ~0.87 | November — Autumn | Muted brown transitioning into pale winter |
 
-Make more than four palette stops possible (e.g. early yellow → deep orange → red → brown). Use a compact inspector-editable Godot Gradient/Resource, not hardcoded per-species RGB branches. Preserve underlying leaf shading and highlight variation rather than painting the entire crown a solid colour.
+Species Palette Gradient supplies target RGB and blend influence (alpha). Optional ToneControls Gradient supplies saturation (red channel, 0–1) and brightness lift (green channel, 0–0.5). This lets winter foliage become pale without using snow deposition or flattening true black to white. Summer has a neutral plateau wide enough for the default timing offsets.
 
-In F9 → Environment, insert a **collapsible Seasonal foliage section after Time**, collapsed initially. Add:
-- **Enable seasonal foliage** toggle, **OFF by default** (the live world initially looks exactly as it does today).
-- **Year position** slider, 0–1, step 0.01 or finer; drag for real-time transitions with no Apply/reload.
-- Live **Spring/Summer/Autumn/Winter** label. An intensity slider is optional only if genuinely useful; don't clutter F9 with duplicate sliders.
+F9 → Environment → Seasonal foliage remains collapsed initially and has:
+- Enable toggle, OFF by default; initial date is Summer (YearPosition=0.5).
+- Live month/date/season label and continuous day slider; both endpoints show January 1.
+- Foliage colour strength 0–100%, scaling the complete seasonal appearance independently of weather.
+- Early/late timing variation ±0–45 days, default ±14. Zero synchronizes all trees.
+
+Each tree selects one of 16 stable timing groups once during binding. Streamed trees use world_instance_id; compatibility previews fall back to content ID + rooted world position. Explicit FNV-1a hashing avoids session RNG/runtime IDs. A per-sprite instance uniform selects one column of a shared species 16×2 palette atlas. No extra material per timing group or per-tree seasonal processor. Unloaded/reloaded trees keep the same timing; new chunks receive the current atlas before publication. Species may scale variation through TimingVariationScale.
 
 These are **manual visual preview controls**. Do not implement a second GameClock or make the current 30-second day equal an entire year. The F9 panel calls the production controller; the production controller must run when F9 is absent.
 
@@ -71,7 +76,7 @@ These are **manual visual preview controls**. Do not implement a second GameCloc
 **Implement first. No tree recolouring in this phase.**
 
 1. Introduce one production SeasonController from EnvironmentRuntime and one small SeasonMasterConfig Resource (or reuse existing world config only when clearly more suitable). Add an optional typed Seasons reference to **EnvironmentMasterConfig** and its default .tres so the controller has a clear production-owned Inspector configuration. It exposes Enabled, YearPosition, readable season name and an on-change signal/event.
-2. Constructor/defaults and F9 edits must operate on **world-owned runtime settings**, not mutate authored .tres. Default Enabled=false, YearPosition=0.25/Summer.
+2. Constructor/defaults and F9 edits must operate on **world-owned runtime settings**, not mutate authored .tres. Default Enabled=false, YearPosition=0.5/Summer (SE1b January-based convention).
 3. Add toggle, slider and text to the existing F9 Environment drawer; allow scrubbing even if GameClock is paused. No always-running season _Process needed for manual state.
 4. Do not change weather, snow, solar clock, calendar, seasons for creatures, P3 generator/chunks, P4 save schema, sprite shader or tree definitions.
 5. **Acceptance:** F6 loads, F9 displays season labels as slider moves, disable/enable correctly updates state, optional F9 panel removal does not break the world, no new idle cost and existing controls are unaffected.
@@ -86,7 +91,7 @@ These are **manual visual preview controls**. Do not implement a second GameCloc
    - **Invalid mask:** issue a bounded diagnostic and fall back safely, never sample mismatched dimensions silently.
    - Masks are scalar data, not display colour: sample red without `source_color` conversion, disable repeat/mipmaps, use filtering consistent with the pixel artwork, and validate greys/edges in Godot. Never use mask alpha as foliage weight (this export is fully opaque).
    - One mask per distinct artwork, shared by all instances and seasons; no runtime filename discovery, duplicate nodes or separate seasonal PNGs.
-3. Recolour using a hue/palette operation that preserves each pixel's brightness/texture/shadows and carries variation across leaf clusters. Summer matches the current source image; autumn progresses through yellows/oranges/reds without abruptly flipping an entire tree.
+3. Recolour using a hue/palette operation that preserves each pixel's brightness/texture/shadows and carries variation across leaf clusters. Summer (mid-year, with a neutral plateau) matches the current source image; autumn progresses through yellows/oranges/reds without abruptly flipping an entire tree.
 4. Opt in Oak through its .tres; Pink Blossom should **stay pink/unchanged by default** unless a separate palette is authored later. Other trees/evergreens can opt out with no extra species scripts.
 5. Update **only cached shared material groups on season change**, not per tree every frame. Shader/material variants may be keyed by source material, selected sprite/mask, flip and species palette as necessary. A slider movement must **not recompile shaders**, regenerate chunks, resample sprite images on CPU or mutate source Resources.
 6. **Acceptance:** green Summer Oak looks the same; Autumn oak leaves shift while trunk/root remain normal; original collision/wind alignment and mirrored variants remain intact; pink blossoms don't turn orange.
@@ -134,9 +139,9 @@ Use the existing Avalonia Oak export to prove mask alignment, dark-leaf inclusio
 - A shader can hide selected foliage alpha but **cannot reveal branches that weren't painted underneath**. A convincing bare winter deciduous tree may still need a separate authored bare/charred-style sprite; do not promise perfect winter bark by only recolouring a lush PNG.
 - Optional individual tree variation should use a few **stable shared palette buckets** derived from stable IDs, not one unique active material per tree.
 
-## Copy/paste: first Codex task
+## Historical starting task (SE0 already implemented; see SE1b handoff for current controls)
 
-> Read root README.md, CodePreferences.md, ENVIRONMENT/Seasons/SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md, ENVIRONMENT/EnvironmentRuntime.cs, DEBUG/UI/Environment/EnvironmentDebugPanel.cs, ENVIRONMENT/Time/Clock/GameClock.cs, and the vegetation wind/wetness/snow/fire implementation. **Implement SE0 only:** one production season-preview state plus small inspector SeasonMasterConfig and a collapsible **Seasonal foliage** section in the existing F9 Environment drawer (Enable default off, continuous Year position 0..1 slider, live Spring/Summer/Autumn/Winter label). No tree tint yet, no real calendar/automatic time-of-year simulation, no P4 saving/schema changes, no per-tree Process, no new F-key, no unrelated scene/folder refactor. Preserve production P3 and running campaigns. Update the owning README and phase table, report precise testing/deferred checks and commit once. **The Avalonia Oak mask already exists; bind it in SE1, preserving unmasked detection. Do not modify the external tool or extend fire effects.**
+> Read root README.md, CodePreferences.md, ENVIRONMENT/Seasons/SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md, ENVIRONMENT/EnvironmentRuntime.cs, DEBUG/UI/Environment/EnvironmentDebugPanel.cs, ENVIRONMENT/Time/Clock/GameClock.cs, and the vegetation wind/wetness/snow/fire implementation. **Implement SE0 only:** one production season-preview state plus small inspector SeasonMasterConfig and a collapsible **Seasonal foliage** section in the existing F9 Environment drawer (Enable default off, month/date-labelled day slider backed by YearPosition 0..1, live season label). No tree tint yet, no real calendar/automatic time-of-year simulation, no P4 saving/schema changes, no per-tree Process, no new F-key, no unrelated scene/folder refactor. Preserve production P3 and running campaigns. Update the owning README and phase table, report precise testing/deferred checks and commit once. **The Avalonia Oak mask already exists; bind it in SE1, preserving unmasked detection. Do not modify the external tool or extend fire effects.**
 
 ## Phase status (update only after testing/implementation)
 
@@ -144,6 +149,7 @@ Use the existing Avalonia Oak export to prove mask alignment, dark-leaf inclusio
 | --- | --- | --- |
 | SE0: F9 year-position state/preview | IMPLEMENTED; static review only | Local build / F9 acceptance pending |
 | SE1: masked Oak shader + existing maskless fallback | IMPLEMENTED; software-GL checks passed | Godot build / Windows acceptance pending |
+| SE1b: calendar labels / winter tone / strength / stable tree timing | IMPLEMENTED; software-GL checks passed | Native Godot / Windows pending |
 | SE2: wet/snow/fire/streaming/performance integration | SE1 composition foundations present; broader checks and save bridge pending | Pending |
 | SE3: mask authoring validation and regression coverage | NOT IMPLEMENTED | Pending |
 | SE4: calendar/P4 integration and gameplay seasons | DEFERRED | Separate future approval |
@@ -155,3 +161,7 @@ See [SE0_Validation.md](SE0_Validation.md). No leaf recolouring, mask binding, w
 ## SE1 implementation handoff
 
 See [SE1_Validation.md](SE1_Validation.md). Oak mask/profile binding and shared weather selection are implemented; software-GL checks passed. Native Godot validation and SE2 campaign compatibility remain pending. SE1 updates Oak.tres, so the strict fingerprint can reject older campaigns; use F6/new campaign until an explicit SE2 migration is validated. No new fire effect was added.
+
+## SE1b — calendar labels, winter tone, strength and organic timing
+
+Implemented as an approved SE1 follow-up. See [SE1b_Validation.md](SE1b_Validation.md). Software-GL checks passed; native Godot fixture / Windows rendering / profiling pending. User reported SE1 working before this follow-up. SE2 save compatibility and broader acceptance remain open; SE4 automatic calendar is not implemented.

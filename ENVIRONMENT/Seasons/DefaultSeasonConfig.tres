@@ -3,4 +3,6 @@
 [resource]
 script = ExtResource("script")
 Enabled = false
-YearPosition = 0.25
+YearPosition = 0.5
+ColourStrength = 1.0
+TimingVariationDays = 14.0

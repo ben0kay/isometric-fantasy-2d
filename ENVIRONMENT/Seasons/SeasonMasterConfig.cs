@@ -6,5 +6,7 @@ public partial class SeasonMasterConfig : Resource
 {
     [ExportGroup("Seasonal foliage preview")]
     [Export] public bool Enabled { get; set; }
-    [Export(PropertyHint.Range, "0,1,0.001")] public float YearPosition { get; set; } = 0.25f;
+    [Export(PropertyHint.Range, "0,1,0.001")] public float YearPosition { get; set; } = 0.5f;
+    [Export(PropertyHint.Range, "0,1,0.01")] public float ColourStrength { get; set; } = 1f;
+    [Export(PropertyHint.Range, "0,45,1")] public float TimingVariationDays { get; set; } = 14f;
 }
