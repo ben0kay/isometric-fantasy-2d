@@ -9,6 +9,8 @@ public partial class WorldGenerationMasterConfig : Resource
     [Export] public Godot.Collections.Array<WorldBiomeDefinition> Biomes { get; set; } = new();
     [ExportGroup("Guided layout and reservations")]
     [Export] public WorldLayoutPreset Layout { get; set; }
+    [ExportGroup("Optional water planning")]
+    [Export] public WaterGenerationMasterConfig Water { get; set; }
     [ExportGroup("Region shape")]
     [Export(PropertyHint.Range, "0,1,0.05")] public float BoundaryIrregularity { get; set; } = 0.45f;
     [ExportGroup("Limits")]

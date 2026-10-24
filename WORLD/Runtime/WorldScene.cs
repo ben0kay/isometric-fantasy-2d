@@ -7,6 +7,7 @@ using FantasyGame.WorldInteractions.Fire;
 public partial class WorldScene : Node2D
 {
     [Export] public WorldMasterConfig Config { get; set; }
+    public WaterBodyPlan WaterPlan { get; private set; }
     public WorldFeaturePlan FeaturePlan { get; private set; }
     public MacroWorldMap MacroMap { get; private set; }
     public WorldBlueprintManifest Blueprint { get; private set; }
@@ -111,6 +112,11 @@ public partial class WorldScene : Node2D
                 FeaturePlan = features; MacroMap = map;
                 Blueprint = restore?.Blueprint ?? (launch == null ? WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan)
                     : WorldBlueprintManifest.Create(launch.ProfileId,launch.RunId,MacroMap,FeaturePlan) with { WorldId = launch.WorldId });
+                var fixedPond = GetNodeOrNull<WorldLiquidRegion>("TerrainRoot/Liquids/Pond");
+                WaterPlan = restore == null ? WaterBodyPlanner.Build(Config.Generation,map,features,fixedPond?.SurfaceBounds)
+                    : WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
+                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot() };
+                foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);
                 GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
                 GD.Print($"Macro map | {MacroMap.Columns}x{MacroMap.Rows} | {MacroMap.Regions.Count} regions | 100% land | {timer.ElapsedMilliseconds}ms | hash {MacroMap.Hash}");

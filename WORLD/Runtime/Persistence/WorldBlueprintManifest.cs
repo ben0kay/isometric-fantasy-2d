@@ -7,6 +7,7 @@ public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId,
     float CellSize, int Columns, int Rows, string[] BiomeIds, int[] RegionBiomes, int[] RegionCells,
     int FeaturePlanVersion = 0, string FeatureHash = "", WorldFeatureSnapshot[] Features = null)
 {
+    public WaterPlanSnapshot Water { get; init; }
     public SavedMacroRegion[] MacroRegions { get; init; }
     public SavedMacroBiome[] MacroBiomes { get; init; }
     public int LocalGeneratorVersion { get; init; }

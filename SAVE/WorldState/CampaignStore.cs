@@ -116,7 +116,7 @@ public sealed class CampaignStore
         if ((s.SchemaVersion >= 2 && s.Player.Health == null) || s.Player.Health is < 0 or > 1000000)
             throw new InvalidDataException("Invalid saved player health.");
         if (s.TestEntity.Exists && (!float.IsFinite(s.TestEntity.X) || !float.IsFinite(s.TestEntity.Y) || s.TestEntity.Health < 1)) throw new InvalidDataException("Invalid test actor.");
-        var map = WorldBlueprintRestore.Map(b); WorldBlueprintRestore.Features(b);
+        var map = WorldBlueprintRestore.Map(b); WorldBlueprintRestore.Features(b); WaterBodyPlan.Restore(b.Water,b.Seed,map.Bounds);
         if (s.TestEntity.Exists && !map.Bounds.HasPoint(new Godot.Vector2(s.TestEntity.X,s.TestEntity.Y))) throw new InvalidDataException("Test actor outside world bounds.");
         if (!map.Bounds.HasPoint(new Godot.Vector2(s.Player.X,s.Player.Y))) throw new InvalidDataException("Player outside world bounds.");
         var coords = new HashSet<(int,int)>(); var ids = new HashSet<string>(StringComparer.Ordinal);

@@ -1,7 +1,9 @@
 # WORLD/Generation/Liquids
 
-**Scaffolding only.** Future deterministic seeded liquid-body generation: site choice, pond/lake outlines, river paths, volcanic lava lakes, drainage and water/body placement. Shape/cutout generation outputs compatible region geometry to `WORLD/Liquids/Regions/`; renderers, palettes and gameplay interactions live in `WORLD/Liquids/`.
+**WG0 audit complete; WG1 macro pond/lake planning implemented.** Generation owns deterministic liquid placement and frozen geometry; `WORLD/Liquids/` owns rendering and interactions. WG2 presentation, rivers and carving are still planned.
 
-Suggested future subdivisions only when implementing them: `Ponds/`, `Lakes/`, `Rivers/` and `Carving/`. Actual terrain excavation, banks and transition masks must coordinate with `WORLD/Terrain/`, avoiding a visually masked puddle pretending to be a carved hole.
+`WaterGenerationMasterConfig` is an optional Resource on `WorldGenerationMasterConfig.Water` (null/off by default). `WaterBodyPlanner` consumes P1 ownership and P2 permissions once, plus a fixed-pond exclusion. `WaterBodyPlan` holds immutable bounded geometry, lookup queries, exact hashes and detached save snapshots. `BiomeHydrologyProfile` supplies optional biome permissions/weights. Missing saved data means empty water, never reroll on Continue.
 
-Current DEBUG pond is a fixed startup polygon overlay, not a true carved lake. Do not add lake-carving algorithms in the first water-promotion pass.
+Try `TESTS/Water/WaterPlanningPractice.tscn` with F6→F7 for three blue planned lake footprints; these are metadata only until WG2. No water/scenery/navigation/ground changes are implied by the overlay.
+
+Read [WG0 decisions, WG1 settings, validation and WG2 handoff](WG0_WG1_Validation.md) and [phase plan](WATER_GENERATION_PLAN.md). Preserve the authored pond and DEBUG prototype. No speculative river/carving directories or per-biome managers.

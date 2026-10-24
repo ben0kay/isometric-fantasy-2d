@@ -17,6 +17,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
         box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
+        box.AddChild(new Label { Text = $"WG1 planned lakes: {world.WaterPlan?.Bodies.Count ?? 0} (blue; geometry only, WG2 renders water)" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
         {
@@ -33,6 +34,10 @@ public partial class MacroMapDebugPanel : CanvasLayer
                     if ((x == ax && Mathf.Abs(y - ay) <= 1) || (y == ay && Mathf.Abs(x - ax) <= 1)) colour = Colors.White;
                 }
             }
+            Vector2 sample = map.Bounds.Position + new Vector2((x+0.5f)*map.CellSize,(y+0.5f)*map.CellSize);
+            if (world.WaterPlan != null)
+                foreach (var body in world.WaterPlan.Bodies)
+                    if (body.Bounds.HasPoint(sample) && body.SignedDistance(sample) >= 0) colour = new Color(0.15f,0.55f,0.95f);
             image.SetPixel(x, y, colour);
         }
         box.AddChild(new TextureRect { Texture = ImageTexture.CreateFromImage(image), CustomMinimumSize = new Vector2(700, 460),

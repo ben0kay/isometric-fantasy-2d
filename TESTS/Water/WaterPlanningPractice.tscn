@@ -1,0 +1,5 @@
+[gd_scene format=3]
+[ext_resource type="PackedScene" path="res://SCENES/World/World.tscn" id="world"]
+[ext_resource type="Script" path="res://TESTS/Water/WaterPlanningPractice.cs" id="script"]
+[node name="WaterPlanningPractice" instance=ExtResource("world")]
+script = ExtResource("script")

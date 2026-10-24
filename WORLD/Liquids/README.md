@@ -2,7 +2,7 @@
 
 **Production pond integrated:** WorldPond.tscn is present in the world scene. Shared data/region/wading/splash classes use unique WorldLiquid* names to coexist with the original DEBUG test; canonical liquid folders and data-driven water definitions are preserved.
 
-**Status: documentation/folder foundation only. No liquid implementation is copied from DEBUG yet.** The current production World scene remains unchanged.
+**Current status:** production pond, shared polygon/distance queries, shaders, player wading and rain splashes are implemented. [WG1](../Generation/Liquids/README.md) now plans optional generated lake metadata; generated rendering remains WG2. Historical promotion notes below describe the already completed pond copy, not pending implementation.
 
 Liquid is an extensible domain: water, lava, toxic pools, sludge, quicksand and future types can reuse boundary/region mechanics without being forced to share identical visuals or player effects.
 
@@ -23,7 +23,7 @@ Liquid is an extensible domain: water, lava, toxic pools, sludge, quicksand and 
 
 A biome (e.g. volcanic biome) references a **lava definition**, rather than copying lava artwork/logic into the biome folder. A lake/pond instance defines shape/location independently of liquid type. The same lake geometry could host water or lava using a different definition; rules may reject combinations when needed.
 
-## First production copy (future separate job)
+## Historical first production copy (already implemented)
 
 Copy/adapt the existing `DEBUG/TopDownTest/Liquids/` **pond** into production using `Definitions/Water/`, shared Regions/Surfaces/Interactions and the existing production clock/wind/rain/player. Reuse the region's cached 96-point polygon and small one-time distance field where practical; eliminate all `DEBUG/TopDownTest/` runtime paths. Preserve the debug scene completely. Integrate with `ENTITIES/Player/Visuals/Surfaces/` so liquid immersion does not conflict with existing player snow burial. Do **not** implement lava, damage, potion immunity, rivers, carving, hydrology or new gameplay in that copy pass.
 
