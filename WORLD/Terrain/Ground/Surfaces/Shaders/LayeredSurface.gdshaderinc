@@ -41,6 +41,18 @@ vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     float threshold=1.0-mask.r;
     if(procedural) threshold=(info.b<1.5 || grayscale) ? mix(0.85,0.30,mask.r) : mix(0.88,0.38,mask.r);
     float soft=max(mask.a,0.0001);
+    // Grayscale soil has solid islands, with small world-space bites along the broad boundary.
+    // Full coverage skips edge noise; other material recipes retain their original masks.
+    if(grayscale && mask.r<1.0) {
+        vec2 pixel=floor(world)+vec2(0.5);
+        float edge=1.0-smoothstep(0.03,0.12,abs(n-threshold));
+        if(edge>0.0) {
+            float clumps=texture(ground_noise,pixel/384.0+noise.gb).r-0.5;
+            float flecks=texture(ground_noise,pixel/96.0+noise.bg+vec2(0.37,0.61)).r-0.5;
+            n+=(clumps*0.11+flecks*0.05)*edge;
+        }
+        soft=max(mask.a*0.12,0.0001);
+    }
     float coverage=mask.r>=1.0 ? 1.0 : smoothstep(threshold-soft,threshold+soft,n);
     float amount=coverage*mask.g;
     if(amount<=0.0) return below;

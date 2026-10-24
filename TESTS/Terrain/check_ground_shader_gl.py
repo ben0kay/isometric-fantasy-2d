@@ -174,28 +174,33 @@ v={'preview_overlay_visibility':(1,0)}
 result=render(new,flags,(-1024,-1024),(256,256),256,vectors=v)
 expected=gray.copy();expected[:,:,:3]*=np.array((1,.72,.44))
 assert np.max(np.abs(result-expected))<2e-6,'Native grayscale sampling/tint lost detail'
-# Constant white material isolates the mask: PNG and Dust must blend identically.
+# Constant white material isolates coverage for the new broken dirt boundary.
 # Alpha must remain opaque.
 white=np.ones((256,256,4),np.float32);white[:,:,:3]=.5;maps['grayscale_art']=texture(white)
 table[0,5]=(1,1,1,1);table[0,0]=(1,1,1,1);table[0,2]=(1,1,1,1)
-table[0,6]=(.4,.8,500,.10);table[0,7,0]=0
+table[0,6]=(.4,1,500,.10);table[0,7,0]=0
 maps['overlay_table']=texture(table)
 png=render(new,flags,vectors=v)
-# A test-only constant material isolates coverage from the old Dust grain.
+# Compare partial blend area with the previous smooth Dust mask at the same opacity.
 import tempfile
 source=load(ROOT/'WORLD/Terrain/Ground/Surfaces/Shaders/StreamedGround.gdshader')
-source=re.sub(r'vec3 material=procedural_ground\([^;]+;', 'vec3 material=vec3(1.0);',source)
+source=re.sub(r'    if\(grayscale && mask.r<1.0\) \{.*?\n    \}', '',source,flags=re.S)
 with tempfile.NamedTemporaryFile(mode='w',suffix='.glsl') as f:
-    f.write(source);f.flush();mask_reference=program(f.name)
-table[0,8,2]=1;maps['overlay_table']=texture(table)
-assert np.max(np.abs(png-render(mask_reference,flags,vectors=v)))<1e-6,'PNG changed Dust coverage mask'
-table[0,8,2]=3
+    f.write(source);f.flush();smooth_reference=program(f.name)
+smooth=render(smooth_reference,flags,vectors=v)
+under=render(new,{'blend_ground_art':True})
+alpha=(png[:,:,0]-under[:,:,0])/(1-under[:,:,0])
+old_alpha=(smooth[:,:,0]-under[:,:,0])/(1-under[:,:,0])
+partial=(alpha>.01)&(alpha<.99);old_partial=(old_alpha>.01)&(old_alpha<.99)
+assert partial.sum()<old_partial.sum()*.5,'Dirt transition remains broadly translucent'
+assert (alpha>.999).any() and (alpha<.001).any(),'Missing solid dirt or grass'
+assert ((alpha>.999)&old_partial).any() and ((alpha<.001)&old_partial).any(),'No interlocking edge breakup'
 table[0,6,1]=0;maps['overlay_table']=texture(table)
 assert np.max(np.abs(render(new,flags,vectors=v)-render(new,{'blend_ground_art':True})))<1e-6,'PNG zero opacity changed grass'
-table[0,6,1]=.8;maps['overlay_table']=texture(table)
+table[0,6,1]=1;maps['overlay_table']=texture(table)
 for iy in range(4):
     for ix in range(4):
         piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors=v)
         assert np.max(np.abs(piece-png[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'PNG mask chunk seam'
-print('PASS: native 256px grayscale detail, brown tint, exact Dust mask parity, zero-opacity grass parity and PNG mask seams')
+print('PASS: native 256px grayscale detail, brown tint, solid dirt and narrower interlocking edges, zero-opacity grass parity and PNG mask seams')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')
