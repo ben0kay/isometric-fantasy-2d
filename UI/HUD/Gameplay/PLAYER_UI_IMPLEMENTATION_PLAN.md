@@ -1,12 +1,12 @@
 # Player HUD, Hotbar & Inventory UI — Implementation Plan
 
-> **Status: PLANNED / documentation only — 24 October 2026.** No UI scenes, C# gameplay logic, input bindings or inventory systems are implemented by this note. Read root README.md, CodePreferences.md, UI/README.md, UI/HUD/Gameplay/README.md, UI/Inventory/PLAYER_INVENTORY.md, ENTITIES/Player/Input/README.md, ENTITIES/Player/Inventory/README.md and UI/Shared/Buttons/README.md before each phase. Confirm actual code and scenes at HEAD rather than relying only on READMEs. User approval required per phase.
+> **Status: UI0 AUDIT COMPLETE; UI1–UI5 PLANNED — 24 October 2026. Documentation only.** No UI scenes, C# gameplay logic, input bindings or inventory systems are implemented by this note. Read root README.md, CodePreferences.md, UI/README.md, UI/HUD/Gameplay/README.md, UI/Inventory/PLAYER_INVENTORY.md, ENTITIES/Player/Input/README.md, ENTITIES/Player/Inventory/README.md and UI/Shared/Buttons/README.md before each phase. Confirm actual code and scenes at HEAD rather than relying only on READMEs. User approval required per phase.
 
 ## Phase overview
 
 | Phase | Objective | Suggested assistant | Status |
 | --- | --- | --- | --- |
-| **UI0** | Audit PlayerInput, current world UI, button factory, item/inventory foundations and input conflicts | Regular Chat | Planned |
+| **UI0** | Audit PlayerInput, current world UI, button factory, item/inventory foundations and input conflicts | Regular Chat | **Complete: source audit** |
 | **UI1** | Add shared gameplay HUD root and visual six-slot bottom hotbar, initially placeholder data | Codex | Planned |
 | **UI2** | Add inventory open/close action through PlayerInput and a non-pausing inventory overlay | Codex | Planned |
 | **UI3** | Connect hotbar/inventory to authoritative item state and selection, after item contracts exist | Codex | Planned |
@@ -69,6 +69,36 @@ Do not put input polling or item authority into the HUD scenes. UI observes play
 **Performance:** identify shared signal wiring and hidden-UI sleep.
 **Pass:** short documented mapping and no conflicting controls or invented item backend.
 **Assistant:** Regular Chat.
+
+## UI0 audit results — completed 24 October 2026
+
+**Scope checked against current source:** \`project.godot\`, \`ENTITIES/Player/Input/PlayerInput.cs\`, \`ENTITIES/Player/Movement/PlayerMovement.cs\`, \`ENTITIES/Player/Equipment/EquippedTool.cs\`, \`ENTITIES/Player/Player.tscn\`, \`SCENES/World/World.tscn\`, \`WORLD/Runtime/WorldScene.cs\`, \`UI/Shared/Buttons/UIButtonFactory.cs\`, \`UIButtonStyle.cs\`, \`DefaultButtonStyle.tres\`, \`ITEMS/ItemMasterConfig.cs\`, existing UI/player inventory notes and menu styles. Source audit only; no editor/runtime validation.
+
+| Area | Confirmed current behavior | Required UI1–UI3 handoff |
+| --- | --- | --- |
+| Input | One PlayerInput child on Player.tscn. Unhandled input emits combat mouse and starter-selection signals; raw _Input handles right-mouse/shift releases. | Add an InventoryToggleRequested intent in PlayerInput rather than direct raw-key polling in UI. |
+| Bindings | project.godot has arrow movement actions, no inventory InputMap action. No current I-key handling in audited PlayerInput. | Create named player_inventory InputMap action, default I. Ensure I can close panel even if a button has keyboard focus. |
+| Number keys | Keys 1/2/3 emit StarterSelectionRequested; EquippedTool switches axe/sword and toggles shield. Selection is temporary and can reject during attack/recovery. | UI1 displays hotbar only; do not steal number keys yet. UI3 migrates to 1–6 hotbar selection with intentional axe/sword/shield compatibility. |
+| RMB | Right mouse press currently hop or guard, release passes through _Input even when UI consumes it. Future water plans also use RMB for flotation. | No inventory RMB behavior assumed; open inventory safely releases active guard/sprint and avoids combat input leaks. |
+| Movement | PlayerMovement physics reads PlayerInput.ReadMovement, which uses Input.GetVector directly, independent of Control input consumption. | UI2 must gate movement/combat/shift/dodge explicitly when inventory is open. SceneTree keeps running; do not rely on MouseFilter alone. |
+| Scene | World.tscn has separate TerrainRoot, SystemsRoot, DebugUIRoot and WorldActorsRoot with persistent Player; WorldScene caches Player on EnterTree. | Add one screen-space GameplayUIRoot CanvasLayer under World, not under player/camera/streaming chunks. Connect once and unsubscribe on world exit. |
+| Debug overlap | F9 environment CanvasLayer uses layer 20 and left panel around x=16–366 when open. | Gameplay HUD below debug layer. Top-left toast lane later avoids expanded F9; bottom-centered hotbar stays separate. |
+| Factory | UIButtonFactory.Create/Apply implemented, with Primary/Secondary/Danger/Small variants; UIButtonStyle provides colours and radius. | Every inventory Button must use factory. Future organic refinements should use shared style resource/factory, not per-view duplicated styling. |
+| Items | ITEMS/ItemMasterConfig.cs empty; player Inventory folder documentation only. Combat EquippedItemDefinition is not general backpack/stack storage. | UI1/UI2 use honest empty slots/equipment placeholders. UI3 requires authoritative item stacks, equipment and save integration. |
+| Layout | project.godot 1920×1080 canvas_items, expand aspect. | Anchor responsive bottom hotbar; test viewport resizes, smaller windows, safe margins. |
+| Menus | MenuNavigation changes scenes and clears pause; current world pause/Esc arbitration not fully established by this audit. | UI2 priority recommendation: I toggles, Esc closes an open inventory before other menu behavior; inspect existing pause/session hooks when implementing. |
+
+### Decisions carried into UI1/UI2
+
+- Initial hotbar is **six visual slots**, configurable; these are not fake usable items and do not change weapon controls in UI1.
+- Inventory is a **non-pausing overlay**; enemies, physics, world and weather continue. Recommend freezing *player commands* while it is open, rather than freezing the world.
+- Add input suppression at the central PlayerInput/PlayerMovement boundary so held arrows cannot move the player through the overlay. Suppress combat presses, clear active guard/sprint/dodge state safely, and keep UI toggle functioning while focused.
+- Preserve C2.5 right-mouse release handling; future water flotation bindings remain separate.
+- Add one HUD canvas owned by World with an embedded independent inventory view; no UI-owned inventory storage, duplicated HUD, or extra idle _Process loops.
+- Use UIButtonFactory for inventory buttons; design rounded organic frames through passive controls/resources. Defer interactive item assignments/drag-and-drop until UI3.
+- Validate Godot import/build, 1080p + smaller windows, I/Esc + focus, held keys/mouse, world still running, F9/F7 overlap, unload/reload lifecycle, idle and active frame cost in UI1/UI2.
+
+**UI0 validation:** completed documentation and source inspection only. No gameplay/UI files edited and no Godot, .NET or graphical tests run. UI1 and UI2 remain separately authorized implementation phases.
 
 ### UI1 — bottom hotbar foundation
 **Objective:** render a polished, resolution-aware six-slot hotbar within one persistent gameplay HUD CanvasLayer.
