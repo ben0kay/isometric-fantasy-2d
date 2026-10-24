@@ -3,16 +3,16 @@
 [ext_resource type="Script" path="res://FEEDBACK/Particles/ParticleProfile.cs" id="particles"]
 [sub_resource type="Resource" id="particles"]
 script = ExtResource("particles")
-VelocityMin = Vector2(-15, -45)
-VelocityMax = Vector2(15, -20)
+VelocityMin = Vector2(-25, -70)
+VelocityMax = Vector2(25, -25)
 Acceleration = Vector2(0, 120)
-DirectionSpeed = 105.0
-SpreadDegrees = 25.0
+DirectionSpeed = 235.0
+SpreadDegrees = 65.0
 WindMultiplier = 0.0
 FlutterAmplitude = 0.0
-LifetimeMin = 0.22
-LifetimeMax = 0.35
-FadeSeconds = 0.12
+LifetimeMin = 0.4
+LifetimeMax = 0.65
+FadeSeconds = 0.18
 Shape = 1
 Size = 1
 Spin = 14.0

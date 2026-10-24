@@ -10,6 +10,7 @@ Sprite = ExtResource("sprite")
 ChasePlayer = true
 MeleeEnabled = false
 MaxHealth = 50
+DeathFadeSeconds = 0.75
 DetectionRadius = 600.0
 Ranged = ExtResource("ranged")
 ImpactFeedback = ExtResource("bone")

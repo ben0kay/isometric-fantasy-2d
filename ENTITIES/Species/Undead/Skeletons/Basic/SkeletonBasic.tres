@@ -8,4 +8,5 @@ Id = "undead.skeleton.basic"
 Sprite = ExtResource("sprite")
 ChasePlayer = true
 MaxHealth = 50
+DeathFadeSeconds = 0.75
 ImpactFeedback = ExtResource("impact")

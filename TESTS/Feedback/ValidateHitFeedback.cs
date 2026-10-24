@@ -14,7 +14,14 @@ public partial class ValidateHitFeedback : Node2D
             var bone=GD.Load<HitFeedbackProfile>("res://FEEDBACK/HitFeedback/Profiles/Bone.tres");
             var flesh=GD.Load<HitFeedbackProfile>("res://FEEDBACK/HitFeedback/Profiles/Flesh.tres");
             Check(bone.Particles.Shape==ParticleShape.Shard && flesh.Particles.Shape==ParticleShape.Droplet,"Material shapes");
-            Check(bone.Colour!=flesh.Colour && bone.Particles.LifetimeMax<=0.3f,"Distinct short material profiles");
+            Check(bone.Colour!=flesh.Colour && bone.Particles.LifetimeMin>=0.4f
+                && bone.Particles.LifetimeMax>=0.65f && bone.Particles.DirectionSpeed==235f
+                && bone.Particles.SpreadDegrees==65f,"Distinct stronger bone material profile");
+            var basic=GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Basic/SkeletonBasic.tres");
+            var archer=GD.Load<EntityDefinition>("res://ENTITIES/Species/Undead/Skeletons/Archer/SkeletonArcher.tres");
+            Check(basic.ImpactFeedback==bone && archer.ImpactFeedback==bone
+                && basic.DeathFadeSeconds>=bone.Particles.LifetimeMax
+                && archer.DeathFadeSeconds>=bone.Particles.LifetimeMax,"Skeleton-only bone profiles or final burst lifetime");
             var player=GD.Load<PackedScene>("res://ENTITIES/Player/Player.tscn").Instantiate<PlayerMovement>();
             player.Config=(PlayerMasterConfig)GD.Load<PlayerMasterConfig>("res://ENTITIES/Player/DefaultPlayerConfig.tres").Duplicate();
             AddChild(player); player.SetPhysicsProcess(false);
@@ -29,7 +36,7 @@ public partial class ValidateHitFeedback : Node2D
             Check(hit.Source==player && hit.Target==target && hit.Direction==Vector2.Right,"Source/direction provenance");
             Check(hit.Position.DistanceTo(new Vector2(23,0))<0.01f,"Closest hurt point");
             var renderer=target.ImpactVisual;
-            Check(renderer!=null && renderer.EmittedBursts==1 && renderer.ActiveParticleCount==8,"Bone burst");
+            Check(renderer!=null && renderer.EmittedBursts==1 && renderer.ActiveParticleCount==12,"Bone burst");
             Check(renderer.LastImpactPoint==hit.Position && target.Health==95,"Impact origin/damage");
             Check(query.Strike(player,values with { Damage=0 },Vector2.Right,player.Stats.Values,out _),"Zero contact");
             Check(renderer.EmittedBursts==1,"Zero damage emitted");
@@ -47,7 +54,7 @@ public partial class ValidateHitFeedback : Node2D
             Check(renderer.ActiveParticleCount==32 && target.GetChildCount()==children,"Overflow/node reuse");
             target.Position+=new Vector2(10,20); target.Scale=new Vector2(1.2f,0.8f);
             Check(renderer.LastImpactPoint==hit.Position,"Recoil changed snapshotted impact");
-            await Frames(30); Check(!renderer.IsProcessing() && renderer.ActiveParticleCount==0,"Settled renderer did not sleep");
+            await Frames(60); Check(!renderer.IsProcessing() && renderer.ActiveParticleCount==0,"Settled renderer did not sleep");
             target.Position=new Vector2(35,0); target.Scale=Vector2.One; await Frames(3);
             query.Strike(player,values,Vector2.Right,player.Stats.Values,out _);
             target.ProcessMode=ProcessModeEnum.Disabled;
