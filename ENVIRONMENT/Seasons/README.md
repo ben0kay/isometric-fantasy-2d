@@ -13,3 +13,5 @@ Each tree receives one stable timing group from its world instance ID (preview f
 State belongs here; generic foliage logic belongs under WORLD/Content/Vegetation/Shared; artwork/masks belong beside species sprites. DEBUG owns only removable controls. Future fire-mask uses are outside this task.
 
 Current follow-up: [SE1b implementation, tests and local checks](SE1b_Validation.md).
+
+**SE2 implemented, local acceptance pending:** exact seasonal resource bridges now reconstruct compatible older fingerprints alongside the existing terrain bridges. No schema/calendar change. Fire cache entries release after their last active user; trees without charred art keep original textures and complete/reset cleanly. Adapter diagnostics expose live counts/uploads. See [SE2 checks and local commands](SE2_Validation.md). Earlier SE1 migration warnings describe those revisions, not the new bridge.

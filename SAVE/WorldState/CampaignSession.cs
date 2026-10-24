@@ -39,7 +39,7 @@ public static class CampaignSession
     internal static string LegacyGS1ContentFingerprint() => BuildContentFingerprint(null,true);
     // Compare the full dependency set with only explicitly requested frozen substitutions.
     // =========================================================
-    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false, bool previousDirtEdges = false)
+    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false, bool previousDirtEdges = false, IReadOnlyDictionary<string, string> seasonalReferences = null)
     {
         if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
             throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
@@ -89,6 +89,11 @@ public static class CampaignSession
                     _ => null
                 };
                 if (reference != null) source = Godot.FileAccess.GetFileAsString(reference).Replace("\r\n","\n");
+            }
+            if (seasonalReferences != null && seasonalReferences.TryGetValue(path, out string seasonalReference))
+            {
+                if (!Godot.FileAccess.FileExists(seasonalReference)) throw new InvalidDataException("Missing seasonal migration reference: " + seasonalReference);
+                source = Godot.FileAccess.GetFileAsString(seasonalReference).Replace("\r\n", "\n");
             }
             string normalized = string.Join("\n",source.Split('\n').Where(line => !line.StartsWith("RandomSeedOnLoad = ",StringComparison.Ordinal) && !line.StartsWith("FixedSeed = ",StringComparison.Ordinal)));
             files.Add(path,normalized);
@@ -142,6 +147,27 @@ public static class CampaignSession
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "420883184A259F63C067AF1207BD8585FCA6FB67C78BB4D1DB455E9EAE8D6288" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "5451A796CE25C205BC2FAFE45FBF2B778A7516B098C96BF52030EF0AC21558C4";
 
+    // Compose exact seasonal substitutions with already gated terrain/layout bridges.
+    // This work runs only while opening incompatible campaigns, never during world simulation.
+    // =========================================================
+    internal static IEnumerable<string> SeasonalContentFingerprints()
+    {
+        if (!SeasonalSaveCompatibility.CanMigrate()) yield break;
+        foreach (var references in SeasonalSaveCompatibility.ReferenceSets())
+        {
+            yield return BuildContentFingerprint(null, seasonalReferences: references);
+            if (CanMigrateDirtEdges()) yield return BuildContentFingerprint(null, previousDirtEdges: true, seasonalReferences: references);
+            if (CanMigrateDirtPng()) yield return BuildContentFingerprint(null, previousPng: true, seasonalReferences: references);
+            if (CanMigrateRecipes()) yield return BuildContentFingerprint(null, previousRecipes: true, seasonalReferences: references);
+            if (CanMigrateOakExtras()) yield return BuildContentFingerprint(null, previousOakExtras: true, seasonalReferences: references);
+            if (CanMigratePatches()) yield return BuildContentFingerprint(null, previousPatches: true, seasonalReferences: references);
+            if (CanMigrateGround()) yield return BuildContentFingerprint(null, previousGround: true, seasonalReferences: references);
+            string scene = Godot.FileAccess.GetFileAsString("res://SCENES/World/World.tscn").Replace("\r\n", "\n");
+            if (CheckpointFiles.Digest(Encoding.UTF8.GetBytes(scene)) == SaveCompatibility.SO2SceneSourceHash)
+                yield return BuildContentFingerprint("res://SAVE/Migrations/References/SO1WorldScene.txt", seasonalReferences: references);
+        }
+    }
+
     // Reject changed content rather than moving old trees or rerolling geography behind the player's back.
     // =========================================================
     public static void RequireContent(CampaignSnapshot snapshot)
@@ -158,6 +184,8 @@ public static class CampaignSession
         string scene = Godot.FileAccess.GetFileAsString("res://SCENES/World/World.tscn").Replace("\r\n","\n");
         if (CheckpointFiles.Digest(Encoding.UTF8.GetBytes(scene)) == SaveCompatibility.SO2SceneSourceHash
             && snapshot.ContentFingerprint == LegacySO1ContentFingerprint()) return;
+        foreach (string fingerprint in SeasonalContentFingerprints())
+            if (snapshot.ContentFingerprint == fingerprint) return;
         throw new InvalidDataException("Campaign content/settings have changed. A deliberate migration is required; the saved world was preserved.");
     }
 }

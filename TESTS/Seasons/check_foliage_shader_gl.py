@@ -49,9 +49,10 @@ base=re.sub(r'(uniform [^;:=]+)\s*:[^;=]+',r'\1',base)
 base=base.replace('void fragment()', 'void main()')
 wet=load(ROOT/'WORLD/Content/Vegetation/Shared/Wetness/VegetationWetness.gdshaderinc')
 snow=load(ROOT/'WORLD/Content/Vegetation/Shared/Snow/VegetationSnow.gdshaderinc')
+fire=load(ROOT/'WORLD/Content/Vegetation/Trees/Shared/Fire/FireErosion.gdshaderinc')
 anchor='    COLOR = pixel * sprite_tint * inside;'
-code=base.replace('void main()',wet+'\n'+snow+'\nvoid main()')
-code=code.replace(anchor,'    if (!shadow_only) pixel.rgb = wet_foliage_colour(pixel.rgb, original_foliage_rgb, sample_uv);\n    if (!shadow_only) pixel.rgb = tree_snow_colour(pixel.rgb, original_foliage_rgb, sample_uv);\n'+anchor)
+code=base.replace('void main()',wet+'\n'+snow+'\n'+fire+'\nvoid main()')
+code=code.replace(anchor,'    if (!shadow_only) pixel.rgb = wet_foliage_colour(pixel.rgb, original_foliage_rgb, sample_uv);\n    if (!shadow_only) pixel.rgb = tree_snow_colour(pixel.rgb, original_foliage_rgb, sample_uv);\n    pixel = fire_erode_pixel(pixel, sample_uv, UV);\n'+anchor)
 code=re.sub(r'(uniform [^;:=]+)\s*:[^;=]+',r'\1',code)
 code='#version 330 core\nout vec4 COLOR;\nuniform sampler2D TEXTURE;\nuniform vec2 TEXTURE_PIXEL_SIZE;\nuniform float TIME;\nconst vec2 UV=vec2(0.5);\n'+code
 prog=createProgram();attach(prog,vertex);attach(prog,shader(0x8B30,code));link(prog)
@@ -74,17 +75,18 @@ output=texture((0,0,0,0),7);gl('glFramebufferTexture2D',None,[c.c_uint,c.c_uint,
 vao=c.c_uint();gl('glGenVertexArrays',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(vao));gl('glBindVertexArray',None,[c.c_uint])(vao)
 vec4(loc(prog,b'sprite_tint'),1,1,1,1);vec2(loc(prog,b'TEXTURE_PIXEL_SIZE'),1,1);scalar(loc(prog,b'strength_world_pixels'),0)
 read=gl('glReadPixels',None,[c.c_int,c.c_int,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_void_p])
-def render(rgb,mask=1,enabled=True,amount=1,healthy=True,wetness=0,snowfall=0,hasmask=True,tone=(1,0),bucket=0,atlas=None):
+def render(rgb,mask=1,enabled=True,amount=1,healthy=True,wetness=0,snowfall=0,hasmask=True,tone=(1,0),bucket=0,atlas=None,burn=0):
     if atlas is None:
         atlas=np.zeros((2,16,4),np.float32);atlas[0,:]=(.89,.38,.08,amount);atlas[1,:]=(tone[0],tone[1],0,0)
     scalar(loc(prog,b'seasonal_bucket'),bucket)
-    for unit,(name,colour) in enumerate([('TEXTURE',(*rgb,0.7)),('foliage_mask',(mask,mask,mask,1)),('seasonal_state',atlas),('snow_noise',(1,1,1,1))]):
+    for unit,(name,colour) in enumerate([('TEXTURE',(*rgb,0.7)),('foliage_mask',(mask,mask,mask,1)),('seasonal_state',atlas),('snow_noise',(1,1,1,1)),('fire_burn_noise',(.5,.5,.5,1))]):
         texture(colour,unit);one(loc(prog,name.encode()),unit)
     for name,value in [('foliage_has_mask',hasmask),('seasonal_profile_enabled',enabled),('foliage_healthy',healthy)]:one(loc(prog,name.encode()),value)
-    for name,value in [('wet_coverage',wetness),('snow_coverage',snowfall)]:scalar(loc(prog,name.encode()),value)
+    for name,value in [('wet_coverage',wetness),('snow_coverage',snowfall),('fire_burn_progress',burn)]:scalar(loc(prog,name.encode()),value)
     gl('glViewport',None,[c.c_int,c.c_int,c.c_int,c.c_int])(0,0,1,1);gl('glDrawArrays',None,[c.c_uint,c.c_int,c.c_int])(4,0,3)
     result=np.zeros(4,np.float32);read(0,0,1,1,0x1908,0x1406,result.ctypes.data)
-    assert np.isfinite(result).all();assert abs(result[3]-.7)<1e-6
+    assert np.isfinite(result).all();assert 0 <= result[3] <= .700001
+    if burn==0:assert abs(result[3]-.7)<1e-6
     return result[:3]
 dark=(.094,.078,.145);green=(.15,.36,.26);bark=(.4,.2,.1)
 for colour in [dark,green,bark]:
@@ -130,3 +132,10 @@ winter=render(green,atlas=authored(0));assert np.dot(winter,[.3,.6,.1])>np.dot(g
 assert winter[2]>winter[0] and winter[1]>winter[0]
 assert np.max(abs(render(green,bucket=0,atlas=authored(.76))-render(green,bucket=15,atlas=authored(.76))))>.05
 print('PASS: authored Jan/Dec wrap, Summer plateau, pale winter lift, strength, synchronized/varied timing and atlas group sampling')
+
+for snow_value in [0, .7]:
+    unburnt=render(green,atlas=authored(.76),snowfall=snow_value)
+    burned=render(green,atlas=authored(.76),snowfall=snow_value,burn=.4)
+    assert np.max(abs(burned-unburnt))>.01
+    assert np.isfinite(render(green,atlas=authored(0),snowfall=snow_value,wetness=1,burn=.7)).all()
+print('PASS: seasonal/wet/snow/fire composition compiles and active erosion remains effective across palette/weather states')

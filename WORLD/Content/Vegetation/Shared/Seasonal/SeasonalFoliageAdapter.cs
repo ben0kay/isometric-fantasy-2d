@@ -29,6 +29,9 @@ public partial class SeasonalFoliageAdapter : Node
     private readonly Dictionary<TreeVisualVariant, (Texture2D Mask, int Users)> _masks = new();
     public int PaletteCount => _palettes.Count;
     public int ChunkCount => _chunks.Count;
+    public int MaskVariantCount => _masks.Count;
+    public int MaterialCount { get; private set; }
+    public long PaletteUploads { get; private set; }
 
     // Only explicit season changes update tiny shared data textures, including snow/fire copies.
     // =========================================================
@@ -67,7 +70,7 @@ public partial class SeasonalFoliageAdapter : Node
                     material.SetShaderParameter("seasonal_state", AcquirePalette(profile));
                     state.Profiles.Add(profile);
                 }
-                groups.Add(key, material); state.Materials.Add(material); Wind.RegisterMaterial(material);
+                groups.Add(key, material); state.Materials.Add(material); MaterialCount++; Wind.RegisterMaterial(material);
             }
             state.Sprites.Add(sprite, (source, material)); sprite.Material = material;
         }
@@ -92,7 +95,7 @@ public partial class SeasonalFoliageAdapter : Node
         if (!_palettes.TryGetValue(profile, out PaletteState state))
         {
             state = new PaletteState(); _palettes.Add(profile, state);
-            WritePalette(profile, state); state.Texture = ImageTexture.CreateFromImage(state.Image);
+            WritePalette(profile, state); state.Texture = ImageTexture.CreateFromImage(state.Image); PaletteUploads++;
         }
         state.Users++; return state.Texture;
     }
@@ -125,7 +128,7 @@ public partial class SeasonalFoliageAdapter : Node
             }
         }
         state.Written = true;
-        if (dirty) state.Texture?.Update(state.Image);
+        if (dirty && state.Texture != null) { state.Texture.Update(state.Image); PaletteUploads++; }
     }
 
     // Explicit FNV-1a avoids randomized string hashes, runtime IDs and reload-dependent RNG.
@@ -146,6 +149,7 @@ public partial class SeasonalFoliageAdapter : Node
             if (GodotObject.IsInstanceValid(pair.Key) && pair.Key.Material == pair.Value.Owned)
                 pair.Key.Material = pair.Value.Source;
         foreach (ShaderMaterial material in state.Materials) Wind.UnregisterMaterial(material);
+        MaterialCount -= state.Materials.Count;
         foreach (var profile in state.Profiles)
             if (--_palettes[profile].Users == 0) _palettes.Remove(profile);
         foreach (var variant in state.Variants)
@@ -163,6 +167,6 @@ public partial class SeasonalFoliageAdapter : Node
         Seasons.Changed -= Refresh;
         foreach (var state in _chunks.Values)
             foreach (var material in state.Materials) Wind.UnregisterMaterial(material);
-        _chunks.Clear(); _palettes.Clear(); _masks.Clear();
+        _chunks.Clear(); _palettes.Clear(); _masks.Clear(); MaterialCount = 0;
     }
 }

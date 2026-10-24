@@ -8,7 +8,9 @@ public sealed class FireErosionAdapter
 {
     private const string OutputAnchor = "    COLOR = pixel * sprite_tint * inside;";
     private const string IncludePath = "res://WORLD/Content/Vegetation/Trees/Shared/Fire/FireErosion.gdshaderinc";
-    private static readonly Dictionary<Shader, Shader> ExtendedShaders = new();
+    private static readonly Dictionary<Shader, (Shader Extended, int Users)> ExtendedShaders = new();
+    public static int CachedShaderCount => ExtendedShaders.Count;
+    private Shader _shaderSource;
 
     private Sprite2D _sprite;
     private Texture2D _noise;
@@ -38,21 +40,22 @@ public sealed class FireErosionAdapter
             GD.PushWarning("FIRE2: unsupported tree shader, using FIRE1 crossfade for this oak.");
             return false;
         }
-        if (!ExtendedShaders.TryGetValue(shader, out Shader extended))
+        if (!ExtendedShaders.TryGetValue(shader, out var cached))
         {
             code = code.Replace("shader_type canvas_item;",
                 "shader_type canvas_item;\n#include \"" + IncludePath + "\"");
             code = code.Replace("instance uniform float wind_orientation", "uniform float wind_orientation");
             code = code.Replace(OutputAnchor,
                 "    pixel = fire_erode_pixel(pixel, sample_uv, UV);\n" + OutputAnchor);
-            extended = new Shader { Code = code };
-            ExtendedShaders.Add(shader, extended);
+            cached = (new Shader { Code = code }, 0);
         }
+        ExtendedShaders[shader] = (cached.Extended, cached.Users + 1);
+        ReleaseShader(); _shaderSource = shader;
         _source = source;
         _hasSnow = shader.Code.Contains("VegetationSnow.gdshaderinc");
         _hasWetness = shader.Code.Contains("VegetationWetness.gdshaderinc");
         _burning = (ShaderMaterial)source.Duplicate();
-        _burning.Shader = extended;
+        _burning.Shader = cached.Extended;
         _burning.SetShaderParameter("fire_burn_noise", _noise);
         _burning.SetShaderParameter("fire_burn_progress", 0f);
         _burning.SetShaderParameter("wind_orientation", _sprite.FlipH ? -1f : 1f);
@@ -92,7 +95,18 @@ public sealed class FireErosionAdapter
     {
         if (GodotObject.IsInstanceValid(_sprite) && _sprite.Material == _burning)
             _sprite.Material = _source;
+        ReleaseShader();
         _source = null; _burning = null; _sprite = null; _noise = null;
+    }
+    // A world/chunk unload must not leave composed shaders retained by a process-wide cache.
+    // =========================================================
+    private void ReleaseShader()
+    {
+        if (_shaderSource == null) return;
+        var cached = ExtendedShaders[_shaderSource];
+        if (cached.Users <= 1) ExtendedShaders.Remove(_shaderSource);
+        else ExtendedShaders[_shaderSource] = (cached.Extended, cached.Users - 1);
+        _shaderSource = null;
     }
     #endregion
 }

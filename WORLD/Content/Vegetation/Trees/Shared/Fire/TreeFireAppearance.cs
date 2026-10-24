@@ -113,8 +113,9 @@ public partial class TreeFireAppearance : Node
     private void OnCompleted()
     {
         _sprite.SetInstanceShaderParameter("foliage_healthy", false);
-        if (Config?.BurntTexture == null) return;
-        _sprite.Texture = Config.BurntTexture; _sprite.Offset = BurntOffset(); _sprite.SelfModulate = _healthyTint;
+        if (Config?.BurntTexture != null)
+        { _sprite.Texture = Config.BurntTexture; _sprite.Offset = BurntOffset(); _sprite.SelfModulate = _healthyTint; }
+        // Without replacement art, retain the original texture/tint; only healthy foliage effects stop.
         _foliageErosion = false;
         RemoveOverlay(); SetProcess(false);
         EmitSignal(SignalName.AppearanceChanged);

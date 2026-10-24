@@ -43,3 +43,5 @@ SO2 revision: Godot 4.7.2 build/import, scene ownership and **real SO1-layout ch
 ## C1 health checkpoint compatibility
 
 New snapshots use schema 2 with required player HP (zero is a retained dead player). Schema-1 checkpoints lacked this field and restore configured full HP; the next explicit/automatic checkpoint writes schema 2 with the ordinary previous-checkpoint backup. Entity HP/death, frozen geography, edit blobs and content fingerprints remain unchanged. Invalid HP rejects, including values above the runtime actor maximum; there is no silent clamping. Runtime stat modifiers are not persisted before equipment/buff ownership exists. See COMBAT/C1_Validation.md.
+
+SE2 adds narrowly gated compatibility for the shipped seasonal visual resource revisions, composed with existing terrain bridges. It preserves the current schema/fingerprint and does not persist F9 preview state. Source-level historical reconstruction passed; native/disk restoration is awaiting local validation. [Details](../ENVIRONMENT/Seasons/SE2_Validation.md).

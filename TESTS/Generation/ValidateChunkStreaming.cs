@@ -45,6 +45,12 @@ public partial class ValidateChunkStreaming : Node
         var items = original.Values.ToArray();
         for (int i = 0; i < items.Length; i++) for (int j = i+1; j < items.Length; j++)
         { float distance = items[i].Radius+items[j].Radius+world.Config.ExtraSpacing; Check(items[i].Position.DistanceSquaredTo(items[j].Position) >= distance*distance,"Overlapping chunk seam scenery"); }
+        var seasonEnvironment = world.GetNode<EnvironmentRuntime>("SystemsRoot/Environment");
+        seasonEnvironment.Seasons.SetEnabled(true); seasonEnvironment.Seasons.SetYearPosition(0.76f);
+        var seasonalAdapter = seasonEnvironment.GetNode<SeasonalFoliageAdapter>("SeasonalFoliage");
+        var homeTiming = world.ActorsRoot.FindChildren("*", "", true, false).OfType<FantasyGame.World.Trees.Tree>()
+            .Where(t => t.Definition.SeasonalFoliage != null)
+            .ToDictionary(t => t.GetMeta("world_instance_id").AsString(), t => t.GetNode<Sprite2D>("Sprite").GetInstanceShaderParameter("seasonal_bucket").AsSingle());
         var home = Capture(world); Check(home.Count > 0,"No initial scenery");
         var tree = world.ActorsRoot.FindChildren("*","",true,false).OfType<FantasyGame.World.Trees.Tree>().First();
         string burntId = tree.GetMeta("world_instance_id").AsString(); tree.GetNode<Burnable>("Burnable").RestoreProgress(1);
@@ -73,6 +79,19 @@ public partial class ValidateChunkStreaming : Node
             var material = (ShaderMaterial)healthy.GetNode<Sprite2D>("Sprite").Material;
             Check(material.Shader.Code.Contains("wet_foliage_colour"),"New chunk foliage lost rain wetness");
             Check(Mathf.Abs(material.GetShaderParameter("wind_multiplier").AsSingle()-env.Wind.Strength) < 0.001f,"Wet/snow material stopped following shared wind");
+            foreach (var oak in world.ActorsRoot.FindChildren("*", "", true, false).OfType<FantasyGame.World.Trees.Tree>()
+                .Where(t => t.Definition.SeasonalFoliage != null).Take(8))
+            {
+                var sprite = oak.GetNode<Sprite2D>("Sprite"); string id = oak.GetMeta("world_instance_id").AsString();
+                int bucket = SeasonalFoliageAdapter.TimingBucket(id);
+                Check(sprite.GetInstanceShaderParameter("seasonal_bucket").AsSingle() == bucket, "Streamed seasonal timing changed stable identity");
+                var atlas = (Texture2D)((ShaderMaterial)sprite.Material).GetShaderParameter("seasonal_state").AsGodotObject();
+                Check(atlas != null && atlas.GetImage().GetPixel(bucket, 0).A > 0.9f, "New Autumn chunk has missing/neutral seasonal atlas");
+            }
+            int liveProfiles = world.ActorsRoot.FindChildren("*", "", true, false).OfType<FantasyGame.World.Trees.Tree>()
+                .Select(t => t.Definition.SeasonalFoliage).Where(p => p != null).Distinct().Count();
+            Check(!seasonalAdapter.IsProcessing() && seasonalAdapter.PaletteCount <= liveProfiles + 1
+                && seasonalAdapter.ChunkCount <= stream.LoadedCount + 2, "Seasonal streaming cache/callback bound failed");
             Check(stream.LoadedCount <= 81,"Loaded chunks grew beyond the unload square");
             Check(stream.CanMoveTo(destination),"Active chunks did not finish loading");
             Check(GetTree().GetNodesInGroup("world_trees").Count < 1500,"Unloaded tree nodes leaked");
@@ -83,6 +102,9 @@ public partial class ValidateChunkStreaming : Node
         foreach (var pair in home) Check(returned.TryGetValue(pair.Key,out Vector2 point) && point == pair.Value,"Home scenery changed after unload/reload");
         var restored = world.ActorsRoot.FindChildren("*","",true,false).OfType<Node2D>().First(n => n.HasMeta("world_instance_id") && n.GetMeta("world_instance_id").AsString() == burntId);
         Check(restored.GetNode<Burnable>("Burnable").State == BurnState.Burnt,"Burnt state reset on chunk return");
+        foreach (var oak in world.ActorsRoot.FindChildren("*", "", true, false).OfType<FantasyGame.World.Trees.Tree>())
+            if (homeTiming.TryGetValue(oak.GetMeta("world_instance_id").AsString(), out float bucket))
+                Check(oak.GetNode<Sprite2D>("Sprite").GetInstanceShaderParameter("seasonal_bucket").AsSingle() == bucket, "Returning tree changed seasonal timing");
         Check(!returned.ContainsKey(removedId),"Removed runtime prop resurrected on return");
         Check(world.Blueprint.LocalGeneratorVersion == 1 && world.Blueprint.ChunkSize == 512,"Missing local generation manifest metadata");
         Check(world.Blueprint.WorldId == stream.WorldId,"Chunk state lost world identity");
