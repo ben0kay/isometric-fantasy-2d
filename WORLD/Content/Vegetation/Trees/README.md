@@ -34,3 +34,9 @@ Validation: C# build, full-density Godot 4.5.1 Compatibility rendering, both-bio
 
 
 Local torch shadows: CastLocalLightShadows on TreeDefinition defaults on. The template owns LocalLightOccluder, deriving the selected mirrored trunk polygon once. A variant can override LocalLightPolygon without changing collision. No additional species resource files or scripts are required.
+
+## Planned seasonal foliage and optional Sprite Studio masks (not implemented)
+
+[ENVIRONMENT/Seasons/SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md](../../../../ENVIRONMENT/Seasons/SEASONAL_FOLIAGE_IMPLEMENTATION_PLAN.md) specifies the future F9 **Year position** preview, seasonal colour palettes and compositing with live wind/wetness/snow/fire and P3 streamed chunks. The goal is green Spring/Summer Oak → yellow/orange/red Autumn using the **same healthy PNG**, not a separate tree scene or sprite for each season.
+
+The user plans to build an **external Avalonia Sprite Studio** which exports exact per-artwork **grayscale foliage masks**. Godot should accept an optional **TreeVisualVariant.FoliageMask** Texture2D (same source canvas as the healthy texture, white leaves/black non-leaves/grey edges). The mask is **not present/implemented yet**; a conservative original-colour/canopy heuristic will be used until authored masks exist. Studio development is separate from Godot SE0–SE3, and Godot should not require the app or masks to be finished.
