@@ -17,3 +17,5 @@ GS4: F9 Ground Surfaces now offers session-only base/layer toggles, global cover
 Current clarified structure: full-coverage base + a separately authored accompanying patch layer + up to two extra surface patches. Oak/Pink grass variation now lives in AccompanyingPatches and preserves the original look when enabled. F9 exposes that distinction; no dirt/rock added. [Contract, save bridge and local checks](ACCOMPANYING_PATCH_LAYER.md).
 
 GS5 now supplies default-off, F9-previewable Oak Dirt/Rock extras, plus strength sliders for base detail/accompanying grass. Pink and existing base profiles are unchanged. See [preview instructions and pending checks](GS5_Validation.md).
+
+Current Dirt/Rock use procedural Dust/Basalt recipes adapted from the old isometric game. They do not use SVG artwork; base grass still does. See [source, behavior and validation](PROCEDURAL_GROUND_RECIPES.md).

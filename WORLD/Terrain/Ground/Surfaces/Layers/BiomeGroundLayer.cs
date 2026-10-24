@@ -27,12 +27,14 @@ public partial class BiomeGroundLayer : Resource
     {
         if (string.IsNullOrWhiteSpace(Id) || string.IsNullOrWhiteSpace(Label) || Surface == null)
             throw new ArgumentException("Ground layers require an ID, label and surface.");
-        if (Surface.Texture == null || Surface.Material == null)
+        if ((Surface.Recipe==GroundMaterialRecipe.Artwork && Surface.Texture==null) || Surface.Material == null)
             throw new ArgumentException("Ground layer surfaces require texture and material.");
         Surface.Validate();
         RequireRange(Tint.R,0,1); RequireRange(Tint.G,0,1); RequireRange(Tint.B,0,1);
         if (!float.IsFinite(Tint.A) || Tint.A != 1f)
             throw new ArgumentException("Ground tint must be opaque; it changes colour, not ground coverage.");
+        if(isBase && Surface.Recipe!=GroundMaterialRecipe.Artwork)
+            throw new ArgumentException("Procedural recipes currently belong to extra patch layers; base ground requires artwork.");
         if (isBase) return; // Base always fills 100%; overlay fields never affect it.
         RequireRange(Coverage,0,1); RequireRange(Opacity,0,1); RequireRange(PatchSize,80,8192);
         RequireRange(EdgeSoftness,0,1); RequireRange(WarpStrength,0,1);

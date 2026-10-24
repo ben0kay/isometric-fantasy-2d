@@ -64,6 +64,8 @@ public partial class ValidateGroundStack : Node
             Check(CampaignSession.CanMigratePatches(),"Exact accompanying extraction migration gate");
             Check(CampaignSession.CanMigrateOakExtras(),"Exact optional Oak layer migration gate");
             CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyOakExtrasFingerprint(),"",null,null,null,null,null));
+            Check(CampaignSession.CanMigrateRecipes(),"Exact procedural recipe migration gate");
+            CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyRecipeFingerprint(),"",null,null,null,null,null));
             string patchPrevious=CampaignSession.LegacyPatchLayerFingerprint();
             var patchSnapshot=new CampaignSnapshot(2,"","","",patchPrevious,"",null,null,null,null,null);
             CampaignSession.RequireContent(patchSnapshot);

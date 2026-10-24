@@ -10,6 +10,10 @@
 
 Implemented: BiomeGroundLayer.Tint (opaque RGB, white default), applied to the completed base appearance by both existing renderers. Production biome/profile Resources remain unchanged. Streamed tint uses a shared coarse RGB map only when any biome is tinted; all-white skips that upload/sample. No per-frame CPU work. Overlay tint becomes effective with GS3, since overlays remain unsupported now. This is an explicitly authorized tint extension, not completion of GS2. See TINT_Validation.md for local checks and limitations.
 
+## Optional appearance revision after GS5
+
+The author rejected the first optional SVG materials. Dirt/Rock now use procedural recipes adapted from the old isometric game's dust/basalt shaders. No base/companion changes; no dirt/rock SVG dependency. See [current appearance and pending checks](PROCEDURAL_GROUND_RECIPES.md).
+
 ## 1. Current clarified stack — author request supersedes the original base-mottling design
 
 1. **Defining Base Ground:** one full-coverage source texture and base colour/tint, plus artwork fine detail.

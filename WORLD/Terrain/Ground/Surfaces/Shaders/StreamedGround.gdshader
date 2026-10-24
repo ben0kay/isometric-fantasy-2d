@@ -27,6 +27,7 @@ uniform sampler2D map_styles : filter_linear, repeat_disable;
 uniform bool has_ground_overlays = false;
 uniform sampler2D overlay_table : filter_nearest, repeat_disable;
 uniform float overlay_rows = 1.0;
+#include "res://WORLD/Terrain/Ground/Surfaces/Shaders/ProceduralGround.gdshaderinc"
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/LayeredSurface.gdshaderinc"
 varying vec2 ground_world;
 varying vec4 ground_tint;

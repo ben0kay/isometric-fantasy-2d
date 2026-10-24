@@ -31,15 +31,22 @@ vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     if(mask.r<=0.0 || mask.g<=0.0) return below;
     vec4 noise=layer_data(row,7.0);
     // Independent authored salt and slot offset remain deterministic at negative coordinates.
-    vec2 uv=world/mask.b*0.18+noise.gb+vec2(0.137,0.293)*mod(row,2.0);
-    vec2 warp=vec2(texture(ground_noise,uv*0.63+vec2(0.17,0.43)).r,
+    bool procedural=info.b>0.5;
+    vec2 uv=world/mask.b*(procedural ? 0.065 : 0.18)+noise.gb+vec2(0.137,0.293)*mod(row,2.0);
+    vec2 warp=vec2(0.0);
+    if(noise.r>0.0) warp=vec2(texture(ground_noise,uv*0.63+vec2(0.17,0.43)).r,
         texture(ground_noise,uv*0.63+vec2(0.71,0.29)).r)-vec2(0.5);
     float n=texture(ground_noise,uv+warp*noise.r).r;
     float threshold=1.0-mask.r;
+    if(procedural) threshold=info.b<1.5 ? mix(0.85,0.30,mask.r) : mix(0.88,0.38,mask.r);
     float soft=max(mask.a,0.0001);
     float coverage=mask.r>=1.0 ? 1.0 : smoothstep(threshold-soft,threshold+soft,n);
     float amount=coverage*mask.g;
     if(amount<=0.0) return below;
+    if(procedural) {
+        vec3 material=procedural_ground(info.b,world,info.a,noise.gb,layer_data(row,0.0).rgb,layer_data(row,2.0).rgb);
+        return mix(below,material*layer_data(row,5.0).rgb,amount);
+    }
     vec4 settings=layer_data(row,4.0);
     vec2 appearance=world/max(settings.g,80.0)*0.18+noise.gb;
     float broad=texture(ground_noise,appearance+warp*0.05).r;

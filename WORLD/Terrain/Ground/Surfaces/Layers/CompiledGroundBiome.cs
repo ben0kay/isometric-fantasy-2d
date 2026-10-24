@@ -23,6 +23,8 @@ public sealed class CompiledGroundBiome
             Base=biome.Surface ?? throw new ArgumentException("A streamed biome requires base ground.");
             Base.Validate(); Tint=Colors.White; Patches=GroundPatchLayer.FromLegacy(Base); Overlays=Array.Empty<BiomeGroundLayer>();
         }
+        if(Base.Recipe!=GroundMaterialRecipe.Artwork || Base.Texture==null)
+            throw new ArgumentException("Base ground requires artwork; procedural recipes are supported on extra patch layers.");
         RequireSupportedMaterial(Base);
         foreach(var layer in Overlays) RequireSupportedMaterial(layer.Surface);
     }
