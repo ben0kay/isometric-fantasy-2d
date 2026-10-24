@@ -131,7 +131,9 @@ Decoration/scenery and ENVIRONMENT weather/lighting remain independent. Reusable
 
 ### GS5 — Add *optional* Oak Dirt and Rock configurations (still OFF by default)
 
-**Implemented, awaiting local visual/performance acceptance.** Both are OFF by default and can be enabled through F9 without asset changes; base/companion also have strength sliders. See [GS5 test instructions](GS5_Validation.md).
+**Layer configuration and F9 controls implemented; visual direction under revision.** Both overlays remain OFF by default. The author tested the procedural dirt/basalt version and found that both read as shadows rather than recognizable dirt and small rocks. See [GS5 test instructions](GS5_Validation.md) for the existing controls.
+
+**Likely next approach — discuss in regular ChatGPT before further implementation:** use imported PNG textures (or similar raster artwork) for warm brown dirt and greyish gravel with visible little stones. Let the artwork supply recognizable material detail and the shader handle deterministic world-space patch placement and irregular blending into grass. Texture choice, resolution, repeat scale, tint and blending details are still to be decided; this note does not authorize another implementation pass. Retain the existing base/accompanying/optional-layer structure and independent F9 controls.
 
 1. Create reusable production dirt/rock/gravel appearance profiles only where needed, instead of copying/debug-promoting all RockPatches implementation.
 2. Give Oak an Overlay A with broad subtle soil/dirt patches; Overlay B with much sparser, smaller rocky breakup, inspired by the reference image. Choose modest coverage, softened non-repetitive edges, independent colour and strength. Keep Oak's existing base as-is.
