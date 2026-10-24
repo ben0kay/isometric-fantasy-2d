@@ -81,20 +81,38 @@ public sealed class StaticObstacleNavigation
         if (!new Rect2(new Vector2(left-c,top-c),new Vector2(right-left+2*c,bottom-top+2*c)).Intersects(_bounds)) return;
         Vector2I start = ToCell(new Vector2(left - c, top - c));
         Vector2I end = ToCell(new Vector2(right + c, bottom + c));
+        // Dense liquid banks share this rasterizer: scan crossings once per row and test clearance only against local edges.
+        var crossings=new List<float>(polygon.Length); var nearby=new List<int>(); var rowEdges=new List<int>();
+        for (int i=0;i<polygon.Length;i++)
+            if (new Rect2(polygon[i],polygon[(i+1)%polygon.Length]-polygon[i]).Abs().Grow(c).Intersects(_bounds,true)) nearby.Add(i);
         for (int y = start.Y; y <= end.Y; y++)
-        for (int x = start.X; x <= end.X; x++)
         {
-            Vector2I id = new(x, y);
-            Vector2 center = _grid.GetPointPosition(id);
-            bool solid = Geometry2D.IsPointInPolygon(center, polygon);
-            if (!solid)
-                for (int i = 0; i < polygon.Length; i++)
+            float py=_grid.GetPointPosition(new Vector2I(start.X,y)).Y; crossings.Clear(); rowEdges.Clear();
+            for (int i=0;i<polygon.Length;i++)
+            {
+                Vector2 a=polygon[i],b=polygon[(i+1)%polygon.Length];
+                if ((a.Y>py)!=(b.Y>py)) crossings.Add((float)(a.X+((double)b.X-a.X)*(py-a.Y)/((double)b.Y-a.Y)));
+            }
+            crossings.Sort(); int crossing=0;
+            foreach (int i in nearby)
+            {
+                float ay=polygon[i].Y,by=polygon[(i+1)%polygon.Length].Y;
+                if (py>=Mathf.Min(ay,by)-c && py<=Mathf.Max(ay,by)+c) rowEdges.Add(i);
+            }
+            for (int x = start.X; x <= end.X; x++)
+            {
+                Vector2I id=new(x,y); Vector2 center=_grid.GetPointPosition(id);
+                while (crossing<crossings.Count && crossings[crossing]<center.X) crossing++;
+                bool solid=(crossing&1)==1;
+                if (!solid) foreach (int i in rowEdges)
                 {
-                    Vector2 nearest = Geometry2D.GetClosestPointToSegment(center, polygon[i], polygon[(i + 1) % polygon.Length]);
-                    if (center.DistanceSquaredTo(nearest) > c * c) continue;
-                    solid = true; break;
+                    Vector2 a=polygon[i],delta=polygon[(i+1)%polygon.Length]-a;
+                    float t=Mathf.Clamp((center-a).Dot(delta)/Mathf.Max(0.001f,delta.LengthSquared()),0,1);
+                    if (center.DistanceSquaredTo(a+delta*t)>c*c) continue;
+                    solid=true; break;
                 }
-            if (solid) _grid.SetPointSolid(id);
+                if (solid) _grid.SetPointSolid(id);
+            }
         }
     }
     #endregion

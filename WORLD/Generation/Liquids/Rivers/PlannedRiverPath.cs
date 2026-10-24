@@ -16,9 +16,9 @@ public sealed class PlannedRiverPath
     // =========================================================
     public PlannedRiverPath(Vector2[] points,float[] widths)
     {
-        if (points==null || widths==null || points.Length<2 || points.Length>24 || points.Length!=widths.Length
+        if (points==null || widths==null || points.Length<2 || points.Length>1000 || points.Length!=widths.Length
             || points.Any(p => !p.IsFinite()) || widths.Any(w => !float.IsFinite(w) || w<32 || w>1024))
-            throw new ArgumentException("River needs 2–24 finite centerline points and positive bounded widths.");
+            throw new ArgumentException("River needs 2–1000 finite centerline points and positive bounded widths.");
         for (int i=1;i<points.Length;i++)
             if (points[i].DistanceSquaredTo(points[i-1])<1) throw new ArgumentException("River centerline has a zero-length segment.");
         Points=Array.AsReadOnly((Vector2[])points.Clone()); Widths=Array.AsReadOnly((float[])widths.Clone());
@@ -31,7 +31,7 @@ public sealed class PlannedRiverPath
     internal static PlannedRiverPath Restore(RiverPathSnapshot value)
     {
         if (value==null) return null;
-        if (value.CentrelineXY==null || value.Widths==null || value.CentrelineXY.Length<4 || value.CentrelineXY.Length>48
+        if (value.CentrelineXY==null || value.Widths==null || value.CentrelineXY.Length<4 || value.CentrelineXY.Length>2000
             || value.CentrelineXY.Length%2!=0 || value.Widths.Length!=value.CentrelineXY.Length/2
             || value.Source!=RiverEndpointKind.SpringPool || value.Destination!=RiverEndpointKind.TerminalBasin)
             throw new ArgumentException("Invalid frozen river path/endpoints.");

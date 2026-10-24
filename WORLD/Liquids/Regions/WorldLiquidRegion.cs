@@ -95,7 +95,7 @@ public partial class WorldLiquidRegion : Node2D
             Vector2 a = Boundary[i], b = Boundary[(i + 1) % Boundary.Length], delta = _edgeDelta[i];
             float t = Mathf.Clamp((p - a).Dot(delta) * _inverseLength[i], 0f, 1f);
             minimum = Mathf.Min(minimum, p.DistanceSquaredTo(a + delta * t));
-            if ((a.Y > p.Y) != (b.Y > p.Y) && p.X < (b.X - a.X) * (p.Y - a.Y) / (b.Y - a.Y) + a.X) inside = !inside;
+            if ((a.Y > p.Y) != (b.Y > p.Y) && p.X < ((double)b.X - a.X) * (p.Y - a.Y) / ((double)b.Y - a.Y) + a.X) inside = !inside;
         }
         return Mathf.Sqrt(minimum) * (inside ? 1f : -1f);
     }
@@ -142,11 +142,31 @@ public partial class WorldLiquidRegion : Node2D
         var fieldBounds=new Rect2(origin,end-origin);
         int width=Mathf.RoundToInt(fieldBounds.Size.X/4),height=Mathf.RoundToInt(fieldBounds.Size.Y/4);
         using var image=Image.CreateEmpty(width,height,false,Image.Format.Rf);
+        // Dense banks do not require scanning the entire river for each texel. Distances saturate at 256 units.
+        var edges=new List<int>(); var crossings=new List<float>(Boundary.Length);
+        for (int i=0;i<Boundary.Length;i++)
+            if (new Rect2(Boundary[i],_edgeDelta[i]).Abs().Grow(256f).Intersects(fieldBounds,true)) edges.Add(i);
         for (int y=0;y<height;y++)
         {
+            float py=origin.Y+(y+0.5f)*4f; crossings.Clear();
+            for (int i=0;i<Boundary.Length;i++)
+            {
+                Vector2 a=Boundary[i],b=Boundary[(i+1)%Boundary.Length];
+                if ((a.Y>py)!=(b.Y>py)) crossings.Add(a.X+(b.X-a.X)*(py-a.Y)/(b.Y-a.Y));
+            }
+            crossings.Sort(); int crossing=0;
             for (int x=0;x<width;x++)
             {
-                float distance=SignedDistance(origin+new Vector2(x+0.5f,y+0.5f)*4f);
+                Vector2 p=new(origin.X+(x+0.5f)*4f,py);
+                while (crossing<crossings.Count && crossings[crossing]<p.X) crossing++;
+                float minimum=256f*256f;
+                foreach (int i in edges)
+                {
+                    Vector2 a=Boundary[i],delta=_edgeDelta[i];
+                    float t=Mathf.Clamp((p-a).Dot(delta)*_inverseLength[i],0,1);
+                    minimum=Mathf.Min(minimum,p.DistanceSquaredTo(a+delta*t));
+                }
+                float distance=Mathf.Sqrt(minimum)*((crossing&1)==1 ? 1f : -1f);
                 image.SetPixel(x,y,new Color(Mathf.Clamp(0.5f+distance/512f,0,1),0,0));
             }
             if (y%8==7) yield return 0;

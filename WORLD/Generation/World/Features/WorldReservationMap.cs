@@ -101,9 +101,9 @@ internal static class FeatureGeometry
     }
     // Reject degenerate/self-crossing normalized footprints at authoring boundaries.
     // =========================================================
-    internal static void Validate(Vector2[] polygon, string id)
+    internal static void Validate(Vector2[] polygon, string id,int maximumVertices=64)
     {
-        if (polygon == null || polygon.Length < 3 || polygon.Length > 64) throw new ArgumentException($"Feature {id}: polygon needs 3–64 vertices.");
+        if (polygon == null || polygon.Length < 3 || polygon.Length > maximumVertices) throw new ArgumentException($"Feature {id}: polygon needs 3–{maximumVertices} vertices.");
         double area = 0;
         for (int i = 0; i < polygon.Length; i++)
         {

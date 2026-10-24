@@ -26,8 +26,15 @@ public partial class ValidateRiverPlanning : Node
             var pond=new Rect2(650,500,860,600);
             var plan=WaterBodyPlanner.Build(config,map,features,pond);
             Check(plan.Bodies.Count(b => b.River!=null)==1,"No feasible default river at seed "+seed+": "+string.Join(";",plan.Warnings));
+            if (OS.GetCmdlineUserArgs().Contains("--river-preview")) File.WriteAllText(Path.Combine(Path.GetTempPath(),$"river-preview-{seed}.json"),JsonSerializer.Serialize(plan.Snapshot()));
             var river=plan.Bodies.Single(b => b.River!=null); var path=river.River;
-            Check(plan.PlanVersion==2 && path.Points.Count<=24 && river.CopyPolygon().Length<=64,"River exceeded frozen geometry limits");
+            Check(plan.PlanVersion==3 && path.Points.Count<=1000 && river.CopyPolygon().Length<=2048,"River exceeded frozen geometry limits");
+            for (int i=1;i<path.Points.Count-1;i++)
+            {
+                var before=path.Points[i]-path.Points[i-1]; var after=path.Points[i+1]-path.Points[i];
+                Check(before.Length()<70 && after.Length()<70,"Shore samples too sparse for local curves");
+                Check(Mathf.Abs(before.AngleTo(after))<0.3f,"River has a sudden angular turn");
+            }
             Check(path.Source==RiverEndpointKind.SpringPool && path.Destination==RiverEndpointKind.TerminalBasin,"Missing supported river terminals");
             Check(path.Points.Select(p => map.BiomeAt(p).Id).Distinct().Count()>=2,"River did not cross biome types");
             Check(path.Widths.Max()>path.Widths.Min() && path.Widths.Min()>0,"River width is uniform or has gaps");
@@ -35,7 +42,7 @@ public partial class ValidateRiverPlanning : Node
             for (int i=1;i<path.Points.Count;i++) for (int sample=0;sample<=8;sample++)
             {
                 var p=path.Points[i-1].Lerp(path.Points[i],sample/8f);
-                Check(river.SignedDistance(p)>0,"Disconnected corridor along saved centerline");
+                Check(river.SignedDistance(p)>0,"Disconnected corridor along saved centerline seed="+seed+" segment="+i+" sample="+sample+" distance="+river.SignedDistance(p));
                 Check(features.Reservations.AllowsDisk(p,0,WorldPlacementKind.Water),"River entered protected reservation");
                 Check(!pond.Grow(config.Water.Separation).HasPoint(p),"River entered authored pond exclusion");
             }
@@ -59,6 +66,15 @@ public partial class ValidateRiverPlanning : Node
         var fixedMap=MacroWorldBuilder.Build(config,42); var fixedFeatures=WorldFeaturePlanner.Build(config,42);
         var initial=WaterBodyPlanner.Build(config,fixedMap,fixedFeatures);
         var sampleBody=initial.Bodies.Single(b => b.River!=null);
+        var navigation=new StaticObstacleNavigation(); var actors=new Node2D(); AddChild(actors);
+        var navigationBounds=new Rect2(sampleBody.River.Points[sampleBody.River.Points.Count/2]-Vector2.One*384,Vector2.One*768);
+        navigation.Build(actors,navigationBounds,24,17,8,new[] { sampleBody.CopyPolygon() });
+        for (int y=1;y<31;y++) for (int x=1;x<31;x++)
+        {
+            var point=navigationBounds.Position+new Vector2(x+0.5f,y+0.5f)*24;
+            Check(navigation.IsWalkable(point)==(sampleBody.SignedDistance(point)<-17),"Navigation disagrees with dense shoreline/clearance");
+        }
+        actors.Free();
         var smooth=RiverPlanner.Outline(sampleBody.River);
         var noisy=RiverPlanner.Outline(sampleBody.River,0.3f);
         Check(smooth.SequenceEqual(RiverPlanner.Outline(sampleBody.River,0)),"Zero bank noise changed the smooth outline");
@@ -71,6 +87,10 @@ public partial class ValidateRiverPlanning : Node
         config.Water.RiverBankIrregularity=0.31f;
         Reject(() => WaterBodyPlanner.Build(config,fixedMap,fixedFeatures),"Excessive bank irregularity accepted");
         config.Water.RiverBankIrregularity=0.15f;
+        config.Water.RiverMeanderLength=float.NaN;
+        Reject(() => WaterBodyPlanner.Build(config,fixedMap,fixedFeatures),"Nonfinite meander length accepted");
+        config.Water.RiverMeanderLength=2400;
+        Reject(() => WaterBodyPlan.Restore(initial.Snapshot() with { Version=2 },42,fixedMap.Bounds),"Dense geometry accepted under legacy river version");
         config.Water.RiverCount=2; var extra=WaterBodyPlanner.Build(config,fixedMap,fixedFeatures);
         Check(initial.Bodies.Where(b => b.River!=null).All(b => extra.Bodies.Any(e => e.Id==b.Id && e.CopyPolygon().SequenceEqual(b.CopyPolygon()))),"Later river slot moved first river");
         config.Water.RiverCount=1; config.Water.LakeCount=0;
@@ -106,7 +126,10 @@ public partial class ValidateRiverPlanning : Node
         var body=new PlannedWaterBody("u-river","water",RiverPlanner.Outline(path),path);
         var dry=new Rect2(900,900,128,128);
         Check(body.Bounds.Encloses(dry) && !body.Intersects(dry,40),"Sparse river index retained bounding-box interior");
-        var plan=new WaterBodyPlan(1,new Rect2(-1000,-1000,5000,5000),new[] { body },Array.Empty<string>());
+        var legacyBounds=new Rect2(-1000,-1000,5000,5000);
+        var legacy=new WaterBodyPlan(1,legacyBounds,new[] { body },Array.Empty<string>(),2);
+        Check(WaterBodyPlan.Restore(legacy.Snapshot(),1,legacyBounds).Hash==legacy.Hash,"Legacy version-2 river failed frozen restore");
+        var plan=new WaterBodyPlan(1,legacyBounds,new[] { body },Array.Empty<string>());
         var hits=new List<PlannedWaterBody>(); plan.Query(dry,hits); Check(hits.Count==0,"Shared chunk query ignored segment index");
         var runtime=new GeneratedWaterRuntime(); AddChild(runtime); runtime.Initialize(plan,new WorldLiquidMasterConfig { Animate=false });
         var chunk=new ChunkCoord(3,3); foreach (int step in runtime.PrepareChunkSteps(chunk,chunk.Bounds(256))) { }

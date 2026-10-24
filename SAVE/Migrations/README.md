@@ -26,3 +26,5 @@ SE2 seasonal visuals: SeasonalSaveCompatibility freezes only the shipped pre-SE0
 Biome identity colour relocation: exact current Oak/Pink relocation and Dirt/Rock hashes gate frozen IdentityOakBefore/IdentityPinkBefore source substitution, including earlier terrain/seasonal combinations. Full unrelated dependencies remain checked. Native/disk validation pending; see ../../WORLD/Biomes/IDENTITY_COLOUR.md.
 
 GS5 fine texture/grey rock revision: FineGroundOak/Dirt/RockBefore.txt freeze the preceding appearance-only Resource texts. Exact current Oak/Pink/Dirt/Rock gates compose with identity, terrain and seasonal substitutions; no broad fingerprint bypass. Static reconstruction checked; disk Continue pending.
+
+Smooth river blueprints: schema 7 requires water version 3. Existing schema 6/version 2 rivers and schema 4/5 worlds stay supported; no geography migration or rerouting. Older headers reject dense geometry. See WORLD/Generation/Liquids/Rivers/WG3_Validation.md.

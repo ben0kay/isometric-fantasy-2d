@@ -11,8 +11,9 @@ Rivers are opt-in: enable `WaterGenerationMasterConfig.Enabled` and set `RiverCo
 | RiverCount | 0 default; up to 4. Requested lake+river slots cannot exceed 32. |
 | MinimumRiverSpan / MaximumRiverSpan | Endpoint separation in world units, default 6000–11000; accepted minimum ≥1500 and maximum ≤12000. Detour length may be longer; routes exceeding twice maximum span reject. |
 | MinimumRiverWidth / MaximumRiverWidth | Base full width, default 100–180; accepted 64–384. Smooth variation plus wider source/terminal pools; width never fades to zero. |
-| RiverBendStrength | Bounded lateral displacement, default 100, accepted 0–256 world units. |
-| RiverBankIrregularity | Inspector-only bank variation, default 0.15, accepted 0–0.3 (fraction of local half-width). Zero preserves smooth banks. Independent seeded broad waves on each bank, tapering to unchanged terminal caps. |
+| RiverBendStrength | Bounded lateral displacement, default 280, accepted 0–512 world units. |
+| RiverMeanderLength | Broad S-bend wavelength, default 2400, accepted 1200–6000 world units. Independent of routing/chunk grid. |
+| RiverBankIrregularity | Inspector-only bank variation, default 0.15, accepted 0–0.3 (fraction of local half-width). Independent 170–430-unit bank waves; zero removes small offsets while retaining curved meanders. |
 | RequireMultipleRiverBiomes | Optional different endpoint biome types. Ignored only when the map has one configured biome; impossible multi-biome requests warn/skip. The practice fixture enables it. |
 | RiverRouteCellSize | Independent routing grid, default 512, accepted 256–1024 world units. This is not the streaming chunk size or shoreline resolution. At most 65536 route cells. |
 | AttemptsPerRiver | 12 default, maximum 32 route attempts; endpoint selection also has a bounded candidate loop. |
@@ -25,7 +26,7 @@ Biome Hydrology `AllowFreshwaterRivers` is the hard permission, checked across t
 
 1. Build a conservative clearance/suitability grid after P1/P2 and lake placement. Protect required reservations, finite edges, the fixed pond and already placed water.
 2. Choose independently seeded `river.NNN` source/destination slots, then deterministic weighted A* with stable tie IDs and no diagonal corner cutting.
-3. Resample the full route to at most 24 controls. Add low-frequency lateral bends and continuous positive widths. Build one simple corridor polygon (at most 58 vertices), including rounded, widened spring/terminal pools.
+3. Resample and soften the obstacle-avoidance route into coarse anchors, interpolate continuous cubic curves, then add broad distance-based S meanders. Sample the curve at roughly 32 world units (at most 1000 samples). Independently offset each bank with smaller distance-based waves; construct one validated corridor (at most 2048 vertices), including rounded widened terminal pools. Routing anchors never become visible straight bank segments.
 4. Validate its entire final outline against biome cells, reservations, water separation and self-intersection; invalid candidates reject as a whole. Optional requests that exhaust bounds warn/skip rather than drawing broken fragments or pretending no valid route exists anywhere.
 5. Freeze exact outcomes and direction/width metadata into the normal WaterBodyPlan. Do not reroute on Continue or chunk visits.
 
@@ -35,8 +36,10 @@ There is no elevation/downhill simulation yet. A terminal basin here is a widene
 
 Planning runs once per new world, with bounded grid, attempts and search. No river Node, timer or per-river update loop is introduced. Cached polygon-edge rectangles reject dry chunks inside a winding river's large bounding box before fields are prepared. Resident visibility and point exclusion use the same bounded index. The shared renderer retains its existing chunk-only fields and lifecycle; constant offline metadata stays cheap. Exact footprint eligibility is limited to 4096 coarse biome cells per candidate; unsupported disk/grid scales fail clearly or oversized corridors skip. Startup remains synchronous; profile target hardware rather than assuming an FPS improvement.
 
-Lake-only plans keep water version 1 and their existing hash byte layout. River plans use water version 2 and world blueprint schema 6, so older executables reject them. Schema 4/5 Continue retains its original geography and never gains a river. See [WG3 validation and local checks](WG3_Validation.md).
+Lake-only plans keep water version 1 and their existing hash byte layout. New smooth river plans use water version 3 and world blueprint schema 7, so older executables reject them. Previously saved version-2/schema-6 rivers retain their exact polygons and hashes. Schema 4/5 Continue retains its original geography and never gains a river. See [WG3 validation and local checks](WG3_Validation.md).
 
 For immediate testing, open `TESTS/Water/RiverPractice.tscn`, press F6, then R to jump through five saved river sections. F7 shows the cyan saved route with source/terminal markers; F9 retains shared rain controls. Production defaults remain off.
 
-Bank irregularity and longer default spans apply only to newly generated worlds (including RiverPractice). Saved polygons remain authoritative; no in-game sliders or additional runtime callbacks. The existing 24-control/64-vertex limits remain; this is broad bank variation, not fine shoreline detail. WG4 terrain/shore blending remains separate.
+Bank irregularity and longer default spans apply only to newly generated worlds (including RiverPractice). Saved polygons remain authoritative; no in-game sliders or additional runtime callbacks. Dense river geometry now has separate bounded limits; lake geometry retains its 64-vertex limit. WG4 terrain/shore blending remains separate.
+
+Chunk distance fields collect only edges within the 256-unit distance saturation radius and compute inside/outside crossings once per row. They retain the existing world-aligned texels, halo and eight-row yields. Point queries cache edge vectors and reject farther edge bounds before distance calculations. Geometry validation/planning is bounded but more expensive than the original coarse corridor; target-PC startup, navigation and streaming profiling remain necessary. No river-shape work runs per frame.

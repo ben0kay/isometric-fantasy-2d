@@ -139,7 +139,7 @@ public static class RiverPlanner
         }
         return null;
     }
-    // Resample the complete route, then apply bounded low-frequency lateral bends and smoothly varying widths.
+    // Smooth the macro route with cubic curves, then sample by world distance for continuous meanders and banks.
     // =========================================================
     private static PlannedRiverPath ShapePath(Vector2[] route,WaterGenerationMasterConfig settings,RandomNumberGenerator rng)
     {
@@ -147,23 +147,37 @@ public static class RiverPlanner
         for (int i=1;i<route.Length;i++) lengths[i]=lengths[i-1]+route[i].DistanceTo(route[i-1]);
         float total=lengths[^1];
         if (total<settings.MinimumRiverSpan || total>settings.MaximumRiverSpan*2f) return null;
-        int count=Math.Clamp(Mathf.CeilToInt(total/(settings.RiverRouteCellSize*0.5f))+1,4,24);
-        var points=new Vector2[count]; var widths=new float[count]; float phase=rng.Randf()*Mathf.Tau;
-        for (int i=0,segment=1;i<count;i++)
+        // Sparse routing anchors describe obstacle avoidance only; dense curve samples determine the actual shoreline.
+        int anchorsCount=Math.Clamp(Mathf.CeilToInt(total/1024f)+1,4,32);
+        var anchors=new Vector2[anchorsCount];
+        for (int i=0,segment=1;i<anchorsCount;i++)
         {
-            float t=i/(float)(count-1),along=total*t;
+            float along=total*i/(anchorsCount-1);
             while (segment<route.Length-1 && lengths[segment]<along) segment++;
-            points[i]=route[segment-1].Lerp(route[segment],(along-lengths[segment-1])/(lengths[segment]-lengths[segment-1]));
-            float wave=0.5f+0.5f*Mathf.Sin(t*Mathf.Tau*1.3f+phase);
-            float pools=1f+0.7f*Mathf.Pow(1-t,8)+1.2f*Mathf.Pow(t,8);
-            widths[i]=Mathf.Lerp(settings.MinimumRiverWidth,settings.MaximumRiverWidth,wave)*pools;
+            anchors[i]=route[segment-1].Lerp(route[segment],(along-lengths[segment-1])/(lengths[segment]-lengths[segment-1]));
         }
-        var original=(Vector2[])points.Clone();
-        for (int i=1;i<count-1;i++)
+        // Average interior routing corners before interpolation; final footprint checks still protect all exclusions.
+        var original=(Vector2[])anchors.Clone();
+        for (int i=1;i<anchorsCount-1;i++) anchors[i]=(original[i-1]+original[i]*2+original[i+1])*0.25f;
+        int count=Math.Clamp(Mathf.CeilToInt(total/32f)+1,4,1000);
+        var points=new Vector2[count]; var widths=new float[count]; float phase=rng.Randf()*Mathf.Tau;
+        for (int i=0;i<count;i++)
         {
-            var tangent=(original[i+1]-original[i-1]).Normalized(); var normal=new Vector2(-tangent.Y,tangent.X);
-            float offset=settings.RiverBendStrength*Mathf.Sin(Mathf.Pi*i/(count-1))*Mathf.Sin(i*Mathf.Tau*2f/(count-1)+phase);
-            points[i]+=normal*offset;
+            float t=i/(float)(count-1),u=t*(anchorsCount-1); int k=Math.Min((int)u,anchorsCount-2); float f=u-k;
+            Vector2 p0=k==0 ? anchors[0]*2-anchors[1] : anchors[k-1],p1=anchors[k],p2=anchors[k+1];
+            Vector2 p3=k+2>=anchorsCount ? p2*2-p1 : anchors[k+2];
+            // Uniform Catmull-Rom has matching tangents across anchors; extrapolated end controls avoid flat endpoints.
+            points[i]=0.5f*((2*p1)+(-p0+p2)*f+(2*p0-5*p1+4*p2-p3)*f*f+(-p0+3*p1-3*p2+p3)*f*f*f);
+            Vector2 tangent=(p2-p1).Normalized(),normal=new(-tangent.Y,tangent.X);
+            // Smoothly interpolate normals too, avoiding a displacement jump at a routing anchor.
+            Vector2 before=(p2-p0).Normalized(),after=(p3-p1).Normalized();
+            tangent=before.Lerp(after,f).Normalized(); normal=new(-tangent.Y,tangent.X);
+            float envelope=Mathf.Pow(Mathf.Sin(Mathf.Pi*t),2);
+            float wave=Mathf.Sin(total*t*Mathf.Tau/settings.RiverMeanderLength+phase);
+            points[i]+=normal*(settings.RiverBendStrength*envelope*wave);
+            float widthWave=0.5f+0.5f*Mathf.Sin(t*Mathf.Tau*1.3f+phase);
+            float pools=1f+0.7f*Mathf.Pow(1-t,8)+1.2f*Mathf.Pow(t,8);
+            widths[i]=Mathf.Lerp(settings.MinimumRiverWidth,settings.MaximumRiverWidth,widthWave)*pools;
         }
         try { return new PlannedRiverPath(points,widths); } catch (ArgumentException) { return null; }
     }
@@ -171,7 +185,7 @@ public static class RiverPlanner
     // =========================================================
     internal static Vector2[] Outline(PlannedRiverPath path,float irregularity=0f)
     {
-        int count=path.Points.Count; var left=new Vector2[count]; var right=new Vector2[count];
+        int count=path.Points.Count; float along=0; var left=new Vector2[count]; var right=new Vector2[count];
         for (int i=0;i<count;i++)
         {
             var before=(path.Points[i]-path.Points[Math.Max(0,i-1)]).Normalized();
@@ -181,10 +195,11 @@ public static class RiverPlanner
             var n1=new Vector2(-before.Y,before.X); var n2=new Vector2(-after.Y,after.X); var normal=(n1+n2).Normalized();
             float half=path.Widths[i]*0.5f/Mathf.Max(0.65f,normal.Dot(n1));
             // Independent broad bank waves preserve terminal caps and the saved centerline; no runtime noise sampling.
-            float t=i/(float)(count-1),envelope=Mathf.Sin(Mathf.Pi*t);
+            if (i>0) along+=path.Points[i].DistanceTo(path.Points[i-1]);
+            float t=i/(float)(count-1),envelope=i==0 || i==count-1 ? 0 : Mathf.Min(1f,Mathf.Sin(Mathf.Pi*t)*8f);
             float phase=path.Points[0].X*0.013f+path.Points[0].Y*0.017f;
-            float leftWave=0.65f*Mathf.Sin(t*Mathf.Tau*3f+phase)+0.35f*Mathf.Sin(t*Mathf.Tau*5f-phase);
-            float rightWave=0.65f*Mathf.Sin(t*Mathf.Tau*3.7f-phase)+0.35f*Mathf.Sin(t*Mathf.Tau*5.3f+phase);
+            float leftWave=0.65f*Mathf.Sin(along*Mathf.Tau/380f+phase)+0.35f*Mathf.Sin(along*Mathf.Tau/170f-phase);
+            float rightWave=0.65f*Mathf.Sin(along*Mathf.Tau/430f-phase)+0.35f*Mathf.Sin(along*Mathf.Tau/190f+phase);
             left[i]=path.Points[i]+normal*(half*(1f+irregularity*envelope*leftWave));
             right[i]=path.Points[i]-normal*(half*(1f+irregularity*envelope*rightWave));
         }
@@ -240,7 +255,8 @@ public static class RiverPlanner
             || s.MaximumRiverSearchNodes<32 || s.MaximumRiverSearchNodes>65536 || s.RiverRouteCellSize<256 || s.RiverRouteCellSize>1024
             || !float.IsFinite(s.MinimumRiverSpan) || s.MinimumRiverSpan<1500 || !float.IsFinite(s.MaximumRiverSpan) || s.MaximumRiverSpan<s.MinimumRiverSpan || s.MaximumRiverSpan>12000
             || !float.IsFinite(s.MinimumRiverWidth) || s.MinimumRiverWidth<64 || !float.IsFinite(s.MaximumRiverWidth) || s.MaximumRiverWidth<s.MinimumRiverWidth || s.MaximumRiverWidth>384
-            || !float.IsFinite(s.RiverBendStrength) || s.RiverBendStrength<0 || s.RiverBendStrength>256
+            || !float.IsFinite(s.RiverBendStrength) || s.RiverBendStrength<0 || s.RiverBendStrength>512
+            || !float.IsFinite(s.RiverMeanderLength) || s.RiverMeanderLength<1200 || s.RiverMeanderLength>6000
             || !float.IsFinite(s.RiverBankIrregularity) || s.RiverBankIrregularity<0 || s.RiverBankIrregularity>0.3f)
             throw new ArgumentException("Invalid bounded river settings.");
     }

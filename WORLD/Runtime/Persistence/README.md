@@ -17,3 +17,5 @@ Blueprint schema 5 marks new generated-water gameplay and requires a nonempty va
 ## WG3 river worlds
 
 Blueprint schema 6 carries water-plan version 2: frozen polygon plus explicit source-to-terminal centerline, widths and endpoint kinds. Version-1 lake plans/hash layout and schema-4/5 worlds remain unchanged. Version-2 metadata is rejected under older schema headers, and Continue never invokes the river planner. See [WG3](../../Generation/Liquids/Rivers/WG3_Validation.md).
+
+Smooth river geometry uses blueprint schema 7 / water version 3, with up to 1000 centerline samples and 2048 shoreline vertices per river (lakes remain at 64). Schema 6/version 2 retains the original 24/64 bounds and exact hash layout; supported older saves restore without smoothing/rerouting. New dense data rejects older schema/version headers.

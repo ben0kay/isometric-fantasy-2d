@@ -130,6 +130,8 @@ Keep one extensible, data-driven water-body record across ponds, lakes, rivers a
 **Pass:** connected path across several chunks/biomes, correct exclusions, no abrupt disappearance, consistent banks/wading, same seed reproducible, no streaming hitches.
 **Assistant:** Codex; Copilot local tests.
 
+WG3 shape follow-up: smooth cubic macro routing, broad S meanders (`RiverBendStrength`, `RiverMeanderLength`) and independent closely sampled bank offsets are implemented. New river blueprints use schema 7/water version 3; old frozen shapes remain unchanged. WG4 below remains planned; reference image 5 guides earthy shore texture/edge overlap, not the already implemented river geometry.
+
 ### WG4 — banks, shallows and terrain transitions
 **Objective:** believable shores rather than blue shapes pasted onto grass.
 **Scope:** shoreline width/colour/material masks, shallow-to-deep appearance, ground exclusions/edge blending, optional banks or carved masks coordinated with WORLD/Terrain/Transitions and GroundStack.

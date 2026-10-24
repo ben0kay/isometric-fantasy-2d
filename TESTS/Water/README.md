@@ -20,7 +20,7 @@ Use the installed Godot Mono executable's actual name/path. Expect `WG1 PASS`, `
 ## WG3 river fixtures
 
 - `RiverPractice.tscn`: F6 starts beside a middle section; R visits five fixed stations, F7 draws the saved route, F9 controls shared weather. Cloned config opts into two lakes and one cross-biome river.
-- `ValidateRiverPlanning.tscn`: 12 seeds, deterministic repetition/order/slot independence, positive continuous corridor/variable width, protected areas, cross-biome eligibility, hard/soft exclusions, forbidden world-spanning barrier, sparse corridor chunks, single-biome fallback and frozen JSON/corruption/version checks.
-- `ValidateStreamedRiver.tscn`: real production source/middle/terminal traversal, shared wading/scenery/field binding, disk checkpoint and real Continue with the new-world planner disabled. Validates schema-6 identity and rejection under schema 4/5.
+- `ValidateRiverPlanning.tscn`: 12 seeds, deterministic repetition/order/slot independence, positive continuous corridor/variable width, protected areas, cross-biome eligibility, hard/soft exclusions, forbidden world-spanning barrier, sparse corridor chunks, single-biome fallback and frozen JSON/corruption/version checks. Smooth-shape assertions bound local sample spacing/turn angles, retain version-2 restore, reject dense geometry under old versions, and compare navigation to exact shoreline clearance.
+- `ValidateStreamedRiver.tscn`: real production source/middle/terminal traversal, shared wading/scenery/field binding, disk checkpoint and real Continue with the new-world planner disabled. Validates schema-7 identity and rejection under schema 4/5/6; sampled chunk fields must match exact shoreline distance.
 
 [River settings, exact results and target-PC commands](../../WORLD/Generation/Liquids/Rivers/WG3_Validation.md).

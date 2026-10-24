@@ -8,4 +8,4 @@ Try `TESTS/Water/WaterPlanningPractice.tscn` with F6→F7 for three blue planned
 
 Read [WG0 decisions, WG1 settings, validation and WG2 handoff](WG0_WG1_Validation.md) and [phase plan](WATER_GENERATION_PLAN.md). Preserve the authored pond and DEBUG prototype. No speculative river/carving directories or per-biome managers.
 
-WG3 adds river settings to the same generation MasterConfig, one RiverPlanner and a frozen PlannedRiverPath contract. It reuses shared water presentation/interactions and preserves lake-only version-1 hashes. New river worlds are schema 6; old saves never gain rivers. Try `TESTS/Water/RiverPractice.tscn` → F6, R cycles sections, F7 shows the cyan route.
+WG3 adds river settings to the same generation MasterConfig, one RiverPlanner and a frozen PlannedRiverPath contract. It reuses shared water presentation/interactions and preserves lake-only version-1 hashes. New smooth river worlds are schema 7 (water version 3); earlier schema-6 river saves remain supported; old saves never gain rivers. Try `TESTS/Water/RiverPractice.tscn` → F6, R cycles sections, F7 shows the cyan route.

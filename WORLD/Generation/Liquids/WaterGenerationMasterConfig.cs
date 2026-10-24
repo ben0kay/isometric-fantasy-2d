@@ -17,7 +17,8 @@ public partial class WaterGenerationMasterConfig : Resource
     [Export] public float MaximumRiverSpan { get; set; } = 11000f;
     [Export] public float MinimumRiverWidth { get; set; } = 100f;
     [Export] public float MaximumRiverWidth { get; set; } = 180f;
-    [Export] public float RiverBendStrength { get; set; } = 100f;
+    [Export] public float RiverBendStrength { get; set; } = 280f;
+    [Export] public float RiverMeanderLength { get; set; } = 2400f;
     [Export(PropertyHint.Range, "0,0.3,0.01")] public float RiverBankIrregularity { get; set; } = 0.15f;
     [Export] public bool RequireMultipleRiverBiomes { get; set; }
     [ExportGroup("River route limits")]

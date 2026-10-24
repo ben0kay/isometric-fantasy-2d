@@ -116,7 +116,7 @@ public partial class WorldScene : Node2D
                 var fixedPond = GetNodeOrNull<WorldLiquidRegion>("TerrainRoot/Liquids/Pond");
                 WaterPlan = restore == null ? WaterBodyPlanner.Build(Config.Generation,map,features,fixedPond?.SurfaceBounds)
                     : WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
-                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot(), SchemaVersion = WaterPlan.PlanVersion==2 ? 6 : WaterPlan.Bodies.Count > 0 ? 5 : 4 };
+                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot(), SchemaVersion = WaterPlan.PlanVersion==3 ? 7 : WaterPlan.PlanVersion==2 ? 6 : WaterPlan.Bodies.Count > 0 ? 5 : 4 };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);
                 GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
