@@ -16,3 +16,11 @@ godot --headless --path . TESTS/Generation/ValidateMacroGeneration.tscn
 Use the installed Godot Mono executable's actual name/path. Expect `WG1 PASS`, `P2 PASS` and the macro fixture's success log; nonzero exit or engine errors require investigation. Graphical check: open practice with F6, walk into the generated lake, press L to cycle lakes, and F7 for blue footprints. Confirm wading, scenery exclusions, existing pond and controls remain functional. Profile startup separately from steady-state and chunk crossing; no new water callbacks should run after planning. Check existing campaign Continue retains no generated lakes; newly opted-in test campaigns must preserve exact plan after restart. See the owning validation note for runner versions and results.
 
 `ValidateStreamedWater.tscn` exercises WG2 tile seam samples, supplied polygons, nav avoidance, partial-load cancellation, unload/return, actual player wading, scenery exclusions, rain/config sleep/wake, disk water identity and real Continue for playable/legacy/no-water worlds. Run with `godot --headless --fixed-fps 60 --path . TESTS/Water/ValidateStreamedWater.tscn`. See [WG2 results and manual checks](../../WORLD/Liquids/WG2_Validation.md).
+
+## WG3 river fixtures
+
+- `RiverPractice.tscn`: F6 starts beside a middle section; R visits five fixed stations, F7 draws the saved route, F9 controls shared weather. Cloned config opts into two lakes and one cross-biome river.
+- `ValidateRiverPlanning.tscn`: 12 seeds, deterministic repetition/order/slot independence, positive continuous corridor/variable width, protected areas, cross-biome eligibility, hard/soft exclusions, forbidden world-spanning barrier, sparse corridor chunks, single-biome fallback and frozen JSON/corruption/version checks.
+- `ValidateStreamedRiver.tscn`: real production source/middle/terminal traversal, shared wading/scenery/field binding, disk checkpoint and real Continue with the new-world planner disabled. Validates schema-6 identity and rejection under schema 4/5.
+
+[River settings, exact results and target-PC commands](../../WORLD/Generation/Liquids/Rivers/WG3_Validation.md).

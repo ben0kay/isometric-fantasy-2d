@@ -54,18 +54,19 @@ public static class WaterBodyPlanner
             }
             if (!placed) warnings.Add($"Water lake.{slot:D3}: no eligible placement after {settings.AttemptsPerLake} attempts; skipped.");
         }
+        RiverPlanner.Append(settings,map,features,profiles,bodies,warnings,authoredPond);
         return new(map.Seed,map.Bounds,bodies,warnings);
     }
     // Every coarse biome cell touched by the polygon must allow water, including interior islands.
     // =========================================================
-    private static float Suitability(Vector2[] polygon, Rect2 bounds, MacroWorldMap map, Dictionary<string,BiomeHydrologyProfile> profiles)
+    internal static float Suitability(Vector2[] polygon, Rect2 bounds, MacroWorldMap map, Dictionary<string,BiomeHydrologyProfile> profiles,bool river = false)
     {
         int left = Math.Max(0,Mathf.FloorToInt((bounds.Position.X-map.Bounds.Position.X)/map.CellSize));
         int top = Math.Max(0,Mathf.FloorToInt((bounds.Position.Y-map.Bounds.Position.Y)/map.CellSize));
         int right = Math.Min(map.Columns-1,Mathf.FloorToInt((bounds.End.X-map.Bounds.Position.X)/map.CellSize));
         int bottom = Math.Min(map.Rows-1,Mathf.FloorToInt((bounds.End.Y-map.Bounds.Position.Y)/map.CellSize));
         // Bound even pathological diameter/cell-size authoring; no unbounded whole-map footprint scan.
-        if ((long)(right-left+1)*(bottom-top+1) > 4096) throw new ArgumentException("Lake footprint exceeds 4096 macro cells; reduce diameter or increase macro cell size.");
+        if ((long)(right-left+1)*(bottom-top+1) > 4096) throw new ArgumentException("Water footprint exceeds 4096 macro cells; reduce diameter or increase macro cell size.");
         float sum = 0; int count = 0;
         for (int y = top; y <= bottom; y++) for (int x = left; x <= right; x++)
         {
@@ -74,8 +75,8 @@ public static class WaterBodyPlanner
             var corners = new[] { cell.Position,new Vector2(cell.End.X,cell.Position.Y),cell.End,new Vector2(cell.Position.X,cell.End.Y) };
             if (!FeatureGeometry.Overlaps(polygon,bounds,0,corners,cell,0)) continue;
             var profile = profiles[map.Biomes[map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex].Id];
-            if (profile != null && !profile.AllowFreshwaterLakes) return 0;
-            sum += profile?.LakeSuitability ?? 1f; count++;
+            if (profile != null && !(river ? profile.AllowFreshwaterRivers : profile.AllowFreshwaterLakes)) return river ? -1 : 0;
+            sum += profile == null ? 1f : river ? profile.RiverSuitability : profile.LakeSuitability; count++;
         }
         return count == 0 ? 0 : sum/count;
     }

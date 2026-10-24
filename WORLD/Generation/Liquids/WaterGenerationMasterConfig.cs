@@ -11,6 +11,18 @@ public partial class WaterGenerationMasterConfig : Resource
     [Export] public float MaximumDiameter { get; set; } = 1200f;
     [Export] public float Separation { get; set; } = 128f;
     [Export(PropertyHint.Range, "0,0.3,0.01")] public float Irregularity { get; set; } = 0.18f;
+    [ExportGroup("Rivers - opt-in, world units")]
+    [Export] public int RiverCount { get; set; }
+    [Export] public float MinimumRiverSpan { get; set; } = 4000f;
+    [Export] public float MaximumRiverSpan { get; set; } = 8000f;
+    [Export] public float MinimumRiverWidth { get; set; } = 100f;
+    [Export] public float MaximumRiverWidth { get; set; } = 180f;
+    [Export] public float RiverBendStrength { get; set; } = 100f;
+    [Export] public bool RequireMultipleRiverBiomes { get; set; }
+    [ExportGroup("River route limits")]
+    [Export] public int RiverRouteCellSize { get; set; } = 512;
+    [Export] public int AttemptsPerRiver { get; set; } = 12;
+    [Export] public int MaximumRiverSearchNodes { get; set; } = 8192;
     [ExportGroup("Planning limits")]
     [Export] public int AttemptsPerLake { get; set; } = 64;
 }

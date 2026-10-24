@@ -8,4 +8,8 @@ Chunk fields use a global four-world-unit texel lattice plus a halo. Image work 
 
 No residents, disabled water, or static dry presentation stops the runtime callback. Animate/rain/config events wake it again; continuous animation uses one bounded camera/body visibility pass and updates visible bodies only. Rain pools sleep on dry/disabled/offscreen states. WorldLiquidWading retains one player physics lookup and sleeps its render callback after immersion settles. No body has its own simulation loop. Config changes never rebuild or move the saved shoreline.
 
-See [WG2 validation, settings, save compatibility and local checks](../WG2_Validation.md). New generated-water worlds use blueprint schema 5; schema 4 retains no playable generated lakes, even when it contains WG1 metadata. Normal production water generation remains opt-in; use the disposable water practice scene for immediate testing.
+See [WG2 validation, settings, save compatibility and local checks](../WG2_Validation.md). Lake-only generated-water worlds use blueprint schema 5; WG3 river worlds use schema 6; schema 4 retains no playable generated lakes, even when it contains WG1 metadata. Normal production water generation remains opt-in; use the disposable water practice scene for immediate testing.
+
+## WG3 shared river input
+
+The same runtime also presents schema-6 river polygons. Body edge bounds conservatively reject dry chunks/points and camera regions inside a winding corridor’s overall AABB; resident published tiles remain the only geometry owners. No separate river rendering or current simulation is added. Immutable centerline/width metadata belongs to generation/SAVE and is reserved for future WG6 flow. [WG3 contract](../../Generation/Liquids/Rivers/README.md).

@@ -1,5 +1,6 @@
 // Removable F7 overview of biome geography and P2 feature reservations; never drives production generation or player movement.
 using Godot;
+using System.Linq;
 public partial class MacroMapDebugPanel : CanvasLayer
 {
     private PanelContainer _panel;
@@ -17,7 +18,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
         box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
-        box.AddChild(new Label { Text = $"Lakes: {world.WaterPlan?.Bodies.Count ?? 0} (blue; {(world.Blueprint.SchemaVersion == 5 ? "playable" : "metadata only")})" });
+        box.AddChild(new Label { Text = $"Lakes: {world.WaterPlan?.Bodies.Count(b => b.River==null) ?? 0} / Rivers: {world.WaterPlan?.Bodies.Count(b => b.River!=null) ?? 0} (blue/cyan; {(world.Blueprint.SchemaVersion >= 5 ? "playable" : "metadata only")})" });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
         {
@@ -40,9 +41,30 @@ public partial class MacroMapDebugPanel : CanvasLayer
                     if (body.Bounds.HasPoint(sample) && body.SignedDistance(sample) >= 0) colour = new Color(0.15f,0.55f,0.95f);
             image.SetPixel(x, y, colour);
         }
+        if (world.WaterPlan!=null)
+            foreach (var body in world.WaterPlan.Bodies)
+                if (body.River!=null) DrawRiver(image,map,body.River);
         box.AddChild(new TextureRect { Texture = ImageTexture.CreateFromImage(image), CustomMinimumSize = new Vector2(700, 460),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered });
         image.Dispose();
+    }
+    // Coarse cells can miss narrow water; draw the saved centerline explicitly for the removable F7 overview.
+    // =========================================================
+    private static void DrawRiver(Image image,MacroWorldMap map,PlannedRiverPath path)
+    {
+        Vector2 Pixel(Vector2 p) => (p-map.Bounds.Position)/map.CellSize;
+        void Dot(Vector2 p,Color colour)
+        {
+            int x=Mathf.FloorToInt(p.X),y=Mathf.FloorToInt(p.Y);
+            if (x>=0 && y>=0 && x<image.GetWidth() && y<image.GetHeight()) image.SetPixel(x,y,colour);
+        }
+        for (int i=1;i<path.Points.Count;i++)
+        {
+            var a=Pixel(path.Points[i-1]); var b=Pixel(path.Points[i]);
+            int steps=Mathf.Max(1,Mathf.CeilToInt((b-a).Length()*2));
+            for (int j=0;j<=steps;j++) Dot(a.Lerp(b,j/(float)steps),new Color(0.1f,0.85f,1f));
+        }
+        Dot(Pixel(path.Points[0]),Colors.White); Dot(Pixel(path.Points[^1]),new Color(0.2f,0.5f,1f));
     }
     // Toggle only the overview, keeping input and preview behaviour independent.
     // =========================================================

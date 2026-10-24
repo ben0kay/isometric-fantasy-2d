@@ -1,6 +1,6 @@
 # Procedural Lakes, Ponds, Rivers & Biome Water Suitability — Implementation Plan
 
-> **UPDATED — 24 October 2026. WG0 complete; WG1 implemented, awaiting target-PC visual/performance acceptance.** See [audit, decisions, validation and WG2 handoff](WG0_WG1_Validation.md). WG2 is implemented; target-PC visual/performance acceptance is pending ([WG2 evidence](../../Liquids/WG2_Validation.md)). WG3–WG7 remain planned. Do not implement phases without explicit approval. Read root README.md, CodePreferences.md, WORLD/Generation/README.md, WORLD/Generation/Liquids/README.md, WORLD/Liquids/README.md, WORLD/Generation/World/Features/README.md, WORLD/Runtime/Streaming/README.md, and relevant actual C# scripts/scenes before coding. P5 world geography and the separate Oak spawning plan remain independent.
+> **UPDATED — 24 October 2026. WG0 complete; WG1 implemented, awaiting target-PC visual/performance acceptance.** See [audit, decisions, validation and WG2 handoff](WG0_WG1_Validation.md). WG2 is implemented; target-PC visual/performance acceptance is pending ([WG2 evidence](../../Liquids/WG2_Validation.md)). WG3 is now implemented; see [river status/validation](Rivers/WG3_Validation.md). WG4–WG7 remain planned. Do not implement phases without explicit approval. Read root README.md, CodePreferences.md, WORLD/Generation/README.md, WORLD/Generation/Liquids/README.md, WORLD/Liquids/README.md, WORLD/Generation/World/Features/README.md, WORLD/Runtime/Streaming/README.md, and relevant actual C# scripts/scenes before coding. P5 world geography and the separate Oak spawning plan remain independent.
 
 ## Phase overview
 
@@ -9,7 +9,7 @@
 | **WG0** | Audit current pond, macro map, reservations, liquid regions, streaming and SAVE; finalize contracts | Regular Chat | Complete |
 | **WG1** | Deterministic macro water plan: biome suitability + organic pond/lake footprints | Codex | Implemented; target-PC acceptance pending |
 | **WG2** | Render/stream generated lakes using existing liquid behavior; exclude scenery and navigation | Codex | Implemented; target-PC acceptance pending |
-| **WG3** | Generate continuous cross-biome rivers with noise-driven meanders and sensible endpoints | Codex | Planned |
+| **WG3** | Generate continuous cross-biome rivers with noise-driven meanders and sensible endpoints | Codex | Implemented; target-PC acceptance pending |
 | **WG4** | Add shoreline, shallows, banks and terrain blending/carving where supported | Codex | Planned |
 | **WG5** | Elevation-aware drainage, tributaries and wetlands (optional) | Regular Chat → Codex | Planned |
 | **WG6** | Shared directional river/stream currents and surface flow visuals | Codex | Planned |
@@ -30,7 +30,7 @@
 ```text
 WORLD/
 ├── Biomes/
-│   ├── Shared/                        # proposed reusable BiomeHydrologyProfile.cs
+│   ├── Shared/                        # shared BiomeHydrologyProfile.cs (implemented)
 │   └── Definitions/OakForest/
 │       ├── Biome.tres                  # existing; future optional Hydrology link
 │       └── Hydrology.tres              # PROPOSED, not created
@@ -40,7 +40,7 @@ WORLD/
 │       ├── WATER_GENERATION_PLAN.md    # this plan
 │       ├── Ponds/                      # future, create only when needed
 │       ├── Lakes/                      # future
-│       ├── Rivers/                     # future
+│       ├── Rivers/                     # WG3 planner and frozen path data
 │       └── Carving/                    # future
 ├── Liquids/                            # existing shared types, regions, visuals, interactions
 └── Terrain/                            # future banks, shore transitions, elevation
@@ -181,4 +181,4 @@ Keep one extensible, data-driven water-body record across ponds, lakes, rivers a
 4. What is the minimum size range for the first lake relative to 512-unit chunks?
 5. Should generated water be new-world-only initially, with old P4 saves retaining the previous blueprint until a migration is explicitly designed? **Recommend yes if save contracts cannot safely extend.**
 
-**Current handoff:** WG0/WG1 were subsequently authorized and implemented; consult WG0_WG1_Validation.md. WG2 was subsequently authorized and implemented; see ../../Liquids/WG2_Validation.md. Do not begin WG3–WG7 automatically. One commit per job, update owning README/status and record actual validation after authorized work.
+**Current handoff:** WG0/WG1 were subsequently authorized and implemented; consult WG0_WG1_Validation.md. WG2 was subsequently authorized and implemented; see ../../Liquids/WG2_Validation.md. WG3 was subsequently authorized and implemented; see Rivers/WG3_Validation.md. Do not begin WG4–WG7 automatically. One commit per job, update owning README/status and record actual validation after authorized work.

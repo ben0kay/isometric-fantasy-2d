@@ -116,7 +116,7 @@ public partial class WorldScene : Node2D
                 var fixedPond = GetNodeOrNull<WorldLiquidRegion>("TerrainRoot/Liquids/Pond");
                 WaterPlan = restore == null ? WaterBodyPlanner.Build(Config.Generation,map,features,fixedPond?.SurfaceBounds)
                     : WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
-                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot(), SchemaVersion = WaterPlan.Bodies.Count > 0 ? 5 : 4 };
+                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot(), SchemaVersion = WaterPlan.PlanVersion==2 ? 6 : WaterPlan.Bodies.Count > 0 ? 5 : 4 };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);
                 GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
@@ -148,7 +148,7 @@ public partial class WorldScene : Node2D
         var pond = GetNodeOrNull<WorldPond>("TerrainRoot/Liquids");
         var placement = SceneryPlacement;
         placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
-        if (streaming && Blueprint.SchemaVersion == 5)
+        if (streaming && Blueprint.SchemaVersion >= 5)
         {
             GeneratedWater=new GeneratedWaterRuntime { Name="GeneratedLiquids" };
             GetNode("TerrainRoot").AddChild(GeneratedWater);
@@ -159,7 +159,7 @@ public partial class WorldScene : Node2D
         {
             Stream = new WorldChunkStream { Name = "Streaming" }; GetNode("SystemsRoot").AddChild(Stream);
             Stream.Initialize(this,ChunkActorsRoot,StreamedGroundRoot,ActorsRoot,EntityPlacement,(PlayerMovement)player,Config,placement.ExcludedLiquid,restore?.Chunks);
-            Blueprint = Blueprint with { SchemaVersion = Blueprint.SchemaVersion == 5 ? 5 : 4,
+            Blueprint = Blueprint with { SchemaVersion = Blueprint.SchemaVersion >= 5 ? Blueprint.SchemaVersion : 4,
                 MacroRegions = MacroMap.Regions.Select(r => new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray(),
                 MacroBiomes = MacroMap.Biomes.Select(b => new SavedMacroBiome(b.Id,b.Name,b.Colour.R,b.Colour.G,b.Colour.B,b.Colour.A)).ToArray(), LocalGeneratorVersion = ChunkSceneryData.GeneratorVersion,
                 ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };

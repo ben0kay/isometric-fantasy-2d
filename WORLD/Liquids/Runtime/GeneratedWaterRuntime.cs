@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public partial class GeneratedWaterRuntime : Node2D
 {
     private sealed class Entry { public WorldLiquidRegion Region; public LiquidSurfaceTile Tile; public bool Published; }
-    private sealed class Resident { public WorldLiquidRegion Region; public WorldLiquidRainSplashes Rain; public int Owners,Published; }
+    private sealed class Resident { public WorldLiquidRegion Region; public WorldLiquidRainSplashes Rain; public int Owners,Published; public readonly List<LiquidSurfaceTile> Tiles=new(); }
     private readonly Dictionary<ChunkCoord,List<Entry>> _chunks=new();
     private readonly Dictionary<string,Resident> _regions=new(StringComparer.Ordinal);
     private readonly Dictionary<string,WorldLiquidDefinition> _definitions=new(StringComparer.Ordinal);
@@ -42,7 +42,7 @@ public partial class GeneratedWaterRuntime : Node2D
     public bool Contains(Vector2 point,float margin=0)
     {
         foreach (var body in _plan.Bodies)
-            if (body.Bounds.Grow(Mathf.Max(0,margin)).HasPoint(point) && body.SignedDistance(point)>=-margin) return true;
+            if (body.Intersects(new Rect2(point,Vector2.Zero),Mathf.Max(0,margin)) && body.SignedDistance(point)>=-margin) return true;
         return false;
     }
     // The single player immersion controller only selects regions with published nearby presentation.
@@ -64,7 +64,7 @@ public partial class GeneratedWaterRuntime : Node2D
         var entries=new List<Entry>(); _chunks.Add(coord,entries);
         foreach (var body in _plan.Bodies)
         {
-            if (!body.Bounds.Grow(40).Intersects(bounds)) continue;
+            if (!body.Intersects(bounds,40)) continue;
             if (!_regions.TryGetValue(body.Id,out var resident))
             {
                 var region=new WorldLiquidRegion { Name=body.Id.Replace('.','_'),PlannedBody=body,Config=_config,
@@ -87,7 +87,7 @@ public partial class GeneratedWaterRuntime : Node2D
         {
             if (entry.Published || entry.Tile==null) continue;
             entry.Published=true; entry.Tile.Visible=true; TileCount++;
-            _regions[entry.Region.PlannedBody.Id].Published++;
+            var resident=_regions[entry.Region.PlannedBody.Id]; resident.Published++; resident.Tiles.Add(entry.Tile);
         }
         Refresh();
     }
@@ -99,7 +99,7 @@ public partial class GeneratedWaterRuntime : Node2D
         foreach (var entry in entries)
         {
             var resident=_regions[entry.Region.PlannedBody.Id]; resident.Owners--;
-            if (entry.Published) { resident.Published--; TileCount--; }
+            if (entry.Published) { resident.Published--; resident.Tiles.Remove(entry.Tile); TileCount--; }
             if (entry.Tile!=null) resident.Region.ReleaseTile(entry.Tile);
             if (resident.Owners==0)
             { _regions.Remove(entry.Region.PlannedBody.Id); resident.Region.Free(); }
@@ -136,7 +136,7 @@ public partial class GeneratedWaterRuntime : Node2D
         Rect2 view=_weather.VisibleWorldRect().Grow(48);
         foreach (var resident in _regions.Values)
         {
-            bool active=resident.Published>0 && _config.Enabled && resident.Region.SurfaceBounds.Intersects(view);
+            bool active=resident.Published>0 && _config.Enabled && VisibleIn(resident,view);
             if (resident.Region.PresentationActive!=active)
             {
                 resident.Region.PresentationActive=active; resident.Region.Visible=active;
@@ -144,6 +144,14 @@ public partial class GeneratedWaterRuntime : Node2D
             }
             if (active) resident.Region.UpdateSurface(delta,_weather.WindStrength);
         }
+    }
+    // Long rivers can enclose dry land in their overall AABB; cull against indexed shoreline sections and loaded tiles.
+    // =========================================================
+    private static bool VisibleIn(Resident resident,Rect2 view)
+    {
+        if (!resident.Region.PlannedBody.Intersects(view,40)) return false;
+        foreach (var tile in resident.Tiles) if (tile.TileBounds.Intersects(view)) return true;
+        return false;
     }
     // Scene teardown unregisters events before external weather/config owners disappear.
     // =========================================================
