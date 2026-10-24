@@ -15,3 +15,5 @@ Accompanying-layer extraction adds no-companion base-only, separate serializatio
 GS5 adds authored-off preview activation/reset checks and base/companion scalar controls. Default production appearance maps remain compared to the pre-GS2 reference; unused atlas cells now contain optional artwork. Software GL exercises dormant-preview and strength uniforms; engine fixtures remain unrun here. See ../../WORLD/Terrain/Ground/Surfaces/GS5_Validation.md.
 
 Procedural revision: software GL additionally compares Dust/Basalt against frozen old-project formulas in References/OldBasaltAndDust.txt, checks no artwork dependence and sixteen-chunk procedural seams. Engine fixtures require texture-free recipe resources and explicit appearance migration. Existing base atlas parity is restored now that optional recipes add no tiles. See ../../WORLD/Terrain/Ground/Surfaces/PROCEDURAL_GROUND_RECIPES.md.
+
+GS5 native grayscale dirt: ValidateGroundLayers checks every uploaded PNG byte; ValidateGroundStack checks the narrow PNG save bridge. Mesa script also checks full-resolution sampling, tint, preserved Dust masks and seams. See ../../WORLD/Terrain/Ground/Surfaces/GS5_PNG_DIRT.md.

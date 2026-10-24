@@ -1,5 +1,7 @@
 # Old-project dust/basalt adaptation
 
+**Dirt superseded:** [GS5 PNG Dirt](GS5_PNG_DIRT.md) now uses native grayscale artwork while retaining the Dust mask. Rock still uses this Basalt recipe.
+
 The author rejected the first SVG-based optional surfaces and requested the old isometric game's blended basalt/soil appearance. Dirt and Rock now use texture-free, data-driven extra-layer recipes. The existing grass base/artwork and its independent accompanying patches remain unchanged; extras still start OFF and use the same F9 toggles/coverage/opacity sliders.
 
 ## Source and adaptation

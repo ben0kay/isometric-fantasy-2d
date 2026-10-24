@@ -33,6 +33,7 @@ script = ExtResource("ground_layer")
 Id = "dirt"
 Label = "Dirt patches"
 Surface = ExtResource("dirt_surface")
+Tint = Color(0.50, 0.36, 0.22, 1)
 Enabled = false
 AllowSessionPreview = true
 Coverage = 0.4

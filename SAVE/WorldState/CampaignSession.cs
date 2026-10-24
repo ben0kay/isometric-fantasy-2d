@@ -39,7 +39,7 @@ public static class CampaignSession
     internal static string LegacyGS1ContentFingerprint() => BuildContentFingerprint(null,true);
     // Compare the full dependency set with only explicitly requested frozen substitutions.
     // =========================================================
-    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false)
+    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false)
     {
         if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
             throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
@@ -49,6 +49,14 @@ public static class CampaignSession
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
+            if(previousPng)
+            {
+                string reference=path switch {
+                    "res://WORLD/Biomes/Definitions/OakForest/Biome.tres" => "res://SAVE/Migrations/References/PngDirtOakBefore.txt",
+                    "res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres" => "res://SAVE/Migrations/References/PngDirtProfileBefore.txt",
+                    _ => null };
+                if(reference!=null) source=Godot.FileAccess.GetFileAsString(reference).Replace("\r\n","\n");
+            }
             if(previousRecipes)
             {
                 string reference=path switch {
@@ -111,9 +119,17 @@ public static class CampaignSession
     // Exact appearance-only recipe replacement; unrelated dependency changes still reject.
     // =========================================================
     internal static string LegacyRecipeFingerprint() => BuildContentFingerprint(null,false,false,false,true);
-    internal static bool CanMigrateRecipes() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "F1EF5B922EFB75957F52D7D023ACE85A383E97950A613F116EF0AB5D6FD84A4E" &&
+    internal static bool CanMigrateRecipes() => CanMigrateDirtPng() || CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "F1EF5B922EFB75957F52D7D023ACE85A383E97950A613F116EF0AB5D6FD84A4E" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "AD426D1F72246B1B4711AB78F32FC494D2D4A539E43D0CC43567CD84A60453C8" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "46048C1C9CE04AB9C6296F52D14358BD7B8FD6ED8D71D6F6E5CB09BCAEDC80FF" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "5451A796CE25C205BC2FAFE45FBF2B778A7516B098C96BF52030EF0AC21558C4";
+
+    // Only this shipped PNG/tint conversion may reconstruct the old full content fingerprint.
+    // =========================================================
+    internal static string LegacyDirtPngFingerprint() => BuildContentFingerprint(null,false,false,false,false,true);
+    internal static bool CanMigrateDirtPng() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "98C31D4D61AB2AFDD68BBBD01151B77C4942C2C3063F5ACEFB67408B67958071" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "420883184A259F63C067AF1207BD8585FCA6FB67C78BB4D1DB455E9EAE8D6288" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "AD426D1F72246B1B4711AB78F32FC494D2D4A539E43D0CC43567CD84A60453C8" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "5451A796CE25C205BC2FAFE45FBF2B778A7516B098C96BF52030EF0AC21558C4";
 
     // Reject changed content rather than moving old trees or rerolling geography behind the player's back.
@@ -121,6 +137,7 @@ public static class CampaignSession
     public static void RequireContent(CampaignSnapshot snapshot)
     {
         if (snapshot.ContentFingerprint == ContentFingerprint()) return;
+        if(CanMigrateDirtPng() && snapshot.ContentFingerprint==LegacyDirtPngFingerprint()) return;
         if(CanMigrateRecipes() && snapshot.ContentFingerprint==LegacyRecipeFingerprint()) return;
         if(CanMigrateOakExtras() && snapshot.ContentFingerprint==LegacyOakExtrasFingerprint()) return;
         if (CanMigratePatches() && snapshot.ContentFingerprint == LegacyPatchLayerFingerprint()) return;

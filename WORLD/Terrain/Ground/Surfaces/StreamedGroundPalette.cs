@@ -23,6 +23,28 @@ public static class StreamedGroundPalette
         for(int i=0;i<compiled.Length;i++) for(int slot=0;slot<compiled[i].Overlays.Length;slot++)
             if(GroundOverlayPalette.CanCompile(compiled[i].Overlays[slot]) && compiled[i].Overlays[slot].Surface.Recipe==GroundMaterialRecipe.Artwork)
             { overlayArt[i,slot]=artwork.Count; artwork.Add(compiled[i].Overlays[slot].Surface.Texture); }
+        // Native grayscale art lives separately so existing 32px base/legacy artwork stays byte-identical.
+        var grayscale=new List<Texture2D>();
+        for(int i=0;i<compiled.Length;i++) for(int slot=0;slot<compiled[i].Overlays.Length;slot++)
+        {
+            var layer=compiled[i].Overlays[slot];
+            if(!GroundOverlayPalette.CanCompile(layer) || layer.Surface.Recipe!=GroundMaterialRecipe.GrayscaleArtwork) continue;
+            int index=grayscale.IndexOf(layer.Surface.Texture);
+            if(index<0) { index=grayscale.Count; grayscale.Add(layer.Surface.Texture); }
+            overlayArt[i,slot]=index;
+        }
+        if(grayscale.Count>0)
+        {
+            int columns=Mathf.CeilToInt(Mathf.Sqrt(grayscale.Count));
+            using var atlas=Image.CreateEmpty(columns*256,columns*256,false,Image.Format.Rgba8);
+            for(int i=0;i<grayscale.Count;i++)
+            {
+                using var tile=grayscale[i].GetImage(); tile.Convert(Image.Format.Rgba8);
+                atlas.BlitRect(tile,new Rect2I(0,0,256,256),new Vector2I(i%columns*256,i/columns*256));
+            }
+            material.SetShaderParameter("grayscale_art",ImageTexture.CreateFromImage(atlas));
+            material.SetShaderParameter("grayscale_columns",(float)columns);
+        }
         int atlasColumns = Mathf.CeilToInt(Mathf.Sqrt(artwork.Count));
         using (var atlas = Image.CreateEmpty(atlasColumns*32,atlasColumns*32,false,Image.Format.Rgba8))
         {

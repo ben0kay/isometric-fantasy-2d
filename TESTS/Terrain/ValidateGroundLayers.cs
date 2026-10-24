@@ -26,6 +26,12 @@ public partial class ValidateGroundLayers : Node
                 SameTexture(old,current,name);
             foreach(string name in new[] {"has_ground_tint","has_surface_styles","blend_ground_art"})
                 Check(!current.GetShaderParameter(name).AsBool(),"Original production fast path: "+name);
+            using(var uploaded=Texture(current,"grayscale_art").GetImage())
+            using(var original=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Texture.GetImage())
+            {
+                original.Convert(Image.Format.Rgba8);
+                Check(uploaded.GetWidth()==256 && uploaded.GetHeight()==256 && uploaded.GetData().SequenceEqual(original.GetData()),"Native dirt artwork must preserve every pixel");
+            }
             var oakPreview=new GroundSurfacePreview(current,true);
             Check(!oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1),"Oak extras must start off");
             var packed=Texture(current,"overlay_table");
@@ -53,7 +59,7 @@ public partial class ValidateGroundLayers : Node
         Check(rejected,"Duplicate accompanying/base ID accepted"); duplicate.Dispose();
         var dirt=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres");
         var rock=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres");
-        Check(dirt.Texture==null && rock.Texture==null && dirt.Recipe==GroundMaterialRecipe.Dust && rock.Recipe==GroundMaterialRecipe.Basalt,"Optional recipes must not require SVG artwork");
+        Check(dirt.Texture!=null && dirt.Texture.GetWidth()==256 && dirt.Texture.GetHeight()==256 && dirt.Recipe==GroundMaterialRecipe.GrayscaleArtwork && rock.Texture==null && rock.Recipe==GroundMaterialRecipe.Basalt,"Dirt requires native PNG; rock retains Basalt");
         dirt.Validate(); rock.Validate();
         var fixture=GroundLayerFixture.Definitions(); var f=GroundLayerFixture.Map();
         using var both=StreamedGroundPalette.Build(f,fixture);

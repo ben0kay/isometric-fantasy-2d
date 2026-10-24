@@ -31,18 +31,27 @@ vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     if(mask.r<=0.0 || mask.g<=0.0) return below;
     vec4 noise=layer_data(row,7.0);
     // Independent authored salt and slot offset remain deterministic at negative coordinates.
-    bool procedural=info.b>0.5;
+    bool grayscale=info.b>2.5;
+    bool procedural=info.b>0.5; // Grayscale dirt deliberately retains the existing Dust mask family.
     vec2 uv=world/mask.b*(procedural ? 0.065 : 0.18)+noise.gb+vec2(0.137,0.293)*mod(row,2.0);
     vec2 warp=vec2(0.0);
     if(noise.r>0.0) warp=vec2(texture(ground_noise,uv*0.63+vec2(0.17,0.43)).r,
         texture(ground_noise,uv*0.63+vec2(0.71,0.29)).r)-vec2(0.5);
     float n=texture(ground_noise,uv+warp*noise.r).r;
     float threshold=1.0-mask.r;
-    if(procedural) threshold=info.b<1.5 ? mix(0.85,0.30,mask.r) : mix(0.88,0.38,mask.r);
+    if(procedural) threshold=(info.b<1.5 || grayscale) ? mix(0.85,0.30,mask.r) : mix(0.88,0.38,mask.r);
     float soft=max(mask.a,0.0001);
     float coverage=mask.r>=1.0 ? 1.0 : smoothstep(threshold-soft,threshold+soft,n);
     float amount=coverage*mask.g;
     if(amount<=0.0) return below;
+    if(grayscale) {
+        vec2 tile=vec2(mod(info.r,grayscale_columns),floor(info.r/grayscale_columns));
+        vec2 pixel=floor(world)+vec2(0.5);
+        vec4 artwork=texture(grayscale_art,(tile+fract(pixel/info.a))/grayscale_columns);
+        // Mid-grey is neutral; biome-owned tint supplies soil colour without duplicating artwork.
+        vec3 colour=layer_data(row,0.0).rgb*layer_data(row,5.0).rgb*(artwork.r*2.0);
+        return mix(below,colour,amount*artwork.a);
+    }
     if(procedural) {
         vec3 material=procedural_ground(info.b,world,info.a,noise.gb,layer_data(row,0.0).rgb,layer_data(row,2.0).rgb);
         return mix(below,material*layer_data(row,5.0).rgb,amount);

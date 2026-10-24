@@ -16,3 +16,5 @@ Accompanying-patch extraction: exact converted Oak/Pink text hashes gate frozen 
 GS5 optional Oak content: exact Oak/Pink/new Dirt/Rock Resource hashes gate frozen pre-GS5 Oak substitution. Historical dependency traversal excludes added profiles only for this explicit migration; all unrelated dependencies remain strict. See WORLD/Terrain/Ground/Surfaces/GS5_Validation.md; real disk Continue still needs local validation.
 
 Procedural appearance revision: exact Oak/Pink/Dirt/Rock hashes permit previous full fingerprint reconstruction via Procedural*Before.txt source references. Earlier known terrain bridges remain gated; unrelated content still rejects. See WORLD/Terrain/Ground/Surfaces/PROCEDURAL_GROUND_RECIPES.md. Disk validation pending.
+
+Dirt PNG appearance conversion adds exact-source-gated frozen Oak/Dirt references; all unrelated content remains fingerprinted. See ../../WORLD/Terrain/Ground/Surfaces/GS5_PNG_DIRT.md.

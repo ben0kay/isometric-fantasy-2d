@@ -131,6 +131,9 @@ Decoration/scenery and ENVIRONMENT weather/lighting remain independent. Reusable
 
 ### GS5 — Add *optional* Oak Dirt and Rock configurations (still OFF by default)
 
+**PNG Dirt revision implemented; local engine/visual acceptance pending.** Dirt now uses imported `Dirt01_gs.png` at native 256×256, biome-owned tint and the existing Dust masks/coverage/opacity/F9 controls. Oak grass is unchanged; Rock remains Basalt. See [current authoring and checks](GS5_PNG_DIRT.md). The earlier discussion note below records the preceding decision.
+
+
 **Layer configuration and F9 controls implemented; visual direction under revision.** Both overlays remain OFF by default. The author tested the procedural dirt/basalt version and found that both read as shadows rather than recognizable dirt and small rocks. See [GS5 test instructions](GS5_Validation.md) for the existing controls.
 
 **Likely next approach — discuss in regular ChatGPT before further implementation:** use imported PNG textures (or similar raster artwork) for warm brown dirt and greyish gravel with visible little stones. Let the artwork supply recognizable material detail and the shader handle deterministic world-space patch placement and irregular blending into grass. Texture choice, resolution, repeat scale, tint and blending details are still to be decided; this note does not authorize another implementation pass. Retain the existing base/accompanying/optional-layer structure and independent F9 controls.

@@ -8,3 +8,5 @@ GS3 profiles can choose Organic (existing default), Granular or Mineral detail p
 Clarified base contract: explicit stacks read only BaseColour/artwork/detail/tint from the base profile. AccompanyingPatches owns the grass variation palette and distribution separately. Old profile patch fields are grouped as extra-surface/legacy defaults and do not silently populate an explicit base. See ../ACCOMPANYING_PATCH_LAYER.md.
 
 Recipe applies to extra layers: Artwork (default) requires Texture; Dust/Basalt require no artwork and use BaseColour/FreshColour as low/high procedural tones plus MaterialFeatureSize. The canonical Dirt/Rock profiles now use these old-project recipes. Base ground remains artwork-based. See ../PROCEDURAL_GROUND_RECIPES.md.
+
+Current GS5 Dirt uses native 256×256 grayscale PNG artwork with biome-owned tint and unchanged Dust patch masks; Rock remains Basalt. See [authoring and validation](../GS5_PNG_DIRT.md).

@@ -163,4 +163,39 @@ for recipe,low,high in [(1,(.112,.105,.094,1),(.177,.158,.130,1)),(2,(.075,.086,
             piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors={'preview_overlay_visibility':(1,0)})
             assert np.max(np.abs(piece-result[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'Procedural chunk seam'
 print('PASS: old Dust/Basalt formula match, no artwork dependence and sixteen-chunk procedural seams')
+# A single native 256px tile: every source pixel survives sampling, including adjacent pixels.
+gy,gx=np.mgrid[:256,:256];gray=np.ones((256,256,4),np.float32)
+gray[:,:,:3]=((gx+gy*3)%256/255.0)[:,:,None]
+maps['grayscale_art']=texture(gray)
+table[:]=0;table[0,0]=(1,1,1,1);table[0,5]=(.5,.36,.22,1)
+table[0,6]=(1,1,500,.10);table[0,7]=saved[0,7];table[0,8]=(0,1,3,256)
+maps['overlay_table']=texture(table)
+v={'preview_overlay_visibility':(1,0)}
+result=render(new,flags,(-1024,-1024),(256,256),256,vectors=v)
+expected=gray.copy();expected[:,:,:3]*=np.array((1,.72,.44))
+assert np.max(np.abs(result-expected))<2e-6,'Native grayscale sampling/tint lost detail'
+# Constant white material isolates the mask: PNG and Dust must blend identically.
+# Alpha must remain opaque.
+white=np.ones((256,256,4),np.float32);white[:,:,:3]=.5;maps['grayscale_art']=texture(white)
+table[0,5]=(1,1,1,1);table[0,0]=(1,1,1,1);table[0,2]=(1,1,1,1)
+table[0,6]=(.4,.8,500,.10);table[0,7,0]=0
+maps['overlay_table']=texture(table)
+png=render(new,flags,vectors=v)
+# A test-only constant material isolates coverage from the old Dust grain.
+import tempfile
+source=load(ROOT/'WORLD/Terrain/Ground/Surfaces/Shaders/StreamedGround.gdshader')
+source=re.sub(r'vec3 material=procedural_ground\([^;]+;', 'vec3 material=vec3(1.0);',source)
+with tempfile.NamedTemporaryFile(mode='w',suffix='.glsl') as f:
+    f.write(source);f.flush();mask_reference=program(f.name)
+table[0,8,2]=1;maps['overlay_table']=texture(table)
+assert np.max(np.abs(png-render(mask_reference,flags,vectors=v)))<1e-6,'PNG changed Dust coverage mask'
+table[0,8,2]=3
+table[0,6,1]=0;maps['overlay_table']=texture(table)
+assert np.max(np.abs(render(new,flags,vectors=v)-render(new,{'blend_ground_art':True})))<1e-6,'PNG zero opacity changed grass'
+table[0,6,1]=.8;maps['overlay_table']=texture(table)
+for iy in range(4):
+    for ix in range(4):
+        piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors=v)
+        assert np.max(np.abs(piece-png[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'PNG mask chunk seam'
+print('PASS: native 256px grayscale detail, brown tint, exact Dust mask parity, zero-opacity grass parity and PNG mask seams')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')

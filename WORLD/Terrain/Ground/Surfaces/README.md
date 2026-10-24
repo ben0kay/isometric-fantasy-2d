@@ -19,3 +19,5 @@ Current clarified structure: full-coverage base + a separately authored accompan
 GS5 now supplies default-off, F9-previewable Oak Dirt/Rock extras, plus strength sliders for base detail/accompanying grass. Pink and existing base profiles are unchanged. See [preview instructions and pending checks](GS5_Validation.md).
 
 Current Dirt/Rock use procedural Dust/Basalt recipes adapted from the old isometric game. They do not use SVG artwork; base grass still does. See [source, behavior and validation](PROCEDURAL_GROUND_RECIPES.md).
+
+Current GS5 Dirt uses native 256×256 grayscale PNG artwork with biome-owned tint and unchanged Dust patch masks; Rock remains Basalt. See [authoring and validation](GS5_PNG_DIRT.md).

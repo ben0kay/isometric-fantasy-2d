@@ -3,6 +3,8 @@ shader_type canvas_item;
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/NoiseSampling.gdshaderinc"
 uniform sampler2D ground_art : filter_nearest, repeat_disable;
 uniform float art_columns;
+uniform sampler2D grayscale_art : filter_nearest, repeat_disable;
+uniform float grayscale_columns = 1.0;
 uniform sampler2D map_base : filter_linear, repeat_disable;
 uniform sampler2D map_shade : filter_linear, repeat_disable;
 uniform sampler2D map_fresh : filter_linear, repeat_disable;

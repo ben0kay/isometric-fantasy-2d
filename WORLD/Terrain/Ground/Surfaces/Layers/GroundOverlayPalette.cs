@@ -11,7 +11,7 @@ public static class GroundOverlayPalette
     // =========================================================
     public static bool CanCompile(BiomeGroundLayer layer) => (layer.Enabled || layer.AllowSessionPreview) && layer.Coverage>0 && layer.Opacity>0;
 
-    // Row = biome*2 + slot. Artwork indices refer to the same nearest-filtered 32px atlas as base.
+    // Row = biome*2 + slot. Artwork indices select the legacy 32px atlas or the native 256px grayscale atlas by recipe.
     // =========================================================
     public static void Bind(ShaderMaterial material,CompiledGroundBiome[] biomes,int[,] artwork)
     {

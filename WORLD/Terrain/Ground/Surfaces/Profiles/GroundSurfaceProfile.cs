@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 public enum GroundDetailStyle { Organic, Granular, Mineral }
-public enum GroundMaterialRecipe { Artwork, Dust, Basalt }
+public enum GroundMaterialRecipe { Artwork, Dust, Basalt, GrayscaleArtwork }
 
 [GlobalClass]
 public partial class GroundSurfaceProfile : Resource
@@ -32,13 +32,15 @@ public partial class GroundSurfaceProfile : Resource
     // =========================================================
     public void Validate()
     {
-        if ((Recipe==GroundMaterialRecipe.Artwork && Texture==null) || Material == null || !Enum.IsDefined(DetailStyle)
+        if (((Recipe==GroundMaterialRecipe.Artwork || Recipe==GroundMaterialRecipe.GrayscaleArtwork) && Texture==null) || Material == null || !Enum.IsDefined(DetailStyle)
             || !Enum.IsDefined(Recipe) || !float.IsFinite(MaterialFeatureSize) || MaterialFeatureSize<1 || MaterialFeatureSize>256
             || !float.IsFinite(Variation) || Variation < 0 || Variation > 1
             || !float.IsFinite(PatchSize) || PatchSize < 80 || PatchSize > 8192
             || !float.IsFinite(DetailStrength) || DetailStrength < 0 || DetailStrength > 1
             || !float.IsFinite(ArtworkInfluence) || ArtworkInfluence < 0 || ArtworkInfluence > 1)
             throw new ArgumentException("Invalid ground surface appearance settings.");
+        if (Recipe==GroundMaterialRecipe.GrayscaleArtwork && (Texture.GetWidth()!=256 || Texture.GetHeight()!=256))
+            throw new ArgumentException("Grayscale extra artwork must be 256x256; it is uploaded without resizing.");
         foreach (var colour in new[] { BaseColour,ShadeColour,FreshColour,DryColour })
             if (!float.IsFinite(colour.R) || !float.IsFinite(colour.G) || !float.IsFinite(colour.B) || !float.IsFinite(colour.A))
                 throw new ArgumentException("Ground palettes must be finite.");
