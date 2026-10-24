@@ -22,9 +22,9 @@ vec4 layer_data(float row,float column) {
 vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     float slot=mod(row,2.0);
     float visibility=slot<0.5 ? preview_overlay_visibility.x : preview_overlay_visibility.y;
-    if(visibility<0.5) return below;
+    if(visibility==0.0) return below;
     vec4 info=layer_data(row,8.0);
-    if(info.g<0.5) return below;
+    if(info.g<0.5 || (visibility<0.0 && info.g>1.5)) return below;
     vec4 mask=layer_data(row,6.0);
     mask.r=clamp(mask.r*(slot<0.5 ? preview_overlay_coverage.x : preview_overlay_coverage.y),0.0,1.0);
     mask.g=clamp(mask.g*(slot<0.5 ? preview_overlay_opacity.x : preview_overlay_opacity.y),0.0,1.0);

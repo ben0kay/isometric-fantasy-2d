@@ -34,16 +34,18 @@ public partial class GroundSurfaceDebugPanel : VBoxContainer
         _status=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_status);
         AddChild(new HSeparator()); AddChild(new Label { Text="Base appearance" });
         _widgets.Toggle(this,"Base fine detail",()=>_preview.ShowBaseDetail,v=>_preview.ShowBaseDetail=v);
+        _widgets.Slider(this,"Base fine detail strength",0,2,0.01f,()=>_preview.BaseDetailStrength,v=>_preview.BaseDetailStrength=v);
         AddChild(new HSeparator()); AddChild(new Label { Text="Accompanying patch layer" });
         _patchStatus=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_patchStatus);
         _widgets.Toggle(this,"Show accompanying patches",()=>_preview.ShowAccompanyingPatches,v=>_preview.ShowAccompanyingPatches=v);
         _patchToggle=(CheckButton)GetChild(GetChildCount()-1);
+        _widgets.Slider(this,"Accompanying patch strength",0,2,0.01f,()=>_preview.AccompanyingStrength,v=>_preview.AccompanyingStrength=v);
         if(_preview.SupportsOverlays)
         {
             AddChild(new HSeparator()); AddChild(new Label { Text="Extra patch layers — global comparisons" });
             _widgets.Toggle(this,"Show extra patch layers",()=>_preview.ShowOptionalLayers,v=>_preview.ShowOptionalLayers=v);
             for(int i=0;i<2;i++) BuildSlot(i);
-            AddChild(new Label { Text="Multipliers affect compiled active layers across all biomes. Unconfigured or authored-off layers stay off. The base always remains visible.",AutowrapMode=TextServer.AutowrapMode.WordSmart });
+            AddChild(new Label { Text="Sliders preview configured layers across all biomes. Missing layers stay off. The base always remains visible.",AutowrapMode=TextServer.AutowrapMode.WordSmart });
         }
         else AddChild(new Label { Text="Compatibility preview: base comparisons only. Use streamed World for overlays.",AutowrapMode=TextServer.AutowrapMode.WordSmart });
         var reset=new Button { Text="Reset Ground Preview",FocusMode=Control.FocusModeEnum.None }; AddChild(reset);
@@ -104,8 +106,8 @@ public partial class GroundSurfaceDebugPanel : VBoxContainer
         for(int i=0;i<2;i++)
         {
             var layer=stack?.OverlayLayers!=null && i<stack.OverlayLayers.Count ? stack.OverlayLayers[i] : null;
-            bool available=layer!=null && GroundOverlayPalette.IsVisible(layer);
-            string state=layer==null ? "not configured here" : $"{layer.Label} ({(available ? "authored on" : "authored off / zero strength")})";
+            bool available=layer!=null && GroundOverlayPalette.CanCompile(layer);
+            string state=layer==null ? "not configured here" : $"{layer.Label} ({(layer.Enabled ? "authored on" : available ? "off by default; preview available" : "authored off / zero strength")})";
             _slotLabels[i].Text=$"Overlay {(i==0 ? "A" : "B")}: {state}";
             _slotToggles[i].Disabled=!available;
             _sliders[i,0].Editable=available; _sliders[i,1].Editable=available;

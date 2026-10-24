@@ -1,6 +1,6 @@
 # Layered Ground Surfaces — Production Implementation Plan
 
-> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2/GS3 implemented, awaiting local engine/visual/performance validation; GS4 controls implemented, awaiting local engine/UI validation; GS5–GS6 not implemented.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
+> **Status: GS0 source audit complete; graphical/performance baseline pending. GS1 implemented, awaiting local build/runtime/visual validation. GS2/GS3 implemented, awaiting local engine/visual/performance validation; GS4 controls implemented, awaiting local engine/UI validation; GS5 optional Oak dirt/rock and F9 strength sliders implemented, awaiting visual/local validation; GS6 remains pending.** See [GS0/GS1 handoff](GS0_GS1_Validation.md). Codex must execute only the phase explicitly assigned by the author. Creating this note does not authorize coding.
 >
 > **Absolute priority: DO NOT change how Oak Forest currently looks by default.** First extract its existing ground behaviour into a reusable layered architecture; only later offer optional, individually enabled layers for dirt and rock breakup. The supplied illustrated Oak Forest scene is art-direction inspiration, not an exact terrain shader replacement.
 >
@@ -16,7 +16,7 @@ Implemented: BiomeGroundLayer.Tint (opaque RGB, white default), applied to the c
 2. **Accompanying Patch Layer:** optional, independently authored and toggled GroundPatchLayer for underlying flavour (Oak's existing greener/drier patches). It is not hidden inside the base and does not use an extra slot.
 3. **Extra Patch Layers:** at most two optional ordered surface overlays, e.g. dirt and rock later.
 
-This separation is implemented for Oak/Pink while preserving their existing enabled appearance. Both extra slots remain empty; GS5 dirt/rock is not implemented. See [accompanying extraction evidence and local check](ACCOMPANYING_PATCH_LAYER.md). Earlier GS0–GS4 implementation received user-reported World/practice functional checks; the extraction itself awaits local validation, and target performance evidence remains separate.
+This separation is implemented for Oak/Pink while preserving their existing enabled appearance. Oak now configures both extra slots as default-OFF F9 previews (Dirt and Rock); Pink remains empty. See GS5_Validation.md. See [accompanying extraction evidence and local check](ACCOMPANYING_PATCH_LAYER.md). Earlier GS0–GS4 implementation received user-reported World/practice functional checks; the extraction itself awaits local validation, and target performance evidence remains separate.
 
 Decoration/scenery and ENVIRONMENT weather/lighting remain independent. Reusable grass/sand/soil/stone profiles and biome-owned tint remain the data-driven material source; no biome-specific renderer classes.
 
@@ -126,6 +126,8 @@ Decoration/scenery and ENVIRONMENT weather/lighting remain independent. Reusable
 **Done when:** the author can switch each layer off/on and compare the old base live from F9, with existing F9 functions untouched.
 
 ### GS5 — Add *optional* Oak Dirt and Rock configurations (still OFF by default)
+
+**Implemented, awaiting local visual/performance acceptance.** Both are OFF by default and can be enabled through F9 without asset changes; base/companion also have strength sliders. See [GS5 test instructions](GS5_Validation.md).
 
 1. Create reusable production dirt/rock/gravel appearance profiles only where needed, instead of copying/debug-promoting all RockPatches implementation.
 2. Give Oak an Overlay A with broad subtle soil/dirt patches; Overlay B with much sparser, smaller rocky breakup, inspired by the reference image. Choose modest coverage, softened non-repetitive edges, independent colour and strength. Keep Oak's existing base as-is.

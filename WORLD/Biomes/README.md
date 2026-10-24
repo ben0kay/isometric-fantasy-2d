@@ -18,3 +18,5 @@ GS1: Oak/Pink now author inline GroundStack Resources with a clearly labelled re
 GS2/GS3: streamed setup reads GroundStack directly (legacy Surface remains fallback). Biomes may author at most two ordered enabled organic overlays; existing production arrays stay empty. Ground surfaces/overlays belong in WORLD/Terrain, decorative grass objects remain Content. See ../Terrain/Ground/Surfaces/GS2_GS3_Validation.md.
 
 Base/patch clarification: each explicit stack may author AccompanyingPatches separately from DefiningBaseGround and the two extra OverlayLayers. Oak/Pink own inline accompanying grass variation with the original colours/scale; production extra arrays remain empty. See ../Terrain/Ground/Surfaces/ACCOMPANYING_PATCH_LAYER.md.
+
+GS5 Oak has two extra inline layer entries referencing canonical Dirt/Rock profiles, both Enabled=false with AllowSessionPreview=true. F9 can inspect them without saving biome changes. Pink remains unchanged. See ../Terrain/Ground/Surfaces/GS5_Validation.md.

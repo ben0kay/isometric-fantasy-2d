@@ -13,6 +13,9 @@
 
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/GroundPatchLayer.cs" id="accompanying_script"]
 
+[ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres" id="dirt_surface"]
+[ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres" id="rock_surface"]
+
 [sub_resource type="Resource" id="base_ground"]
 script = ExtResource("ground_layer")
 Id = "base"
@@ -25,10 +28,39 @@ Id = "accompanying"
 Label = "Forest grass patches"
 Enabled = true
 
+[sub_resource type="Resource" id="dirt_patches"]
+script = ExtResource("ground_layer")
+Id = "dirt"
+Label = "Dirt patches"
+Surface = ExtResource("dirt_surface")
+Enabled = false
+AllowSessionPreview = true
+Coverage = 0.48
+Opacity = 0.8
+PatchSize = 400.0
+EdgeSoftness = 0.15
+WarpStrength = 0.45
+SeedSalt = 431
+
+[sub_resource type="Resource" id="rock_patches"]
+script = ExtResource("ground_layer")
+Id = "rock"
+Label = "Rocky patches"
+Surface = ExtResource("rock_surface")
+Enabled = false
+AllowSessionPreview = true
+Coverage = 0.3
+Opacity = 0.7
+PatchSize = 150.0
+EdgeSoftness = 0.12
+WarpStrength = 0.55
+SeedSalt = 829
+
 [sub_resource type="Resource" id="ground"]
 script = ExtResource("ground_stack")
 DefiningBaseGround = SubResource("base_ground")
 AccompanyingPatches = SubResource("accompanying_patches")
+OverlayLayers = Array[ExtResource("ground_layer")]([SubResource("dirt_patches"), SubResource("rock_patches")])
 
 [sub_resource type="Resource" id="trees"]
 script = ExtResource("population")

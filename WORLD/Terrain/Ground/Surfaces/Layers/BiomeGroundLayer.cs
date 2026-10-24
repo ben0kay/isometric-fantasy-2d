@@ -13,6 +13,7 @@ public partial class BiomeGroundLayer : Resource
     [Export] public Color Tint { get; set; } = Colors.White;
     [ExportGroup("Optional overlay only")]
     [Export] public bool Enabled { get; set; } = false;
+    [Export] public bool AllowSessionPreview { get; set; } = false;
     [Export(PropertyHint.Range,"0,1")] public float Coverage { get; set; } = 0.25f;
     [Export(PropertyHint.Range,"0,1")] public float Opacity { get; set; } = 1f;
     [Export(PropertyHint.Range,"80,8192")] public float PatchSize { get; set; } = 320f;

@@ -11,3 +11,5 @@ Only the visible drawer refreshes current-biome text/widgets (maximum 4Hz); hidd
 See [GS4 validation and all-phase local checklist](../../../WORLD/Terrain/Ground/Surfaces/GS4_Validation.md). Godot/.NET and Windows acceptance remain pending.
 
 The author clarified the stack: Base appearance, Accompanying patch layer, Extra patch layers. Show accompanying patches controls the new independent data layer; it does not consume A/B. Oak/Pink accompanying layers are authored on; extra dirt/rock remain absent. See ../../../WORLD/Terrain/Ground/Surfaces/ACCOMPANYING_PATCH_LAYER.md.
+
+GS5: sliders now cover Base fine detail strength and Accompanying patch strength as well as independent A/B coverage/opacity. Configured AllowSessionPreview layers can be shown while authored OFF; Oak Dirt/Rock start OFF and reset OFF. Sliders write only changed uniforms; no image rebuilding. See ../../../WORLD/Terrain/Ground/Surfaces/GS5_Validation.md.

@@ -37,9 +37,11 @@ public partial class ValidateDebugHud : Node
             groundToggles.Single(t=>t.Text=="Base fine detail").ButtonPressed=false;
             groundToggles.Single(t=>t.Text=="Show extra patch layers").ButtonPressed=false;
             Check(!world.GroundPreview.ShowAccompanyingPatches && !world.GroundPreview.ShowBaseDetail && !world.GroundPreview.ShowOptionalLayers,"Ground widgets reach production preview");
+            groundToggles.Single(t=>t.Text=="Show overlay A").ButtonPressed=true;
+            Check(world.GroundPreview.ShowOverlay(0) && !world.GroundPreview.ShowOverlay(1),"Dormant dirt preview switch");
             groundToggles.Single(t=>t.Text=="Show overlay A").ButtonPressed=false;
-            Check(!world.GroundPreview.ShowOverlay(0) && world.GroundPreview.ShowOverlay(1),"Independent ground toggles");
-            ground.FindChildren("*","HSlider",true,false).OfType<HSlider>().First().Value=0.4;
+            Check(!world.GroundPreview.ShowOverlay(0) && !world.GroundPreview.ShowOverlay(1),"Independent ground toggles");
+            ground.FindChildren("*","HSlider",true,false).OfType<HSlider>().Skip(2).First().Value=0.4;
             Check(Mathf.IsEqualApprox(world.GroundPreview.Coverage(0),0.4f) && world.GroundPreview.Coverage(1)==1,"Coverage slider affects only A");
             Check(ground.FindChildren("*","Button",true,false).OfType<Button>().All(b=>b.FocusMode==Control.FocusModeEnum.None),"Ground controls capture movement focus");
             owner._UnhandledInput(new InputEventKey { Keycode=Key.F9,Pressed=true }); await Frames(2);
@@ -50,7 +52,7 @@ public partial class ValidateDebugHud : Node
             Check(menu.ActiveCategory=="Ground Surfaces" && ground.IsVisibleInTree() && !diagnostics.Visible,"Ground F9 selection persistence");
             ground.FindChildren("*","Button",true,false).OfType<Button>().Single(b=>b.Text=="Reset Ground Preview").EmitSignal(BaseButton.SignalName.Pressed);
             Check(world.GroundPreview.ShowAccompanyingPatches && world.GroundPreview.ShowBaseDetail && world.GroundPreview.ShowOptionalLayers
-                && world.GroundPreview.ShowOverlay(0) && world.GroundPreview.ShowOverlay(1) && world.GroundPreview.Coverage(0)==1,"Ground reset incomplete");
+                && !world.GroundPreview.ShowOverlay(0) && !world.GroundPreview.ShowOverlay(1) && world.GroundPreview.Coverage(0)==1,"Ground reset incomplete");
             Check(originalContent==CampaignSession.ContentFingerprint(),"Ground preview mutated authored content");
             menu.SelectCategory("Combat"); await Frames(2);
             Check(!groundPanel.IsProcessing() && !ground.IsVisibleInTree(),"Inactive Ground still processing");

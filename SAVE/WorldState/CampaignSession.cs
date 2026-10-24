@@ -39,7 +39,7 @@ public static class CampaignSession
     internal static string LegacyGS1ContentFingerprint() => BuildContentFingerprint(null,true);
     // Compare the full dependency set with only explicitly requested frozen substitutions.
     // =========================================================
-    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false)
+    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false)
     {
         if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
             throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
@@ -49,6 +49,8 @@ public static class CampaignSession
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
+            if(previousOakExtras && path=="res://WORLD/Biomes/Definitions/OakForest/Biome.tres")
+                source=Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/GS5OakBeforeExtras.txt").Replace("\r\n","\n");
             if (previousPatches)
             {
                 string reference = path switch
@@ -86,14 +88,23 @@ public static class CampaignSession
     // Exact accompanying-layer extraction only, with all unrelated dependency text still compared.
     // =========================================================
     internal static string LegacyPatchLayerFingerprint() => BuildContentFingerprint(null,false,true);
-    internal static bool CanMigratePatches() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "16E0DDE1492A9FE91043A34B350BAA252370457905044EAFF26A9728ABFAAFB0" &&
+    internal static bool CanMigratePatches() => CanMigrateOakExtras() || CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "16E0DDE1492A9FE91043A34B350BAA252370457905044EAFF26A9728ABFAAFB0" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "AD426D1F72246B1B4711AB78F32FC494D2D4A539E43D0CC43567CD84A60453C8";
+
+    // Exact optional Oak content addition, preserving all unrelated dependency checks.
+    // =========================================================
+    internal static string LegacyOakExtrasFingerprint() => BuildContentFingerprint(null,false,false,true);
+    internal static bool CanMigrateOakExtras() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "D7702F421654910023F887B9E1F037E5843D168EE5E94FE04B0BB3F96158006C" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "AD426D1F72246B1B4711AB78F32FC494D2D4A539E43D0CC43567CD84A60453C8" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "74F226EA5363C4F19B97DE64A56BC69A3213CA276AC7C83B6AB62F352CC757E6" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "5D785BE17D1D388209D9E653E4630D1CFE776CA970733F6B24028987E050D000";
 
     // Reject changed content rather than moving old trees or rerolling geography behind the player's back.
     // =========================================================
     public static void RequireContent(CampaignSnapshot snapshot)
     {
         if (snapshot.ContentFingerprint == ContentFingerprint()) return;
+        if(CanMigrateOakExtras() && snapshot.ContentFingerprint==LegacyOakExtrasFingerprint()) return;
         if (CanMigratePatches() && snapshot.ContentFingerprint == LegacyPatchLayerFingerprint()) return;
         // Exact GS1 data conversion only; all other current dependency text still participates.
         if (CanMigrateGround() && snapshot.ContentFingerprint == LegacyGS1ContentFingerprint()) return;

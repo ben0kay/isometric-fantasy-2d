@@ -22,16 +22,22 @@ public partial class ValidateGroundLayers : Node
             var map=MacroWorldBuilder.Build(config,seed);
             using var old=PreGS2GroundPalette.Build(map,config.Biomes);
             using var current=StreamedGroundPalette.Build(map,config.Biomes);
-            foreach(string name in new[] {"ground_art","map_base","map_shade","map_fresh","map_dry","map_settings"})
+            foreach(string name in new[] {"map_base","map_shade","map_fresh","map_dry","map_settings"})
                 SameTexture(old,current,name);
-            foreach(string name in new[] {"has_ground_tint","has_ground_overlays","has_surface_styles","blend_ground_art"})
+            foreach(string name in new[] {"has_ground_tint","has_surface_styles","blend_ground_art"})
                 Check(!current.GetShaderParameter(name).AsBool(),"Original production fast path: "+name);
+            var oakPreview=new GroundSurfacePreview(current,true);
+            Check(!oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1),"Oak extras must start off");
+            var packed=Texture(current,"overlay_table");
+            oakPreview.SetShowOverlay(0,true);
+            Check(oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1) && Texture(current,"overlay_table")==packed,"F9 must wake only dirt without rebuilding data");
+            oakPreview.Reset(); Check(!oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1),"Reset restores authored-off extras");
             Check(map.Hash==MacroWorldBuilder.Build(config,seed).Hash,"Geography stable");
         }
         var oak=GD.Load<WorldBiomeDefinition>("res://WORLD/Biomes/Definitions/OakForest/Biome.tres");
         var pink=GD.Load<WorldBiomeDefinition>("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres");
         Check(oak.GroundStack.AccompanyingPatches!=null && oak.GroundStack.AccompanyingPatches.Enabled,"Oak accompanying layer missing");
-        Check(pink.GroundStack.AccompanyingPatches!=null && oak.GroundStack.OverlayLayers.Count==0,"Accompanying consumes no extra slots");
+        Check(pink.GroundStack.AccompanyingPatches!=null && oak.GroundStack.OverlayLayers.Count==2,"Accompanying consumes no extra slots");
         using var explicitBase=new WorldBiomeDefinition { Id="base.only",GroundStack=new BiomeGroundStack {
             DefiningBaseGround=new BiomeGroundLayer { Id="base",Label="Flat base",Surface=oak.Surface } } };
         Check(new CompiledGroundBiome(explicitBase).Patches==null,"Explicit base inferred hidden patches");
@@ -65,7 +71,7 @@ public partial class ValidateGroundLayers : Node
         preview.Reset();
         Check(preview.ShowAccompanyingPatches && preview.ShowBaseDetail && preview.ShowOptionalLayers && preview.ShowOverlay(0)
             && preview.Coverage(1)==1 && preview.Opacity(0)==1,"Preview reset preserves authored state");
-        Check(both.GetShaderParameter("preview_overlay_visibility").AsVector2()==Vector2.One,"Reset visibility uniform");
+        Check(both.GetShaderParameter("preview_overlay_visibility").AsVector2()==-Vector2.One,"Reset visibility uniform");
         using var fresh=StreamedGroundPalette.Build(f,fixture);
         var isolated=new GroundSurfacePreview(fresh,true);
         preview.SetShowOverlay(1,false);

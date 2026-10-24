@@ -16,12 +16,12 @@ public static class StreamedGroundPalette
         bool hasTint = compiled.Any(b=>b.Tint!=Colors.White);
         bool hasStyles=compiled.Any(b=>b.Base.DetailStyle!=GroundDetailStyle.Organic || b.Base.ArtworkInfluence!=0.22f);
         bool blendArt=compiled.Skip(1).Any(b=>b.Base.Texture!=compiled[0].Base.Texture);
-        bool hasOverlays=compiled.Any(b=>b.Overlays.Any(GroundOverlayPalette.IsVisible));
+        bool hasOverlays=compiled.Any(b=>b.Overlays.Any(GroundOverlayPalette.CanCompile));
         var material = new ShaderMaterial { Shader = GD.Load<Shader>("res://WORLD/Terrain/Ground/Surfaces/Shaders/StreamedGround.gdshader") };
         var artwork=compiled.Select(b=>b.Base.Texture).ToList();
         var overlayArt=new int[compiled.Length,2];
         for(int i=0;i<compiled.Length;i++) for(int slot=0;slot<compiled[i].Overlays.Length;slot++)
-            if(GroundOverlayPalette.IsVisible(compiled[i].Overlays[slot]))
+            if(GroundOverlayPalette.CanCompile(compiled[i].Overlays[slot]))
             { overlayArt[i,slot]=artwork.Count; artwork.Add(compiled[i].Overlays[slot].Surface.Texture); }
         int atlasColumns = Mathf.CeilToInt(Mathf.Sqrt(artwork.Count));
         using (var atlas = Image.CreateEmpty(atlasColumns*32,atlasColumns*32,false,Image.Format.Rgba8))
@@ -70,6 +70,8 @@ public static class StreamedGroundPalette
             material.SetShaderParameter("map_styles",ImageTexture.CreateFromImage(styles));
         }
         material.SetShaderParameter("has_ground_overlays",hasOverlays);
+        float DefaultSlot(int slot) => compiled.Any(b=>slot<b.Overlays.Length && GroundOverlayPalette.IsVisible(b.Overlays[slot])) ? -1f : 0f;
+        material.SetShaderParameter("preview_overlay_visibility",new Vector2(DefaultSlot(0),DefaultSlot(1)));
         if(hasOverlays) GroundOverlayPalette.Bind(material,compiled,overlayArt);
         material.SetShaderParameter("map_origin",map.Bounds.Position); material.SetShaderParameter("map_cell_size",map.CellSize);
         material.SetShaderParameter("map_grid_size",new Vector2(map.Columns,map.Rows)); return material;

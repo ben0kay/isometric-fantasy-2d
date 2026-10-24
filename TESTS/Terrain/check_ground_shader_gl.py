@@ -85,14 +85,14 @@ maps['overlay_table']=texture(table)
 fbo=c.c_uint();gl('glGenFramebuffers',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(fbo));gl('glBindFramebuffer',None,[c.c_uint,c.c_uint])(0x8D40,fbo)
 vao=c.c_uint();gl('glGenVertexArrays',None,[c.c_int,c.POINTER(c.c_uint)])(1,c.byref(vao));gl('glBindVertexArray',None,[c.c_uint])(vao)
 read=gl('glReadPixels',None,[c.c_int,c.c_int,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_void_p])
-def render(prog,flags=None,origin=(-1024,-1024),size=(2048,2048),resolution=128,vectors=None):
+def render(prog,flags=None,origin=(-1024,-1024),size=(2048,2048),resolution=128,vectors=None,scalars=None):
     output=texture(np.zeros((resolution,resolution,4),np.float32))
     gl('glFramebufferTexture2D',None,[c.c_uint,c.c_uint,c.c_uint,c.c_uint,c.c_int])(0x8D40,0x8CE0,0x0DE1,output,0)
     use(prog)
     for unit,(name,ident) in enumerate(maps.items()):
         activeTex(0x84C0+unit);bindTex(0x0DE1,ident);one(loc(prog,name.encode()),unit)
     for name,value in {'has_ground_tint':False,'blend_ground_art':False,'has_ground_overlays':False,'has_surface_styles':False,'preview_accompanying_patches':True,'preview_base_detail':True,'preview_optional_layers':True,**(flags or {})}.items():one(loc(prog,name.encode()),value)
-    for name,value in [('art_columns',2),('map_cell_size',512),('overlay_rows',4)]:scalar(loc(prog,name.encode()),value)
+    for name,value in {'art_columns':2,'map_cell_size':512,'overlay_rows':4,'preview_base_detail_strength':1,'preview_accompanying_strength':1,**(scalars or {})}.items():scalar(loc(prog,name.encode()),value)
     for name,value in [('map_origin',(-1024,-1024)),('map_grid_size',(4,4)),('frame_origin',origin),('frame_size',size)]:vec(loc(prog,name.encode()),*value)
     for name,value in {'preview_overlay_visibility':(1,1),'preview_overlay_coverage':(1,1),'preview_overlay_opacity':(1,1),**(vectors or {})}.items():vec(loc(prog,name.encode()),*value)
     gl('glViewport',None,[c.c_int,c.c_int,c.c_int,c.c_int])(0,0,resolution,resolution)
@@ -135,4 +135,13 @@ base_no_detail=render(new,{'blend_ground_art':True,'preview_base_detail':False})
 assert np.max(np.abs(base_flat-base))>.001 and np.max(np.abs(base_no_detail-base))>.00001,'Base comparison controls had no effect'
 assert np.max(np.abs(render(new,flags)-both))<1e-6,'Uniform reset did not restore authored rendering'
 print('PASS: preview master, independent slots, coverage/opacity multipliers, base comparisons and neutral reset')
+detail_zero=render(new,{'blend_ground_art':True},scalars={'preview_base_detail_strength':0})
+patch_zero=render(new,{'blend_ground_art':True},scalars={'preview_accompanying_strength':0})
+assert np.max(np.abs(detail_zero-base_no_detail))<1e-6,'Base detail slider zero disagrees with toggle'
+assert np.max(np.abs(patch_zero-base_flat))<1e-6,'Accompanying slider zero disagrees with toggle'
+table[:]=saved;table[0:2,8,1]=2;maps['overlay_table']=texture(table)
+off=render(new,flags,vectors={'preview_overlay_visibility':(0,0)})
+forced=render(new,flags,vectors={'preview_overlay_visibility':(1,1)})
+assert np.max(np.abs(off-base))<1e-6 and np.max(np.abs(forced-both))<1e-6,'Default-off preview activation failed'
+print('PASS: base/accompanying strength sliders and dormant configured-layer F9 activation')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')

@@ -15,7 +15,8 @@ public partial class ValidateGroundStack : Node
                 var biome = GD.Load<WorldBiomeDefinition>($"res://WORLD/Biomes/Definitions/{name}/Biome.tres");
                 string profile = name == "OakForest" ? "ForestGrass" : "PinkMeadowGrass";
                 Check(biome.Surface == GD.Load<GroundSurfaceProfile>($"res://WORLD/Terrain/Ground/Surfaces/Profiles/{profile}.tres"),"Original profile identity");
-                Check(biome.GroundStack.OverlayLayers.Count == 0,"Authored overlays empty");
+                Check(biome.GroundStack.OverlayLayers.Count == (name=="OakForest" ? 2 : 0),"Oak preview layers / untouched Pink");
+                foreach(var extra in biome.GroundStack.OverlayLayers) Check(!extra.Enabled && extra.AllowSessionPreview,"Oak extras must default off but be previewable");
             }
             var surface = GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/ForestGrass.tres");
             using var third = new WorldBiomeDefinition { Id="arbitrary.third", Surface=surface };
@@ -61,6 +62,8 @@ public partial class ValidateGroundStack : Node
             var tintTexture=tinted.GetShaderParameter("map_tint").AsGodotObject() as Texture2D;
             Check(tintTexture != null && tintTexture.GetWidth()==map.Columns,"Shared coarse tint map");
             Check(CampaignSession.CanMigratePatches(),"Exact accompanying extraction migration gate");
+            Check(CampaignSession.CanMigrateOakExtras(),"Exact optional Oak layer migration gate");
+            CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyOakExtrasFingerprint(),"",null,null,null,null,null));
             string patchPrevious=CampaignSession.LegacyPatchLayerFingerprint();
             var patchSnapshot=new CampaignSnapshot(2,"","","",patchPrevious,"",null,null,null,null,null);
             CampaignSession.RequireContent(patchSnapshot);
