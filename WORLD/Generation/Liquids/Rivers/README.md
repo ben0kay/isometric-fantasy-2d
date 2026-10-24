@@ -9,9 +9,10 @@ Rivers are opt-in: enable `WaterGenerationMasterConfig.Enabled` and set `RiverCo
 | Setting | Meaning / bound |
 | --- | --- |
 | RiverCount | 0 default; up to 4. Requested lake+river slots cannot exceed 32. |
-| MinimumRiverSpan / MaximumRiverSpan | Endpoint separation in world units, default 4000–8000; accepted minimum ≥1500 and maximum ≤12000. Detour length may be longer; routes exceeding twice maximum span reject. |
+| MinimumRiverSpan / MaximumRiverSpan | Endpoint separation in world units, default 6000–11000; accepted minimum ≥1500 and maximum ≤12000. Detour length may be longer; routes exceeding twice maximum span reject. |
 | MinimumRiverWidth / MaximumRiverWidth | Base full width, default 100–180; accepted 64–384. Smooth variation plus wider source/terminal pools; width never fades to zero. |
 | RiverBendStrength | Bounded lateral displacement, default 100, accepted 0–256 world units. |
+| RiverBankIrregularity | Inspector-only bank variation, default 0.15, accepted 0–0.3 (fraction of local half-width). Zero preserves smooth banks. Independent seeded broad waves on each bank, tapering to unchanged terminal caps. |
 | RequireMultipleRiverBiomes | Optional different endpoint biome types. Ignored only when the map has one configured biome; impossible multi-biome requests warn/skip. The practice fixture enables it. |
 | RiverRouteCellSize | Independent routing grid, default 512, accepted 256–1024 world units. This is not the streaming chunk size or shoreline resolution. At most 65536 route cells. |
 | AttemptsPerRiver | 12 default, maximum 32 route attempts; endpoint selection also has a bounded candidate loop. |
@@ -37,3 +38,5 @@ Planning runs once per new world, with bounded grid, attempts and search. No riv
 Lake-only plans keep water version 1 and their existing hash byte layout. River plans use water version 2 and world blueprint schema 6, so older executables reject them. Schema 4/5 Continue retains its original geography and never gains a river. See [WG3 validation and local checks](WG3_Validation.md).
 
 For immediate testing, open `TESTS/Water/RiverPractice.tscn`, press F6, then R to jump through five saved river sections. F7 shows the cyan saved route with source/terminal markers; F9 retains shared rain controls. Production defaults remain off.
+
+Bank irregularity and longer default spans apply only to newly generated worlds (including RiverPractice). Saved polygons remain authoritative; no in-game sliders or additional runtime callbacks. The existing 24-control/64-vertex limits remain; this is broad bank variation, not fine shoreline detail. WG4 terrain/shore blending remains separate.

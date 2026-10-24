@@ -13,11 +13,12 @@ public partial class WaterGenerationMasterConfig : Resource
     [Export(PropertyHint.Range, "0,0.3,0.01")] public float Irregularity { get; set; } = 0.18f;
     [ExportGroup("Rivers - opt-in, world units")]
     [Export] public int RiverCount { get; set; }
-    [Export] public float MinimumRiverSpan { get; set; } = 4000f;
-    [Export] public float MaximumRiverSpan { get; set; } = 8000f;
+    [Export] public float MinimumRiverSpan { get; set; } = 6000f;
+    [Export] public float MaximumRiverSpan { get; set; } = 11000f;
     [Export] public float MinimumRiverWidth { get; set; } = 100f;
     [Export] public float MaximumRiverWidth { get; set; } = 180f;
     [Export] public float RiverBendStrength { get; set; } = 100f;
+    [Export(PropertyHint.Range, "0,0.3,0.01")] public float RiverBankIrregularity { get; set; } = 0.15f;
     [Export] public bool RequireMultipleRiverBiomes { get; set; }
     [ExportGroup("River route limits")]
     [Export] public int RiverRouteCellSize { get; set; } = 512;

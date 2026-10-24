@@ -54,3 +54,9 @@ Use your installed Godot Mono executable path. Expect WG3 PLAN / WG3 STREAM / WG
 4. For opted-in new campaigns, save/restart/Continue and verify the same river. Existing schema-4/5 campaigns must keep their old geography. Do not insert rivers into valued old saves.
 
 Deferred unless recorded below: target graphical render/shore/zoom inspection, profiler CPU/GPU/allocations/hitches/memory, separate-process restart and broader unrelated suites. No elevation, tributaries, directional currents or underwater behavior is implied.
+
+## Bank irregularity and longer rivers — 24 October 2026
+
+Added Inspector-only `RiverBankIrregularity` (0–0.3, default 0.15), independent broad bank waves within existing geometry limits. Default endpoint span increased from 4000–8000 to 6000–11000 world units. Full footprint validation remains; saved polygons restore unchanged. No new nodes, callbacks or in-game sliders. Work runs once at new-world planning, with no idle processing. WG4 remains planned.
+
+Direct .NET 8 Roslyn compilation with Godot 4.5.1 source generators passed. Normal dotnet build failed before compilation due to runner process-metadata access. Godot 4.5.1 headless ValidateRiverPlanning: **7672 checks**, exit 0; ValidateStreamedRiver --fixed-fps 60: **84 checks passed**. Tests cover repeated seeds, full placement, JSON restore, zero/max noise and invalid settings. Target Windows visuals/profiling remain pending: reopen RiverPractice, R cycles stations and F7 shows route. No measured FPS claim.

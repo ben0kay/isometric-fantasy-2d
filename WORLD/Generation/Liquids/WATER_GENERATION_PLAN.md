@@ -159,7 +159,7 @@ Keep one extensible, data-driven water-body record across ponds, lakes, rivers a
 ## Validation and F9/F7 suggestions
 
 - F7: show planned water polygons/corridors, seed/IDs, biome suitability and blocked placements (debug only).
-- F9: master water generation preview toggle, lake count/size, shoreline noise strength, river bend/width and active geometry count; runtime preview must not mutate authored Resources or saved blueprint.
+- River geometry controls stay Inspector-only per user preference: bend strength, bank irregularity and span/width ranges. No in-game geometry sliders are requested.
 - Tests: repeatability across seeds; two biomes and one-biome cases; zero enabled biomes still fail as P1 specifies; hard exclusions; reservation conflicts; concave shore queries; chunk borders; fixed pond coexistence; saved-world reload; water collision/nav; graphical zoom, FPS and memory.
 - Explicit performance handoff after each implementation: trigger, shutdown, remaining idle callbacks, bounded scaling, tests actually run and deferred target-PC checks.
 

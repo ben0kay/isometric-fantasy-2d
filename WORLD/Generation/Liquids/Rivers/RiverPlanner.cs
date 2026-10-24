@@ -47,7 +47,7 @@ public static class RiverPlanner
                 var path=ShapePath(route,settings,rng);
                 if (path==null) continue;
                 PlannedWaterBody body;
-                try { body=new PlannedWaterBody($"river.{slot:D3}",settings.LiquidId,Outline(path),path); }
+                try { body=new PlannedWaterBody($"river.{slot:D3}",settings.LiquidId,Outline(path,settings.RiverBankIrregularity),path); }
                 catch (ArgumentException) { continue; } // Invalid bends are rejected as a whole, never drawn as disconnected pieces.
                 if (!ValidFootprint(body,settings,map,features,profiles,bodies,authoredPond)) continue;
                 bodies.Add(body); placed=true; break;
@@ -169,7 +169,7 @@ public static class RiverPlanner
     }
     // One simple polygon includes positive-width spring/terminal pools, not a ribbon fading away at biome edges.
     // =========================================================
-    internal static Vector2[] Outline(PlannedRiverPath path)
+    internal static Vector2[] Outline(PlannedRiverPath path,float irregularity=0f)
     {
         int count=path.Points.Count; var left=new Vector2[count]; var right=new Vector2[count];
         for (int i=0;i<count;i++)
@@ -180,7 +180,13 @@ public static class RiverPlanner
             if (before.Dot(after)<-0.2f) throw new ArgumentException("River has an acute reversal.");
             var n1=new Vector2(-before.Y,before.X); var n2=new Vector2(-after.Y,after.X); var normal=(n1+n2).Normalized();
             float half=path.Widths[i]*0.5f/Mathf.Max(0.65f,normal.Dot(n1));
-            left[i]=path.Points[i]+normal*half; right[i]=path.Points[i]-normal*half;
+            // Independent broad bank waves preserve terminal caps and the saved centerline; no runtime noise sampling.
+            float t=i/(float)(count-1),envelope=Mathf.Sin(Mathf.Pi*t);
+            float phase=path.Points[0].X*0.013f+path.Points[0].Y*0.017f;
+            float leftWave=0.65f*Mathf.Sin(t*Mathf.Tau*3f+phase)+0.35f*Mathf.Sin(t*Mathf.Tau*5f-phase);
+            float rightWave=0.65f*Mathf.Sin(t*Mathf.Tau*3.7f-phase)+0.35f*Mathf.Sin(t*Mathf.Tau*5.3f+phase);
+            left[i]=path.Points[i]+normal*(half*(1f+irregularity*envelope*leftWave));
+            right[i]=path.Points[i]-normal*(half*(1f+irregularity*envelope*rightWave));
         }
         var polygon=new List<Vector2>(count*2+10); polygon.AddRange(left);
         void Cap(int point,Vector2 direction)
@@ -234,7 +240,8 @@ public static class RiverPlanner
             || s.MaximumRiverSearchNodes<32 || s.MaximumRiverSearchNodes>65536 || s.RiverRouteCellSize<256 || s.RiverRouteCellSize>1024
             || !float.IsFinite(s.MinimumRiverSpan) || s.MinimumRiverSpan<1500 || !float.IsFinite(s.MaximumRiverSpan) || s.MaximumRiverSpan<s.MinimumRiverSpan || s.MaximumRiverSpan>12000
             || !float.IsFinite(s.MinimumRiverWidth) || s.MinimumRiverWidth<64 || !float.IsFinite(s.MaximumRiverWidth) || s.MaximumRiverWidth<s.MinimumRiverWidth || s.MaximumRiverWidth>384
-            || !float.IsFinite(s.RiverBendStrength) || s.RiverBendStrength<0 || s.RiverBendStrength>256)
+            || !float.IsFinite(s.RiverBendStrength) || s.RiverBendStrength<0 || s.RiverBendStrength>256
+            || !float.IsFinite(s.RiverBankIrregularity) || s.RiverBankIrregularity<0 || s.RiverBankIrregularity>0.3f)
             throw new ArgumentException("Invalid bounded river settings.");
     }
     #endregion
