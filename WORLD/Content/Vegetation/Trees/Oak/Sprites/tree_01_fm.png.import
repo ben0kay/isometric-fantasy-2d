@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0oxtsxug2lv8"
-path="res://.godot/imported/Rock.svg-b75853184e8020aa2290932615a4fdb3.ctex"
+uid="uid://klursxes7dfw"
+path="res://.godot/imported/tree_01_fm.png-8074efd142ef97bf22d047b7367d78f1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://WORLD/Terrain/Ground/Surfaces/Textures/Rock.svg"
-dest_files=["res://.godot/imported/Rock.svg-b75853184e8020aa2290932615a4fdb3.ctex"]
+source_file="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01_fm.png"
+dest_files=["res://.godot/imported/tree_01_fm.png-8074efd142ef97bf22d047b7367d78f1.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
