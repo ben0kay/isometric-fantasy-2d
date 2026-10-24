@@ -14,6 +14,7 @@ public partial class ValidateGroundStack : Node
             {
                 var biome = GD.Load<WorldBiomeDefinition>($"res://WORLD/Biomes/Definitions/{name}/Biome.tres");
                 string profile = name == "OakForest" ? "ForestGrass" : "PinkMeadowGrass";
+                Check(biome.Colour==biome.Surface.BaseColour && biome.GroundTint==Colors.White,"Production identity preserves original grass");
                 Check(biome.Surface == GD.Load<GroundSurfaceProfile>($"res://WORLD/Terrain/Ground/Surfaces/Profiles/{profile}.tres"),"Original profile identity");
                 Check(biome.GroundStack.OverlayLayers.Count == (name=="OakForest" ? 2 : 0),"Oak preview layers / untouched Pink");
                 foreach(var extra in biome.GroundStack.OverlayLayers) Check(!extra.Enabled && extra.AllowSessionPreview,"Oak extras must default off but be previewable");
@@ -28,6 +29,15 @@ public partial class ValidateGroundStack : Node
             stack.AccompanyingPatches=patches;
             third.GroundStack=stack; third.Surface=null;
             Check(third.Surface == surface,"Stack takes precedence over legacy setter");
+            Check(third.Colour==surface.BaseColour,"Unconfigured identity inherits base tone");
+            third.Colour=new Color(surface.BaseColour.R*0.8f,surface.BaseColour.G*0.6f,surface.BaseColour.B*0.4f,1);
+            Check(third.OverviewColour==third.Colour && new CompiledGroundBiome(third).Tint==third.GroundTint,"Map alias and renderer share identity");
+            Check(third.GroundTint.IsEqualApprox(new Color(0.8f,0.6f,0.4f,1)),"Identity tone becomes base modulation");
+            third.Colour=new Color(float.NaN,1,1,1);
+            bool invalidColour=false;
+            try { third.ValidateColour(); } catch(ArgumentException) { invalidColour=true; }
+            Check(invalidColour,"Nonfinite identity colour rejected");
+            third.Colour=surface.BaseColour;
             var originalBase = surface.BaseColour;
             layer.Tint=new Color(1f,0.65f,0.8f,1f);
             Check(third.GroundTint==layer.Tint && surface.BaseColour==originalBase,"Biome tint leaves shared palette unchanged");
@@ -43,13 +53,17 @@ public partial class ValidateGroundStack : Node
             stack.OverlayLayers.Add(null); Reject(stack); stack.OverlayLayers.RemoveAt(1);
             stack.OverlayLayers.Add(overlay); stack.OverlayLayers.Add(overlay); Reject(stack); stack.OverlayLayers.Clear();
             stack.DefiningBaseGround=null; Reject(stack); stack.DefiningBaseGround=layer;
+            third.Colour=new Color(surface.BaseColour.R*0.8f,surface.BaseColour.G*0.6f,surface.BaseColour.B*0.4f,1);
             const string temporary="user://gs1-ground-stack-test.tres";
             Check(ResourceSaver.Save(third,temporary)==Error.Ok,"Save authored stack");
             var loaded=ResourceLoader.Load<WorldBiomeDefinition>(temporary,"",ResourceLoader.CacheMode.Ignore);
-            Check(loaded.GroundTint==layer.Tint && loaded.GroundStack.DefiningBaseGround.Id=="base" && loaded.Surface.ResourcePath==surface.ResourcePath,"Serialized stack round trip");
+            Check(loaded.Colour==third.Colour && loaded.GroundTint==third.GroundTint && loaded.GroundStack.DefiningBaseGround.Id=="base" && loaded.Surface.ResourcePath==surface.ResourcePath,"Serialized stack round trip");
             Check(loaded.GroundStack.AccompanyingPatches.Label==patches.Label
                 && loaded.GroundStack.AccompanyingPatches.Strength==patches.Strength,"Accompanying layer serialized separately");
             DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(temporary));
+            third.Colour=surface.BaseColour;
+            Check(CampaignSession.CanMigrateIdentity(),"Exact identity relocation migration gate");
+            CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyIdentityFingerprint(),"",null,null,null,null,null));
             Check(CampaignSession.CanMigrateGround(),"Exact shipped conversion migration gate");
             var config=GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres");
             var map=MacroWorldBuilder.Build(config,213876);

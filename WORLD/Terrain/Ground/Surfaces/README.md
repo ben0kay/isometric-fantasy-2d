@@ -1,4 +1,6 @@
 # Shared ground surfaces
+
+Current colour authoring: edit **Biome → Identity → Colour** for the base-ground tone and map swatch. Both renderers resolve the same biome tint; leave base-layer Tint white for one colour authority. Dirt/rock retain independent tints. [Details and validation](../../../Biomes/IDENTITY_COLOUR.md).
 Implemented: GroundSurface applies a GroundSurfaceProfile once, tiles the original ground artwork and configures one private material per ground region. Profiles supply palette, variation and fine detail. Noise and shaders are shared. No per-frame C# material updates.
 
 The shader copies the DEBUG Oak Forest west-side patch, noise, authored texture and fine-detail calculations, removing only two-biome blending. It does not reproduce optional debug lighting, weather or polish. Definitions can reuse ForestGrass.tres or add another profile without copying the shaders.

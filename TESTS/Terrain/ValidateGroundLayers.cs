@@ -39,6 +39,12 @@ public partial class ValidateGroundLayers : Node
             Check(oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1) && Texture(current,"overlay_table")==packed,"F9 must wake only dirt without rebuilding data");
             oakPreview.Reset(); Check(!oakPreview.ShowOverlay(0) && !oakPreview.ShowOverlay(1),"Reset restores authored-off extras");
             Check(map.Hash==MacroWorldBuilder.Build(config,seed).Hash,"Geography stable");
+            var recoloured=(WorldGenerationMasterConfig)config.Duplicate(true);
+            recoloured.Biomes[0].Colour=new Color(0.3f,0.2f,0.25f,1);
+            var recolouredMap=MacroWorldBuilder.Build(recoloured,seed);
+            Check(recolouredMap.Hash==map.Hash,"Colour edits do not reroll geography");
+            Check(recolouredMap.Biomes.Any(b=>b.Id==recoloured.Biomes[0].Id && b.Colour==recoloured.Biomes[0].Colour),"Map reads identity colour");
+            recoloured.Dispose();
         }
         var oak=GD.Load<WorldBiomeDefinition>("res://WORLD/Biomes/Definitions/OakForest/Biome.tres");
         var pink=GD.Load<WorldBiomeDefinition>("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres");
@@ -48,6 +54,11 @@ public partial class ValidateGroundLayers : Node
             DefiningBaseGround=new BiomeGroundLayer { Id="base",Label="Flat base",Surface=oak.Surface } } };
         Check(new CompiledGroundBiome(explicitBase).Patches==null,"Explicit base inferred hidden patches");
         var duplicate=(WorldBiomeDefinition)oak.Duplicate(true);
+        var previousDirtTint=duplicate.GroundStack.OverlayLayers[0].Tint;
+        duplicate.Colour=new Color(0.3f,0.2f,0.25f,1);
+        Check(new CompiledGroundBiome(duplicate).Tint==duplicate.GroundTint && duplicate.GroundTint!=Colors.White,"Identity feeds compiled tint");
+        Check(duplicate.GroundStack.OverlayLayers[0].Tint==previousDirtTint && oak.GroundTint==Colors.White,"Identity leaves extra layers and shared biome unchanged");
+        duplicate.Colour=oak.Colour;
         duplicate.GroundStack.AccompanyingPatches.Enabled=false;
         Check(new CompiledGroundBiome(duplicate).Patches.Enabled==false && oak.GroundStack.AccompanyingPatches.Enabled,"Disabled accompanying layer mutated source");
         bool rejected=false; duplicate.GroundStack.AccompanyingPatches.Strength=float.NaN;

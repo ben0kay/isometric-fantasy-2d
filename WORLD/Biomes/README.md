@@ -1,4 +1,6 @@
 # Overworld biomes
+
+Current identity colour: **Id / DisplayName / Colour** now live together. Colour drives the macro-map swatch and base-ground tone through one shared resolver. Oak/Pink retain their current grass appearance; their map swatches now match their ground tones. Dirt/rock keep independent tints. [Authoring, compatibility and validation](IDENTITY_COLOUR.md).
 Implemented: `Definitions/OakForest/Biome.tres` and `Definitions/PinkMeadow/Biome.tres` are the two production biomes. All individual biome folders live under Definitions; Shared owns common Resource types. Cave biomes remain separate.
 
 WorldBiomeDefinition references a ground surface profile and an ordered array of inline BiomePopulation resources. Each population references canonical content and stores count, scale, mirroring and optional cluster settings. Populate these in the Inspector; no separate spawn file per species per biome is needed.
@@ -9,7 +11,7 @@ Environment: WorldBiomeDefinition.Environment optionally references BiomeEnviron
 
 Layouts/OakAndMeadow.tres selects the two definitions and the curved boundary. Biome art/content remain in canonical WORLD folders. World bounds remain in WorldMasterConfig.
 
-P1 macro generation: each definition now includes enabled/weight/target-diameter/overview-colour settings. `WorldMasterConfig.Generation.Biomes` is the arbitrary-size source collection for the new finite map. The old Layout remains only for the playable preview. See [macro generation](../Generation/World/README.md).
+P1 macro generation: each definition now includes enabled/weight/target-diameter settings; map colour comes from Identity. `WorldMasterConfig.Generation.Biomes` is the arbitrary-size source collection for the new finite map. The old Layout remains only for the playable preview. See [macro generation](../Generation/World/README.md).
 
 P3: streamed populations use explicit InstancesPerMillionUnits; Count/cluster settings retain preview-only semantics. Scale/mirror/variant settings remain shared. All enabled biome definitions supply palettes, textures and local scenery to arbitrary regions. Automatic regional environment-profile blending remains future work; see WORLD/Runtime/Streaming/README.md.
 

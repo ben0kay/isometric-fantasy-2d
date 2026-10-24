@@ -22,3 +22,5 @@ Dirt PNG appearance conversion adds exact-source-gated frozen Oak/Dirt reference
 Dirt boundary refinement adds an exact-source-gated Oak opacity migration using DirtEdgesOakBefore.txt; unrelated dependency checks remain strict.
 
 SE2 seasonal visuals: SeasonalSaveCompatibility freezes only the shipped pre-SE0 environment, pre-SE1 Oak, SE0 season defaults and SE1 palette texts. Exact current hashes gate reconstruction; CampaignSession composes these substitutions with existing separately gated terrain/layout variants. Full unrelated dependencies still participate. No schema bump or file rewrite on lookup; next ordinary checkpoint uses the current fingerprint. Source reconstruction checks passed; native API, disk Continue and preservation checks remain pending. See ENVIRONMENT/Seasons/SE2_Validation.md.
+
+Biome identity colour relocation: exact current Oak/Pink relocation and Dirt/Rock hashes gate frozen IdentityOakBefore/IdentityPinkBefore source substitution, including earlier terrain/seasonal combinations. Full unrelated dependencies remain checked. Native/disk validation pending; see ../../WORLD/Biomes/IDENTITY_COLOUR.md.

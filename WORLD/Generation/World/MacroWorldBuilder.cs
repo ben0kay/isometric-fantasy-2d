@@ -24,6 +24,7 @@ public static class MacroWorldBuilder
         if (definitions.Length == 0 || definitions.Any(b => string.IsNullOrWhiteSpace(b.Id))
             || definitions.Select(b => b.Id).Distinct(StringComparer.Ordinal).Count() != definitions.Length)
             throw new ArgumentException("Enabled biome IDs must be nonempty and unique; at least one is required.");
+        foreach (var b in definitions) b.ValidateColour();
         foreach (var b in definitions)
             if (!float.IsFinite(b.GenerationWeight) || b.GenerationWeight < 0 || !float.IsFinite(b.MinimumRegionDiameter)
                 || !float.IsFinite(b.MaximumRegionDiameter) || b.MinimumRegionDiameter <= 0 || b.MaximumRegionDiameter < b.MinimumRegionDiameter)
@@ -80,7 +81,7 @@ public static class MacroWorldBuilder
             return new MacroRegion(i, s.Biome, centre, s.Diameter, sizes[i]);
         }).ToArray();
         return new MacroWorldMap(seed, config.Bounds, config.CellSize, columns, rows, cells,
-            definitions.Select(b => new MacroBiomeInfo(b.Id, b.DisplayName, b.OverviewColour)).ToArray(), regions);
+            definitions.Select(b => new MacroBiomeInfo(b.Id, b.DisplayName, b.Colour)).ToArray(), regions);
         void Expand(int cell, int region, double cost)
         {
             int x = cell % columns, y = cell / columns;

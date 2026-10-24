@@ -14,14 +14,14 @@ public sealed class CompiledGroundBiome
     {
         if (biome.GroundStack is { } stack)
         {
-            Base=stack.ResolveBaseSurface(); Tint=stack.DefiningBaseGround.Tint; Patches=stack.AccompanyingPatches;
+            Base=stack.ResolveBaseSurface(); Tint=biome.GroundTint; Patches=stack.AccompanyingPatches;
             Overlays=new BiomeGroundLayer[stack.OverlayLayers.Count];
             for(int i=0;i<Overlays.Length;i++) Overlays[i]=stack.OverlayLayers[i];
         }
         else
         {
             Base=biome.Surface ?? throw new ArgumentException("A streamed biome requires base ground.");
-            Base.Validate(); Tint=Colors.White; Patches=GroundPatchLayer.FromLegacy(Base); Overlays=Array.Empty<BiomeGroundLayer>();
+            Base.Validate(); Tint=biome.GroundTint; Patches=GroundPatchLayer.FromLegacy(Base); Overlays=Array.Empty<BiomeGroundLayer>();
         }
         if(Base.Recipe!=GroundMaterialRecipe.Artwork || Base.Texture==null)
             throw new ArgumentException("Base ground requires artwork; procedural recipes are supported on extra patch layers.");
