@@ -65,7 +65,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
     // =========================================================
     public override void _ExitTree()
     {
-        if (GodotObject.IsInstanceValid(_input)) _input.DodgeRequested -= RequestDodge;
+        if (GodotObject.IsInstanceValid(_input)) { _input.DodgeRequested -= RequestDodge; _input.CommandSuppressionChanged-=OnCommandSuppression; }
         HealthState.Changed -= OnHealthChanged; Stats.Dispose();
     }
     // Cache input; camera child owns framing and wheel zoom.
@@ -78,6 +78,7 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
         _input = GetNode<PlayerInput>("Input");
         _input.DodgeDoubleTapSeconds = Config.DodgeDoubleTapSeconds;
         _input.DodgeRequested += RequestDodge;
+        _input.CommandSuppressionChanged+=OnCommandSuppression;
         MotionMode = MotionModeEnum.Floating;
         GetNode<SharedHealthBar>("HealthBar").Bind(HealthState, GetNode<Sprite2D>("Sprite"));
         var numbers = new DamageNumbers { Name = "DamageNumbers", ZIndex = 5 };
@@ -121,6 +122,10 @@ public partial class PlayerMovement : CharacterBody2D, ICombatTarget, IReactionT
         if (GodotObject.IsInstanceValid(_art)) _art.Offset=_artOffset;
         _input?.ResetMovementActions();
     }
+    // Stop voluntary dodge/guard immediately while damage reactions and the world remain active.
+    // =========================================================
+    private void OnCommandSuppression(bool suppressed)
+    { if (!suppressed) return; StopGuard(); _dodgeRemaining=0; Actions.End(PlayerAction.Dodge); Velocity=Vector2.Zero; }
     #region Dodge and movement
     // Event-driven activation; direction is captured from held movement at the second Shift press.
     // =========================================================

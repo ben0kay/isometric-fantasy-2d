@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://UI/HUD/Gameplay/GameplayHUD.cs" id="script"]
+[ext_resource type="Resource" path="res://UI/DefaultUIConfig.tres" id="config"]
+
+[node name="GameplayUIRoot" type="CanvasLayer"]
+layer = 10
+script = ExtResource("script")
+Config = ExtResource("config")

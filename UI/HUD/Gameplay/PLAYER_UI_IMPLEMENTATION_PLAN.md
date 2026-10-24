@@ -1,14 +1,14 @@
 # Player HUD, Hotbar & Inventory UI — Implementation Plan
 
-> **Status: UI0 AUDIT COMPLETE; UI1–UI5 PLANNED — 24 October 2026. Documentation only.** No UI scenes, C# gameplay logic, input bindings or inventory systems are implemented by this note. Read root README.md, CodePreferences.md, UI/README.md, UI/HUD/Gameplay/README.md, UI/Inventory/PLAYER_INVENTORY.md, ENTITIES/Player/Input/README.md, ENTITIES/Player/Inventory/README.md and UI/Shared/Buttons/README.md before each phase. Confirm actual code and scenes at HEAD rather than relying only on READMEs. User approval required per phase.
+> **Status: UI0 audit complete; UI1/UI2 implemented, awaiting Windows visual/performance acceptance; UI3–UI5 planned — 24 October 2026.** UI1/UI2 add presentation and input gating only; authoritative item storage remains unimplemented. See [UI1/UI2 validation](UI1_UI2_Validation.md). Read root README.md, CodePreferences.md, UI/README.md, UI/HUD/Gameplay/README.md, UI/Inventory/PLAYER_INVENTORY.md, ENTITIES/Player/Input/README.md, ENTITIES/Player/Inventory/README.md and UI/Shared/Buttons/README.md before each phase. Confirm actual code and scenes at HEAD rather than relying only on READMEs. User approval required per phase.
 
 ## Phase overview
 
 | Phase | Objective | Suggested assistant | Status |
 | --- | --- | --- | --- |
 | **UI0** | Audit PlayerInput, current world UI, button factory, item/inventory foundations and input conflicts | Regular Chat | **Complete: source audit** |
-| **UI1** | Add shared gameplay HUD root and visual nine-slot bottom hotbar, initially placeholder data | Codex | Planned |
-| **UI2** | Add inventory open/close action through PlayerInput and a non-pausing inventory overlay | Codex | Planned |
+| **UI1** | Add shared gameplay HUD root and visual nine-slot bottom hotbar, initially placeholder data | Codex | Implemented; visual/performance acceptance pending |
+| **UI2** | Add inventory open/close action through PlayerInput and a non-pausing inventory overlay | Codex | Implemented; visual/performance acceptance pending |
 | **UI3** | Connect hotbar/inventory to authoritative item state and selection, after item contracts exist | Codex | Planned |
 | **UI4** | Polish responsive organic styling, tooltips, focus and interaction behavior | Codex | Planned |
 | **UI5** | Optional status/buff rail, top-left toasts and top-center alerts | Regular Chat plan → Codex | Planned |
@@ -32,7 +32,7 @@
 
 **Future peripheral HUD:** a compact vertical rail of buff/debuff/status icons on one screen side; independent toast lane entering from **top-left**; prominent alert lane at **top-center**. Keep their root containers and layout reservations separate so messages do not overlap inventory, hotbar or F9 debug controls. Toasts are transient low-priority feedback; alerts are higher-priority warnings and should not block movement.
 
-## Proposed ownership (create only when phase requires)
+## Ownership (create future folders only when their phase requires)
 
 ```text
 UI/
@@ -40,15 +40,15 @@ UI/
 │   └── Gameplay/
 │       ├── README.md                    # EXISTS
 │       ├── PLAYER_UI_IMPLEMENTATION_PLAN.md # THIS FILE
-│       ├── GameplayHUD.tscn             # PROPOSED — one shared HUD canvas/root
-│       ├── Hotbar/                      # PROPOSED — visual slots/selection
+│       ├── GameplayHUD.tscn             # IMPLEMENTED — one shared HUD canvas/root
+│       ├── Hotbar/                      # IMPLEMENTED — visual slots/selection
 │       ├── StatusEffects/               # FUTURE — buff/debuff icon rail
 │       └── Notifications/               # FUTURE — toast + alert views
 ├── Inventory/
 │   ├── README.md                        # EXISTS
 │   ├── PLAYER_INVENTORY.md              # EXISTS — detailed design vision
-│   ├── PlayerInventoryView.tscn         # PROPOSED
-│   ├── Components/                      # PROPOSED — reusable item/stack widgets
+│   ├── PlayerInventoryView.cs           # IMPLEMENTED — built by HUD
+│   ├── Components/                      # IMPLEMENTED — reusable item/stack widgets
 │   └── Containers/                      # EXISTS — future container views
 └── Shared/
     └── Buttons/                         # EXISTS — UIButtonFactory + styles
@@ -98,7 +98,7 @@ Do not put input polling or item authority into the HUD scenes. UI observes play
 - Use UIButtonFactory for inventory buttons; design rounded organic frames through passive controls/resources. Defer interactive item assignments/drag-and-drop until UI3.
 - Validate Godot import/build, 1080p + smaller windows, I/Esc + focus, held keys/mouse, world still running, F9/F7 overlap, unload/reload lifecycle, idle and active frame cost in UI1/UI2.
 
-**UI0 validation:** completed documentation and source inspection only. No gameplay/UI files edited and no Godot, .NET or graphical tests run. UI1 and UI2 remain separately authorized implementation phases.
+**UI0 validation:** completed documentation and source inspection only. No gameplay/UI files edited and no Godot, .NET or graphical tests run. UI1 and UI2 were subsequently authorized and implemented; see the validation record.
 
 ### UI1 — bottom hotbar foundation
 **Objective:** render a polished, resolution-aware nine-slot hotbar within one persistent gameplay HUD CanvasLayer.
@@ -153,4 +153,14 @@ Do not put input polling or item authority into the HUD scenes. UI observes play
 6. **Button factory:** every actual inventory Button uses UI/Shared/Buttons/UIButtonFactory.
 7. **Notifications:** reserve distinct top-left and top-center lanes, but defer their runtime implementation until UI5.
 
-**Handoff:** documentation only; do not automatically implement UI0–UI5. Each approved implementation is one GitHub commit with actual tests, deferred local checks and performance activation/shutdown notes.
+## UI1/UI2 implementation handoff — 24 October 2026
+
+- World.tscn owns one GameplayUIRoot, layer 10 below F9 (20). Nine passive numbered slots remain empty; no fake selection or hotbar key takeover.
+- UIMasterConfig/DefaultUIConfig.tres owns slot count, size, spacing, margin, inventory size and palette. Slot count is configurable from 1–9 for the initial numeric-label design.
+- PlayerInput owns named player_inventory (I) in _Input so focused buttons cannot trap the toggle. Esc closes inventory before campaign unhandled-key handling. Inventory uses a full-screen mouse shield, factory close button and scrollable responsive pack/equipment placeholders.
+- Opening releases guard/sprint/tap history and cancels voluntary dodge; movement reads zero and new combat/equipment intents are suppressed. Already committed attacks/hops finish normally, damage/knockback remain active, and the world never pauses. Closing restores held-arrow movement, but sprint/guard require a fresh press.
+- View updates only on construction, explicit transitions/selection and viewport resize. No new UI _Process/_PhysicsProcess loops, timers, per-slot polling or full-world scans. World teardown unsubscribes and releases suppression.
+- Direct C# compilation and 45 native headless integration assertions passed using available Godot 4.5.1/.NET 8 tooling. The project targets Godot.NET.Sdk 4.7.2; standard editor/build validation on the user's installation remains pending. Existing PlayerActions thrust-aim failure reproduced with unchanged player source as well.
+- See [validation and exact local commands](UI1_UI2_Validation.md). UI3–UI5 require separate authorization.
+
+**Handoff:** each approved implementation is one GitHub commit; implementation does not imply user visual/performance acceptance.
