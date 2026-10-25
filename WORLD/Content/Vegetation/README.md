@@ -2,7 +2,7 @@
 
 Reusable plant-like world objects. Species or types own their artwork, variation lists, growth/harvest parameters and collision footprints. Biomes control eligible species and distribution.
 
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+Trees and grass are production content. [Plants](Plants/README.md) now have a reusable PL1 scene/data foundation; production plant populations and generation integration remain PL2/PL3. Shared weather adapters live under Shared/.
 
 ## Rain-soaked tree foliage
 

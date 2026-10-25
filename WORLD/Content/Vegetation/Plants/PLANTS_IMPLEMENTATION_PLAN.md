@@ -1,6 +1,6 @@
 # Data-driven World Content — One Scene per Category, One Definition per Type, Many Art Variants
 
-> **Status: PLANNED — architecture clarified 24 October 2026. Documentation only.** This is the PLANTS implementation plan and the intended content-authoring contract for TREES, PLANTS, GRASS, ROCKS and future scenery types. The earlier proposal to combine eight *distinct* plants into one Plants.tres is superseded. **Implement PL1–PL3 for plants only when approved; category conversions for grass, rocks or trees are separate requests.** Read root README.md, CodePreferences.md, the owning README files and actual current production code before implementing. One commit per authorized job.
+> **Status: PL0 audited; PL1 implemented, awaiting native validation. PL2/PL3 remain planned.** This is the PLANTS implementation plan and the intended content-authoring contract for TREES, PLANTS, GRASS, ROCKS and future scenery types. The earlier proposal to combine eight *distinct* plants into one Plants.tres is superseded. **Implement PL1–PL3 for plants only when approved; category conversions for grass, rocks or trees are separate requests.** Read root README.md, CodePreferences.md, the owning README files and actual current production code before implementing. One commit per authorized job.
 
 ## Project-wide content authoring rule — mandatory design target
 
@@ -48,8 +48,8 @@ No special BiomePlantWhitelist system is needed now: the existing BiomePopulatio
 
 | Phase | Objective | Suggested assistant | Status |
 | --- | --- | --- | --- |
-| PL0 | Verify content classes, biome ownership, streamer, assets, save compatibility | Regular Chat | Source audit recorded; Codex rechecks HEAD |
-| PL1 | Reusable one-scene vegetation definition/controller and **1-to-many visual-variant contract** | Codex | Planned |
+| PL0 | Verify content classes, biome ownership, streamer, assets, save compatibility | Regular Chat | Audited at `3673cb1`; see PL0_PL1_Validation.md |
+| PL1 | Reusable one-scene vegetation definition/controller and **1-to-many visual-variant contract** | Codex | Implemented; awaiting native validation |
 | PL2 | Move eight artwork files, author EIGHT plant Resources, register EIGHT Oak biome populations | Codex | Planned |
 | PL3 | Wire production streamed World and compatibility-preview generation; test wind/snow/performance | Codex | Planned |
 | PL4 | Later attach existing Harvesting/Drops capabilities and SAVE integration to plant types | Codex | Deferred; separate approval after H4 |
@@ -210,3 +210,7 @@ After PL1–PL3 are accepted, migrate existing Grass.tres with its FOUR cosmetic
 - [ ] Codex records implementation commit, test results and follow-up; one commit for the authorized PL1–PL3 job.
 
 **Suggested Codex instruction:** Read this file, root README.md and CodePreferences.md, then implement only PL1–PL3 as one production World vertical slice. Follow the **project-wide content contract: one scene per category, one Resource per distinct species/type, one or multiple textures/atlas regions as variants inside that Resource, deterministic seeded variant selection**. Use ONE Plant.tscn shared by EIGHT independent Plant001.tres–Plant008.tres (each initially with one PNG), and confirm the system supports two or more variants on one definition without extra scenes. Register eight separate BiomePopulation entries in OakForest/Biome.tres, none in PinkMeadow. Maintain extensibility for future Pine/Volcano definitions and existing shared Harvesting/Drops. Keep grass Tuft scenes and rock scenes unchanged (future GR0/RK0); keep existing Tree.tscn as the precedent; no production harvesting until H4. Respect density, stable IDs, P3, P4 save compatibility and performance requirements; test and commit once.
+
+## PL0/PL1 implementation handoff
+
+See [audit, implementation and validation](PL0_PL1_Validation.md). Only PL0/PL1 were authorized. No artwork moves, production plant definitions, biome changes or generator dispatch are included. PL3 must wire the existing candidate sample into SelectVariant, use per-variant bounds/radius, instantiate Template and Configure before AddChild in both placement paths, then reuse environment lifecycle registration.
