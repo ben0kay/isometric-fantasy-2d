@@ -9,3 +9,5 @@ Tweak `UI/DefaultUIConfig.tres` through `UIMasterConfig`: slot count (1–9), si
 [Phase plan](PLAYER_UI_IMPLEMENTATION_PLAN.md) · [UI1/UI2 validation](UI1_UI2_Validation.md) · [Inventory design](../../Inventory/PLAYER_INVENTORY.md).
 
 **Status:** UI1/UI2 implemented; headless interaction checks passed. Windows graphical acceptance and profiling pending. Status rails, toasts, alerts and item bindings remain future phases.
+
+**UI3 groundwork:** `BindInventory(storage, hotbar)` lets an explicit inventory owner populate the existing views. InventoryPractice uses real storage/selection; normal World remains unbound. No UI owns stack quantities. [Foundation status](../../../SYSTEMS/Inventory/README.md).

@@ -34,10 +34,10 @@ public partial class EquippedTool : Node2D
     }
     // The original primary request remains compatible with C2 callers.
     // =========================================================
-    private void Primary(Vector2 aim) => BeginSwing(EquippedItem.PrimaryAttack,aim);
+    private void Primary(Vector2 aim) { if (EquippedItem!=null) BeginSwing(EquippedItem.PrimaryAttack,aim); }
     // Alternate intent uses an independent resource through the exact same executor/cooldown.
     // =========================================================
-    private void Secondary(Vector2 aim) => BeginSwing(EquippedItem.SecondaryAttack,aim);
+    private void Secondary(Vector2 aim) { if (EquippedItem!=null) BeginSwing(EquippedItem.SecondaryAttack,aim); }
     // No queued input: block/hop/dodge exclude new attacks, and the committed swing must finish first.
     // =========================================================
     private void BeginSwing(AttackProfile profile, Vector2 aim)
@@ -64,18 +64,36 @@ public partial class EquippedTool : Node2D
         if (!_owner.HealthState.IsAlive || Attack.Busy || _owner.Actions.Current!=PlayerAction.Idle) return;
         if (slot==0) Equip(_axe); else if (slot==1) Equip(_sword); else if (slot==2) ShieldEquipped=!ShieldEquipped;
     }
+    // Inventory adapters may request authored equipment or empty hands; busy actions never queue or reset cooldowns.
+    // =========================================================
+    public bool TryEquipInventoryItem(ItemDefinition item)
+    {
+        if (!_owner.HealthState.IsAlive || Attack.Busy || _owner.Actions.Current!=PlayerAction.Idle) return false;
+        if (item?.Equipment!=null) { item.Validate(); Equip(item.Equipment); }
+        else ClearInventoryEquipment();
+        ShieldEquipped=false; _owner.StopGuard(); return true;
+    }
+    // Lost/consumed items immediately stop pending contacts but retain the original recovery/cooldown.
+    // =========================================================
+    public void ClearInventoryEquipment()
+    {
+        Attack.Interrupt(); EquippedItem=null; _visualSwing=false; _returnRemaining=0;
+        _owner.Actions.End(PlayerAction.Attack); _owner.StopGuard(); ShieldEquipped=false;
+        _toolSprite.Hide(); Hide(); SetProcess(false); SetPhysicsProcess(Attack.Busy);
+        if (_marker) { _marker=false; QueueRedraw(); }
+    }
     // Geometry and identity come from item data, never axe/sword branches in attack execution.
     // =========================================================
     private void Equip(EquippedItemDefinition item)
     {
-        EquippedItem=item; _toolSprite.Texture=item.Texture; _toolSprite.Centered=item.Centered;
+        EquippedItem=item; Show(); SetProcess(_owner.HealthState.IsAlive); _toolSprite.Show(); _toolSprite.Texture=item.Texture; _toolSprite.Centered=item.Centered;
         _toolSprite.Offset=item.GripOffset; _toolSprite.Scale=item.SpriteScale;
         _toolSprite.RotationDegrees=item.SpriteRotationDegrees;
     }
     // Death cancels committed state and sleeps presentation; restoring HP never replays an attack.
     // =========================================================
     private void OnHealthChanged(HealthChange change)
-    { if (!_owner.HealthState.IsAlive) { CancelAttack(); Hide(); } SetProcess(_owner.HealthState.IsAlive); }
+    { if (!_owner.HealthState.IsAlive) { CancelAttack(); Hide(); } SetProcess(_owner.HealthState.IsAlive && EquippedItem!=null); }
     // Disabled scene ownership must not retain pending contact or guard state.
     // =========================================================
     public override void _Notification(int what) { if (what==NotificationDisabled) CancelAttack(); }
@@ -116,6 +134,7 @@ public partial class EquippedTool : Node2D
     public override void _Process(double delta)
     {
         using var trace=RuntimeFrameTrace.Measure("EquippedTool.Process");
+        if (EquippedItem==null) return;
         Visible=Config.Enabled;
         if (!Visible) { CancelAttack(); return; }
         Position=Config.HandAnchor+_playerSprite.Position+new Vector2(0,-_owner.HopHeight);

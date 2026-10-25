@@ -1,5 +1,5 @@
-# ITEMS/Resources
+# Raw gathered items
 
-Raw gathered items (logs, branches, stones, ores, hides). E.g. Oak tree exists in WORLD, while an Oak Log item exists in ITEMS and is referenced by the tree's harvest data.
+Physical source objects live in WORLD; inventory-ready raw materials live here. [Wood/WoodenLog](Wood/WoodenLog/README.md) is the first stackable material. Other resource folders should be added only when they contain real definitions.
 
-> **Status:** Folder planning only — no implementation or gameplay assets have been added.
+Wooden logs currently appear only in the disposable inventory fixture. Future harvesting data will reference the catalog item; adding an item does not automatically give trees a drop.

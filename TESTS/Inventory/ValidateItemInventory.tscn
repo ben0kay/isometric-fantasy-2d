@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://TESTS/Inventory/ValidateItemInventory.cs" id="script"]
+[node name="ValidateItemInventory" type="Node"]
+script = ExtResource("script")

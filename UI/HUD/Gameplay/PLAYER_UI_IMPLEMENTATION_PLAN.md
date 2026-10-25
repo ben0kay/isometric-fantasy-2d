@@ -1,6 +1,6 @@
 # Player HUD, Hotbar & Inventory UI — Implementation Plan
 
-> **Status: UI0 audit complete; UI1/UI2 implemented, awaiting Windows visual/performance acceptance; UI3–UI5 planned — 24 October 2026.** UI1/UI2 add presentation and input gating only; authoritative item storage remains unimplemented. See [UI1/UI2 validation](UI1_UI2_Validation.md). Read root README.md, CodePreferences.md, UI/README.md, UI/HUD/Gameplay/README.md, UI/Inventory/PLAYER_INVENTORY.md, ENTITIES/Player/Input/README.md, ENTITIES/Player/Inventory/README.md and UI/Shared/Buttons/README.md before each phase. Confirm actual code and scenes at HEAD rather than relying only on READMEs. User approval required per phase.
+> **Status: UI0 audit complete; UI1/UI2 implemented, awaiting Windows visual/performance acceptance; UI3 groundwork implemented in disposable fixture; UI4–UI5 planned — 24 October 2026.** UI1/UI2 add presentation and input gating only; shared item storage and optional view binding now exist; production inventory persistence remains unimplemented. See [UI1/UI2 validation](UI1_UI2_Validation.md). Read root README.md, CodePreferences.md, UI/README.md, UI/HUD/Gameplay/README.md, UI/Inventory/PLAYER_INVENTORY.md, ENTITIES/Player/Input/README.md, ENTITIES/Player/Inventory/README.md and UI/Shared/Buttons/README.md before each phase. Confirm actual code and scenes at HEAD rather than relying only on READMEs. User approval required per phase.
 
 ## Phase overview
 
@@ -9,7 +9,7 @@
 | **UI0** | Audit PlayerInput, current world UI, button factory, item/inventory foundations and input conflicts | Regular Chat | **Complete: source audit** |
 | **UI1** | Add shared gameplay HUD root and visual nine-slot bottom hotbar, initially placeholder data | Codex | Implemented; visual/performance acceptance pending |
 | **UI2** | Add inventory open/close action through PlayerInput and a non-pausing inventory overlay | Codex | Implemented; visual/performance acceptance pending |
-| **UI3** | Connect hotbar/inventory to authoritative item state and selection, after item contracts exist | Codex | Planned |
+| **UI3** | Connect hotbar/inventory to authoritative item state and selection, after item contracts exist | Codex | Partial: item/storage + disposable binding implemented; production/save integration pending |
 | **UI4** | Polish responsive organic styling, tooltips, focus and interaction behavior | Codex | Planned |
 | **UI5** | Optional status/buff rail, top-left toasts and top-center alerts | Regular Chat plan → Codex | Planned |
 
@@ -164,3 +164,7 @@ Do not put input polling or item authority into the HUD scenes. UI observes play
 - See [validation and exact local commands](UI1_UI2_Validation.md). UI3–UI5 require separate authorization.
 
 **Handoff:** each approved implementation is one GitHub commit; implementation does not imply user visual/performance acceptance.
+
+## Item foundation / UI3 groundwork — 24 October 2026
+
+Shared ItemDefinition/catalog and SYSTEMS/Inventory storage/hotbar models now exist. InventoryPractice.tscn binds actual axe/sword/log stacks to the real HUD and opts into 1–9 selection. Normal World/campaigns remain unbound until durable inventory ownership/persistence and save migration are implemented. UI3 is not complete. See [foundation evidence](../../../SYSTEMS/Inventory/ITEM_FOUNDATION_VALIDATION.md).

@@ -1,9 +1,11 @@
-// Nine configurable visual slots; no selection keys or invented item/equipment authority.
+// Configurable slot presentation with optional shared-hotbar binding; no input polling or item authority.
 using Godot;
 
 public partial class GameplayHotbar : PanelContainer
 {
     private InventorySlot[] _slots;
+    private InventoryHotbar _data;
+    private Label _hint;
     // Construct passive slots once; the entire bar lets mouse events reach gameplay.
     // =========================================================
     public void Initialize(UIMasterConfig config)
@@ -15,9 +17,23 @@ public partial class GameplayHotbar : PanelContainer
         _slots=new InventorySlot[Mathf.Clamp(config.HotbarSlots,1,9)];
         for (int i=0;i<_slots.Length;i++)
         { var slot=new InventorySlot(); slot.Initialize(config,(i+1).ToString(),Mathf.Clamp(config.SlotSize,36,96)); _slots[i]=slot; row.AddChild(slot); }
-        var hint=new Label { Text="QUICK BELT  ·  Empty slots  ·  I  Backpack", HorizontalAlignment=HorizontalAlignment.Center, MouseFilter=MouseFilterEnum.Ignore };
-        hint.AddThemeFontSizeOverride("font_size",14); hint.AddThemeColorOverride("font_color",config.TextColor); column.AddChild(hint);
+        _hint=new Label { Text="QUICK BELT  ·  Empty slots  ·  I  Backpack", HorizontalAlignment=HorizontalAlignment.Center, MouseFilter=MouseFilterEnum.Ignore };
+        _hint.AddThemeFontSizeOverride("font_size",14); _hint.AddThemeColorOverride("font_color",config.TextColor); column.AddChild(_hint);
     }
+    // Bind only when an inventory owner explicitly supplies state; production placeholders remain supported.
+    // =========================================================
+    public void Bind(InventoryHotbar data)
+    { if (_data!=null) _data.Changed-=Refresh; _data=data; if (_data!=null) _data.Changed+=Refresh; Refresh(); }
+    // Quantities and selection are resolved from shared storage, never copied into the UI as authority.
+    // =========================================================
+    private void Refresh()
+    {
+        for(int i=0;i<_slots.Length;i++) _slots[i].Display(_data?.Get(i) ?? default);
+        SetSelected(_data?.SelectedSlot ?? -1); _hint.Text=_data==null ? "QUICK BELT  ·  Empty slots  ·  I  Backpack" : "QUICK BELT  ·  1–9 select  ·  I  Backpack";
+    }
+    // Release the shared model when the canvas leaves its session.
+    // =========================================================
+    public override void _ExitTree() { if (_data!=null) _data.Changed-=Refresh; }
     // Future authoritative bindings can highlight a slot; -1 clears without selecting a fake item.
     // =========================================================
     public void SetSelected(int index)

@@ -4,6 +4,8 @@
 
 Reusable interactive gameplay mechanics that connect WORLD objects, ENTITIES, ITEMS and ENVIRONMENT without hard-coding each feature into the player or a specific world object.
 
+[Inventory/](Inventory/README.md) now implements shared event-driven storage and hotbar references, exercised only by a disposable fixture; production player/save integration remains pending.
+
 ## Folder map
 
 - [WorldInteractions/](WorldInteractions/README.md): World-object interaction mechanics; [Fire/](WorldInteractions/Fire/README.md) includes dormant-idle burn lifecycle, effects and streamed registration **in production**. Lightning-to-tree ignition, fire spread, damage and offline simulation are future.

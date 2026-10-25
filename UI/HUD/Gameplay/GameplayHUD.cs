@@ -22,6 +22,10 @@ public partial class GameplayHUD : CanvasLayer
         _input.InventoryToggleRequested+=ToggleInventory; _input.InventoryCloseRequested+=CloseInventory; _inventory.CloseRequested+=CloseInventory;
         _viewport=GetViewport(); _viewport.SizeChanged+=Fit; Fit();
     }
+    // Optional inventory-owner integration. A test fixture supplies these models until campaign persistence exists.
+    // =========================================================
+    public void BindInventory(InventoryStorage storage, InventoryHotbar hotbar)
+    { _inventory.Bind(storage); _hotbar.Bind(hotbar); Fit(); }
     // Resizing scales the complete belt when necessary and preserves a centered safe margin.
     // =========================================================
     private void Fit()

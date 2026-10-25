@@ -1,9 +1,9 @@
-// Reserved Inspector-editable master configuration for ITEMS.
+// Shared explicit item catalog reference; no runtime quantities live in configuration.
 // =========================================================
-// Folder architecture only; add fields after designing an actual feature.
 using Godot;
 
 [GlobalClass]
 public partial class ItemMasterConfig : Resource
 {
+    [Export] public ItemCatalog Catalog { get; set; }
 }

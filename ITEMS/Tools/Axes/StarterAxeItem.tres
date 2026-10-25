@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3]
+[ext_resource type="Script" path="res://ITEMS/Definitions/ItemDefinition.cs" id="script"]
+[ext_resource type="Texture2D" path="res://ITEMS/Tools/Axes/Sprites/axe01.png" id="icon"]
+[ext_resource type="Resource" path="res://ITEMS/Tools/Axes/StarterAxe.tres" id="equipment"]
+[resource]
+script = ExtResource("script")
+Id = "starteraxe"
+DisplayName = "Starter Axe"
+Description = "A basic chopping tool."
+Icon = ExtResource("icon")
+MaxStack = 1
+WeightKg = 2.0
+Equipment = ExtResource("equipment")

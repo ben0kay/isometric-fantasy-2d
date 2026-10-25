@@ -7,6 +7,8 @@ public partial class PlayerInput : Node
     [Signal] public delegate void AlternateUseRequestedEventHandler(Vector2 worldAim);
     [Signal] public delegate void UtilityRequestedEventHandler(bool held, Vector2 worldAim);
     [Signal] public delegate void StarterSelectionRequestedEventHandler(int selection);
+    [Signal] public delegate void HotbarSelectionRequestedEventHandler(int slot);
+    public bool HotbarSelectionEnabled { get; set; }
     [Signal] public delegate void DodgeRequestedEventHandler(Vector2 worldDirection);
     [Signal] public delegate void InventoryToggleRequestedEventHandler();
     [Signal] public delegate void InventoryCloseRequestedEventHandler();
@@ -62,6 +64,11 @@ public partial class PlayerInput : Node
         if (input is InputEventKey select && select.Pressed && !select.Echo)
         {
             Key code=select.PhysicalKeycode==Key.None ? select.Keycode : select.PhysicalKeycode;
+            if (HotbarSelectionEnabled)
+            {
+                int hotbar=code>=Key.Key1 && code<=Key.Key9 ? (int)code-(int)Key.Key1 : -1;
+                if (hotbar>=0) { EmitSignal(SignalName.HotbarSelectionRequested,hotbar); GetViewport().SetInputAsHandled(); return; }
+            }
             int slot=code==Key.Key1 ? 0 : code==Key.Key2 ? 1 : code==Key.Key3 ? 2 : -1;
             if (slot>=0) { EmitSignal(SignalName.StarterSelectionRequested,slot); GetViewport().SetInputAsHandled(); return; }
         }
