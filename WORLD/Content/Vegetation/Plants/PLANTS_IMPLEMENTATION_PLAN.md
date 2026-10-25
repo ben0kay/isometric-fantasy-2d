@@ -1,191 +1,172 @@
-# Data-Driven Harvest-Ready Plants — One Scene, Multiple Artwork Variants
+# Data-driven Plants — Individual Definitions, One Shared Scene
 
-> **Status: PLANNED — 24 October 2026.** This document is the Codex implementation handoff for **plants only**. The subsequent **grass scene consolidation is deliberately deferred to a separate Regular Chat task** after plant implementation is visually accepted. No gameplay files are changed by writing this plan. Read the root `README.md`, `CodePreferences.md`, the relevant feature READMEs and actual HEAD code before coding; implement only explicitly authorized phases. One GitHub commit per authorized job.
+> Status: PLANNED. Revised 24 October 2026. Documentation only. This supersedes the earlier incorrect instruction to combine eight distinct plant types into one Plants.tres. The separate grass migration GR0 is not approved by this plan. Read root README.md, CodePreferences.md, the owning README files, and current production code before implementing. One commit per authorized job.
 
-## Goal and non-negotiable constraints
+## The three responsibilities — core design
 
-- **Exactly one shared `Plant.tscn`**, not one scene per `Plant001.png` … `Plant008.png`.
-- One initial **`Plants.tres` definition** holds all eight artwork variants. The PNGs are **visual variants of the same plant population**, not eight independently configured world populations or eight separate species scripts. Prefer eight references/inline variant entries, **not eight standalone .tres files**.
-- These eight textures are **Oak Forest only** for now: add `Plants.tres` as one population in `WORLD/Biomes/Definitions/OakForest/Biome.tres`; do not add them to Pink Meadow.
-- Keep grass (`Grass.tres`, four Tuft scenes) and trees (`Tree.tscn`, TreeDefinition) **working and structurally unchanged** in this plants job. The user will request a second, smaller pass to convert grass to one `Grass.tscn` after plants establish the reusable mechanism.
-- Prepare for **100+ plant artworks and many biomes**. A reusable shared vegetation runtime and definition/variant contract may serve future groups (forest plants, marsh plants, desert plants, flowers and grass), each with their own Resource identity and per-biome density. **One scene per vegetation category, not per sprite or per biome.**
-- Production integration is mandatory: plants must visibly populate **`SCENES/World/World.tscn`** with the existing P3 chunk generator, not work only in a standalone test scene.
-- No hardcoded checks for `OakForest`, `Plant001` or a specific bitmap name inside generation code; no reflection/directory scanning of resource folders during runtime generation.
-- Aim for zero idle per-plant CPU work. Reuse existing wind/snow presentation and chunk lifecycle; no collision for plants initially; no per-plant `_Process` or `_PhysicsProcess`.
+1. **Plant.tscn**: exactly ONE reusable scene for the plant category. All plant types instantiate this scene, with the same basic node tree and reusable mechanics. No per-image or per-biome plant scenes.
+2. **One individual .tres per distinct plant type**: its stable ID, its PNG artwork, name, grounded anchor, placement and environment settings, and later its harvest requirements and drop table. The first eight separate types are Plant001.tres through Plant008.tres. Do NOT combine these eight distinct species into one Plants.tres. True cosmetic sprite variations of the same biological plant can optionally share one definition in the future.
+3. **Biome.tres decides plant eligibility**: each biome has an explicit list of BiomePopulation entries referencing the *individual* plant .tres definitions that can spawn there. Each entry owns independent density, preview count, scale/mirror settings. A future Pine biome can reuse Plant001.tres directly and choose different density. A future volcanic biome can use its own VolcanicDeadPlant.tres without allowing it in Oak. Folders never grant biome permission automatically.
 
-## Phase overview
+The distinction is: **the scene controls common behavior; a species Resource controls plant identity/properties; each biome controls which species appear and how often.**
 
-| Phase | Objective | Recommended assistant | Status |
+| Shared plant Resource | Oak Forest | Future Pine | Future Volcano |
 | --- | --- | --- | --- |
-| **PL0** | Audit vegetation definitions, two generation paths, density limits, root sprites, environment hooks and SAVE impacts | Regular Chat | **Source audit recorded below** |
-| **PL1** | Build one reusable vegetation definition/variant/runtime contract and `Plant.tscn` | Codex | Planned |
-| **PL2** | Import eight plant sprites, create one `Plants.tres` and connect to Oak Forest biome data | Codex | Planned |
-| **PL3** | Wire both existing placement paths + environment/streaming, validate plants in production World and document results | Codex | Planned |
-| **PL4** | **Future separately authorized** plant harvesting, drops and persistence using existing shared systems | Codex (after H4) | Deferred — not in initial plant implementation |
-| **GR0** | **Later, separate request:** migrate grass to one shared `Grass.tscn` using the finished PL1 mechanism | Regular Chat for small pass, Codex if integration complexity arises | Deferred — **not part of plant job** |
+| Plant001.tres | Yes | Optionally yes | No |
+| Plant002.tres | Yes | No | No |
+| Plant003.tres | Yes | Optionally yes | No |
+| Plant004–008.tres | Yes | Choose individually later | No |
+| PineFern.tres | No | Yes | No |
+| VolcanicDeadPlant.tres | No | No | Yes |
 
-Codex may implement **PL1–PL3 together in one reviewed commit** because all three are necessary to show working plants in production. Do not silently begin GR0.
+No special BiomePlantWhitelist system is needed now: the existing BiomePopulation array already provides the explicit allowlist. An optional grouped BiomeVegetationPalette is future authoring convenience only if lists grow unwieldy.
 
-## Actual current source audit (24 October 2026)
+## Implementation phases
 
-- New art: repository root contains `Plant001.png` through `Plant008.png`. `WORLD/Content/Vegetation/Plants/` presently contains only its README; no plant definition, scene or biome population exists.
-- Grass: `WORLD/Content/Vegetation/Grass/Grass.tres` is a `SceneryDefinition` whose `Variants` are **four PackedScenes** (`Tuft01.tscn`–`Tuft04.tscn`). All four use a `Node2D/Sprite2D` structure with the same `GrassWind.tres`; this works but is unnecessary scene duplication and is **not** migrated in PL1–PL3.
-- Trees: `TreeDefinition` has `VisualVariants` and one `WORLD/Content/Vegetation/Trees/Shared/Tree.tscn`; `Tree.Configure` assigns texture/anchor and collision before adding to the world. This is the **architectural precedent**, but plants should not inherit tree fire, hit, trunk collision, occlusion or harvest behavior.
-- **Harvesting already exists:** `SYSTEMS/Harvesting/Harvestable.cs` and `HarvestProfile.cs` provide event-driven work/progress; `SYSTEMS/Drops/DropTable.cs` and the world pickup code provide shared rewards. Current tree harvesting explicitly rejects production World until H4 persistence is implemented. Plants should be capable of the same future opt-in; this plant sprite/generation pass does not bypass that safety gate.
-- `SceneryDefinition` currently owns `Id`, `DisplayName`, legacy `Array<PackedScene> Variants`, `SpacingRadius`, `VisualMinimum/VisualMaximum`, `GrassLike`, `SnowResponse`, `CastSunShadow`, and `AvoidBiomeTransition`.
-- `BiomePopulation` references one `SceneryDefinition` and holds independently adjustable preview `Count`, streamed `InstancesPerMillionUnits`, scale range, mirroring and preview-only cluster settings.
-- **Both placement paths need a generic visual-template case:** `WORLD/Generation/Placement/ChunkSceneryData.cs` selects a variant and validates bounds, `WORLD/Runtime/Streaming/WorldChunkStream.cs::ApplyOne` currently instantiates tree template vs non-tree PackedScene; `WORLD/Generation/Placement/WorldSceneryPlacement.cs` does the analogous preview path. Keep old tree and packed-scene behavior exactly intact.
-- Streaming candidates use a coordinate-keyed seeded lattice, stable content IDs, reservation/water checks, spacing and world/biome clipping. **Changing biome population composition changes generated placement**, even when code is deterministic; existing P4 content fingerprints/checkpoint compatibility must be respected. No silent re-generation of saved campaign scenery.
-- Oak Forest currently has three populations (trees 26, rocks 11, grass 60 instances per million world units²; total **97**). The P3 generator validates total density against `1,000,000 / CandidateCellSize²`, with `CandidateCellSize = 96` (capacity approximately **108.5**). An additional plant population must **fit this limit**. One illustrative balance: trees 26 + rocks 11 + grass **45** + plants **20** = **102**, with Oak's existing grass *resource density* adjusted only; **do not convert grass scenes during this pass**. Alternative if preserving grass count: plants <=11.5, subject to margin and desired visual density. Preview-only `Count` must also be authored.
-- `GrassLike=true` currently means a **lightweight low-vegetation placement category** (`WorldPlacementKind.LowVegetation`), rather than a requirement to be literal grass. Initial plants may use this category with `SnowResponse=Vegetation` and `CastSunShadow=false`; do not add new placement categories merely for naming.
-- `ENVIRONMENT/Wind/Visuals/VegetationSway.gdshader` already supports world-unit sway and a root-weighted deformation. Grass uses `GrassWind.tres`; vegetation/snow systems attach by existing content metadata and shared materials. A small `PlantWind.tres` can reuse that shader if independent wind tuning is needed; **no separate plant shader or CPU sway processor**.
+| Phase | Objective | Suggested assistant | Status |
+| --- | --- | --- | --- |
+| PL0 | Verify content classes, biome ownership, streamer, assets, save compatibility | Regular Chat | Source audit recorded; Codex rechecks HEAD |
+| PL1 | Reusable one-scene vegetation definition/controller contract | Codex | Planned |
+| PL2 | Move eight artwork files, author EIGHT plant Resources, register EIGHT Oak biome populations | Codex | Planned |
+| PL3 | Wire production streamed World and compatibility-preview generation; test wind/snow/performance | Codex | Planned |
+| PL4 | Later attach existing Harvesting/Drops capabilities and SAVE integration to plant types | Codex | Deferred; separate approval after H4 |
+| GR0 | Later convert grass from four scenes to one Grass.tscn using same reusable setup | Regular Chat for small refactor; Codex if needed | Deferred; separate job |
 
-## Ownership and proposed files — lean, extensible
+Codex may implement PL1–PL3 together as a coherent production feature with one commit when authorized. Do not implement PL4 or GR0 in that job.
 
-The existing `WORLD/Content/Vegetation/Shared/` folder **already contains `Seasonal/`, `Snow/` and `Wetness/`**. **No new files have been added there as part of planning.** Because Grass is intended to reuse the same one-scene pattern later, a *small shared sprite-configuration contract* belongs in this existing Shared folder, but no duplicate wind, snow, harvest or drop logic should be introduced. Codex should create only the minimum classes actually needed; inline texture arrays are acceptable if all artwork shares sensible anchors/bounds.
+## Current source state verified 24 October 2026
 
-```text
+- New source art: Plant001.png through Plant008.png are currently in the **repository root**. The Plants folder has this plan and its README, but no plant scenes/definitions.
+- WORLD/Content/Vegetation/Shared/ already contains Seasonal/, Snow/, Wetness/. They are existing shared adapters. **This planning commit does not add C# files there**; Codex should add only the minimum visual setup classes required.
+- Existing grass uses one Grass.tres and four PackedScene Tufts. This stays unchanged during plant implementation.
+- Existing trees demonstrate single-template instancing using TreeDefinition, TreeVisualVariant, and Trees/Shared/Tree.tscn; do not copy tree-specific fire/collision/falling mechanics to plants.
+- WORLD/Content/Shared/SceneryDefinition.cs owns inherited Id, DisplayName, old PackedScene Variants, spacing, artwork bounds, snow response, GrassLike, shadows and transition rules.
+- WORLD/Biomes/Shared/BiomePopulation.cs contains a Content: SceneryDefinition reference, Count, InstancesPerMillionUnits, MinimumScale, MaximumScale and MirrorChance. WORLD/Biomes/Shared/WorldBiomeDefinition.cs contains the Populations array. **Each distinct plant Resource becomes one entry in this array.**
+- WORLD/Generation/Placement/ChunkSceneryData.cs currently chooses from biome populations by content ID, selects deterministic candidate positions, and **rejects duplicated Content.Id in a biome**. Therefore each PlantXXX.tres must use a distinct stable ID. Current generator special-cases TreeDefinition; it needs minimal generalized template support for one Plant.tscn.
+- WORLD/Runtime/Streaming/WorldChunkStream.cs::ApplyOne and WORLD/Generation/Placement/WorldSceneryPlacement.cs instantiate legacy PackedScene or tree template. Preserve both existing paths, add a small data-driven branch/contract for vegetation definitions. Avoid new separate plant generation algorithms or hardcoded biome names.
+- SYSTEMS/Harvesting/Harvestable.cs, HarvestProfile.cs, SYSTEMS/Drops/DropTable.cs, WorldDropSpawner.cs and DroppedItem.tscn already exist. The existing tree harvesting H1–H3 forbids production World until H4 persistence is complete. **Do not duplicate harvesting, reward generation or pickup logic inside plants.**
+- P3 is a coordinate-seeded streamed candidate generator; P4 checkpoint validity uses strict content/generator compatibility checks. Changing Oak biome content/density changes future generated placements. Never bypass save validation, silently regenerate old campaigns, or delete saves.
+- Current Oak density per million world units squared is trees 26 + rocks 11 + grass 60 = **97**. CandidateCellSize is 96, and the current validation capacity is approximately **108.5**. Eight additional plant population densities must fit as a *sum*. Example only: trees 26 + rocks 11 + grass 45 + eight plant populations at 2.5 each = 102. The existing candidate model may ultimately need a separate bounded low-vegetation placement tier for truly lush areas; do NOT rewrite the generator for this task.
+
+## Proposed ownership structure (minimal)
+
+~~~text
 WORLD/Content/Vegetation/
 ├── Shared/
-│   ├── Seasonal/                      # EXISTS: foliage/season systems
-│   ├── Snow/                          # EXISTS: snow adaptation
-│   ├── Wetness/                       # EXISTS: rain wetness
-│   ├── VegetationInstance.cs          # PROPOSED: only sprite/variant setup, no harvesting logic
-│   ├── VegetationDefinition.cs        # PROPOSED: reusable scenery Resource, variant list
-│   └── VegetationVariant.cs           # OPTIONAL: only if different anchors/bounds require it
+│   ├── Seasonal/                         EXISTING
+│   ├── Snow/                             EXISTING
+│   ├── Wetness/                          EXISTING
+│   ├── VegetationDefinition.cs           PROPOSED, shared SceneryDefinition subtype
+│   └── VegetationInstance.cs             PROPOSED, sprite/anchor configuration only
 │
 ├── Plants/
-│   ├── README.md                         # EXISTS; update upon implementation
-│   ├── PLANTS_IMPLEMENTATION_PLAN.md     # THIS PLAN
-│   ├── Plant.tscn                        # PROPOSED: ONE scene; VegetationInstance controller + Sprite
-│   ├── Plants.tres                       # PROPOSED: ONE initial Resource, eight inline textures/variants
-│   ├── PlantWind.tres                    # OPTIONAL: same shared wind shader; independent settings
-│   └── Sprites/
-│       ├── Plant001.png                  # MOVE from repo root
-│       ├── Plant002.png
-│       ├── Plant003.png
-│       ├── Plant004.png
-│       ├── Plant005.png
-│       ├── Plant006.png
-│       ├── Plant007.png
-│       └── Plant008.png
+│   ├── README.md                         EXISTS
+│   ├── PLANTS_IMPLEMENTATION_PLAN.md     THIS PLAN
+│   ├── Plant.tscn                        ONE shared scene
+│   ├── Definitions/
+│   │   ├── Plant001.tres                 individual definition, PNG link
+│   │   ├── Plant002.tres
+│   │   ├── Plant003.tres
+│   │   ├── Plant004.tres
+│   │   ├── Plant005.tres
+│   │   ├── Plant006.tres
+│   │   ├── Plant007.tres
+│   │   └── Plant008.tres
+│   ├── Sprites/
+│   │   ├── Plant001.png
+│   │   ├── Plant002.png
+│   │   ├── Plant003.png
+│   │   ├── Plant004.png
+│   │   ├── Plant005.png
+│   │   ├── Plant006.png
+│   │   ├── Plant007.png
+│   │   └── Plant008.png
+│   └── PlantWind.tres                    OPTIONAL reused vegetation shader settings
 │
-├── Grass/                                # EXISTING; leave structure alone for now
-│   ├── Grass.tres
-│   └── Tuft01.tscn ... Tuft04.tscn
+├── Grass/
+│   ├── Grass.tres                        EXISTING, unchanged for now
+│   └── Tuft01–Tuft04.tscn                EXISTING, unchanged for now
 │
-└── Trees/Shared/Tree.tscn               # EXISTING; leave alone
+└── Trees/Shared/Tree.tscn                EXISTING, unchanged
+~~~
 
-WORLD/Biomes/Definitions/OakForest/Biome.tres
-   └── Populations += one Plants.tres entry
+These shared class names are suggested, not a requirement to introduce an unnecessary hierarchy. The smallest practical contract is a generic vegetation Resource (identity/Texture2D/ground anchor/spacing/shared template/optional future HarvestProfile) and a lightweight scene controller (apply Resource before AddChild, no idle loop). One definition may optionally use multiple cosmetic images later, but **different plant species MUST remain separately selectable by biome**.
 
-WORLD/Biomes/Definitions/PinkMeadow/Biome.tres
-   └── NO new plant entry
-```
+A plant is not necessarily forever noninteractive. PL1–PL3 construct the data-driven scene/biome foundation; PL4 later opts individual definitions into the existing systems for harvesting and drops. No second plant-only Harvestable or Drops implementation.
 
-The class and file names above are recommendations, not a demand to create extra abstraction layers. Use the *smallest* reusable contract that lets grass adopt the same system later. Do not add a separate scene per PNG, duplicate visual-`.tres` assets per PNG, or add an Oak-specific C# class.
+## How the biome selects plants
 
-### Definition vs scene vs biome — important long-term distinction
+Inside WORLD/Biomes/Definitions/OakForest/Biome.tres, add eight separate inline BiomePopulation subresources, each with a different Content reference:
 
-| Responsibility | Lives where | Example |
-| --- | --- | --- |
-| **Runtime object template** | One `.tscn` per vegetation category | `Plant.tscn` |
-| **Shared visual/interaction wiring (not gameplay authority)** | Shared C# implementation | `VegetationInstance.cs` |
-| **Artwork group** | One data Resource per meaningful group, with inline variant textures | `Plants.tres` today; optional `SwampPlants.tres` later |
-| **Individual textures** | Sprites folder | `Plant001.png` ... `Plant008.png` |
-| **Where/how many** | BiomePopulation under each biome `.tres` | Oak references Plants; Pink does not |
-| **Optional future gameplay** | Shared harvest/interaction contract, opted in via data | Herbs harvestable, ferns decorative |
+~~~text
+OakForest/Biome.tres
+  Populations:
+    Oak.tres                  existing
+    Rock.tres                 existing
+    Grass.tres                existing
+    Plant001.tres             new: own count, streamed density, scale
+    Plant002.tres             new: own count, streamed density, scale
+    Plant003.tres             new: own count, streamed density, scale
+    Plant004.tres             new: own count, streamed density, scale
+    Plant005.tres             new: own count, streamed density, scale
+    Plant006.tres             new: own count, streamed density, scale
+    Plant007.tres             new: own count, streamed density, scale
+    Plant008.tres             new: own count, streamed density, scale
+~~~
 
-One `Plants.tres` with eight variants means the eight sprites appear as a **single weighted population** with randomized variant selection. If later some plants require individual spawn rarity, different harvest rewards or biome restrictions, **split them into additional definitions referencing the same `Plant.tscn`**, not additional scenes. Do not prematurely author a separate `.tres` per artwork when shared defaults are sufficient.
+Do NOT reference the new definitions from PinkMeadow/Biome.tres. When PineForest/Biome.tres exists, it can reference Plant001.tres (same exact Resource file) plus some other subset, choosing a new density for that biome. A volcano's dead plant definition only appears in the volcanic biome if the volcanic biome explicitly references it. Plant file names or folder layout never encode a hard restriction to one biome.
 
-## Phase implementation details
+If each plant has its own harvested items/drops, each PlantXXX.tres can later have its own HarvestProfile/DropTable reference. If several plants share identical yield rules, they can reference one shared profile to avoid unnecessary Resources.
 
-### PL0 — existing-code audit (source review completed; no code changes)
+## PL0 — audit confirmation
 
-**Objective:** confirm root asset paths/import dimensions and transparent ground-anchor alignment, Tree vs PackedScene dispatch, preview/streamed data selection, environment metadata, density constraints and P4 compatibility.
+**Objective:** trace current generation, plant artwork setup, biome population contract and save constraints. **Completed at documentation level:** current class/scene structure, density validator, H1–H3 harvesting state, wind/snow source, existing shared folders. **Still verify before coding:** actual image dimensions, transparent padding and rooted display anchors, old-save behavior and present HEAD. **Preserve:** original grass/trees/rocks/biome composition unless necessary to accommodate plant densities. **Pass:** eight unique IDs and total population density are established. **Assistant:** Regular Chat; Codex rechecks.
 
-**Current dependencies:** see verified source audit above. Codex must re-read HEAD and check actual pixel sizes/transparent padding before fixing anchors; do not assume all eight PNGs have the same content bounds merely because they share a naming pattern.
+## PL1 — single scene, reusable visual definition
 
-**In scope:** plan the minimal reusable definition/controller and plant visual variation contract. **Out of scope:** changes to code/resources. **Preserve:** current Oak grass, Oak/Pink trees, rocks and saved-world contract. **Performance:** no additional idle polling and stable resource caching. **Pass:** no hidden dependency on one species-name or one PNG path; density budget calculated. **Assistant:** Regular Chat (completed design audit), Codex re-verifies at coding time.
+**Objective:** all plant species instantiate one Plant.tscn, configured by their respective definitions, not by separate scenes.
 
-### PL1 — reusable vegetation template
+**Dependencies:** SceneryDefinition and both placement paths; generic tree precedent; existing Vegetation/Shared environment adapters.
 
-**Objective:** establish *one* configurable scene and reusable sprite-selection API for plants and later grass, without excluding future harvesting.
+**Implementation:** add smallest reusable visual definition/controller, ideally using a shared VegetationDefinition : SceneryDefinition with Texture2D, ground anchor or bottom-centre fallback, optional shared wind material, optional prototype/template PackedScene reference and existing inherited spacing/bounds. VegetationInstance : Node2D (or equivalent) configures its Sprite2D once before adding to the world, honoring scale/mirror, transparent padding and root orientation. Keep one Plant.tscn with shared node structure; no bespoke Plant001.cs. Only create more Resource classes when actual artwork variations or behavior need them.
 
-**Implementation approach:** prefer `VegetationDefinition : SceneryDefinition` with one optional `PackedScene TemplateScene` referencing `Plant.tscn` and a lightweight list of visual textures (use inline `VegetationVariant` data **only if individual artworks really need different anchor/bounds settings**). A lightweight `VegetationInstance : Node2D` configures its single `Sprite2D` with the seeded variant index **before AddChild**; do not choose artwork using node-local RNG or `_Ready` randomness. Support `Sprite.FlipH`, a grounded bottom-centre/source-pixel anchor, positive display scale and conservative placement bounds. Optional variant-specific anchor/bounds should be **inline** and default from shared settings when possible, to make 100+ artworks practical to author. Validate missing textures, empty lists, invalid scale/bounds and optional duplicated variant IDs at configuration/registration time.
+**Out of scope:** enabling harvesting/collision, plant growth or new GPU effects. **Preserve:** Tree.tscn, Grass.tres, legacy PackedScene population behavior and existing wind/snow. **Performance:** no per-instance _Process or _PhysicsProcess; reuse materials and cache template references. **Pass:** Plant001.tres and Plant008.tres both instantiate the identical scene with different sprites, stable anchors and unique identities. **Assistant:** Codex.
 
-**Files:** shared classes under `Vegetation/Shared/`, `Plants/Plant.tscn`. Avoid modifying `TreeVisualVariant` or piling plant-specific fields into trees.
+## PL2 — individual plant definitions and Oak permissions
 
-**Preserve:** TreeDefinition/Tree.tscn behavior and legacy SceneryDefinition.PackedScene Variants; grass untouched; existing wind source. **Out of scope of PL1:** enabling harvest interactions, drop spawning, physical harvest colliders, foliage masks, particle systems, new shaders and P3 replacement. **Future-ready contract:** a plant instance can later opt into `Harvestable` and a drop table via Resource data and a hit/interaction adapter, without new per-plant-artwork scenes. **Performance:** no per-instance idle updates; cache loaded `PackedScene`/textures and reuse one plant wind material. **Pass:** one `Plant.tscn` renders any of eight provided textures correctly and with fixed rooted location after mirroring and scaling. **Assistant:** Codex (C# and reusable architecture).
+**Objective:** eight distinct Resources independently controllable by a biome.
 
-### PL2 — author Oak-only assets and biome population
+**Dependencies:** PL1. **Files:** move all eight root PNGs into Plants/Sprites, create Plant001.tres–Plant008.tres in Plants/Definitions, connect each Texture2D with correct anchor, bounds and unique stable Id (plant.001 etc). Author one BiomePopulation per plant in OakForest/Biome.tres with appropriate per-plant density/scale; adjust existing grass density only as needed to remain within the existing validator. Do not change any Grass scenes, and do not add plants to PinkMeadow.
 
-**Objective:** move and wire eight existing images into one plant definition and make Oak Forest own its density.
+**Out of scope:** one aggregate Plants.tres, eight plant scenes, changing all biomes or adding harvest-drop mechanics. **Performance:** bounded total density and deterministic distribution. **Pass:** disable an individual plant population and only that specific plant stops appearing; all eight are separately editable in Inspector; no plant is selected outside the Oak biome. **Assistant:** Codex.
 
-**Implementation approach:** move `Plant001.png`–`Plant008.png` from the repo root to `Plants/Sprites/` (preserve Godot import metadata if applicable; check image alpha/orientation). Create **one** `Plants.tres`, referencing the one template and eight inline visual variants. Give it stable unique `Id` (e.g. `plants.oak_understory`) and readable display name; default `GrassLike=true`, `SnowResponse=Vegetation`, `CastSunShadow=false`, safe `AvoidBiomeTransition` and artwork-appropriate `SpacingRadius`, `VisualMinimum/Maximum`.
+## PL3 — production world/streaming, weather and regression
 
-Use existing `VegetationSway.gdshader` through shared `PlantWind.tres` only if separate plant tuning is desirable. Match ground-foot anchoring and choose conservative visual bounds for the **largest of the eight sprites**, or per-variant bounds if noticeably different.
+**Objective:** seeded placement and instantiated appearance work in real SCENES/World/World.tscn (F6), not just a test fixture.
 
-**Biome data:** add one new `BiomePopulation` reference to `OakForest/Biome.tres`. Set `InstancesPerMillionUnits` and preview `Count` reasonably; keep total density within current P3 limit (illustrative 45 grass +20 plants +26 trees +11 rocks =102). Pink Meadow's biome `.tres` remains byte-for-byte unchanged.
+**Implementation:** extend minimal definition/template dispatch in ChunkSceneryData.cs (one image per definition or optional true cosmetic variants), WorldChunkStream.cs::ApplyOne and WorldSceneryPlacement.cs. Reuse the existing seeded selection, biome population filtering, stable world-content and instance IDs, spacing, water/feature exclusions, biome-edge check, scaled bounds, Y sort, P3 publication/unload and snow/wind registration. Avoid hardcoded switches on plant name, oak biome name or sprite file.
 
-**Preserve:** Oak's existing tree/rock identities; no grass structural migration. **Out of scope:** eight plant definitions or eight scenes, plant gathering, placing plants in every biome. **Performance:** one Resource list; existing coordinate-keyed variant choice. **Pass:** Godot sees all 8 textures; only Oak regions select Plants; no new root PNG leftovers; valid density. **Assistant:** Codex.
+**Save:** changes to Oak's biome populations change content fingerprint and deterministic candidate outputs. Audit P4 compatibility; do not silently load/regenerate mismatched saved campaigns. **Tests:** Godot import/build, F6 production Oak/Pink comparison, no duplicate/incorrect plant type, fixed seed revisit and unload/reload, compatibility preview, wind/snow/off state, 1920x1080 and target Windows performance; clearly identify manual/unperformed checks. **Performance:** no per-item idle loops, no per-frame folder search, bounded chunk actors/materials; do not claim draw-call performance improvement from simply reducing scene count. **Pass:** one shared Plant scene, eight Resource-authored types, correct Oak eligibility and distinct per-plant density in real World. **Assistant:** Codex.
 
-### PL3 — full production-streaming + legacy preview hookup and validation
+## PL4 — later shared harvesting and drops (separate permission)
 
-**Objective:** both production streamed chunks and compatibility-preview world can instantiate the one plant template using the chosen visual variant.
+When H4 persistent harvesting/drop state is implemented in the production World, enable selected plant definitions to opt in using existing SYSTEMS/Harvesting/HarvestProfile + Harvestable and SYSTEMS/Drops/DropTable + WorldDropSpawner. A plant could be picked by hand, cut with a sickle, or require a certain tool; each species can have its own Resource settings, or reuse shared profiles. Do not add new harvest logic or pickup scene per species. Use stable instance IDs so harvesting/removal and drops save across chunks; no duplicate rewards on reload. Keep dormant plants dormant. The original plant-only PL1–PL3 pass must not turn on production harvest before this persistence safety check.
 
-**Implementation approach:** extend **only the necessary dispatch points** in `ChunkSceneryData.cs`, `WorldChunkStream.cs::ApplyOne` and `WorldSceneryPlacement.cs` to support the new vegetation definition. Keep **all existing tree and PackedScene behaviors** as fallback. Use an explicit shared helper/contract when it materially removes duplication; avoid creating a giant vegetation manager. The generator must select content/variant deterministically by coordinates/seed, while the lightweight scene applies texture/anchor; no new per-chunk/random population system.
+## GR0 — later grass conversion (separate permission)
 
-Preserve `GrassLike` low-vegetation reservation semantics, P2 water exclusions, distance from spawn, area bounds, biome seams, footprint spacing, P3 publish/unload, wind/snow registration, Y sorting and stable `world_content_id`/instance metadata.
+After PL1–PL3 are accepted, migrate existing Grass.tres with its FOUR cosmetic image variants to ONE Grass.tscn using the same shared vegetation definition/controller. This case differs from plants: Grass is currently one content type with four cosmetic textures, so **one Grass.tres holding those four images is correct**. Preserve stable grass content Id, biome populations, no-collision, wind, snow, scaling and save compatibility. Search all references before retiring Tuft01–04.tscn. Do not invent a second vegetation framework. **Not part of the current plants job.**
 
-**Production-first acceptance:** run `SCENES/World/World.tscn` (F6) with streamed mode and see the eight plant appearances mixed in **Oak only**. Keep independent headless/fixture tests supplementary, not the sole working example. Exercise F7/F9 if relevant and confirm wind/snow responses. Test a fixed seed in different visit orders and after leave/return; no duplicated plants at chunk boundaries, no spurious Pink Meadow plants, no oversized sprites or arbitrary placement near the player's feet.
+## Acceptance checklist
 
-**Save safety:** compare unchanged trees/grass placement when new plant population is disabled; changes caused by the *new Oak population/density data* are expected and must be documented. Existing campaign content fingerprints/migrations must reject unsupported composition changes rather than silently rerolling old runs. If the current system needs an explicit generator/content compatibility update, perform the narrow required action or flag it without corrupting old saves. **Do not delete old saves** or bypass SAVE checks.
+- [ ] Exactly ONE Plant.tscn and EIGHT individually selectable PlantXXX.tres Resources, each with its own PNG.
+- [ ] OakForest/Biome.tres has eight separately tunable plant BiomePopulation entries; PinkMeadow has zero.
+- [ ] Future Pine can share any Oak plant definition directly; a volcanic plant only spawns where its definition is explicitly referenced.
+- [ ] One shared scene handles visuals and future harvesting wiring without per-species C# / scenes.
+- [ ] Existing Seasonal/, Snow/, Wetness/ systems, Harvesting/ and Drops/ are reused, not duplicated.
+- [ ] Grass remains four scenes during initial plants implementation, pending separate GR0.
+- [ ] Generator bounds/density/water/reservations, chunk streaming, World F6 and legacy preview still work.
+- [ ] P4 old campaign content compatibility is audited; no silent checkpoint corruption.
+- [ ] Idle plants have no per-node process loops; document active/sleep/unload behavior and measured vs unmeasured performance.
+- [ ] Codex records implementation commit, test results and follow-up; one commit for the authorized PL1–PL3 job.
 
-**Performance:** no `_Process`/`_PhysicsProcess` on idle plants; no per-frame folder scans; bounded scene counts/instantiation based on existing streamed candidate lattice and application budget; material shared by compatible variants; test loaded/idle/travel/unload and spot-check allocations/FPS rather than claiming unmeasured gains.
-
-**Out of scope:** GR0, **activating plant harvesting in saved campaigns before H4**, plant growth, globally rebalancing every biome, rewriting TreeDefinition or replacing chunk streaming. **Pass:** .NET/Godot build/import and relevant generation/streaming/vegetation tests pass or are explicitly marked awaiting local validation; Windows visual acceptance may be deferred with instructions. **Assistant:** Codex, with local Copilot validation where requested.
-
-## Deferred PL4 — enable shared plant harvesting and drops
-
-**Not part of the initial PL1–PL3 visual generation job.** The first eight plants must remain eligible to receive interactive harvesting later without replacing their Resource identity or multiplying their scenes.
-
-- Extend plant definition data with optional `HarvestProfile` and/or appropriate interaction capability, using the **existing** `SYSTEMS/Harvesting/Harvestable` and `SYSTEMS/Drops/DropTable` / `WorldDropSpawner`. Do **not** add a second plant harvest meter, reward table, world item scene or duplicate pickup service.
-- Choose how a plant is harvested by data (hand-pick / sickle / axe / similar tool capability); the same plant scene can be configured as harvestable or nonharvestable as appropriate, while individual visuals remain variants.
-- Coordinate with the existing H4 harvesting/save milestone before enabling generated plants to disappear and produce persistent pickups in `World.tscn`. The current generic tree H3 harvesting is **test-fixture-only**, because production persistence is not yet complete.
-- Ensure that harvesting a plant can remove it or change its appearance, emit drops exactly once, and record authoritative state across unload/reload. Future regrowth is a separate opt-in data/mechanic, not required for PL1–PL3.
-- Reuse source identity from world chunk candidate metadata. Preserve compatibility of old saved campaigns or explicitly version the change.
-- No idle callbacks on untouched plants or landed pickups; adapt player interaction/hit receiver only on event.
-
-## Deferred follow-up GR0 — convert Grass after plants are accepted
-
-**Not authorized for the plant implementation.** Once PL1–PL3 work in production, migrate Grass from four PackedScene Tufts to **one `Grass.tscn`** using the **exact same DecorativeVegetation scene controller/definition/variant contract** created for Plants.
-
-- Keep `Grass.tres` as the canonical **separate Grass definition** with its four current `grass_small_0*.png` artwork variants; preserve its stable `Id = "grass.tuft"`, `GrassWind.tres`, no-collision, snow, low-Z, scale and spacing.
-- Create only one `Grass.tscn` (no four separate Tuft scenes). Replace Grass.tres scene references with inline visual texture variants, then remove the obsolete Tuft scenes **only after searching all references** and verifying production/compatibility tests.
-- Preserve grass counts/positions/variant selection as far as migration contracts allow; changing serialized representation can affect SAVE dependency fingerprints. Validate old saved campaigns or explicitly document incompatibility. Do not rewrite the shared decorative generator again in GR0 unless a real gap is discovered.
-- Task should ideally be a **small Regular Chat / lightweight Codex edit** after the plant framework is working; avoid a second independent grass class or a new scene for each grass PNG.
-- The final intent remains **separate content Resource per category/group**, not one giant `Vegetation.tres` containing all grass, plants, trees and every biome's content.
-
-## Important constraints / decisions
-
-1. **100+ artwork files is not 100+ active scenes per species**; runtime creates only instances of the shared template in *loaded chunks*, choosing a stored variant index. Many PNG varieties may still increase unique texture/material switches: profile batching/atlas only if needed later; do not promise draw-call savings merely from fewer scene files.
-2. Grouping eight artworks in one definition means **one population density** across the group. If each artwork later needs its own scarcity, harvest rules or biome rules, make a new definition/group referencing `Plant.tscn`, not a new scene.
-3. Use the existing **BiomePopulation** data rather than a separate Plants-only generator. Per-biome art eligibility is based on explicit Resource references, not searching a folder and automatically placing everything.
-4. Make sprite foot placement stable at different dimensions. Optionally reuse sensible bottom-centre default and add per-art variant overrides only if necessary. No hardcoded `Vector2(-64,-116)` assumption for all future artwork.
-5. Wind and snow remain optional shared adapters. No per-plant script should tick continuously; plant harvesting is **planned**, using existing `SYSTEMS/Harvesting/` and `SYSTEMS/Drops/` rather than duplicated harvest code in `Plant.tscn`. PL1–PL3 are visual/generation foundations; PL4 is the later production gameplay hookup after H4 persistence.
-
-## Validation / handoff checklist for Codex
-
-- [ ] Exactly one `Plant.tscn`, one initial `Plants.tres`, eight plant sprite PNGs in `Plants/Sprites/`; no extra scene/resource per PNG.
-- [ ] One reusable vegetation controller and resource contract; not hardcoded for Plants, Oak or the texture names.
-- [ ] Oak biome has one plant population; Pink biome has none; old trees, rocks and grass still render.
-- [ ] Seeded variant choice, mirroring, scaled rooted anchors and artwork bounds work consistently across streamed chunk reloads and legacy preview.
-- [ ] Density validator passes under current candidate settings and no plant placement inside water, protected starts or wrong biome.
-- [ ] Shared wind/snow can affect plants without new per-item frame loops; idle/unload state clean.
-- [ ] Save compatibility explicitly reviewed; no silent changes to active saved campaign outcomes.
-- [ ] F6 **production World** visual inspection supported; tests are supplementary; results and known risks reported.
-- [ ] Only **PL1–PL3** implemented; leave **PL4 plant harvesting** and **GR0 grass migration** for separately approved work. Record readiness for existing `Harvestable`/drop integration.
-- [ ] Update affected READMEs, phase status, and record exact commit, changed files and measured/untested performance checks in the same authorized implementation commit.
-
-**Implementation prompt for Codex:** "Read `WORLD/Content/Vegetation/Plants/PLANTS_IMPLEMENTATION_PLAN.md`, root README and CodePreferences, then implement PL1–PL3 as one production-World vertical slice. One Plant.tscn, one Plants.tres with eight Oak-only sprite variants. Reuse existing shared wind/snow and plan for later `SYSTEMS/Harvesting/Harvestable` + shared Drops integration; do not build a duplicate harvest system. Keep Grass Tuft scenes untouched. Check streamed and preview generation, density budget, environmental adapters and old campaign compatibility. One GitHub commit; record tests and deferred Windows checks."
+**Suggested Codex instruction:** Read this file, root README.md and CodePreferences.md, then implement only PL1–PL3 as one production World vertical slice. Use ONE Plant.tscn shared by EIGHT independent Plant001.tres–Plant008.tres (each with its own PNG). Register eight separate BiomePopulation entries in OakForest/Biome.tres, none in PinkMeadow. Maintain extensibility for future Pine/Volcano definitions and existing shared Harvesting/Drops. Keep grass Tuft scenes unchanged; no production harvesting until H4. Respect density, stable IDs, P3, P4 save compatibility and performance requirements; test and commit once.
