@@ -62,8 +62,11 @@ public partial class WorldChunkStream : Node
         foreach (var biome in config.Generation.Biomes.Where(b => b != null && b.EnabledForGeneration)) foreach (var p in biome.Populations)
         {
             if (p?.Content == null) continue;
+            if (p.Content is VegetationDefinition validated) validated.Validate();
             artMargin = Mathf.Max(artMargin,Mathf.Max(p.Content.VisualMinimum.Length(),p.Content.VisualMaximum.Length())*p.MaximumScale);
             if (p.Content is TreeDefinition tree) foreach (var variant in tree.VisualVariants)
+                artMargin = Mathf.Max(artMargin,Mathf.Max(variant.VisualMinimum.Length(),variant.VisualMaximum.Length())*p.MaximumScale);
+            if (p.Content is VegetationDefinition plants) foreach (var variant in plants.VisualVariants)
                 artMargin = Mathf.Max(artMargin,Mathf.Max(variant.VisualMinimum.Length(),variant.VisualMaximum.Length())*p.MaximumScale);
         }
         var lighting = config.Biome.Environment?.Lighting ?? world.Environment.Config.Defaults.Lighting;
@@ -227,11 +230,13 @@ public partial class WorldChunkStream : Node
     {
         using var frameTrace = RuntimeFrameTrace.Measure("Chunk instantiate");
         var item = chunk.Items[chunk.Applied++]; if (_removed.Contains(item.Id)) return;
-        var content = item.Content; var tree = content as TreeDefinition;
-        var scene = tree != null ? GD.Load<PackedScene>("res://WORLD/Content/Vegetation/Trees/Shared/Tree.tscn") : content.Variants[item.Variant];
+        var content = item.Content; var tree = content as TreeDefinition; var vegetation = content as VegetationDefinition;
+        var scene = tree != null ? GD.Load<PackedScene>("res://WORLD/Content/Vegetation/Trees/Shared/Tree.tscn") : vegetation?.Template ?? content.Variants[item.Variant];
         var prop = scene.Instantiate<Node2D>(); prop.Position = item.Position; prop.Scale = Vector2.One * item.Scale;
         if (prop is FantasyGame.World.Trees.Tree instance) instance.Configure(tree,item.Variant,item.Mirrored);
+        else if (prop is VegetationInstance plant) plant.Configure(vegetation,item.Variant,item.Mirrored);
         else if (item.Mirrored) WorldSceneryPlacement.Mirror(prop,content);
+        prop.SetMeta("world_visual_variant",item.Variant);
         prop.SetMeta("world_instance_id",item.Id); prop.SetMeta("world_biome_id",item.BiomeId); prop.SetMeta("world_content_id",content.Id);
         prop.SetMeta("environment_snow",(int)content.SnowResponse); prop.SetMeta("environment_grass",content.GrassLike);
         prop.SetMeta("environment_shadows",content.CastSunShadow); prop.SetMeta("environment_contact",content.ContactShadowRadius);

@@ -30,11 +30,12 @@ public partial class WorldSceneryPlacement : Node
         foreach (BiomePopulation population in biome.Populations)
         {
             SceneryDefinition content = population?.Content;
-            if (content == null || (content is TreeDefinition trees ? trees.VisualVariants.Count == 0 : content.Variants.Count == 0))
+            if (content == null || (content is TreeDefinition trees ? trees.VisualVariants.Count == 0 : content is VegetationDefinition plants ? plants.VisualVariants.Count == 0 : content.Variants.Count == 0))
             {
                 GD.PushWarning("Skipped a world population without content/scene variants.");
                 continue;
             }
+            if (content is VegetationDefinition validated) validated.Validate();
             int placed = 0, requested = Mathf.Clamp(population.Count, 0, 5000);
             Vector2 center = Vector2.Zero;
             for (int i = 0; i < requested; i++)
@@ -45,17 +46,21 @@ public partial class WorldSceneryPlacement : Node
                     Mathf.Max(0.01f, Mathf.Max(population.MinimumScale, population.MaximumScale)));
                 bool mirrored = random.Randf() < Mathf.Clamp(population.MirrorChance, 0f, 1f);
                 TreeDefinition treeDefinition = content as TreeDefinition;
-                int variantIndex = random.RandiRange(0, (treeDefinition?.VisualVariants.Count ?? content.Variants.Count) - 1);
+                var vegetation = content as VegetationDefinition;
+                int variantIndex = random.RandiRange(0, (treeDefinition?.VisualVariants.Count ?? vegetation?.VisualVariants.Count ?? content.Variants.Count) - 1);
                 TreeVisualVariant treeVariant = treeDefinition?.VisualVariants[variantIndex];
-                PackedScene scene = treeDefinition == null ? content.Variants[variantIndex]
+                var plantVariant = vegetation?.VisualVariants[variantIndex];
+                PackedScene scene = treeDefinition == null ? vegetation?.Template ?? content.Variants[variantIndex]
                     : (_treeTemplate ??= GD.Load<PackedScene>("res://WORLD/Content/Vegetation/Trees/Shared/Tree.tscn"));
                 if (scene == null || (treeDefinition != null && treeVariant?.Texture == null)
-                    || !FindPosition(config, random, content, treeVariant, scale, mirrored,
+                    || !FindPosition(config, random, content, treeVariant, plantVariant, scale, mirrored,
                         clusterSize > 1, center, population.ClusterRadius, secondary, out Vector2 point)) continue;
                 Node2D prop = scene.Instantiate<Node2D>();
                 prop.Position = _destination.ToLocal(point); prop.Scale = Vector2.One * scale;
                 if (prop is FantasyGame.World.Trees.Tree tree) tree.Configure(treeDefinition, variantIndex, mirrored);
+                else if (prop is VegetationInstance plant) plant.Configure(vegetation, variantIndex, mirrored);
                 else if (mirrored) Mirror(prop, content);
+                prop.SetMeta("world_visual_variant", variantIndex);
                 prop.SetMeta("world_biome_id", biome.Id);
                 prop.SetMeta("world_content_id", content.Id);
                 prop.SetMeta("environment_snow", (int)content.SnowResponse);
@@ -64,7 +69,7 @@ public partial class WorldSceneryPlacement : Node
                 prop.SetMeta("environment_contact", content.ContactShadowRadius);
                 if (content.GrassLike) prop.ZIndex = -6;
                 _destination.AddChild(prop);
-                _occupied.Add((point, (treeVariant?.PlacementRadius(content.SpacingRadius) ?? Mathf.Max(0f, content.SpacingRadius)) * scale));
+                _occupied.Add((point, (treeVariant?.PlacementRadius(content.SpacingRadius) ?? plantVariant?.PlacementRadius(content.SpacingRadius) ?? Mathf.Max(0f, content.SpacingRadius)) * scale));
                 placed++;
             }
             GD.Print($"World scenery | {biome.Id} | {content.Id} | {placed}/{requested}");
@@ -76,13 +81,13 @@ public partial class WorldSceneryPlacement : Node
     #region Placement
     // Reject overlaps, map-edge artwork clipping and the configured clear player spawn.
     // =========================================================
-    private bool FindPosition(WorldMasterConfig config, RandomNumberGenerator random, SceneryDefinition content, TreeVisualVariant variant,
+    private bool FindPosition(WorldMasterConfig config, RandomNumberGenerator random, SceneryDefinition content, TreeVisualVariant variant, VegetationVisualVariant plantVariant,
         float scale, bool mirrored, bool clustered, Vector2 center, float clusterRadius, bool secondary, out Vector2 point)
     {
         point = Vector2.Zero;
-        float radius = (variant?.PlacementRadius(content.SpacingRadius) ?? Mathf.Max(0f, content.SpacingRadius)) * scale;
-        Vector2 minimum = (variant?.VisualMinimum ?? content.VisualMinimum) * scale,
-            maximum = (variant?.VisualMaximum ?? content.VisualMaximum) * scale;
+        float radius = (variant?.PlacementRadius(content.SpacingRadius) ?? plantVariant?.PlacementRadius(content.SpacingRadius) ?? Mathf.Max(0f, content.SpacingRadius)) * scale;
+        Vector2 minimum = (variant?.VisualMinimum ?? plantVariant?.VisualMinimum ?? content.VisualMinimum) * scale,
+            maximum = (variant?.VisualMaximum ?? plantVariant?.VisualMaximum ?? content.VisualMaximum) * scale;
         if (mirrored) (minimum.X, maximum.X) = (-maximum.X, -minimum.X);
         Rect2 bounds = config.Bounds.Grow(-Mathf.Max(0f, config.EdgeMargin));
         Rect2 sampleBounds = config.Biomes.SamplingBounds(bounds, secondary);

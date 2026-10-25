@@ -7,7 +7,8 @@ using System.Linq;
 public sealed record ChunkSceneryItem(string Id, string BiomeId, SceneryDefinition Content, Vector2 Position, float Scale, bool Mirrored, int Variant, float Radius, ulong Rank);
 public sealed class ChunkSceneryData
 {
-    public const int GeneratorVersion = 1;
+    // PL3 materializes previously skipped vegetation candidates; older local layouts must not regenerate silently.
+    public const int GeneratorVersion = 2;
     private readonly MacroWorldMap _map;
     private readonly WorldFeaturePlan _features;
     private readonly WorldStreamingConfig _settings;
@@ -34,8 +35,10 @@ public sealed class ChunkSceneryData
                     || !float.IsFinite(p.MinimumScale) || !float.IsFinite(p.MaximumScale) || p.MinimumScale <= 0 || p.MaximumScale < p.MinimumScale)
                     throw new ArgumentException($"Invalid/duplicate streaming population in {biome.Id}.");
                 density += p.InstancesPerMillionUnits;
+                if (p.Content is VegetationDefinition vegetation) vegetation.Validate();
                 float radius = p.Content.SpacingRadius;
                 if (p.Content is TreeDefinition tree) foreach (var v in tree.VisualVariants) radius = Mathf.Max(radius, v.PlacementRadius(radius));
+                if (p.Content is VegetationDefinition plants) foreach (var v in plants.VisualVariants) radius = Mathf.Max(radius, v.PlacementRadius(p.Content.SpacingRadius));
                 maxRadius = Mathf.Max(maxRadius, radius * p.MaximumScale);
             }
             if (density * settings.CandidateCellSize * settings.CandidateCellSize > 1000000)
@@ -86,12 +89,15 @@ public sealed class ChunkSceneryData
         { choice -= p.InstancesPerMillionUnits; if (choice < 0) { population = p; break; } }
         if (population == null) return null;
         var content = population.Content; var trees = content as TreeDefinition;
-        int variants = trees?.VisualVariants.Count ?? content.Variants.Count; if (variants == 0) return null;
-        int variant = Math.Min(variants - 1, (int)(Unit() * variants)); bool mirror = Unit() < population.MirrorChance;
+        var vegetation = content as VegetationDefinition;
+        int variants = trees?.VisualVariants.Count ?? vegetation?.VisualVariants.Count ?? content.Variants.Count; if (variants == 0) return null;
+        float variantSample = Unit();
+        int variant = vegetation?.SelectVariant(variantSample) ?? Math.Min(variants - 1, (int)(variantSample * variants)); bool mirror = Unit() < population.MirrorChance;
         float scale = Mathf.Lerp(population.MinimumScale, population.MaximumScale, Unit());
         var art = trees?.VisualVariants[variant];
-        float radius = (art?.PlacementRadius(content.SpacingRadius) ?? content.SpacingRadius) * scale;
-        Vector2 minimum = (art?.VisualMinimum ?? content.VisualMinimum) * scale, maximum = (art?.VisualMaximum ?? content.VisualMaximum) * scale;
+        var plantArt = vegetation?.VisualVariants[variant];
+        float radius = (art?.PlacementRadius(content.SpacingRadius) ?? plantArt?.PlacementRadius(content.SpacingRadius) ?? content.SpacingRadius) * scale;
+        Vector2 minimum = (art?.VisualMinimum ?? plantArt?.VisualMinimum ?? content.VisualMinimum) * scale, maximum = (art?.VisualMaximum ?? plantArt?.VisualMaximum ?? content.VisualMaximum) * scale;
         if (mirror) (minimum.X, maximum.X) = (-maximum.X,-minimum.X);
         foreach (Vector2 offset in new[] { minimum, maximum, new Vector2(minimum.X, maximum.Y), new Vector2(maximum.X, minimum.Y) })
             if (!_map.Bounds.HasPoint(point + offset) || (content.AvoidBiomeTransition && _map.BiomeAt(point + offset)?.Id != info.Id)) return null;

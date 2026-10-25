@@ -1,6 +1,6 @@
 # Data-driven World Content — One Scene per Category, One Definition per Type, Many Art Variants
 
-> **Status: PL0 audited; PL1 implemented, awaiting native validation. PL2 authored/awaiting native validation; PL3 remains planned.** This is the PLANTS implementation plan and the intended content-authoring contract for TREES, PLANTS, GRASS, ROCKS and future scenery types. The earlier proposal to combine eight *distinct* plants into one Plants.tres is superseded. **Implement PL1–PL3 for plants only when approved; category conversions for grass, rocks or trees are separate requests.** Read root README.md, CodePreferences.md, the owning README files and actual current production code before implementing. One commit per authorized job.
+> **Status: PL0 audited; PL1 implemented, awaiting native validation. PL2 authored/awaiting native validation; PL3 implemented, awaiting native/Windows validation.** This is the PLANTS implementation plan and the intended content-authoring contract for TREES, PLANTS, GRASS, ROCKS and future scenery types. The earlier proposal to combine eight *distinct* plants into one Plants.tres is superseded. **Implement PL1–PL3 for plants only when approved; category conversions for grass, rocks or trees are separate requests.** Read root README.md, CodePreferences.md, the owning README files and actual current production code before implementing. One commit per authorized job.
 
 ## Project-wide content authoring rule — mandatory design target
 
@@ -51,7 +51,7 @@ No special BiomePlantWhitelist system is needed now: the existing BiomePopulatio
 | PL0 | Verify content classes, biome ownership, streamer, assets, save compatibility | Regular Chat | Audited at `3673cb1`; see PL0_PL1_Validation.md |
 | PL1 | Reusable one-scene vegetation definition/controller and **1-to-many visual-variant contract** | Codex | Implemented; awaiting native validation |
 | PL2 | Migrate eight plant Resources to PL1, register eight Oak populations, one shared wind material | Regular Chat | Implemented — Awaiting Validation |
-| PL3 | Wire production streamed World and compatibility-preview generation; test wind/snow/performance | Codex | Planned |
+| PL3 | Wire production streamed World and compatibility-preview generation; test wind/snow/performance | Codex | Implemented — Awaiting Validation |
 | PL4 | Later attach existing Harvesting/Drops capabilities and SAVE integration to plant types | Codex | Deferred; separate approval after H4 |
 | GR0 | Later convert grass from four scenes to one Grass.tscn using same reusable setup | Regular Chat for small refactor; Codex if needed | Deferred; separate job |
 | RK0 | Later convert rocks to one shared Rock.tscn + separate rock type Resources, each with visual variants | Codex/Regular Chat depending on collider/shadow scope | Deferred; separate job |
@@ -224,3 +224,7 @@ After PL1–PL3 are accepted, migrate existing Grass.tres with its FOUR cosmetic
 ## PL0/PL1 implementation handoff
 
 See [audit, implementation and validation](PL0_PL1_Validation.md). Only PL0/PL1 were authorized. No artwork moves, production plant definitions, biome changes or generator dispatch are included. PL3 must wire the existing candidate sample into SelectVariant, use per-variant bounds/radius, instantiate Template and Configure before AddChild in both placement paths, then reuse environment lifecycle registration.
+
+## PL3 implementation result
+
+Production World and compatibility-preview dispatch now support VegetationDefinition directly, with seeded visual variants, per-variant bounds/spacing, rooted configuration and existing environment metadata/lifecycle. Local generator version 2 intentionally rejects older layouts; no save bypass or migration. Eight definitions/biome settings from PL2 are unchanged. [PL3 validation and handoff](PL3_Validation.md) lists executed static checks separately from pending Godot/.NET/Windows checks. Historical PL0–PL2 audit sections above describe their original revisions. PL4/GR0/RK0 remain deferred.

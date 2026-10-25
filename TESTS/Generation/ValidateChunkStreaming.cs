@@ -106,7 +106,7 @@ public partial class ValidateChunkStreaming : Node
             if (homeTiming.TryGetValue(oak.GetMeta("world_instance_id").AsString(), out float bucket))
                 Check(oak.GetNode<Sprite2D>("Sprite").GetInstanceShaderParameter("seasonal_bucket").AsSingle() == bucket, "Returning tree changed seasonal timing");
         Check(!returned.ContainsKey(removedId),"Removed runtime prop resurrected on return");
-        Check(world.Blueprint.LocalGeneratorVersion == 1 && world.Blueprint.ChunkSize == 512,"Missing local generation manifest metadata");
+        Check(world.Blueprint.LocalGeneratorVersion == ChunkSceneryData.GeneratorVersion && world.Blueprint.ChunkSize == 512,"Missing local generation manifest metadata");
         Check(world.Blueprint.WorldId == stream.WorldId,"Chunk state lost world identity");
         world.QueueFree(); await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame); await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
         Check(GetTree().GetNodesInGroup("world_trees").Count == 0,"World exit leaked tree registrations");
