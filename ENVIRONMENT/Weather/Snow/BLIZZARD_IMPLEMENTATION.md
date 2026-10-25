@@ -1,6 +1,8 @@
 # Blizzard implementation plan — B0–B4
 
-**Status: PLANNED — no blizzard implementation in this document commit.**
+**Status: B0 implemented — awaiting native/local validation; B1–B4 planned.**
+
+**User-approved control revision:** extend the existing Snowfall intensity slider to 0–3, preserving 0–1 ordinary snowfall. Storm target = clamp((rate−1)/2, 0, 1). Settled coverage remains independent. There is no second severity slider or separate preview ON/OFF: existing Snow/Falling snow masters gate the storm. B0 only supplies state/transitions; B1/B2 supply stronger visuals. This revision supersedes older separate-severity control suggestions below. Rain can later use the same control convention without changing current rain in B0. [B0 implementation and validation](B0_Validation.md).
 **Recommended first implementation pass: B0 → B1 → B2**, followed by visual feedback before B3/B4.
 **Scope:** production Godot C# top-down world, not the independent `DEBUG/TopDownTest` sandbox.
 **Intent:** intense snowstorms/near-whiteouts with heavy sideways snowfall, snow-covered ground, icy overcast daylight, broad blowing haze, reduced distant visibility and optional frost/snow on the camera. Reuse existing shared systems; leave the normal snow/rain presentation unchanged at storm intensity zero.
@@ -25,7 +27,7 @@ Read the repository root `README.md`, `CodePreferences.md` and this Snow `README
 
 ## Gameplay/visual contract
 
-- Three independent axes: **Snow coverage** (existing 0–1 settled surface), **Snowfall rate** (existing 0–1 falling snow), and **Blizzard intensity** (new 0–1 severe-weather modifier). Neither snow coverage nor snow rate alone should automatically trigger blizzard post effects.
+- Two authoring controls: **Snow coverage** (0–1 settled surface) and **Snowfall intensity** (0–3). Internally normal snowfall clamps to 0–1 and resolved blizzard severity maps the 1–3 portion to 0–1. Coverage never triggers blizzards. Existing settings ≤1 retain ordinary appearance.
 - At storm intensity **0**, the world must behave/render like today's ordinary snow. No extra storm shaders, GPU emitters, screen overlays, ticks, or modified profiles may remain active.
 - At low severity: gently stronger flakes/wind. At high severity: much denser diagonal snowfall, fast near-camera flecks, moving near-ground spindrift, larger icy-grey haze patches, overcast daylight, and irregular distance visibility falloff.
 - At maximum: dramatic whiteout, but **player, immediate nearby threats, telegraphs, torch lighting and readable HUD must remain identifiable**. Do not replace the world with a flat white or black circle.
@@ -49,13 +51,13 @@ Keep each layer independently enableable in F9/Resources so visual problems can 
 
 ## Phases
 
-### B0 — Storm state, composition and F9 controls [ ]
+### B0 — Storm state, composition and F9 controls [x] (implemented; validation pending)
 
 **Goal:** an easy, reversible way to turn a blizzard on for testing without hardcoding meteorology or changing existing snow semantics.
 
-- Add `BlizzardProfile` with `Enabled`/severity (0–1), transition time, future presentation multipliers and `Changed` notifications **only when values actually change**. Default OFF; no generated storm at startup.
+- Added BlizzardProfile transition tuning and changed-only notifications. Existing Snow.Enabled/Snowfall gates and extended SnowfallRate supply enable/severity; no duplicate controls. Current authored snowfall rates remain below 1, so default storm is OFF.
 - Add `WorldBlizzard` (or similar) once under `EnvironmentRuntime`, not per chunk, species or tree. It exposes `Intensity` as a smoothly resolved value, with a single transition callback while changing, then sleeps at the reached value. Notify relevant renderers on input/transition changes; avoid repeated identical shader writes.
-- Add a compact collapsible **Blizzard** section under existing F9 Environment → Snow with severity slider, preview ON/OFF/reset and optional independent checkboxes for new effects. Make the preview work in `SCENES/World/World.tscn` (F6). If preview sets snow on, snowfall rate or wind for convenience, snapshot/restore *only the values the preview temporarily owns*, avoiding a silent override of later manual F9 edits.
+- Existing F9 Snowfall intensity now spans 0–3. A collapsible Blizzard transition subsection exposes real-second transition tuning and reset to normal snowfall. No preview command mutates wind, coverage or snow masters; therefore no snapshot/restore ownership is needed. Production World is wired through EnvironmentRuntime.
 - Do not serialize debug preview into campaign/saves. Runtime default remains inactive. Existing Snow master OFF / Snowfall OFF / zero rate should prevent storm flakes; define whether severity also fades to zero or simply waits dormant with desired target preserved.
 - Acceptance: F6 starts visually unchanged; F9 0→1→0 smooths state; disabled snowfall creates no flakes; snow coverage can remain when falling snow is off; old F9 rain/snow/wind controls still work; removing world disconnects signals and timers. No idle controller `_Process` at settled 0 or settled 1.
 

@@ -17,4 +17,4 @@ Validation: ValidateSnowSleeping passed 23 checks and covers default dormancy, m
 
 ## Planned severe weather: blizzard
 
-See [BLIZZARD_IMPLEMENTATION.md](BLIZZARD_IMPLEMENTATION.md) for the phased **B0–B4** plan (all phases pending). The first demo pass is B0–B2: independent F9 severity, heavy multi-depth snow, wind-driven spindrift, darker overcast, stronger haze and soft distance visibility. B3 proposes camera flakes/frost; B4 covers polishing, performance verification and eventual extreme-rain reuse. This is documentation only; existing snow behaviour is unchanged.
+See [BLIZZARD_IMPLEMENTATION.md](BLIZZARD_IMPLEMENTATION.md) for the phased **B0–B4** plan (B0 implemented; native validation pending). The first demo pass is B0–B2: extended 0–3 snowfall slider, heavy multi-depth snow, wind-driven spindrift, darker overcast, stronger haze and soft distance visibility. B3 proposes camera flakes/frost; B4 covers polishing, performance verification and eventual extreme-rain reuse. B0 now supplies the extended slider and sleeping storm-state controller. Existing 0–1 snowfall remains unchanged; heavier visuals are B1/B2. [B0 checks and handoff](B0_Validation.md).

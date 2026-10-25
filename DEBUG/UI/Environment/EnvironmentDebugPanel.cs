@@ -102,8 +102,14 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Toggle(snow, "Enable snow", () => s.Snow.Enabled, v => s.Snow.Enabled = v);
         Slider(snow, "Settled snow", 0, 1, 0.01, () => s.Snow.Coverage, v => _environment.Snow.SetCoverage((float)v));
         Toggle(snow, "Falling snow", () => s.Snow.Snowfall, v => s.Snow.Snowfall = v);
-        Slider(snow, "Snowfall intensity", 0, 1, 0.01, () => s.Snow.SnowfallRate, v => s.Snow.SnowfallRate = (float)v);
+        Slider(snow, "Snowfall intensity (1 normal / 3 blizzard)", 0, 3, 0.01, () => s.Snow.SnowfallRate, v => s.Snow.SnowfallRate = (float)v);
         Toggle(snow, "Auto accumulate / melt", () => s.Snow.AutoAccumulate, v => s.Snow.AutoAccumulate = v);
+        var blizzard = Section(snow, "Blizzard transition", false);
+        blizzard.AddChild(new Label { Text = "Above 1 drives storm severity. B0 state only; heavy visuals arrive in B1/B2.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        Slider(blizzard, "Storm transition seconds", 0, 10, 0.1,
+            () => _environment.Blizzard.Config.TransitionSeconds,
+            v => _environment.Blizzard.Config.TransitionSeconds = (float)v);
+        Button(blizzard, "Reset snowfall to normal", () => { s.Snow.SnowfallRate = 0.65f; _environment.Blizzard.Config.TransitionSeconds = 3f; });
         var fire=Section(controls,"Tree fire",false);
         GetParent().GetNodeOrNull<WorldFireDebugPanel>("FireDebugPanel")?.AttachTo(fire);
         GetViewport().SizeChanged+=ResizePanel; ResizePanel();
@@ -152,7 +158,7 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         if (!_panel.Visible || !_environmentControls.IsVisibleInTree()) return;
         _refreshTimer+=delta; if(_refreshTimer<0.25) return; _refreshTimer=0;
         _syncing = true; foreach (Action refresh in _refresh) refresh(); _syncing = false;
-        _status.Text = $"{_environment.Clock.Hour:00.00} h | Rain {_environment.Weather.Rain:P0}\nSettled snow {_environment.Snow.Coverage:P0}";
+        _status.Text = $"{_environment.Clock.Hour:00.00} h | Rain {_environment.Weather.Rain:P0}\nSettled snow {_environment.Snow.Coverage:P0} | Blizzard {_environment.Blizzard.Intensity:P0}";
     }
     // Resize only on viewport changes; no per-frame layout writes.
     // =========================================================

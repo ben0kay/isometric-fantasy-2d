@@ -10,7 +10,8 @@ public partial class SnowProfile : Resource
     private float _Coverage = 0.6f;
     [Export] public bool Snowfall { get => _Snowfall; set { if (_Snowfall == value) return; _Snowfall = value; EmitChanged(); } }
     private bool _Snowfall = true;
-    [Export(PropertyHint.Range, "0,1,0.01")] public float SnowfallRate { get => _SnowfallRate; set { if (_SnowfallRate == value) return; _SnowfallRate = value; EmitChanged(); } }
+    // 0–1 keeps ordinary snowfall; 1–3 additionally drives the presentation-only storm state.
+    [Export(PropertyHint.Range, "0,3,0.01")] public float SnowfallRate { get => _SnowfallRate; set { value = float.IsFinite(value) ? Mathf.Clamp(value, 0f, 3f) : 0f; if (_SnowfallRate == value) return; _SnowfallRate = value; EmitChanged(); } }
     private float _SnowfallRate = 0.65f;
     [Export] public bool AutoAccumulate { get => _AutoAccumulate; set { if (_AutoAccumulate == value) return; _AutoAccumulate = value; EmitChanged(); } }
     private bool _AutoAccumulate = false;
