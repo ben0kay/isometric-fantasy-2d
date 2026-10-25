@@ -4,7 +4,7 @@ using System.Linq;
 public partial class RiverPractice : WorldScene
 {
     private int _station=2;
-    // Keep production defaults off; this fixture explicitly requests two lakes and one geography-first river.
+    // Clone a repeatable two-lake/one-river developer preset; normal World also has generated water enabled.
     // =========================================================
     public override void _EnterTree()
     {

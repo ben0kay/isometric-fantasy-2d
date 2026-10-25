@@ -28,6 +28,8 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 
 **Latest C2 validation:** build/import, 46 melee checks, 10037 C1 checks, P4 43/39 and pre-C2 disk restoration pass. World ownership/streaming assertions encounter existing native shutdown errors; scenery cancellation also fails on the unmodified baseline. These are not clean full-suite passes; see [C2 evidence](COMBAT/C2_Validation.md).
 
+**Production water is enabled:** normal `SCENES/World/World.tscn` and New Campaign request three generated lakes and one winding river through the shared geography-first pipeline. F6 on World is the normal development check; F7 shows their locations. Existing campaigns restore their original frozen geography.
+
 **Run/controls:** **F5** launches `UI/Menus/Boot/BootScreen.tscn` (profile → Main Menu → New Campaign / Continue). Open `SCENES/World/World.tscn` and press **F6** for a **disposable** streamed-world test session without campaign persistence. **F7** macro map/reservations, **F9** exclusive Environment/Combat debug drawers and diagnostics, **F8** save active campaign, **Esc** campaign save/leave menu. `WorldMasterConfig.Streaming.Enabled=false` selects the old 3840×1728 compatibility preview. The independent [DEBUG/TopDownTest](DEBUG/TopDownTest/README.md) starts by opening its scene and pressing **F6**, not F5.
 
 **Performance acceptance:** P3 startup and some generation/binding/nav remain synchronous; a nominal 3ms scenery-apply budget is not a hard frame-time limit. Earlier grass-only/giant shadow bugs had fixes and headless regressions but still require target-PC rendering verification. See [streaming evidence](WORLD/Runtime/Streaming/README.md) and the [archived performance handoff](Notes/ARCHIVE_DONOTREADUNLESSINSTRUCTED/performance_refactor.md).
@@ -53,6 +55,8 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 | **Claude — optional second opinion / supporting assistant** | Independently review designs, C# changes, performance risks and bugs; may handle small, isolated tasks if assigned. Its advice is not authoritative without checking the actual repository and tests. |
 | **GitHub Copilot in VS Code — local tester and small-fix assistant** | Pull/review the designated commit; run .NET/Godot builds, headless tests and local diagnostics; capture precise commands, versions, exit codes, failures and performance evidence. **Test first without modifying code**, unless the user authorizes fixes. |
 | **User — final acceptance** | Decide scope and approvals; inspect graphics, gameplay, Godot profiler results and Windows performance; approve a phase only after the relevant checks, not merely because code was pushed. |
+
+**Production delivery:** authorized production features should be wired and configured in the normal World flow when delivered, unless the user explicitly asks for an isolated experiment or opt-in feature. Test scenes supplement normal World testing; they must not leave an unmentioned enable/connect step for the user.
 
 ### Rules shared by every assistant
 

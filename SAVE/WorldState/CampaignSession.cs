@@ -31,6 +31,16 @@ public static class CampaignSession
     // Hash text scene/resource dependencies, excluding seed policy. Textures stay external; generation versions gate algorithms.
     // =========================================================
     public static string ContentFingerprint() => BuildContentFingerprint(null);
+    // Only the exact shipped water-default addition maps to the previous config text; unrelated edits stay strict.
+    // Frozen geography already belongs to the blueprint, so enabling new-world defaults never rerolls old campaigns.
+    // =========================================================
+    internal static string NormalizeDefaultWaterGenerationSource(string path,string source)
+    {
+        if (path=="res://WORLD/Generation/World/DefaultWorldGeneration.tres"
+            && CheckpointFiles.Digest(Encoding.UTF8.GetBytes(source))=="3C740DB6959FC17E53AA55525CCD1FCDEC25DBE9FEBB9D075176CCC1AEB5E112")
+            return Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/WaterDefaultsBefore.txt").Replace("\r\n","\n");
+        return source;
+    }
     // Narrow SO2 compatibility bridge: only the previously shipped scene text is substituted.
     // =========================================================
     internal static string LegacySO1ContentFingerprint() => BuildContentFingerprint("res://SAVE/Migrations/References/SO1WorldScene.txt");
@@ -52,6 +62,7 @@ public static class CampaignSession
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
+            source=NormalizeDefaultWaterGenerationSource(path,source);
             if(variants && path=="res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres")
                 source=Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/DirtVariantsBefore.txt").Replace("\r\n","\n");
             if(fineGround)

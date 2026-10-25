@@ -23,3 +23,7 @@ World composes player, authored Skeleton Basic combat practice (shared chase/mel
 ## AC2 practice actors
 
 F6 now places **eight test skeletons total** around the player start: five Basic melee and three Archer ranged. Select `WorldActorsRoot/PersistentEntitiesRoot/DebugActorsRoot` and uncheck **Enabled** to disable all test skeletons. Four Basic and three Archer child markers tune extra spawn offsets; placement adjusts to nearby walkable, separated points. Existing spawned actors can be toggled in the Remote Inspector; after starting disabled, reopen the scene to populate when enabled. Y-sort ownership metadata is preserved. Campaigns retain only the original saved Basic skeleton; the extra seven are disposable F6 practice. Archer markers reference `SkeletonArcher.tres` without a separate enemy scene or manager. See [debug root instructions](../../DEBUG/World/README.md) and [AC2 validation handoff](../../ENTITIES/Shared/Movement/AC2_Validation.md).
+
+## Generated water in the normal world
+
+Open this `World.tscn` and press F6: `DefaultWorldGeneration.tres` now requests three lakes and one winding river, using the existing geography-first pipeline and shared liquid streaming. F7 shows their locations; the protected starting position stays unchanged. F5 → New Campaign uses the same defaults. Continue restores saved geography instead of adding water to existing campaigns. Counts are bounded requests; infeasible optional water placements warn/skip. Practice scenes are optional developer shortcuts, not a remaining production integration step.

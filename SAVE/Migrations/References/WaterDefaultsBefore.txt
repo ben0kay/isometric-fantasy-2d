@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="WorldGenerationMasterConfig" format=3]
+[ext_resource type="Script" path="res://WORLD/Generation/World/WorldGenerationMasterConfig.cs" id="script"]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Biome.tres" id="oak"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres" id="pink"]
+[ext_resource type="Resource" path="res://WORLD/Generation/World/Features/DefaultWorldLayout.tres" id="layout"]
+[resource]
+script = ExtResource("script")
+Bounds = Rect2(-22500, -16875, 45000, 33750)
+CellSize = 256.0
+Layout = ExtResource("layout")
+Biomes = Array[ExtResource("biome")]([ExtResource("oak"), ExtResource("pink")])

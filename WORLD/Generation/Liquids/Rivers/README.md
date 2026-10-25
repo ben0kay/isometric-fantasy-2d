@@ -38,7 +38,7 @@ Planning runs once per new world, with bounded grid, attempts and search. No riv
 
 Lake-only plans keep water version 1 and their existing hash byte layout. New smooth river plans keep water version 3; new geography-first worlds use blueprint schema 8 / macro generator version 2, so older executables reject them. Previously saved version-2/schema-6 rivers retain their exact polygons and hashes. Schema 4/5 Continue retains its original geography and never gains a river. See [WG3 validation and local checks](WG3_Validation.md).
 
-For immediate testing, open `TESTS/Water/RiverPractice.tscn`, press F6, then R to jump through five saved river sections. F7 shows the cyan saved route with source/terminal markers; F9 retains shared rain controls. Production defaults remain off.
+For immediate testing, open `TESTS/Water/RiverPractice.tscn`, press F6, then R to jump through five saved river sections. F7 shows the cyan saved route with source/terminal markers; F9 retains shared rain controls. Normal World and New Campaign now enable three lakes and one river through DefaultWorldGeneration.tres; this practice scene is optional.
 
 Bank irregularity and longer default spans apply only to newly generated worlds (including RiverPractice). Saved polygons remain authoritative; no in-game sliders or additional runtime callbacks. Dense river geometry now has separate bounded limits; lake geometry retains its 64-vertex limit. WG4 terrain/shore blending remains separate.
 

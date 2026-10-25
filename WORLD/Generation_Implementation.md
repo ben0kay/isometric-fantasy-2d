@@ -13,6 +13,8 @@
 
 **Current P5a/P5b implementation:** new worlds now run P2 reservations → biome-independent major lake/river geography → geography-constrained P1 biome growth through `WorldGenerationPipeline`. `WorldGeographyPlan` and temporary `GeographyBiomeRules` reuse canonical water geometry and existing biome Hydrology data. New blueprints are schema 8 / geography version 1 / macro generator version 2; schema 4–7 worlds restore their exact frozen geography without rerouting. Oceans, volcanic geography, real major POIs and access planning remain P5c/P5d. P3 streaming and shared liquid presentation remain unchanged. See [contracts and validation](Generation/World/Geography/README.md); target-PC visual/performance acceptance remains pending.
 
+**Normal World defaults:** three lakes and one river are now enabled in `DefaultWorldGeneration.tres`, so F6 World and New Campaign use this pipeline without a practice scene. Existing campaigns retain their frozen layouts; see [production-default compatibility/checks](Generation/Liquids/WORLD_WATER_DEFAULTS.md).
+
 ### Target creation order
 
 | Order | Planning pass | Output / responsibility |

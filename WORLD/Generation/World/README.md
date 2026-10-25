@@ -8,6 +8,8 @@ Implemented: a complete finite coarse biome map, independently queryable without
 
 `WorldGenerationPipeline` runs required feature reservations → biome-independent water geography → compatible biome growth. `MacroWorldBuilder.Build(config, seed, geography)` uses generator version 2; the two-argument method remains the exact version-1 baseline for legacy tests. Continue restores either version without running a planner. Hydrology hard flags restrict touched coarse cells; soft preferences influence eligible site selection/growth. Isolated components receive bounded connected fallback regions. See [geography ownership/settings/validation](Geography/README.md). The original unconstrained algorithm below remains the foundation. Oceans/volcanic regions/POIs are still planned, not produced by water-first ordering.
 
+Normal World/New Campaign now uses inline `Water` settings in `DefaultWorldGeneration.tres`: Enabled=true, LakeCount=3, RiverCount=1. Edit that Resource's Water group in the Inspector. Existing smooth-river span/width/bank defaults apply. This is production configuration; no practice scene is required. Existing saved geography is never rerolled.
+
 ## Authoring
 
 Edit `Biomes` in the generation Resource to reference any number of canonical `WorldBiomeDefinition` Resources. Two enabled biomes fill the map with two types; adding two more makes four eligible types without new generator branches. Entries need unique stable IDs. Null references, invalid settings and all-zero weights fail explicitly. Disabled entries do not participate; zero-weight entries never get sites. Selection is probabilistic: every biome is eligible, but a tiny map or a rare weight does not guarantee an occurrence.

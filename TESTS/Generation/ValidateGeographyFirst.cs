@@ -16,6 +16,13 @@ public partial class ValidateGeographyFirst : Node
     }
     private void Run()
     {
+        const string sourcePath="res://WORLD/Generation/World/DefaultWorldGeneration.tres";
+        string authored=Godot.FileAccess.GetFileAsString(sourcePath).Replace("\r\n","\n");
+        string previous=Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/WaterDefaultsBefore.txt").Replace("\r\n","\n");
+        Check(CampaignSession.NormalizeDefaultWaterGenerationSource(sourcePath,authored)==previous,"Shipped water defaults lost legacy content compatibility");
+        string changed=authored.Replace("CellSize = 256.0","CellSize = 128.0");
+        Check(CampaignSession.NormalizeDefaultWaterGenerationSource(sourcePath,changed)==changed,"Unrelated config edit bypassed compatibility");
+        Check(CampaignSession.NormalizeDefaultWaterGenerationSource("res://other.tres",authored)==authored,"Water compatibility leaked to another dependency");
         var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
         config.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1 };
         var pond=new Rect2(650,500,860,600);

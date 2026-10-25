@@ -18,7 +18,7 @@ public partial class ValidateStreamedRiver : Node
     {
         var world=GD.Load<PackedScene>("res://SCENES/World/World.tscn").Instantiate<WorldScene>();
         world.Config=(WorldMasterConfig)world.Config.Duplicate(); world.Config.Generation=(WorldGenerationMasterConfig)world.Config.Generation.Duplicate();
-        world.Config.Generation.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1,RequireMultipleRiverBiomes=true };
+        Check(world.Config.Generation.Water?.Enabled==true,"Production World config has generated water disabled");
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world); Check(world.StartupError==null,"World failed to initialize: "+world.StartupError);
         Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==2 && world.Blueprint.SchemaVersion==8 && world.WaterPlan.PlanVersion==3,"River world did not use the river-capable save contract");
