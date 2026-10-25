@@ -1,6 +1,6 @@
 # Data-driven World Content — One Scene per Category, One Definition per Type, Many Art Variants
 
-> **Status: PL0 audited; PL1 implemented, awaiting native validation. PL2/PL3 remain planned.** This is the PLANTS implementation plan and the intended content-authoring contract for TREES, PLANTS, GRASS, ROCKS and future scenery types. The earlier proposal to combine eight *distinct* plants into one Plants.tres is superseded. **Implement PL1–PL3 for plants only when approved; category conversions for grass, rocks or trees are separate requests.** Read root README.md, CodePreferences.md, the owning README files and actual current production code before implementing. One commit per authorized job.
+> **Status: PL0 audited; PL1 implemented, awaiting native validation. PL2 authored/awaiting native validation; PL3 remains planned.** This is the PLANTS implementation plan and the intended content-authoring contract for TREES, PLANTS, GRASS, ROCKS and future scenery types. The earlier proposal to combine eight *distinct* plants into one Plants.tres is superseded. **Implement PL1–PL3 for plants only when approved; category conversions for grass, rocks or trees are separate requests.** Read root README.md, CodePreferences.md, the owning README files and actual current production code before implementing. One commit per authorized job.
 
 ## Project-wide content authoring rule — mandatory design target
 
@@ -50,7 +50,7 @@ No special BiomePlantWhitelist system is needed now: the existing BiomePopulatio
 | --- | --- | --- | --- |
 | PL0 | Verify content classes, biome ownership, streamer, assets, save compatibility | Regular Chat | Audited at `3673cb1`; see PL0_PL1_Validation.md |
 | PL1 | Reusable one-scene vegetation definition/controller and **1-to-many visual-variant contract** | Codex | Implemented; awaiting native validation |
-| PL2 | Move eight artwork files, author EIGHT plant Resources, register EIGHT Oak biome populations | Codex | Planned |
+| PL2 | Migrate eight plant Resources to PL1, register eight Oak populations, one shared wind material | Regular Chat | Implemented — Awaiting Validation |
 | PL3 | Wire production streamed World and compatibility-preview generation; test wind/snow/performance | Codex | Planned |
 | PL4 | Later attach existing Harvesting/Drops capabilities and SAVE integration to plant types | Codex | Deferred; separate approval after H4 |
 | GR0 | Later convert grass from four scenes to one Grass.tscn using same reusable setup | Regular Chat for small refactor; Codex if needed | Deferred; separate job |
@@ -164,6 +164,16 @@ If each plant has its own harvested items/drops, each PlantXXX.tres can later ha
 **Dependencies:** PL1. **Files:** move all eight root PNGs into Plants/Sprites, create Plant001.tres–Plant008.tres in Plants/Definitions, initialize each definition's **VisualVariants collection with exactly one matching PNG** (ready to append more later), with correct anchor, bounds and unique stable Id (plant.001 etc). Author one BiomePopulation per plant in OakForest/Biome.tres with appropriate per-plant density/scale; adjust existing grass density only as needed to remain within the existing validator. Do not change any Grass scenes, and do not add plants to PinkMeadow.
 
 **Out of scope:** one aggregate Plants.tres, eight plant scenes, changing all biomes or adding harvest-drop mechanics. **Performance:** bounded total density and deterministic distribution. **Pass:** disable an individual plant population and only that specific plant stops appearing; all eight are separately editable in Inspector; no plant is selected outside the Oak biome. **Assistant:** Codex.
+
+## PL2 authoring result — implemented; awaiting engine validation
+
+- Eight `Definitions/plant_oak_001.tres` … `plant_oak_008.tres` were converted from staged SceneryDefinition + metadata into proper `VegetationDefinition` Resources. Each points to one shared `Plant.tscn`, one inline `VegetationVisualVariant` wrapping the matching PNG, and one reusable `PlantWind.tres` material; all keep their existing stable `plant.oak.XXX` IDs.
+- PL0 audited bottom-centre source-pixel anchors are authored: plants 001–004 use (45.5,91); 005–007 (55,100); 008 (54.5,100). Per-variant and inherited placement bounds reflect each full PNG's conservative rooted extent (91×91 or 110×100). Species definitions support more art variants later without extra scenes or separate definition files.
+- `OakForest/Biome.tres` now includes eight separate BiomePopulation references (Count=12; density=2.5 each; scales 0.55–0.80), and grass streamed density is 45 (previously 60). Total = 26 trees + 11 rocks + 45 grass + 8 × 2.5 plants = **102**, under candidate-grid capacity **108.5069** at 96-unit cells.
+- No modifications to Pink Meadow, tree/grass/rock scenes, streaming, preview placement, or SAVE code. This is **data authoring only**, not production rendering: current generation still ignores VegetationDefinition.Template + VisualVariants until PL3; old preview may log expected missing-PackedScene warnings.
+- Existing campaigns may be refused due to P4 content fingerprint change: do not delete or bypass existing save checks. PL3 should test a fresh disposable World and confirm old save rejection is handled safely.
+- **Validation:** static Resource paths/IDs, eight distinct population references, anchored source extents and density arithmetic reviewed. Godot import/serialization, .NET build, deterministic spawning, F6 visuals, climate adapters, streaming traversal and target-PC performance **not run**; user/Copilot should run those tests after PL3.
+- **Performance handoff:** no new C# runtime processing; dormant VegetationInstance applies its data once when spawned in PL3 and disables _Process/_PhysicsProcess, with shared material and existing chunk lifecycle. PL3 must verify activation and unload.
 
 ## PL3 — production world/streaming, weather and regression
 

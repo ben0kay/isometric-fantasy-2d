@@ -6,6 +6,14 @@
 [ext_resource type="Resource" uid="uid://ckx0f2rnjxwx" path="res://WORLD/Content/Vegetation/Trees/Oak/Oak.tres" id="oak"]
 [ext_resource type="Script" uid="uid://b876ubumal6vo" path="res://WORLD/Biomes/Shared/BiomePopulation.cs" id="population"]
 [ext_resource type="Resource" path="res://WORLD/Content/Rocks/Rock.tres" id="rock"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_001.tres" id="plant_oak_001"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_002.tres" id="plant_oak_002"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_003.tres" id="plant_oak_003"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_004.tres" id="plant_oak_004"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_005.tres" id="plant_oak_005"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_006.tres" id="plant_oak_006"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_007.tres" id="plant_oak_007"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Plants/Definitions/plant_oak_008.tres" id="plant_oak_008"]
 [ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/ForestGrass.tres" id="surface"]
 
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundLayer.cs" id="ground_layer"]
@@ -84,10 +92,74 @@ MaximumScale = 1.15
 script = ExtResource("population")
 Content = ExtResource("grass")
 Count = 210
-InstancesPerMillionUnits = 60.0
+InstancesPerMillionUnits = 45.0
 MinimumScale = 0.26
 MaximumScale = 0.42
 ClusterSize = 5
+
+[sub_resource type="Resource" id="plant_oak_001"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_001")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_002"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_002")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_003"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_003")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_004"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_004")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_005"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_005")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_006"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_006")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_007"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_007")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
+
+[sub_resource type="Resource" id="plant_oak_008"]
+script = ExtResource("population")
+Content = ExtResource("plant_oak_008")
+Count = 12
+InstancesPerMillionUnits = 2.5
+MinimumScale = 0.55
+MaximumScale = 0.80
 
 [resource]
 script = ExtResource("biome")
@@ -97,4 +169,4 @@ Colour = Color(0.2196, 0.2745, 0.2078, 1)
 GenerationWeight = 60.0
 Environment = ExtResource("environment")
 GroundStack = SubResource("ground")
-Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks"), SubResource("tufts")])
+Populations = Array[ExtResource("population")]([SubResource("trees"), SubResource("rocks"), SubResource("tufts"), SubResource("plant_oak_001"), SubResource("plant_oak_002"), SubResource("plant_oak_003"), SubResource("plant_oak_004"), SubResource("plant_oak_005"), SubResource("plant_oak_006"), SubResource("plant_oak_007"), SubResource("plant_oak_008")])

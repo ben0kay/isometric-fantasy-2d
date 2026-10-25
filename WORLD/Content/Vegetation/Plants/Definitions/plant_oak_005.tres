@@ -1,15 +1,29 @@
-[gd_resource type="Resource" script_class="SceneryDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="VegetationDefinition" load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://WORLD/Content/Shared/SceneryDefinition.cs" id="definition"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Shared/VegetationDefinition.cs" id="definition"]
+[ext_resource type="Script" path="res://WORLD/Content/Vegetation/Shared/VegetationVisualVariant.cs" id="variant_script"]
+[ext_resource type="PackedScene" path="res://WORLD/Content/Vegetation/Plants/Plant.tscn" id="template"]
 [ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Plants/Sprites/plant_oak_005.png" id="art"]
+[ext_resource type="Material" path="res://WORLD/Content/Vegetation/Plants/PlantWind.tres" id="wind"]
+
+[sub_resource type="Resource" id="artwork"]
+script = ExtResource("variant_script")
+Texture = ExtResource("art")
+SourceAnchor = Vector2(55, 100)
+VisualMinimum = Vector2(-55, -100)
+VisualMaximum = Vector2(55, 0)
 
 [resource]
 script = ExtResource("definition")
+Template = ExtResource("template")
+VisualVariants = Array[ExtResource("variant_script")]([SubResource("artwork")])
+WindMaterial = ExtResource("wind")
 Id = "plant.oak.005"
 DisplayName = "Oak plant 005"
 SnowResponse = 1
 GrassLike = true
 CastSunShadow = false
 AvoidBiomeTransition = true
-metadata/visual_variants = Array[Texture2D]([ExtResource("art")])
-metadata/pending_vegetation_definition = true
+SpacingRadius = 18.0
+VisualMinimum = Vector2(-55, -100)
+VisualMaximum = Vector2(55, 0)
