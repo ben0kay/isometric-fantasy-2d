@@ -1,5 +1,5 @@
 # WORLD/Generation
 
-Reusable world-generation **algorithms**, not an asset dump. Recommended pipeline: world geography → terrain/water → biome selection → natural content placement → locations → entity populations → persistence restore. Use seeds and placement rules for deterministic revisit behaviour.
+Reusable world-generation **algorithms**, not an asset dump. Agreed new-world pipeline: required constraints → major geography/terrain/water → major POI/access reservations → biome assignment → local terrain/connections, scenery and populations. Continue restores frozen outcomes rather than rerunning this pipeline. See [the authoritative P5 plan](../Generation_Implementation.md). Use seeds and placement rules for deterministic revisit behaviour.
 
-**Implemented:** `World/` owns the P1 finite macro biome map and its configuration; `Placement/` owns the existing preview startup scatter. `Liquids/` now provides opt-in WG1 frozen pond/lake planning (rendering is WG2); other unimplemented domains remain scaffolding. See [macro generation](World/README.md).
+**Implemented:** `World/` owns the P1 finite macro biome map and its configuration; `Placement/` owns the existing preview startup scatter. `Liquids/` provides opt-in frozen lake and smooth river planning, rendered through the shared liquid runtime. Current water generation follows biomes; geography-first ordering and real ocean/volcano/POI providers remain planned P5 work. See [macro generation](World/README.md).

@@ -1,9 +1,9 @@
 # World Generation Direction — Fantasy 2D Sandbox
 
 > **Status:** Future-geography design / provisional preferences. **P0–P4 foundational generation, streaming and saves are already implemented**; remaining proposals are not automatically approved work.
-> **Last updated:** 2026-10-21
+> **Last updated:** 2026-10-24
 > **Scope:** The new **fully top-down Godot 2D** fantasy survival sandbox, despite the repository's "isometric" name.
-> **Current implementation:** P0/P1 seeded finite macro biome regions, P2 feature reservations, P3 local chunk streaming and P4 private disk saves/Continue exist. Oceans/continents/relief/rivers, real settlements/caves, expandable finite boundaries and offline ecology remain future. Use [phase guide](../WORLD/Generation_Implementation.md) for authoritative status.
+> **Current implementation:** P0/P1 seeded finite macro biome regions, P2 feature reservations, P3 local chunk streaming and P4 private disk saves/Continue exist. WG lake/river geometry and streaming also exist, currently after biome assignment. Oceans/continents/relief, real settlements/caves, expandable finite boundaries and offline ecology remain future. Use [phase guide](../WORLD/Generation_Implementation.md) for authoritative status.
 
 ## Core decision under consideration
 
@@ -62,18 +62,16 @@ A future creator might show overview layers for **land/ocean, elevation, rainfal
 
 ## Proposed generation stages
 
-Use a layered, deterministic process instead of placing every biome independently at random:
+The agreed direction is **constraints → major geography → major POIs/access → biomes → local detail/population**. Follow the authoritative continuation and P5a–P5e in [Generation_Implementation.md](../WORLD/Generation_Implementation.md); older conceptual ordering is superseded.
 
-1. **Macro geography:** Continents, oceans, coastlines, islands and broad regional constraints.
-2. **Relief:** Mountains, plateaus, valleys and a broad elevation field.
-3. **Water:** River systems, lakes, wetlands, shorelines and drainage constraints.
-4. **Loose climate fields:** Temperature/moisture and perhaps wind/rain-shadow influences, treated as *soft input* rather than rigid biome zoning.
-5. **Biome candidate selection:** Use suitability, theme, rarity, region size and **visual-diversity goals**; allow fantasy exceptions.
-6. **Local terrain:** Detailed ground tiles, cliffs, paths, shoreline transitions, and decoration for active chunks.
-7. **World population:** Trees, rocks, resources, caves, authored landmarks, settlements and creatures based on reusable content definitions.
-8. **Restore persistence:** Apply saved player edits, cleared vegetation, buildings, excavation and other changes over the generated baseline.
+1. Fix bounds/seed and required constraints, including protected start and fixed landmark reservations.
+2. Plan major geography: giant ocean/land topology, volcanic regions, mountains, major lakes and rivers. Coarse relief/climate fields can support this without requiring realistic climate simulation.
+3. Select/reserve important destinations such as endgame temples, settlements and ruins, with critical approaches/crossings and any required biome/theme constraints.
+4. Assign biomes to eligible land around those geography/POI constraints, preserving fantasy contrast and hard exclusion rules.
+5. Finalize detailed connections/local terrain and stream POI scenes, ground, shores, scenery/resources and entities near the player.
+6. On Continue, restore the frozen blueprint first and apply saved local edits through existing persistence/streaming; do not rerun the new-world pipeline over a saved campaign.
 
-This is a conceptual ordering; implementation can combine or rearrange stages as needed.
+Planning a temple early does not instantiate its entire scene globally. Oceans and volcanic geology are features that may span many biome regions. Smaller biome-dependent water details can be added later without moving established major geography. This ordering is agreed design; the dependency inversion is not implemented yet.
 
 ### Two scales of generation
 

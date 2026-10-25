@@ -7,7 +7,51 @@
 > **Scope:** Production fantasy top-down Godot/C# world; preserve current working production and DEBUG prototypes while designing.
 > **Purpose:** Discuss this document with Codex, improve/refine it, then implement in small verifiable passes. The author can edit this plan before approving each phase.
 
-## Current phase status and next-Codex handoff — 22 October 2026
+## Authoritative continuation — geography first (24 October 2026)
+
+**Use this document as the main world-generation plan.** The agreed target order is **world constraints → major geography → major POIs and access reservations → biome assignment → local detail/population**. This supersedes older lists that put random biome layout before geography or place important POIs only after biome assignment. Generation order describes planning data, not when scene artwork is instantiated.
+
+**Confirmed current behavior:** P2 reservations run before the P1 biome map; WG1–WG3 lake/river planning currently runs **after** biome assignment and uses biome hydrology permissions. P3 streams the frozen outcomes locally, and P4 restores saved blueprints. Smooth river geometry is implemented ([water plan](Generation/Liquids/WATER_GENERATION_PLAN.md)); oceans, volcanic geography, real major POIs and geography-constrained biome assignment are still planned. The new order is a design decision, not an implemented pipeline change. Existing campaigns keep their frozen geography.
+
+### Target creation order
+
+| Order | Planning pass | Output / responsibility |
+| --- | --- | --- |
+| 1 | Bounds, seed and required constraints | Fix world identity; reserve protected start requirements, mandatory landmarks/regions and allowed zones. An exact required temple position reserves early; a flexible temple can be selected in pass 3. Resolve conflicting requirements explicitly. |
+| 2 | Major geography | Plan land/ocean topology, giant oceans, volcanic regions, mountains/cliffs, major lakes and long rivers. Publish coarse masks, water corridors and influence/clearance queries before biomes. Geometry may span many future biome regions. |
+| 3 | Important POIs and access | Select/reserve endgame temples, settlements, ruins, strongholds and critical cave approaches using the geography. Reserve feasible approaches and crossing needs before optional biome filling; actual buildings load locally later. |
+| 4 | Biomes | Assign the configured land biome definitions to eligible remaining land using geography, water proximity and POI constraints. Hard rules forbid incompatible overlap; soft weights express preferences. Ocean is non-land, not forest tinted blue. A volcanic geography region may constrain eligible biomes without requiring a duplicate volcanic-biome system. |
+| 5 | Local terrain and content | Resolve detailed roads/crossings, ground/shore surfaces, POI scenes, cave entrances, scenery/resources and entity placement through existing streaming/ownership. Lower-priority detail respects all earlier masks. |
+
+Reserve **critical access requirements** in pass 3; finalize detailed routes/bridges after biome assignment where needed, then validate reachability. A temple with a required biome/theme passes a constraint into biome selection; avoid repeatedly moving rivers or rerolling the whole world to satisfy a late decoration. If mandatory geography/POI/biome constraints cannot coexist, fail with a useful reason rather than silently dropping a required feature. Optional requests may skip after bounded retries.
+
+Freshwater eligibility changes direction under this plan: major rivers are established geography that biome selection must respect. For example, a biome configured to prohibit freshwater overlap cannot claim a river corridor; that must not erase the established river. The existing biome-first water-planning behavior remains the current implementation until P5 changes it deliberately. Smaller biome-dependent ponds/streams can be a later local/macro detail pass, but must remain deterministic, frozen and subordinate to major geography/POIs.
+
+### P5 delivery plan — planned, implement only the explicitly chosen subphase
+
+P0–P4 remain implemented foundations; do not renumber them or treat the original P1-first milestone as the final generation order. P5 now owns the geography-first integration below. This plan does not authorize implementing all subphases at once.
+
+| Phase | Goal | Suggested assistant | Status |
+| --- | --- | --- | --- |
+| P5a | Audit and define a biome-independent geography contract and save/version policy | Regular Chat design; Codex integration | Planned |
+| P5b | Plan existing major lakes/rivers before biomes; make biome assignment consume geography constraints | Codex | Planned; depends on P5a |
+| P5c | Add data-driven major ocean/volcanic-region providers as definitions and presentation become available | Codex | Planned; depends on P5a/P5b |
+| P5d | Plan important POIs/access before biome assignment; connect local scenes, paths/crossings and cave approaches | Codex | Planned; depends on geography contract and selected POI definitions |
+| P5e | Validate combined pipeline, persistence, streaming and target-PC performance | Codex + Copilot/user | Planned; validates each implemented provider incrementally |
+
+**P5a — contract and compatibility.** Inspect WorldScene startup, MacroWorldBuilder/Map, P2 reservations, water planners, hydrology profiles, blueprint restore and SAVE compatibility. Own changes under `WORLD/Generation/World`, `WORLD/Generation/Liquids`, `WORLD/Runtime/Persistence` and `SAVE/Migrations`; reuse existing config and identity contracts. Define geography masks/queries independently of a completed biome map, hard versus soft biome constraints, provider order and mandatory conflict handling. Decide a new-world generator/schema version before changing outcomes; retain exact supported legacy restores. Do not add oceans, POI gameplay or new rendering in this pass. Pass: reviewable contracts and tests demonstrate planner inputs do not require biome IDs and legacy snapshots/hash expectations remain intact. Pure data, no Nodes/per-frame work; bound map resolution and mask memory. Regular Chat can refine the design; Codex owns code integration.
+
+**P5b — invert the existing water/biome dependency.** Reuse current smooth lake/river geometry and liquid runtime; remove the major-water planner's need for an already generated biome map. Plan water after required reservations, then have biome assignment enforce compatible geography rules and fill all eligible land. Keep null/default profiles permissive, support any configured biome collection, and explicitly fail when no biome can satisfy required cells. Define what happens at water margins and narrow corridors; do not promise whole-world drainage/elevation or branching streams. Pass: same seed repeats, mandatory reservations survive, prohibited freshwater biomes cannot overwrite rivers, every eligible land cell has a valid biome, scenery/nav/fields match the frozen geometry, and legacy saves do not reroll. Bound new-world work; preserve chunk-local runtime and add no idle callbacks. Codex recommended for the dependency/save refactor.
+
+**P5c — giant geography providers.** Build real ocean land/water masks and volcanic geological footprints/influence through the same geography/reservation contract, with required/preferred zones, sizes and conflicts. Their exact delivery order can follow available assets; do not invent fake content definitions or implement volcano combat/weather/lava gameplay implicitly. Reuse canonical liquid definitions where suitable. Pass: configured giant features precede biome filling, oceans remain non-land, volcanic constraints affect eligible terrain/biomes, no required feature silently disappears, and only nearby presentation loads. Coarse planning once; bound previews, memory and provider attempts. Codex recommended; Regular Chat can design individual providers first.
+
+**P5d — major destinations and access.** Separate POI footprint/access planning from local scene instantiation. Required endgame temples and other selected major destinations take priority over ordinary biome filling/scenery; fixed required anchors reserve in pass 1, flexible sites resolve after geography. Reuse P2 permissions, stable owner IDs and existing scene/stream lifecycle; no parallel POI reservation manager. Supply required biome/theme constraints forward, reserve entrance/approach/crossing needs, then finalize detailed roads and cave links using the established world. Out of scope: full temple content, quests, underground simulation or A-Life. Pass: required POIs fit and remain reachable, geography/biomes/paths respect one another, unload/reload/save retain identities, and optional props never block protected approaches. Local bounded placement and explicit cleanup; no per-POI idle polling. Codex recommended for integration; isolated definition/document work can use Regular Chat.
+
+**P5e — integration and acceptance.** Extend generation/Water/SAVE fixtures for repeatability, bounds, hard/soft constraints, impossible required requests, one/many biome collections, giant non-land masks, POI/crossing reachability, frozen JSON/disk Continue and legacy rejection/restore. Test every provider at its delivery, not only at the end. Copilot/user runs target Godot build/import, graphical seam/shore checks, startup, chunk/nav hitch, memory/allocations and cleanup profiling. Record implementation and acceptance separately. No claim of complete P5 when only contracts or placeholder reservations exist.
+
+**Water appearance remains a separate track:** WG4 banks/shallows/terrain blending consumes frozen water geometry regardless of creation order; it can proceed independently. Ponds/lakes use organic basin shapes; rivers use continuous broad meanders; future thin branching streams need a connected network and separate reviewed scope. Reuse shared liquid presentation/interactions; do not create per-biome water systems. WG5 advanced drainage/networks and WG6/WG7 flow/swimming remain separately planned.
+
+## Foundation status and earlier handoff — 22 October 2026
 
 Read this handoff before the original design brief below. Historical snapshots and proposed APIs below are not the current implementation; inspect HEAD and the owning READMEs.
 
@@ -17,7 +61,7 @@ Read this handoff before the original design brief below. Historical snapshots a
 | P2 | Resource-driven feature reservations, priority/permissions, required/preferred outcomes and starting anchor implemented. Reservations do not create geological terrain or POI scenes. | Generation/World/Features/README.md |
 | P3 | Finite local streaming, density-based scenery, local navigation, environment lifecycle and session deltas implemented. Rendering fixes pushed; target-machine visual/performance acceptance is open. | Runtime/Streaming/README.md |
 | P4 | **Implementation complete; local automated validation PASSED** (build/import, separate-process P4 save/reload and four regression suites). Earlier P4 functional save/profile flows user-accepted; newer SO2/C1 visual/UI regression and performance profiling still open; unsupported migrations remain future work. | SAVE/README.md and SAVE/P4_Copilot_Handoff.md |
-| P5 | Planned: actual priority POIs, paths and cave connections. | Original scope below |
+| P5 | Planned: geography-first pipeline, major geography and POI/access before biome assignment. | Authoritative P5a–P5e continuation above |
 | P6 | Planned: abstract off-screen A-Life. | Original scope below |
 
 ### Historical M0 menu handoff — superseded by completed P4 implementation
@@ -163,12 +207,13 @@ Suggested logical steps:
 2. Decide world seed once; derive stable independent sub-seeds for major features, geography, climate, biome layout, POIs, paths, scenery, entities.
 3. Allocate a coarse macro map / sampler for the finite world.
 4. Reserve required major features and player starting zone.
-5. Build coarse land/water/elevation/climate suitability.
-6. Choose eligible biome region seeds with relative weighted selection; apply any hard biome suitability constraints only where opted in. Generate region target sizes within their min/max settings.
-7. Expand/partition to cover every eligible land cell, enforcing/smoothing reasonable sizes, avoiding isolated 1-cell fragments where feasible.
-8. Domain-warp region boundaries with deterministic continuous noise, respecting non-land barriers, required features, edge limits and connectedness. Preserve organic transitions.
-9. Give every region a stable identity, biome ID, bounding data and reserved feature conflicts; generate a coarse overview/occupancy proof.
-10. Place/reserve high-priority POIs, caves and roads before generating local chunks.
+5. Plan major geography: land/ocean, volcanic regions, relief and major water; derive coarse suitability fields.
+6. Select/reserve major POIs, critical approaches and crossing requirements, including any required biome/theme constraints.
+7. Choose eligible biome region seeds with relative weighted selection; apply any hard biome suitability constraints only where opted in. Generate region target sizes within their min/max settings.
+8. Expand/partition to cover every eligible land cell, enforcing/smoothing reasonable sizes, avoiding isolated 1-cell fragments where feasible.
+9. Domain-warp region boundaries with deterministic continuous noise, respecting non-land barriers, required features, edge limits and connectedness. Preserve organic transitions.
+10. Give every region a stable identity, biome ID, bounding data and reserved feature conflicts; generate a coarse overview/occupancy proof.
+11. Finalize detailed roads/crossings and cave links from earlier POI/access reservations; materialize local detail only through nearby chunks.
 
 ### Weights / sizes example (illustrative only)
 
@@ -196,13 +241,12 @@ Propose a reusable set of Resource definitions, not hardcoded enum cases:
 
 Important: "Volcanic Region" could become a **guaranteed biome/region directive** when that biome definition is actually available. "Ocean" should be a **geographical water/landmask directive** with coastlines, not require copying an Oak Forest definition. A POI (castle, volcano caldera, unique ruin) is another kind of anchor. Don't implement a fake volcanic or ocean biome if none exists yet: store the capability as an extensible contract and demonstrate with a neutral test reservation/overlay or two existing biomes first.
 
-**Precedence / conflict handling:**
-1. Explicit mandatory world features and their reserved influence zones.
-2. Basic world land/ocean topology and impassable major terrain.
-3. Required starting region and critical routes/approaches.
-4. Biome suitability and ordinary weighted regions for all still-unassigned land.
-5. Required locations, caves, crossings and road connections (with earlier reservations).
-6. Optional decorative content.
+**Precedence / conflict handling (target order):**
+1. Explicit mandatory constraints, protected-start requirements and fixed landmark reservations.
+2. Major geography: land/ocean topology, volcanic regions, relief, lakes and river corridors.
+3. Required POI sites, critical entrances/approaches and crossing reservations.
+4. Geography/POI-constrained biome assignment across eligible land.
+5. Detailed connections, local terrain/content and optional decoration.
 
 If impossible constraints conflict (e.g., giant central ocean entirely covers a required central settlement; two overlapping forced volcanoes), Codex must produce a clear validation error or explicit priority/fallback result. No silent disappearance of a REQUIRED region. Seeds change the look **within the constraints**, not whether the mandatory feature exists.
 
@@ -211,11 +255,11 @@ If impossible constraints conflict (e.g., giant central ocean entirely covers a 
 **Read and obey WORLD/placement_priority.md.** Generation passes and reservation priorities are related but NOT identical: a future castle or cave entrance can reserve clearance in the macro plan before its actual art is instantiated during local chunk loading.
 
 Recommended reservation/placement workflow:
-1. World bounds, landmask, required biome layout, safe/reachable starting area and mandatory macro features.
+1. World bounds/seed, safe-start requirements and mandatory feature/landmark constraints (no ordinary biome filling yet).
 2. Major geography: ocean, mountains, ravines/cliffs, large lakes, rivers, impassable barriers; reserve footprint and appropriate shoreline/approach bands.
 3. Important hand-authored/structured POIs: towns, ruins, strongholds, special camps, temples; reserve footprints/entrances.
-4. Cave entrances/exits, including links into persistent underground network registry and approach clearance.
-5. Paths/roads/bridges/fords through permitted crossings between relevant POIs and starting routes.
+4. Critical cave entrances/approaches and crossing requirements; then assign biomes around geography and POI constraints. Detailed underground networks remain separately scoped.
+5. Finalize local terrain, paths/roads/bridges/fords through permitted crossings between reserved POIs and starting routes.
 6. Large props: tree trunks, massive boulders, dense obstacle clusters.
 7. Small props/resources: bushes, mineral nodes, saplings, grass, twigs, loose items.
 8. Local visual polish, natural transitions, shoreline pebbles, leaf litter and ground details.
@@ -470,10 +514,9 @@ Don't add duplicate shaders, another authoritative biome list, or parallel maste
 - Lock generator version and stable ID strategy before expanding feature count; existing saves do not silently regenerate terrain.
 - **Pass when:** profile A and B can have **the same seed but distinct world IDs and distinct edits, positions and clocks**; A→B→A switching cannot mix chunks/data; quit/reload preserves the correct run; changing random-new-world settings never replaces a saved world seed. Include interrupted-save recovery testing.
 
-**P5 — Priority content placement + POI/paths/caves scaffolding**
-- Expand macro reservation and local placement passes to real large obstacles, required POIs, cave-entrance locations and roads, as those assets arrive.
-- Required-feature footprints/paths remain reachable while optional grass/trees respect clearance.
-- **Pass when:** seeded POI and entrance remain stable/accessible across chunk unload/reload and do not overlap water/trees.
+**P5 — Geography-first world planning and priority content**
+- Follow **P5a–P5e in the authoritative continuation at the top of this document**. Major geography and major POI/access reservations precede ordinary biome assignment; streamed detail follows the frozen blueprint.
+- The former POI/paths/caves-only scope was expanded after discussion; do not implement it as a late isolated pass that leaves biome-first geography in place.
 
 **P6 — Abstract off-screen A-Life (separate substantial feature)**
 - Regional records + clock/tick queue, a simple migrating animal group or wandering patrol off-screen.

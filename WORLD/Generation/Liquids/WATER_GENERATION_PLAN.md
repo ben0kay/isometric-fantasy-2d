@@ -90,7 +90,7 @@ Keep one extensible, data-driven water-body record across ponds, lakes, rivers a
 
 **Biome shapes:** optional separate follow-up, not a requirement for first water generation. Existing P1 ownership grid may later apply coordinate-stable noise distortion/smoothing at region borders, preserving full land assignment and deterministic hashes. Do not silently rewrite P1 macro topology or old saved worlds to improve lake outlines.
 
-**Geography order:** reconcile the existing P2 feature-first reservations with a future geography/water plan. Protected/required areas must remain protected; water sites/river corridors should be planned globally before local scenery and nav materialization. Any changed blueprint order, version, hashes or saved outcomes require migration strategy and tests.
+**Geography order:** [Generation_Implementation.md](../../Generation_Implementation.md) is the authoritative P5 plan: required constraints → major geography (including major water) → important POI/access reservations → biomes → local detail. Current WG1–WG3 water still consumes an already assigned biome map; P5a/P5b must deliberately invert that dependency and version new-world outcomes. Biome rules must then respect established major rivers, not erase them. Preserve protected/required features and exact legacy save restores. WG4 appearance can proceed independently; drainage/branching networks are separately scoped WG5 work.
 
 ## Detailed phases
 

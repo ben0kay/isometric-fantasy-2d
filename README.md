@@ -96,6 +96,8 @@ This is the preferred **collaboration workflow**, not a restriction against assi
 
 **Protect existing contracts:** generation/world IDs, feature reservation ownership, stable candidate/object IDs, cross-chunk seams, biome Resource references, world-specific cache cleanup, shared weather/clock, and reproducible generation under a fixed generation/content version. P3 maintains session deltas; P4 now persists supported edits, player state, clock and world identity through private profiles and Continue. Automatic content migrations and permanent old-world migration do not exist. The startup/preload system and some data/nav/shader work are synchronous; the per-frame application budget is **not** a hard frame-time cap. The latest P3 fixes still require in-game Windows performance verification.
 
+**Agreed generation direction (planned P5):** required constraints → major geography (oceans, volcanic regions, lakes/rivers) → major POIs/access reservations (including endgame temples) → biome assignment → streamed local detail/populations. Current water still runs after biomes; [the authoritative P5a–P5e plan](WORLD/Generation_Implementation.md) owns that future dependency change. WG4 shore appearance remains separate.
+
 **Authoritative detail:** [generation phases / regressions / P4 policy](WORLD/Generation_Implementation.md), [macro generator](WORLD/Generation/World/README.md), [feature reservations](WORLD/Generation/World/Features/README.md), [streaming lifecycle](WORLD/Runtime/Streaming/README.md), [placement priority](WORLD/placement_priority.md), and [SAVE implementation](SAVE/README.md).
 
 ### 3. A-Life-style living world: populations + simulation LOD (DESIRED; NOT IMPLEMENTED)
