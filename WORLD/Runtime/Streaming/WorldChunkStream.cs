@@ -16,6 +16,8 @@ public partial class WorldChunkStream : Node
     private readonly Dictionary<ChunkCoord,Chunk> _chunks = new();
     private readonly Dictionary<string,float> _burns = new();
     private readonly HashSet<string> _removed = new();
+    private readonly HashSet<string> _felled=new();
+    private readonly Dictionary<string,float> _harvest=new();
     private readonly Dictionary<string,ChunkCoord> _editOwners = new();
     private WorldScene _world; private Node2D _actors, _groundRoot, _navigationRoot; private WorldEntityPlacement _entityPlacement; private PlayerMovement _player;
     private WorldMasterConfig _config; private WorldStreamingConfig _settings; private ChunkSceneryData _data;
@@ -56,6 +58,8 @@ public partial class WorldChunkStream : Node
         if (restored != null) foreach (var chunk in restored) foreach (var edit in chunk.Edits)
         {
             _editOwners.Add(edit.Id,new ChunkCoord(chunk.X,chunk.Y));
+            if(edit.Felled) _felled.Add(edit.Id);
+            if(edit.HarvestWork>0) _harvest.Add(edit.Id,edit.HarvestWork);
             if (edit.Removed) _removed.Add(edit.Id); else if (edit.BurnProgress > 0) _burns.Add(edit.Id,edit.BurnProgress);
         }
         float artMargin = 0;
@@ -242,13 +246,14 @@ public partial class WorldChunkStream : Node
         prop.SetMeta("environment_shadows",content.CastSunShadow); prop.SetMeta("environment_contact",content.ContactShadowRadius);
         if (content.GrassLike) prop.ZIndex = -6;
         chunk.Actors.AddChild(prop); chunk.Objects.Add(item.Id,prop);
+        if(prop is FantasyGame.World.Trees.Tree harvestTree) _world.Harvesting?.AttachTree(harvestTree,chunk.Coord,item.Id,_harvest.TryGetValue(item.Id,out float work) ? work : 0);
         prop.TreeExiting += () =>
         {
             if (!_bound || !GodotObject.IsInstanceValid(_fire) || !_fire.IsInsideTree()) return;
             var burn = prop.GetNodeOrNull<Burnable>("Burnable"); if (burn != null) _fire.Unregister(burn);
             _visibility.Unregister(prop.GetNodeOrNull<Sprite2D>("Sprite"));
             _environment.UnregisterScenery(prop);
-            if (chunk.State == WorldChunkState.Loaded) { _removed.Add(item.Id); _editOwners[item.Id] = chunk.Coord; }
+            if (chunk.State == WorldChunkState.Loaded) { _removed.Add(item.Id); _harvest.Remove(item.Id); _editOwners[item.Id] = chunk.Coord; _navDirty=true; }
         };
     }
     // Publish only complete chunks; adapters/physics are ready together before the player may enter.
@@ -259,6 +264,7 @@ public partial class WorldChunkStream : Node
             foreach (int step in _world.GeneratedWater.PrepareChunkSteps(chunk.Coord,chunk.Coord.Bounds(_settings.ChunkSize).Intersection(_world.MacroMap.Bounds))) { }
         _world.GeneratedWater?.PublishChunk(chunk.Coord);
         chunk.State = WorldChunkState.Loaded;
+        _world.Harvesting?.Drops.ActivateChunk(chunk.Coord);
         // Runtime binding is stepped while hidden; startup binds once after environment creation.
         chunk.Actors.ResetPhysicsInterpolation();
         chunk.Actors.ProcessMode = ProcessModeEnum.Inherit; chunk.Actors.Visible = true; chunk.Ground.Visible = true; _navDirty |= chunk.Coord.Distance(PlayerChunk) <= _settings.ActiveRadius; PublishedChunks++;
@@ -289,6 +295,17 @@ public partial class WorldChunkStream : Node
         }
 
     }
+    // Source events update the existing chunk delta owner synchronously before any fall animation or source removal.
+    // =========================================================
+    public void RecordHarvest(string id,ChunkCoord coord,float work)
+    { if(_removed.Contains(id)) return; _harvest[id]=work; _editOwners[id]=coord; }
+    // Felling and reward reservation occur on the same main-thread call; a checkpoint cannot see only half the transition.
+    // =========================================================
+    public void RecordFelled(string id,ChunkCoord coord)
+    { _felled.Add(id); _removed.Add(id); _harvest.Remove(id); _burns.Remove(id); _editOwners[id]=coord; _navDirty=true; }
+    // Persistent source tombstones prevent replay even after all of that source's drop records have been collected/pruned.
+    // =========================================================
+    public bool IsFelled(string id) => _felled.Contains(id);
     // Capture live changed state on the main thread without unloading or disturbing pending bindings.
     // =========================================================
     public SavedChunk[] CaptureChanges()
@@ -299,20 +316,20 @@ public partial class WorldChunkStream : Node
             foreach (var pair in chunk.Objects)
             {
                 if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion())
-                { _removed.Add(pair.Key); _editOwners[pair.Key] = chunk.Coord; continue; }
+                { _removed.Add(pair.Key); _harvest.Remove(pair.Key); _editOwners[pair.Key] = chunk.Coord; continue; }
                 var burn = pair.Value.GetNodeOrNull<Burnable>("Burnable");
                 if (burn == null) continue;
                 if (burn.State != BurnState.Healthy)
                 { _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); _editOwners[pair.Key] = chunk.Coord; }
-                else { _burns.Remove(pair.Key); if (!_removed.Contains(pair.Key)) _editOwners.Remove(pair.Key); }
+                else { _burns.Remove(pair.Key); if (!_removed.Contains(pair.Key) && !_harvest.ContainsKey(pair.Key)) _editOwners.Remove(pair.Key); }
             }
         }
         var grouped = new Dictionary<ChunkCoord,List<ChunkEdit>>();
-        foreach (string id in _removed.Concat(_burns.Keys).Distinct(StringComparer.Ordinal).OrderBy(v => v,StringComparer.Ordinal))
+        foreach (string id in _removed.Concat(_burns.Keys).Concat(_harvest.Keys).Distinct(StringComparer.Ordinal).OrderBy(v => v,StringComparer.Ordinal))
         {
             var coord = _editOwners[id];
             if (!grouped.TryGetValue(coord,out var edits)) grouped.Add(coord,edits = new());
-            edits.Add(new ChunkEdit(id,_removed.Contains(id),_removed.Contains(id) ? 0 : _burns[id]));
+            edits.Add(new ChunkEdit(id,_removed.Contains(id),_removed.Contains(id) ? 0 : _burns.GetValueOrDefault(id),_removed.Contains(id) ? 0 : _harvest.GetValueOrDefault(id),_felled.Contains(id)));
         }
         return grouped.OrderBy(p => p.Key.Y).ThenBy(p => p.Key.X)
             .Select(p => new SavedChunk(WorldId,"surface",p.Key.X,p.Key.Y,p.Value.ToArray())).ToArray();
@@ -324,19 +341,20 @@ public partial class WorldChunkStream : Node
         using var frameTrace = RuntimeFrameTrace.Measure("Chunk release");
         var releaseTimer = System.Diagnostics.Stopwatch.StartNew();
         bool loaded = chunk.State == WorldChunkState.Loaded; chunk.State = WorldChunkState.Unloading;
+        _world.Harvesting?.Drops.DeactivateChunk(chunk.Coord);
         chunk.Binding?.Dispose(); chunk.Binding = null;
         if (loaded || chunk.AdaptersStarted)
         {
             foreach (var pair in chunk.Objects)
             {
-                if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion()) { _removed.Add(pair.Key); _editOwners[pair.Key] = chunk.Coord; continue; }
+                if (!GodotObject.IsInstanceValid(pair.Value) || pair.Value.IsQueuedForDeletion()) { _removed.Add(pair.Key); _harvest.Remove(pair.Key); _editOwners[pair.Key] = chunk.Coord; continue; }
                 var burn = pair.Value.GetNodeOrNull<Burnable>("Burnable");
                 if (burn != null)
                 {
                     if (loaded)
                     {
                         if (burn.State != BurnState.Healthy) { _burns[pair.Key] = Mathf.Max(0.000001f,burn.BurnProgress); _editOwners[pair.Key] = chunk.Coord; }
-                        else { _burns.Remove(pair.Key); if (!_removed.Contains(pair.Key)) _editOwners.Remove(pair.Key); }
+                        else { _burns.Remove(pair.Key); if (!_removed.Contains(pair.Key) && !_harvest.ContainsKey(pair.Key)) _editOwners.Remove(pair.Key); }
                     }
                     _fire.Unregister(burn);
                 }

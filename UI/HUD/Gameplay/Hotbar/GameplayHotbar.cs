@@ -6,6 +6,7 @@ public partial class GameplayHotbar : PanelContainer
     private InventorySlot[] _slots;
     private InventoryHotbar _data;
     private Label _hint;
+    private string _interactionHint;
     // Construct passive slots once; the entire bar lets mouse events reach gameplay.
     // =========================================================
     public void Initialize(UIMasterConfig config)
@@ -29,8 +30,11 @@ public partial class GameplayHotbar : PanelContainer
     private void Refresh()
     {
         for(int i=0;i<_slots.Length;i++) _slots[i].Display(_data?.Get(i) ?? default);
-        SetSelected(_data?.SelectedSlot ?? -1); _hint.Text=_data==null ? "QUICK BELT  ·  Empty slots  ·  I  Backpack" : "QUICK BELT  ·  1–9 select  ·  I  Backpack";
+        SetSelected(_data?.SelectedSlot ?? -1); _hint.Text=_interactionHint ?? (_data==null ? "QUICK BELT  ·  Empty slots  ·  I  Backpack" : "QUICK BELT  ·  1–9 select  ·  I  Backpack");
     }
+    // Optional world-specific instruction text is set once by composition.
+    // =========================================================
+    public void SetInteractionHint(string text) { _interactionHint=text; _hint.Text=text; }
     // Release the shared model when the canvas leaves its session.
     // =========================================================
     public override void _ExitTree() { if (_data!=null) _data.Changed-=Refresh; }

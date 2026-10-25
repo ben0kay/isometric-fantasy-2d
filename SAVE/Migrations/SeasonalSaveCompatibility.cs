@@ -15,12 +15,12 @@ internal static class SeasonalSaveCompatibility
 
     // Future authoring changes disable this bridge until deliberately reviewed again.
     // =========================================================
-    internal static bool CanMigrate()
+    internal static bool CanMigrate(bool previousHarvest=false)
     {
         foreach (var item in CurrentVisuals)
         {
             if (!FileAccess.FileExists(item.Path)) return false;
-            string source = FileAccess.GetFileAsString(item.Path).Replace("\r\n", "\n");
+            string source = FileAccess.GetFileAsString(previousHarvest && HarvestSaveCompatibility.Previous(item.Path) is string old ? old : item.Path).Replace("\r\n", "\n");
             if (CheckpointFiles.Digest(Encoding.UTF8.GetBytes(source)) != item.Hash) return false;
         }
         return true;

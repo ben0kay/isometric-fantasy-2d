@@ -67,7 +67,7 @@ public partial class ValidateCampaignSaves : Node
         StorageCases(checkpointA);
         // Only the exact historical SO2 scene can use its layout bridge. Later content must reject it.
         // Schema-1 HP restoration remains independently testable with a compatible content fingerprint.
-        var legacy = checkpointA with { SchemaVersion=1,Player=checkpointA.Player with { Health=null }, ContentFingerprint = CampaignSession.LegacySO1ContentFingerprint() };
+        var legacy = checkpointA with { SchemaVersion=1,Player=checkpointA.Player with { Health=null,Inventory=null }, ContentFingerprint = CampaignSession.LegacySO1ContentFingerprint() };
         string scene=Godot.FileAccess.GetFileAsString("res://SCENES/World/World.tscn").Replace("\r\n","\n");
         bool historicalLayout=CheckpointFiles.Digest(System.Text.Encoding.UTF8.GetBytes(scene))==SaveCompatibility.SO2SceneSourceHash;
         if (!historicalLayout)
@@ -79,7 +79,7 @@ public partial class ValidateCampaignSaves : Node
         CampaignSession.Continue(legacy);
         var migrated = await Spawn();
         Check(migrated.Player.HealthState.Current==migrated.Player.HealthState.Maximum,"Schema-1 HP default");
-        Check(migrated.Saves.Capture().SchemaVersion==2 && migrated.Saves.Capture().Player.Health!=null,"Schema-2 capture missing HP");
+        Check(migrated.Saves.Capture().SchemaVersion==CampaignSnapshot.CurrentSchema && migrated.Saves.Capture().Player.Health!=null,"Schema-2 capture missing HP");
         migrated.Player.ReceiveDamage(new DamageRequest(13),EffectiveStats.Neutral);
         Check(migrated.Blueprint.WorldId == legacy.WorldId && migrated.MacroMap.Hash == legacy.Blueprint.MapHash,"Schema-1 restoration changed world identity");
         Check(!Props(migrated).Any(p => Id(p)==removed),"Schema-1 restoration resurrected an edit");

@@ -23,6 +23,10 @@ public partial class Harvestable : Node
         profile.Validate(); _plan=profile.Rewards.Compile(catalog); RequiredWork=profile.RequiredWork; _tool=profile.AcceptedTool; EventId=eventId;
         SetProcess(false); SetPhysicsProcess(false);
     }
+    // Restored partial work never rolls rewards or invokes completion; completed sources are omitted by P3 tombstones.
+    // =========================================================
+    public void RestoreProgress(float work)
+    { if(!float.IsFinite(work) || work<0 || work>=RequiredWork || Completed) throw new System.IO.InvalidDataException("Invalid restored harvest progress."); Progress=work; }
     // Reserve rewards through the owner before committing completion; retries reuse the same preselected batch.
     // =========================================================
     public HarvestWorkResult Apply(HarvestHit hit)
@@ -39,7 +43,7 @@ public partial class Harvestable : Node
         if (!accepted) return HarvestWorkResult.Rejected;
         Progress=RequiredWork; Completed=true; Changed?.Invoke(); return HarvestWorkResult.Completed;
     }
-    // Release owner callbacks on source unload; logical H4 persistence is deliberately not implemented here.
+    // Release owner callbacks on source unload; persistent progress belongs to the chunk owner.
     // =========================================================
     public override void _ExitTree() { Eligible=null; TryComplete=null; Changed=null; }
 }

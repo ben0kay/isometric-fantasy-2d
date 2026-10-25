@@ -69,6 +69,30 @@ public sealed class InventoryStorage
         else { _slots[to]=source; _slots[from]=target; }
         Changed?.Invoke(); return true;
     }
+    // Snapshot individual stack identity/slot/count for the save coordinator, never sharing the mutable backing array.
+    // =========================================================
+    public SavedItemStack[] Capture()
+    {
+        var result=new System.Collections.Generic.List<SavedItemStack>();
+        for(int i=0;i<SlotCount;i++) if (!_slots[i].IsEmpty) result.Add(new(i,_slots[i].Item.Id,_slots[i].Count,_slots[i].Key));
+        return result.ToArray();
+    }
+    // Validate all loaded references before committing; unknown IDs or stack overflows never disappear silently.
+    // =========================================================
+    public void Restore(SavedItemStack[] items)
+    {
+        if (items==null) throw new System.IO.InvalidDataException("Missing saved inventory stacks.");
+        var next=new InventoryStack[SlotCount]; var keys=new System.Collections.Generic.HashSet<long>(); long maximum=0;
+        foreach(var item in items)
+        {
+            if (item==null || item.Slot<0 || item.Slot>=SlotCount || !next[item.Slot].IsEmpty || item.Key<=0 || item.Key==long.MaxValue || !keys.Add(item.Key))
+                throw new System.IO.InvalidDataException("Invalid saved inventory identity.");
+            var definition=Catalog.Get(item.ItemId);
+            if (definition==null || item.Count<1 || item.Count>definition.MaxStack) throw new System.IO.InvalidDataException("Unknown item or invalid saved stack: "+item.ItemId);
+            next[item.Slot]=new(definition,item.Count,item.Key); maximum=Math.Max(maximum,item.Key);
+        }
+        Array.Copy(next,_slots,SlotCount); _nextKey=maximum+1; Changed?.Invoke();
+    }
     // Recalculate only on request following inventory events; no idle weight polling.
     // =========================================================
     public double TotalWeightKg()

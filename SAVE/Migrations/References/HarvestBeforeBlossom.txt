@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="TreeDefinition" format=3 uid="uid://f8to0shc3mpx"]
+
+[ext_resource type="Script" uid="uid://ddruxw2ed3sc" path="res://WORLD/Content/Vegetation/Trees/Shared/HitResponse/TreeHitConfig.cs" id="2_dlbj5"]
+[ext_resource type="Script" uid="uid://couitkrtpwbug" path="res://FEEDBACK/Visibility/OcclusionProfile.cs" id="3_cib5n"]
+[ext_resource type="Texture2D" uid="uid://bustgtaa4i006" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/Sprites/tree_pink_blossom_01.png" id="art"]
+[ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomFireProfile.tres" id="fire"]
+[ext_resource type="Script" uid="uid://cu713vrdituxq" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeDefinition.cs" id="script"]
+[ext_resource type="Script" uid="uid://borugxxsu2c4d" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeVisualVariant.cs" id="variant_script"]
+[ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomWind.tres" id="wind"]
+
+[sub_resource type="Resource" id="Resource_swc2o"]
+script = ExtResource("2_dlbj5")
+
+[sub_resource type="Resource" id="Resource_vvyla"]
+script = ExtResource("3_cib5n")
+
+[sub_resource type="Resource" id="variant"]
+script = ExtResource("variant_script")
+Id = "01"
+Texture = ExtResource("art")
+SourceAnchor = Vector2(80, 208.88889)
+SpriteScale = Vector2(0.85, 0.9)
+TrunkPolygon = PackedVector2Array(-28, -7, -17, -19, 0, -23, 18, -17, 28, -6, 20, 4, 0, 8, -19, 3)
+VisualMinimum = Vector2(-68, -188)
+VisualMaximum = Vector2(68, 4)
+
+[resource]
+script = ExtResource("script")
+VisualVariants = Array[ExtResource("variant_script")]([SubResource("variant")])
+FoliageColour = Color(0.87, 0.45, 0.65, 1)
+WindMaterial = ExtResource("wind")
+SnowFoliageProfile = 1
+FireProfile = ExtResource("fire")
+Id = "tree.pink_blossom"
+DisplayName = "Pink Blossom"
+SnowResponse = 1
+ContactShadowRadius = Vector2(25, 9)
+AvoidBiomeTransition = true
+SpacingRadius = 40.0
+VisualMinimum = Vector2(-68, -188)
+VisualMaximum = Vector2(68, 4)
+FootprintPath = NodePath("TrunkFootprint")

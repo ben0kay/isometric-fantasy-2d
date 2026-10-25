@@ -26,6 +26,9 @@ public partial class GameplayHUD : CanvasLayer
     // =========================================================
     public void BindInventory(InventoryStorage storage, InventoryHotbar hotbar)
     { _inventory.Bind(storage); _hotbar.Bind(hotbar); Fit(); }
+    // World supplies gameplay controls without putting interaction or inventory authority into the HUD.
+    // =========================================================
+    public void SetInteractionHint(string text) => _hotbar.SetInteractionHint(text);
     // Resizing scales the complete belt when necessary and preserves a centered safe margin.
     // =========================================================
     private void Fit()

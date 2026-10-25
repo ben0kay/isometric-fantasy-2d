@@ -25,3 +25,5 @@ P3 owns chunk nodes, `surface/x/y/content-id` candidate identity, removal tombst
 H1–H3 run only in TESTS/Harvesting. No automatic harvest attachment or production Resource tuning is added. Tree.EnableHarvesting explicitly rejects WorldScene ancestry until H4 is implemented. Production Oak/Blossom resources have no harvest profile; normal axe Resources retain zero work. Native checks verify the production content fingerprint remains unchanged by the fixture.
 
 H4 must persist source progress/felled + chosen rewards and remaining pickup records atomically with durable inventory, map drop ownership by settled position to existing chunks, materialize only nearby nodes, handle cross-chunk landing/unload and legacy save policy. Do not use TreeFall/DroppedItem nodes as persistent state or infer rewards later from missing trees. A save during fall may restore a settled logical outcome, without replaying or rerolling cosmetics. Offscreen records must not keep Nodes alive. None of those H4 guarantees is claimed by H1–H3.
+
+Historical H0–H3 evidence: production restrictions described above were superseded by [H4 World integration](H4_World_Validation.md).

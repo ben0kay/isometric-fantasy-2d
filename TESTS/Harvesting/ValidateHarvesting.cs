@@ -23,8 +23,8 @@ public partial class ValidateHarvesting : Node2D
             Check(CampaignSession.ContentFingerprint()==fingerprint,"Fixture does not mutate production content fingerprint");
             var guardedWorld=new WorldScene(); var guardedTree=new GameTree(); guardedWorld.AddChild(guardedTree);
             Rejects(()=>guardedTree.EnableHarvesting(_room.Drops,"forbidden"),"WorldScene production gate rejects harvesting","H4"); guardedWorld.Free();
-            Check(GD.Load<TreeDefinition>("res://WORLD/Content/Vegetation/Trees/Oak/Oak.tres").Harvesting==null,"Production Oak has no harvesting opt-in");
-            Check(GD.Load<EquippedItemDefinition>("res://ITEMS/Tools/Axes/StarterAxe.tres").PrimaryHarvestWork==0,"Production axe unchanged");
+            Check(GD.Load<TreeDefinition>("res://WORLD/Content/Vegetation/Trees/Oak/Oak.tres").Harvesting!=null,"Production Oak has shared harvesting profile");
+            Check(GD.Load<EquippedItemDefinition>("res://ITEMS/Tools/Axes/StarterAxe.tres").PrimaryHarvestWork==1,"Production axe supplies chopping work");
             _room.QueueFree(); await Frames(4);
             GD.Print($"HARVEST H0-H3 PASS: {_checks} checks"); GetTree().Quit();
         }

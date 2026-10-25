@@ -99,3 +99,5 @@ GS4: the existing shared ground material owns scene-local GroundSurfacePreview o
 ## WG2 generated liquids
 
 Opted-in schema-5 worlds use the same chunk prepare/publish/release scheduler for cropped water surfaces. Row-sliced fields stay hidden until the ground/scenery chunk publishes; cancellation and unload release their native resources. Full frozen lake geometry participates in candidate rejection, and local nav receives shared polygons. No water is inserted into schema-4 campaigns. [Lifecycle, limits and validation](../../Liquids/WG2_Validation.md).
+
+H4 integration: real World trees use the shared harvest profile. WorldHarvestRuntime owns Player inventory/pickup binding; WorldChunkStream restores work and felled tombstones, attaches harvesting on materialization, and activates only loaded landing-chunk drop nodes. Logical offscreen drops remain saved without Nodes. [Controls, ownership and checks](../../../SYSTEMS/Harvesting/H4_World_Validation.md).

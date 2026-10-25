@@ -2,7 +2,7 @@
 using Godot;
 
 // Logical data contains no Nodes; H4 will persist/chunk these records before enabling production.
-public readonly record struct WorldDropRecord(string Id,string EventId,string ItemId,int Quantity,Vector2 Origin,Vector2 Landing,float LandingRotation,float StartRotation,bool Released=false,bool Collected=false);
+public readonly record struct WorldDropRecord(string Id,string EventId,string ItemId,int Quantity,Vector2 Origin,Vector2 Landing,float LandingRotation,float StartRotation,bool Released=false,bool Collected=false,string SourceId="");
 public partial class DroppedItem : Node2D
 {
     public string DropId { get; private set; }
@@ -24,6 +24,10 @@ public partial class DroppedItem : Node2D
     // =========================================================
     public void Release()
     { if (Visible || Settled) return; Show(); _elapsed=0; SetProcess(true); Animate(0); }
+    // Stream/save restoration resolves cosmetics to their committed landing, never replays collection or rewards.
+    // =========================================================
+    public void RestoreSettled()
+    { Show(); Animate(1); Settled=true; SetProcess(false); SetPhysicsProcess(false); }
     // Only airborne drops update; collection uses an explicit nearby request, never item polling.
     // =========================================================
     public override void _Process(double delta)

@@ -53,3 +53,5 @@ godot --headless --path . --script TESTS/Fire/validate_production_fire.gd
 ## H4 handoff
 
 See H0_Audit and the plan. Stable production world/candidate IDs must replace fixture IDs. Persist source progress/felled + chosen remaining drops + inventory consistently, version legacy saves explicitly, and use existing P3/P4 ownership. Stream by settled location; offscreen records must not keep Nodes alive. Saving mid-fall may restore the already-committed logical outcome as settled. Do not bypass fingerprints or infer drops from tombstones. Current bounded disposable journal is an interface starting point, not a durable store or second streamer.
+
+Historical H0–H3 evidence: production restrictions described above were superseded by [H4 World integration](H4_World_Validation.md).

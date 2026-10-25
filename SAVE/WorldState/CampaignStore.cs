@@ -136,5 +136,6 @@ public sealed class CampaignStore
                 if (!cell.Intersects(new ChunkCoord(chunk.X,chunk.Y).Bounds(b.ChunkSize))) throw new InvalidDataException("Edit belongs to another chunk.");
             }
         }
+        HarvestSaveValidation.Validate(s,map.Bounds);
     }
 }

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PlayerInventoryProfile" format=3]
+[ext_resource type="Script" path="res://ENTITIES/Player/Inventory/PlayerInventoryProfile.cs" id="script"]
+[ext_resource type="Resource" path="res://ITEMS/DefaultItemConfig.tres" id="items"]
+[ext_resource type="Resource" path="res://SYSTEMS/Inventory/DefaultInventoryConfig.tres" id="storage"]
+[ext_resource type="Resource" path="res://ITEMS/Tools/Axes/StarterAxeItem.tres" id="axe"]
+[ext_resource type="Resource" path="res://ITEMS/Weapons/Swords/Starter/StarterSwordItem.tres" id="sword"]
+[resource]
+script = ExtResource("script")
+Items = ExtResource("items")
+Storage = ExtResource("storage")
+StartingItems = [ExtResource("axe"), ExtResource("sword")]

@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://borugxxsu2c4d" path="res://WORLD/Content/Vegetation/Trees/Shared/TreeVisualVariant.cs" id="variant_script"]
 [ext_resource type="Material" path="res://WORLD/Content/Vegetation/Trees/PinkBlossom/PinkBlossomWind.tres" id="wind"]
 
+[ext_resource type="Resource" path="res://SYSTEMS/Harvesting/DefaultTreeHarvest.tres" id="harvest"]
+
 [sub_resource type="Resource" id="Resource_swc2o"]
 script = ExtResource("2_dlbj5")
 
@@ -40,3 +42,4 @@ SpacingRadius = 40.0
 VisualMinimum = Vector2(-68, -188)
 VisualMaximum = Vector2(68, 4)
 FootprintPath = NodePath("TrunkFootprint")
+Harvesting = ExtResource("harvest")

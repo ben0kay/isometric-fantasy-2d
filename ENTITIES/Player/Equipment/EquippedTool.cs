@@ -28,6 +28,7 @@ public partial class EquippedTool : Node2D
         _sword=_owner.Config.StarterSword ?? GD.Load<EquippedItemDefinition>("res://ITEMS/Weapons/Swords/Starter/StarterSword.tres");
         _input=_owner.GetNode<PlayerInput>("Input");
         _input.ToolUseRequested+=Primary; _input.AlternateUseRequested+=Secondary;
+        _input.ShieldToggleRequested+=ToggleShield;
         _input.UtilityRequested+=Utility; _input.StarterSelectionRequested+=SelectStarter;
         _owner.HealthState.Changed+=OnHealthChanged;
         Equip(_axe); ProcessPriority=5; SetPhysicsProcess(false);
@@ -64,6 +65,12 @@ public partial class EquippedTool : Node2D
         if (!_owner.HealthState.IsAlive || Attack.Busy || _owner.Actions.Current!=PlayerAction.Idle) return;
         if (slot==0) Equip(_axe); else if (slot==1) Equip(_sword); else if (slot==2) ShieldEquipped=!ShieldEquipped;
     }
+    // G retains the prototype shield control without consuming any of the nine item shortcuts.
+    // =========================================================
+    private void ToggleShield() => SelectStarter(2);
+    // Startup/accepted selection restores the independent flag; guard itself is transient and never loaded held.
+    // =========================================================
+    public void RestoreShield(bool equipped) { ShieldEquipped=equipped; _owner.StopGuard(); }
     // Inventory adapters may request authored equipment or empty hands; busy actions never queue or reset cooldowns.
     // =========================================================
     public bool TryEquipInventoryItem(ItemDefinition item)
@@ -112,6 +119,7 @@ public partial class EquippedTool : Node2D
         if (GodotObject.IsInstanceValid(_input))
         {
             _input.ToolUseRequested-=Primary; _input.AlternateUseRequested-=Secondary;
+            _input.ShieldToggleRequested-=ToggleShield;
             _input.UtilityRequested-=Utility; _input.StarterSelectionRequested-=SelectStarter;
         }
         Attack.Dispose();

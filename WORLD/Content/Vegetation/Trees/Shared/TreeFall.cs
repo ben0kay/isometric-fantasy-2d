@@ -8,9 +8,9 @@ public partial class TreeFall : Node2D
     private float _age,_seconds,_direction;
     private Action _release;
     private bool _released;
-    // Copy resolved rooted art without standing-tree shaders, colliders, fire, occluders or environment metadata.
+    // Copy rooted art with optional appearance-only material; omit standing colliders, fire, occluders and registrations.
     // =========================================================
-    public static TreeFall Begin(FantasyGame.World.Trees.Tree source,Vector2 direction,Action release)
+    public static TreeFall Begin(FantasyGame.World.Trees.Tree source,Vector2 direction,Action release,bool preserveAppearance=false)
     {
         float seconds=source.Definition.FallSeconds;
         if (!float.IsFinite(seconds) || seconds<0.1f || seconds>3) throw new InvalidOperationException("Invalid tree fall duration.");
@@ -19,7 +19,10 @@ public partial class TreeFall : Node2D
         Vector2 anchor=source.SelectedVariant.GroundOffset;
         fall._pivot=new Node2D { Position=anchor }; fall.AddChild(fall._pivot);
         var art=source.GetNode<Sprite2D>("Sprite");
-        fall._pivot.AddChild(new Sprite2D { Texture=art.Texture,Centered=art.Centered,Offset=art.Offset,Scale=art.Scale,
+        ShaderMaterial material=null;
+        if(preserveAppearance && art.Material is ShaderMaterial original)
+        { material=(ShaderMaterial)original.Duplicate(); material.SetShaderParameter("wind_multiplier",0f); material.SetShaderParameter("strength_world_pixels",0f); }
+        fall._pivot.AddChild(new Sprite2D { Texture=art.Texture,Material=material,Centered=art.Centered,Offset=art.Offset,Scale=art.Scale,
             FlipH=art.FlipH,FlipV=art.FlipV,Position=art.Position-anchor,Rotation=art.Rotation,Modulate=art.Modulate,TextureFilter=art.TextureFilter });
         fall.SetPhysicsProcess(false); fall.SetProcess(true); return fall;
     }

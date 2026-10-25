@@ -28,6 +28,11 @@ project/assembly_name="isometric-fantasy-2d"
 
 [input]
 
+player_shield_toggle={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":71)]
+}
+
 player_interact={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":69)]

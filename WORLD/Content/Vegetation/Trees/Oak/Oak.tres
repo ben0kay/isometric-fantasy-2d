@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Trees/Oak/Sprites/tree_01_fm.png" id="foliage_mask"]
 [ext_resource type="Resource" path="res://WORLD/Content/Vegetation/Trees/Oak/OakSeasonalFoliage.tres" id="seasonal"]
 
+[ext_resource type="Resource" path="res://SYSTEMS/Harvesting/DefaultTreeHarvest.tres" id="harvest"]
+
 [sub_resource type="Resource" id="Resource_swc2o"]
 script = ExtResource("2_do4e4")
 
@@ -39,3 +41,4 @@ ContactShadowRadius = Vector2(25, 9)
 AvoidBiomeTransition = true
 SpacingRadius = 40.0
 FootprintPath = NodePath("TrunkFootprint")
+Harvesting = ExtResource("harvest")

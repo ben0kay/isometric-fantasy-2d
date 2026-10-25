@@ -22,7 +22,7 @@ public partial class DropScatterProfile : Resource
             || !float.IsFinite(FlightSeconds) || FlightSeconds<0.1f || FlightSeconds>2 || !float.IsFinite(RotationDegrees) || RotationDegrees<0 || RotationDegrees>180
             || !float.IsFinite(SpinDegrees) || SpinDegrees<0 || SpinDegrees>720 || MaximumLivePickups<1 || MaximumLivePickups>512
             || !float.IsFinite(CollectionRadius) || CollectionRadius<8 || CollectionRadius>128
-            || MaximumSessionRecords<MaximumLivePickups || MaximumSessionRecords>4096 || MaximumBurstPickups<1 || MaximumBurstPickups>32)
+            || MaximumSessionRecords<MaximumLivePickups || MaximumSessionRecords>65536 || MaximumBurstPickups<1 || MaximumBurstPickups>32)
             throw new InvalidOperationException("Invalid shared drop tuning.");
         return new(ScatterRadius,HopHeight,FlightSeconds,Mathf.DegToRad(RotationDegrees),Mathf.DegToRad(SpinDegrees),MaximumLivePickups,MaximumSessionRecords,MaximumBurstPickups,CollectionRadius);
     }

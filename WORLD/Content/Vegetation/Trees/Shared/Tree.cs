@@ -76,12 +76,12 @@ public partial class Tree : StaticBody2D
         SetMeta("environment_contact", Definition.ContactShadowRadius);
         _configured = true;
     }
-    // Explicit disposable-scope attachment; no production tree acquires harvesting until H4 persistence is implemented.
+    // Attach only through an explicit drop owner; real World requires its persistent H4 coordinator.
     // =========================================================
-    public Harvestable EnableHarvesting(WorldDropSpawner drops,string sourceId)
+    public Harvestable EnableHarvesting(WorldDropSpawner drops,string sourceId,System.Action felled=null)
     {
         for(Node parent=GetParent();parent!=null;parent=parent.GetParent())
-            if (parent is WorldScene) throw new System.InvalidOperationException("H1-H3 are isolated fixtures only; WorldScene requires H4 persistence.");
+            if (parent is WorldScene world && world.Harvesting?.Drops!=drops) throw new System.InvalidOperationException("H1-H3 are isolated fixtures only; WorldScene requires H4 persistence.");
         if (!IsInsideTree() || Definition.Harvesting==null || HarvestState!=null || string.IsNullOrWhiteSpace(sourceId))
             throw new System.InvalidOperationException("Harvesting needs an authored profile and unique source identity.");
         if (!float.IsFinite(Definition.FallSeconds) || Definition.FallSeconds<0.1f || Definition.FallSeconds>3)
@@ -93,12 +93,13 @@ public partial class Tree : StaticBody2D
         harvest.TryComplete=(rewards,hit)=>
         {
             Vector2 origin=GlobalTransform*SelectedVariant.GroundOffset;
-            if (!drops.TryReserve(harvest.EventId,origin,rewards,this)) return false;
+            if (!drops.TryReserve(harvest.EventId,origin,rewards,this,sourceId)) return false;
+            felled?.Invoke();
             hits.Enabled=false; burn.Profile=null; // Stops wobble before copying a clean rooted fall pose; healthy fire never started.
             GetNode<CollisionPolygon2D>("TrunkFootprint").SetDeferred("disabled",true);
             GetNode<LocalLightOccluder>("LocalLightOccluder").Hide();
             string eventId=harvest.EventId;
-            TreeFall.Begin(this,hit.Direction,()=> { if (GodotObject.IsInstanceValid(drops)) drops.Release(eventId); });
+            TreeFall.Begin(this,hit.Direction,()=> { if (GodotObject.IsInstanceValid(drops)) drops.Release(eventId); },preserveAppearance:felled!=null);
             Hide(); QueueFree(); return true;
         };
         hits.Harvesting=harvest; HarvestState=harvest; return harvest;

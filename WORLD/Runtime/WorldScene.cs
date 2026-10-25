@@ -17,6 +17,7 @@ public partial class WorldScene : Node2D
     public GroundSurfacePreview GroundPreview { get; private set; }
     public int ActiveSeed { get; private set; }
 
+    public WorldHarvestRuntime Harvesting { get; private set; }
     public CampaignSaveController Saves { get; private set; }
     public string StartupError { get; private set; }
 
@@ -164,6 +165,7 @@ public partial class WorldScene : Node2D
             GeneratedWater.Initialize(WaterPlan,placement.ExcludedLiquid?.Config ?? GD.Load<WorldLiquidMasterConfig>("res://WORLD/Liquids/Definitions/Water/PondConfig.tres"));
             EntityPlacement.LiquidObstacles=WaterPlan.Bodies.Select(b => b.CopyPolygon()).ToArray();
         }
+        Harvesting=new WorldHarvestRuntime { Name="Harvesting" }; GetNode("SystemsRoot").AddChild(Harvesting); Harvesting.Initialize(this,restore);
         if (streaming)
         {
             Stream = new WorldChunkStream { Name = "Streaming" }; GetNode("SystemsRoot").AddChild(Stream);
@@ -173,7 +175,7 @@ public partial class WorldScene : Node2D
                 MacroBiomes = MacroMap.Biomes.Select(b => new SavedMacroBiome(b.Id,b.Name,b.Colour.R,b.Colour.G,b.Colour.B,b.Colour.A)).ToArray(), LocalGeneratorVersion = ChunkSceneryData.GeneratorVersion,
                 ChunkSize = Config.Streaming.ChunkSize, CandidateCellSize = Config.Streaming.CandidateCellSize };
         }
-        else placement.Generate(Config, ActiveSeed,PreviewSceneryRoot);
+        else { placement.Generate(Config, ActiveSeed,PreviewSceneryRoot); Harvesting.BindPreview(PreviewSceneryRoot); }
         GroundPreview=Stream?.GroundPreview ?? GetNode<GroundSurface>("TerrainRoot/Ground").Preview;
         // Build entity navigation only after the seeded tree/rock colliders exist.
         EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null,projectileFactory:GetProjectileSpawner);

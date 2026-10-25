@@ -38,6 +38,20 @@ public sealed class InventoryHotbar : IDisposable
         if (CanSelect!=null && !CanSelect(Get(index).Item)) return false;
         SelectedSlot=index; Changed?.Invoke(); return true;
     }
+    // Persist references to durable stack keys, not copies of item quantities.
+    // =========================================================
+    public long[] CaptureKeys() => (long[])_keys.Clone();
+    // Restore only valid unique shortcuts and explicitly reapply equipment selection before enabling player input.
+    // =========================================================
+    public void Restore(long[] keys,int selected)
+    {
+        if (keys==null || keys.Length!=SlotCount || selected< -1 || selected>=SlotCount) throw new System.IO.InvalidDataException("Invalid saved hotbar.");
+        var seen=new System.Collections.Generic.HashSet<long>();
+        foreach(long key in keys) if (key<0 || (key>0 && (!seen.Add(key) || _storage.Find(key).IsEmpty))) throw new System.IO.InvalidDataException("Stale or duplicate saved shortcut.");
+        ItemDefinition item=selected>=0 ? _storage.Find(keys[selected]).Item : null;
+        if (CanSelect!=null && !CanSelect(item)) throw new System.IO.InvalidDataException("Cannot restore equipped item.");
+        Array.Copy(keys,_keys,SlotCount); SelectedSlot=selected; Changed?.Invoke();
+    }
     // Clear disappeared stack references. Inventory removal policy must be enforced by its gameplay owner.
     // =========================================================
     private void OnStorageChanged()

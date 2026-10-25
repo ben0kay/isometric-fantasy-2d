@@ -53,3 +53,5 @@ All reusable trees, plants, rocks, props, ores and structures live in `Content/`
 - `WorldMasterConfig.cs` and `DefaultWorldConfig.tres` are **live** production Generation, Streaming and preview configuration; avoid duplicate per-asset master config scripts.
 - Prefer centralized, data-driven definitions and shared reusable logic over hard-coded species-specific spawners.
 - Folder layout is intentional scaffolding, **not a requirement to build every subsystem immediately**.
+
+H4 integration: real World trees use the shared harvest profile. WorldHarvestRuntime owns Player inventory/pickup binding; WorldChunkStream restores work and felled tombstones, attaches harvesting on materialization, and activates only loaded landing-chunk drop nodes. Logical offscreen drops remain saved without Nodes. [Controls, ownership and checks](../SYSTEMS/Harvesting/H4_World_Validation.md).

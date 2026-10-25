@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EquippedItemDefinition" format=3]
+[ext_resource type="Script" path="res://ITEMS/Weapons/Shared/EquippedItemDefinition.cs" id="script"]
+[ext_resource type="Resource" path="res://ITEMS/Tools/Axes/PrimaryAttack.tres" id="primary"]
+[ext_resource type="Resource" path="res://ITEMS/Tools/Axes/SecondaryAttack.tres" id="secondary"]
+[ext_resource type="Texture2D" path="res://ITEMS/Tools/Axes/Sprites/axe01.png" id="art"]
+[resource]
+script = ExtResource("script")
+Id = "starteraxe"
+DisplayName = "Starter axe"
+PrimaryAttack = ExtResource("primary")
+SecondaryAttack = ExtResource("secondary")
+Texture = ExtResource("art")
+GripOffset = Vector2(-90, -270)
+SpriteScale = Vector2(0.144, 0.144)
+SpriteRotationDegrees = 70.0

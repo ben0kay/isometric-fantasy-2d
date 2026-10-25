@@ -1,7 +1,9 @@
-// Bounded scene-local logical drop journal and event-driven presentation/collection. H1–H3 use disposable fixtures only.
+// World-owned logical drops with chunk-local materialization and event-driven collection; offscreen drops are records only.
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 public partial class WorldDropSpawner : Node2D
 {
@@ -9,6 +11,9 @@ public partial class WorldDropSpawner : Node2D
     public string ScopeId { get; private set; }
     public int RecordCount => _records.Count;
     public int LiveCount => _reservedLive;
+    public int MaterializedCount => _nodes.Count;
+    public Func<Vector2,Vector2,bool> SegmentAllowed { get; set; }
+    public Func<string,bool> SourceCompleted { get; set; }
     public float CollectionRadius => _settings.CollectionRadius;
     public Func<Vector2,bool> LandingAllowed { get; set; }
     private Rect2 _bounds;
@@ -16,6 +21,9 @@ public partial class WorldDropSpawner : Node2D
     private PackedScene _scene;
     private int _reservedLive;
     private bool _collecting;
+    private int _chunkSize,_activeReservations;
+    private readonly Dictionary<ChunkCoord,HashSet<string>> _owners=new();
+    private readonly Dictionary<ChunkCoord,Node2D> _activeRoots=new();
     private readonly Dictionary<string,WorldDropRecord> _records=new(StringComparer.Ordinal);
     private readonly Dictionary<string,string[]> _events=new(StringComparer.Ordinal);
     private readonly Dictionary<string,DroppedItem> _nodes=new(StringComparer.Ordinal);
@@ -24,7 +32,7 @@ public partial class WorldDropSpawner : Node2D
     private readonly PhysicsShapeQueryParameters2D _shape=new() { CollisionMask=1,CollideWithAreas=false,CollideWithBodies=true };
     private readonly PhysicsRayQueryParameters2D _ray=new() { CollisionMask=1,CollideWithAreas=false,CollideWithBodies=true,HitFromInside=true };
     private readonly Godot.Collections.Array<Rid> _exclude=new();
-    // No automatic WorldScene discovery or production activation; fixture supplies scope, bounds and shared defaults.
+    // No automatic WorldScene discovery or production activation; owner supplies scope, bounds and shared defaults.
     // =========================================================
     public void Initialize(ItemCatalog catalog,string scopeId,Rect2 bounds,DropScatterProfile scatter)
     {
@@ -36,10 +44,10 @@ public partial class WorldDropSpawner : Node2D
     }
     // Atomically reserve final quantities/landing/IDs before the source is removed or any fall animation begins.
     // =========================================================
-    public bool TryReserve(string eventId,Vector2 origin,DropReward[] rewards,CollisionObject2D source=null)
+    public bool TryReserve(string eventId,Vector2 origin,DropReward[] rewards,CollisionObject2D source=null,string sourceId="")
     {
         if (Catalog==null || !IsInsideTree() || !origin.IsFinite() || !_bounds.HasPoint(origin) || rewards==null || rewards.Length>16
-            || eventId==null || !eventId.StartsWith(ScopeId+"/",StringComparison.Ordinal) || _events.ContainsKey(eventId) || _events.Count>=_settings.MaxRecords) return false;
+            || eventId==null || !eventId.StartsWith(ScopeId+"/",StringComparison.Ordinal) || _events.ContainsKey(eventId) || _events.Count>=_settings.MaxRecords || (sourceId!="" && SourceCompleted?.Invoke(sourceId)==true)) return false;
         var staged=new List<WorldDropRecord>();
         _exclude.Clear(); if (GodotObject.IsInstanceValid(source)) _exclude.Add(source.GetRid());
         _shape.Exclude=_exclude; _ray.Exclude=_exclude;
@@ -60,13 +68,13 @@ public partial class WorldDropSpawner : Node2D
                 float angle=reward.Item.AllowWorldRotation ? (DropRandom.Unit(ref seed)*2-1)*_settings.Rotation : 0;
                 float start=reward.Item.AllowWorldRotation ? angle+(DropRandom.Unit(ref seed)*2-1)*_settings.Spin : 0;
                 int quantity=Math.Min(unit,remaining); remaining-=quantity;
-                staged.Add(new(id,eventId,reward.Item.Id,quantity,origin,landing,angle,start));
+                staged.Add(new(id,eventId,reward.Item.Id,quantity,origin,landing,angle,start,SourceId:sourceId));
             }
         }
-        if (_reservedLive+staged.Count>_settings.MaxNodes || _records.Count+staged.Count>_settings.MaxRecords) return false;
+        if ((_chunkSize>0 ? _activeReservations : _reservedLive)+staged.Count>_settings.MaxNodes || _records.Count+staged.Count>_settings.MaxRecords) return false;
         var ids=new string[staged.Count];
-        for(int i=0;i<staged.Count;i++) { var record=staged[i]; _records.Add(record.Id,record); ids[i]=record.Id; }
-        _events.Add(eventId,ids); _reservedLive+=staged.Count; return true;
+        for(int i=0;i<staged.Count;i++) { var record=staged[i]; _records.Add(record.Id,record); IndexOwner(record); ids[i]=record.Id; }
+        _events.Add(eventId,ids); _reservedLive+=staged.Count; if(_chunkSize>0) _activeReservations+=staged.Count; return true;
     }
     // Bounded deterministic landing trials reject water/bounds/solid obstruction rather than dropping into inaccessible scenery.
     // =========================================================
@@ -78,7 +86,7 @@ public partial class WorldDropSpawner : Node2D
             float angle=DropRandom.Unit(ref seed)*Mathf.Tau;
             float radius=16+DropRandom.Unit(ref seed)*(_settings.Radius-16);
             landing=origin+Vector2.FromAngle(angle)*radius;
-            if (!_bounds.Grow(-6).HasPoint(landing) || LandingAllowed?.Invoke(landing)==false) continue;
+            if (!_bounds.Grow(-6).HasPoint(landing) || LandingAllowed?.Invoke(landing)==false || SegmentAllowed?.Invoke(origin,landing)==false) continue;
             _shape.Transform=new Transform2D(0,landing);
             if (space.IntersectShape(_shape,1).Count!=0) continue;
             _ray.From=origin; _ray.To=landing;
@@ -86,19 +94,16 @@ public partial class WorldDropSpawner : Node2D
         }
         landing=default; return false;
     }
-    // Reserved quantities survive an interrupted fall within this disposable scope; release is idempotent.
+    // Reserved quantities survive an interrupted fall within this world scope; release is idempotent.
     // =========================================================
     public void Release(string eventId)
     {
         if (!IsInsideTree() || IsQueuedForDeletion() || !_events.TryGetValue(eventId,out var ids)) return;
         foreach(string id in ids)
         {
-            var record=_records[id]; if (record.Released || record.Collected) continue;
+            if (!_records.TryGetValue(id,out var record) || record.Released || record.Collected) continue;
             record=record with { Released=true }; _records[id]=record;
-            var node=_scene.Instantiate<DroppedItem>(); AddChild(node); node.Configure(record,Catalog.Get(record.ItemId),_settings);
-            _nodes.Add(id,node); Vector2I cell=Cell(record.Landing);
-            if (!_buckets.TryGetValue(cell,out var bucket)) { bucket=new(StringComparer.Ordinal); _buckets.Add(cell,bucket); }
-            bucket.Add(id); node.Release();
+            Materialize(record,false);
         }
     }
     // Explicit E request queries only nearby spatial buckets and one line-of-sight ray; settled items never poll.
@@ -126,14 +131,97 @@ public partial class WorldDropSpawner : Node2D
         var selected=_records[nearest]; _collecting=true;
         try
         {
-            if (!storage.TryAdd(Catalog.Get(selected.ItemId),selected.Quantity)) return false;
-            _records[nearest]=selected with { Collected=true }; _reservedLive--;
+            // Changed observers may capture a checkpoint inside TryAdd. Publish the matching drop outcome first;
+            // failed adds emit no Changed event and roll this provisional mark back without consuming anything.
+            _records[nearest]=selected with { Collected=true };
+            if (!storage.TryAdd(Catalog.Get(selected.ItemId),selected.Quantity)) { _records[nearest]=selected; return false; }
+            _reservedLive--;
             var cell=Cell(selected.Landing); _buckets[cell].Remove(nearest); if (_buckets[cell].Count==0) _buckets.Remove(cell);
-            _nodes[nearest].QueueFree(); _nodes.Remove(nearest); return true;
+            _nodes[nearest].QueueFree(); _nodes.Remove(nearest);
+            if (_chunkSize>0)
+            {
+                _activeReservations--; var owner=ChunkCoord.At(selected.Landing,_chunkSize); _owners[owner].Remove(nearest); if (_owners[owner].Count==0) _owners.Remove(owner);
+                _records.Remove(nearest); // Source felled tombstone, not collected-node history, prevents replay in production.
+                if (_events.TryGetValue(selected.EventId,out var ids) && !ids.Any(id=>_records.ContainsKey(id))) _events.Remove(selected.EventId);
+            }
+            return true;
         }
         finally { _collecting=false; }
     }
-    // Capture detached logical outcomes for tests and the later H4 save/chunk adapter; no implicit restore or rerolls.
+    // Existing P3 owns when chunks load/unload. This owner only indexes/presents the records for those notifications.
+    // =========================================================
+    public void EnableStreaming(int chunkSize)
+    { if (_records.Count!=0 || chunkSize<256 || chunkSize>2048) throw new InvalidOperationException("Drop streaming requires an empty initialized scope."); _chunkSize=chunkSize; }
+    // Restore settled logical outcomes before any chunk is visible; unknown items fail without deleting quantities.
+    // =========================================================
+    public void Restore(SavedDrop[] drops)
+    {
+        if (_chunkSize==0 || _records.Count!=0 || drops==null || drops.Length>_settings.MaxRecords) throw new InvalidDataException("Invalid saved drop journal.");
+        var staged=new List<WorldDropRecord>(); var seen=new HashSet<string>(StringComparer.Ordinal);
+        foreach(var drop in drops)
+        {
+            var item=drop==null ? null : Catalog.Get(drop.ItemId);
+            string eventId=drop==null ? "" : ScopeId+"/"+drop.SourceId+"/fell/0";
+            if (drop==null || item==null || drop.Quantity<1 || drop.Quantity>item.MaxStack || !seen.Add(drop.Id)
+                || !float.IsFinite(drop.X) || !float.IsFinite(drop.Y) || !_bounds.HasPoint(new Vector2(drop.X,drop.Y))
+                || !float.IsFinite(drop.Rotation) || !drop.Id.StartsWith(eventId+"/reward/",StringComparison.Ordinal))
+                throw new InvalidDataException("Unknown item, identity or quantity in saved drop.");
+            Vector2 point=new(drop.X,drop.Y);
+            staged.Add(new(drop.Id,eventId,drop.ItemId,drop.Quantity,point,point,drop.Rotation,drop.Rotation,true,false,drop.SourceId));
+        }
+        foreach(var record in staged) { _records.Add(record.Id,record); IndexOwner(record); }
+        foreach(var group in staged.GroupBy(d=>d.EventId)) _events.Add(group.Key,group.Select(d=>d.Id).ToArray());
+        _reservedLive=staged.Count;
+    }
+    // Save the final landing even mid-fall/flight. The source's felled outcome and these records share one checkpoint.
+    // =========================================================
+    public SavedDrop[] CaptureSaved() => _records.Values.Where(d=>!d.Collected).OrderBy(d=>d.Id,StringComparer.Ordinal)
+        .Select(d=>new SavedDrop(d.Id,d.SourceId,d.ItemId,d.Quantity,d.Landing.X,d.Landing.Y,d.LandingRotation)).ToArray();
+    // Track only owners with actual records; no empty-world per-object bookkeeping.
+    // =========================================================
+    private void IndexOwner(WorldDropRecord record)
+    {
+        if (_chunkSize==0) return;
+        var coord=ChunkCoord.At(record.Landing,_chunkSize);
+        if (!_owners.TryGetValue(coord,out var ids)) { ids=new(StringComparer.Ordinal); _owners.Add(coord,ids); }
+        ids.Add(record.Id);
+    }
+    // Revisit creates ordinary settled presentations. Existing records are never hidden/deleted to enforce a spawn budget.
+    // =========================================================
+    public void ActivateChunk(ChunkCoord coord)
+    {
+        if (_chunkSize==0 || _activeRoots.ContainsKey(coord)) return;
+        var root=new Node2D { Name=$"Drops_{coord.X}_{coord.Y}",YSortEnabled=true,PhysicsInterpolationMode=PhysicsInterpolationModeEnum.Off };
+        root.SetMeta("world_actor_container",true); AddChild(root); _activeRoots.Add(coord,root);
+        if (_owners.TryGetValue(coord,out var ids)) foreach(string id in ids)
+        { var record=_records[id]; if(!record.Collected) { _activeReservations++; if(record.Released) Materialize(record,true); } }
+    }
+    // Offscreen nodes are discarded; the final landing/quantity stays authoritative in the indexed logical record.
+    // =========================================================
+    public void DeactivateChunk(ChunkCoord coord)
+    {
+        if (!_activeRoots.Remove(coord,out var root)) return;
+        if (_owners.TryGetValue(coord,out var ids)) foreach(string id in ids)
+        {
+            var record=_records[id]; if(!record.Collected) _activeReservations--;
+            _records[id]=record with { Released=true };
+            if (_nodes.Remove(id,out var node))
+            { var cell=Cell(record.Landing); _buckets[cell].Remove(id); if(_buckets[cell].Count==0) _buckets.Remove(cell); node.Hide(); node.SetProcess(false); node.QueueFree(); }
+        }
+        root.QueueFree();
+    }
+    // Presentation is created only in a loaded owner chunk (or explicitly standalone fixture).
+    // =========================================================
+    private void Materialize(WorldDropRecord record,bool settled)
+    {
+        if (_nodes.ContainsKey(record.Id)) return;
+        Node2D parent=this;
+        if (_chunkSize>0 && !_activeRoots.TryGetValue(ChunkCoord.At(record.Landing,_chunkSize),out parent)) return;
+        var node=_scene.Instantiate<DroppedItem>(); parent.AddChild(node); node.Configure(record,Catalog.Get(record.ItemId),_settings); _nodes.Add(record.Id,node);
+        var cell=Cell(record.Landing); if(!_buckets.TryGetValue(cell,out var bucket)) { bucket=new(StringComparer.Ordinal); _buckets.Add(cell,bucket); }
+        bucket.Add(record.Id); if(settled) node.RestoreSettled(); else node.Release();
+    }
+    // Capture detached logical outcomes for tests; campaign persistence uses CaptureSaved without rerolls.
     // =========================================================
     public WorldDropRecord[] Capture()
     { var records=new WorldDropRecord[_records.Count]; _records.Values.CopyTo(records,0); return records; }
