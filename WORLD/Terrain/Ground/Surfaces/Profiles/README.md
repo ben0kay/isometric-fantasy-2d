@@ -13,3 +13,9 @@ Clarified base contract: explicit stacks read only BaseColour/artwork/detail/tin
 Recipe applies to extra layers: Artwork (default) requires Texture; Dust/Basalt require no artwork and use BaseColour/FreshColour as low/high procedural tones plus MaterialFeatureSize. The canonical Dirt/Rock profiles now use these old-project recipes. Base ground remains artwork-based. See ../PROCEDURAL_GROUND_RECIPES.md.
 
 Current GS5 Dirt uses native 256×256 grayscale PNG artwork with biome-owned tint and unchanged Dust patch masks; Rock remains Basalt. See [authoring and validation](../GS5_PNG_DIRT.md).
+
+## Grayscale texture variants
+
+Open Dirt.tres → Grayscale texture variants → TextureVariants. The list is populated with Dirt01_gs.png and Dirt02_gs.png; it replaces Texture for grayscale extra-layer rendering. An empty list uses the original single Texture field. Supply 1–4 nonnull 256×256 PNGs; other recipes reject a variant list rather than silently ignoring it. Both grayscale Dirt and Mineral recipes support lists, but Rock remains unchanged with its empty list.
+
+MaterialFeatureSize remains the artwork repeat distance (128 world units for Dirt). VariantPatchSize (512 by default) controls the separate world-space noise selection pattern. All entries share profile appearance and biome-layer tint, mask, opacity and F9 controls. This is artwork variation within one layer. Reload the world after authoring changes. See ../GS5_PNG_DIRT.md#texture-variants for cost, compatibility and checks.

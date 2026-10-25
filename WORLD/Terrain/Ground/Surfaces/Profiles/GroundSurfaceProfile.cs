@@ -10,6 +10,9 @@ public partial class GroundSurfaceProfile : Resource
 {
     [Export] public Texture2D Texture { get; set; }
     [Export] public ShaderMaterial Material { get; set; }
+    [ExportGroup("Grayscale texture variants - optional replacement for Texture")]
+    [Export] public Godot.Collections.Array<Texture2D> TextureVariants { get; set; } = new();
+    [Export(PropertyHint.Range,"80,8192")] public float VariantPatchSize { get; set; } = 512f;
     [ExportGroup("Base colour")]
     [Export] public Color BaseColour { get; set; } = new(0.2196f, 0.2745f, 0.2078f);
     [ExportGroup("Extra surface / legacy patch defaults - explicit base stacks ignore these")]
@@ -30,19 +33,29 @@ public partial class GroundSurfaceProfile : Resource
 
     public bool UsesGrayscaleArtwork => Recipe==GroundMaterialRecipe.GrayscaleArtwork || Recipe==GroundMaterialRecipe.GrayscaleMineral;
 
+    // Resolve once during palette compilation; existing single-texture surfaces retain their path.
+    // =========================================================
+    public Godot.Collections.Array<Texture2D> ResolveTextureVariants() =>
+        TextureVariants.Count>0 ? TextureVariants : new Godot.Collections.Array<Texture2D> { Texture };
+
     // Fail during compilation, not after uploading NaN/invalid data to the GPU.
     // =========================================================
     public void Validate()
     {
-        if (((Recipe==GroundMaterialRecipe.Artwork || UsesGrayscaleArtwork) && Texture==null) || Material == null || !Enum.IsDefined(DetailStyle)
+        if (((Recipe==GroundMaterialRecipe.Artwork && Texture==null) || (UsesGrayscaleArtwork && Texture==null && (TextureVariants==null || TextureVariants.Count==0))) || Material == null || !Enum.IsDefined(DetailStyle)
             || !Enum.IsDefined(Recipe) || !float.IsFinite(MaterialFeatureSize) || MaterialFeatureSize<1 || MaterialFeatureSize>256
             || !float.IsFinite(Variation) || Variation < 0 || Variation > 1
             || !float.IsFinite(PatchSize) || PatchSize < 80 || PatchSize > 8192
             || !float.IsFinite(DetailStrength) || DetailStrength < 0 || DetailStrength > 1
             || !float.IsFinite(ArtworkInfluence) || ArtworkInfluence < 0 || ArtworkInfluence > 1)
             throw new ArgumentException("Invalid ground surface appearance settings.");
-        if (UsesGrayscaleArtwork && (Texture.GetWidth()!=256 || Texture.GetHeight()!=256))
-            throw new ArgumentException("Grayscale extra artwork must be 256x256; it is uploaded without resizing.");
+        if(TextureVariants==null || TextureVariants.Count>4 || (!UsesGrayscaleArtwork && TextureVariants.Count>0)
+            || !float.IsFinite(VariantPatchSize) || VariantPatchSize<80 || VariantPatchSize>8192)
+            throw new ArgumentException("Up to four texture variants are supported on grayscale extra layers.");
+        if(UsesGrayscaleArtwork)
+            foreach(var texture in ResolveTextureVariants())
+                if(texture==null || texture.GetWidth()!=256 || texture.GetHeight()!=256)
+                    throw new ArgumentException("Grayscale artwork variants must be nonnull native 256x256 images.");
         foreach (var colour in new[] { BaseColour,ShadeColour,FreshColour,DryColour })
             if (!float.IsFinite(colour.R) || !float.IsFinite(colour.G) || !float.IsFinite(colour.B) || !float.IsFinite(colour.A))
                 throw new ArgumentException("Ground palettes must be finite.");

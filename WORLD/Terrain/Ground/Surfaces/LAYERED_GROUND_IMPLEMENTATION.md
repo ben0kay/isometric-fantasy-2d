@@ -131,6 +131,9 @@ Decoration/scenery and ENVIRONMENT weather/lighting remain independent. Reusable
 
 ### GS5 — Add *optional* Oak Dirt and Rock configurations (still OFF by default)
 
+**Artwork variants:** Dirt now blends Dirt01/Dirt02 through one profile list, retaining masks/tint/F9. Rock keeps its single texture. Software-GL and static migration checks passed; native validation remains pending. See [texture variants](GS5_PNG_DIRT.md#texture-variants).
+
+
 **PNG Dirt revision implemented; local engine/visual acceptance pending.** Dirt now uses imported `Dirt01_gs.png` at native 256×256, biome-owned tint and broad Dust patch placement. A follow-up makes dirt interiors opaque and the boundary narrower with interlocking noise breakup; coverage and F9 controls remain. Oak grass is unchanged; Rock now reuses the same PNG in dull grey with mineral masks; both materials use a finer 128-unit repeat and slightly softer narrow edges. See [current authoring and checks](GS5_PNG_DIRT.md). The earlier discussion note below records the preceding decision.
 
 

@@ -17,7 +17,11 @@ float material_grain(vec2 world,float style) {
     return (abs(detail-0.5)*2.0-0.5)*0.8+(grain-0.5)*0.2;
 }
 vec4 layer_data(float row,float column) {
-    return texture(overlay_table,vec2((column+0.5)/9.0,(row+0.5)/overlay_rows));
+    return texture(overlay_table,vec2((column+0.5)/11.0,(row+0.5)/overlay_rows));
+}
+vec4 grayscale_sample(float index,vec2 pixel,float repeat_size) {
+    vec2 tile=vec2(mod(index,grayscale_columns),floor(index/grayscale_columns));
+    return texture(grayscale_art,(tile+fract(pixel/repeat_size))/grayscale_columns);
 }
 vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     float slot=mod(row,2.0);
@@ -58,9 +62,27 @@ vec3 apply_ground_layer(vec3 below,float row,vec2 world) {
     float amount=coverage*mask.g;
     if(amount<=0.0) return below;
     if(grayscale) {
-        vec2 tile=vec2(mod(info.r,grayscale_columns),floor(info.r/grayscale_columns));
         vec2 pixel=floor(world)+vec2(0.5);
-        vec4 artwork=texture(grayscale_art,(tile+fract(pixel/info.a))/grayscale_columns);
+        vec4 variant=layer_data(row,10.0);
+        vec4 artwork;
+        if(variant.r>1.0) {
+            // Stable, smoothly changing artwork selection; coverage masks remain independent.
+            float variant_noise=texture(ground_noise,pixel/variant.g+noise.gb+vec2(0.19,0.73)).r;
+            float position=clamp(variant_noise,0.0,1.0)*(variant.r-1.0);
+            int first=int(floor(position));
+            int second=int(min(float(first)+1.0,variant.r-1.0));
+            float weight=smoothstep(0.2,0.8,fract(position));
+            vec4 indices=layer_data(row,9.0);
+            if(weight<=0.0) artwork=grayscale_sample(indices[first],pixel,info.a);
+            else if(weight>=1.0) artwork=grayscale_sample(indices[second],pixel,info.a);
+            else {
+                vec4 a=grayscale_sample(indices[first],pixel,info.a);
+                vec4 b=grayscale_sample(indices[second],pixel,info.a);
+                a.rgb*=a.a; b.rgb*=b.a;
+                artwork=mix(a,b,weight);
+                if(artwork.a>0.0) artwork.rgb/=artwork.a;
+            }
+        } else artwork=grayscale_sample(info.r,pixel,info.a);
         // Mid-grey is neutral; biome-owned tint supplies soil colour without duplicating artwork.
         vec3 colour=layer_data(row,0.0).rgb*layer_data(row,5.0).rgb*(artwork.r*2.0);
         return mix(below,colour,amount*artwork.a);

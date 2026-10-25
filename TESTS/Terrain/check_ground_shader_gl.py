@@ -76,7 +76,7 @@ for name,colour in [('map_base',(.22,.27,.2,1)),('map_shade',(.18,.24,.18,1)),('
 maps['map_settings']=texture(settings,True);maps['ground_noise']=texture(noise,True,True);maps['ground_art']=texture(art)
 maps['map_tint']=texture(np.ones((4,4,4),np.float32),True)
 styles=np.tile((.22,0,0,1),(4,4,1));maps['map_styles']=texture(styles,True)
-table=np.zeros((4,9,4),np.float32)
+table=np.zeros((4,11,4),np.float32)
 for row in [0,1]:
     table[row,0]=(.3,.25,.16,1);table[row,1]=(.18,.13,.1,1);table[row,2]=(.4,.3,.2,1);table[row,3]=(.35,.3,.2,1)
     table[row,4]=(.6,240,.1,.35);table[row,5]=(1,1,1,1);table[row,6]=(.65,.85,180 if row==0 else 80,.1)
@@ -237,4 +237,33 @@ for iy in range(4):
         piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors=v)
         assert np.max(np.abs(piece-rock_current[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'Grey rock chunk seam'
 print('PASS: finer 128-unit repeat, dull grey shared artwork, slight narrow edge softening and preserved mineral mask/seams')
+# Two native artwork variants share a layer; continuous world noise blends their tones.
+atlas=np.ones((512,512,4),np.float32)
+atlas[:256,:256,:3]=.2;atlas[:256,256:,:3]=.8
+maps['grayscale_art']=texture(atlas)
+table[:]=0;table[0,0]=(1,1,1,1);table[0,5]=(.5,.36,.22,1)
+table[0,6]=(1,1,500,.10);table[0,7]=saved[0,7];table[0,8]=(0,1,3,128)
+table[0,9]=(0,1,0,0);table[0,10]=(2,512,0,0)
+maps['overlay_table']=texture(table)
+opts={'grayscale_columns':2}
+result=render(new,flags,vectors=v,scalars=opts)
+assert np.max(result[:,:48,0])-np.min(result[:,:48,0])>.2,'Variants did not both influence the dirt'
+assert np.max(np.abs(result-render(new,flags,vectors=v,scalars=opts)))<1e-6,'Variant reload changed'
+for iy in range(4):
+    for ix in range(4):
+        piece=render(new,flags,(-1024+ix*512,-1024+iy*512),(512,512),32,vectors=v,scalars=opts)
+        assert np.max(np.abs(piece-result[iy*32:(iy+1)*32,ix*32:(ix+1)*32]))<2e-5,'Artwork variant chunk seam'
+# Identical opaque artwork must preserve coverage and tint, independently of variant selection.
+atlas[:,:,:3]=.5;maps['grayscale_art']=texture(atlas)
+table[0,6]=(.4,1,500,.10);maps['overlay_table']=texture(table)
+blended=render(new,flags,vectors=v,scalars=opts)
+table[0,10,0]=1;maps['overlay_table']=texture(table)
+assert np.max(np.abs(blended-render(new,flags,vectors=v,scalars=opts)))<1e-6,'Variant selection changed patch coverage'
+# Bounded four-way selection supports further data-only artwork additions.
+atlas[:256,:256,:3]=.1;atlas[:256,256:,:3]=.3;atlas[256:,:256,:3]=.6;atlas[256:,256:,:3]=.9
+maps['grayscale_art']=texture(atlas);table[0,6,0]=1;table[0,9]=(0,1,2,3);table[0,10,0]=4
+maps['overlay_table']=texture(table)
+four=render(new,flags,vectors=v,scalars=opts)
+assert np.max(four[:,:48,0])-np.min(four[:,:48,0])>.3,'Four-way variant selection failed'
+print('PASS: two/four artwork variants, stable reload and chunk seams, unchanged patch coverage')
 print('These software-GL checks do not validate Godot import, C# compilation, Windows rendering or target performance.')

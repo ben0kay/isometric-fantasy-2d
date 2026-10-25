@@ -28,3 +28,5 @@ Biome identity colour relocation: exact current Oak/Pink relocation and Dirt/Roc
 GS5 fine texture/grey rock revision: FineGroundOak/Dirt/RockBefore.txt freeze the preceding appearance-only Resource texts. Exact current Oak/Pink/Dirt/Rock gates compose with identity, terrain and seasonal substitutions; no broad fingerprint bypass. Static reconstruction checked; disk Continue pending.
 
 Smooth river blueprints: schema 7 requires water version 3. Existing schema 6/version 2 rivers and schema 4/5 worlds stay supported; no geography migration or rerouting. Older headers reject dense geometry. See WORLD/Generation/Liquids/Rivers/WG3_Validation.md.
+
+Dirt artwork variants freeze the previous Dirt.tres as DirtVariantsBefore.txt. Exact shipped current Dirt text and Oak/Pink/Rock hashes gate full previous fingerprint reconstruction, including older terrain/seasonal variants. Static reconstruction passed; native/disk checks remain pending.

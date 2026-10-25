@@ -25,13 +25,19 @@ public static class StreamedGroundPalette
             { overlayArt[i,slot]=artwork.Count; artwork.Add(compiled[i].Overlays[slot].Surface.Texture); }
         // Native grayscale art lives separately so existing 32px base/legacy artwork stays byte-identical.
         var grayscale=new List<Texture2D>();
+        var grayscaleVariants=new int[compiled.Length,2,4];
         for(int i=0;i<compiled.Length;i++) for(int slot=0;slot<compiled[i].Overlays.Length;slot++)
         {
             var layer=compiled[i].Overlays[slot];
             if(!GroundOverlayPalette.CanCompile(layer) || !layer.Surface.UsesGrayscaleArtwork) continue;
-            int index=grayscale.IndexOf(layer.Surface.Texture);
-            if(index<0) { index=grayscale.Count; grayscale.Add(layer.Surface.Texture); }
-            overlayArt[i,slot]=index;
+            var textures=layer.Surface.ResolveTextureVariants();
+            for(int variant=0;variant<textures.Count;variant++)
+            {
+                int index=grayscale.IndexOf(textures[variant]);
+                if(index<0) { index=grayscale.Count; grayscale.Add(textures[variant]); }
+                grayscaleVariants[i,slot,variant]=index;
+            }
+            overlayArt[i,slot]=grayscaleVariants[i,slot,0];
         }
         if(grayscale.Count>0)
         {
@@ -94,7 +100,7 @@ public static class StreamedGroundPalette
         material.SetShaderParameter("has_ground_overlays",hasOverlays);
         float DefaultSlot(int slot) => compiled.Any(b=>slot<b.Overlays.Length && GroundOverlayPalette.IsVisible(b.Overlays[slot])) ? -1f : 0f;
         material.SetShaderParameter("preview_overlay_visibility",new Vector2(DefaultSlot(0),DefaultSlot(1)));
-        if(hasOverlays) GroundOverlayPalette.Bind(material,compiled,overlayArt);
+        if(hasOverlays) GroundOverlayPalette.Bind(material,compiled,overlayArt,grayscaleVariants);
         material.SetShaderParameter("map_origin",map.Bounds.Position); material.SetShaderParameter("map_cell_size",map.CellSize);
         material.SetShaderParameter("map_grid_size",new Vector2(map.Columns,map.Rows)); return material;
     }

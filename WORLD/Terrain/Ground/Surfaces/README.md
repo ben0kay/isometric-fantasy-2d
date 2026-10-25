@@ -1,5 +1,8 @@
 # Shared ground surfaces
 
+Current dirt artwork: Dirt.tres uses **TextureVariants** = Dirt01_gs.png + Dirt02_gs.png. Stable world-space noise blends them inside the existing dirt layer. Colour, texture repeat scale, patch masks and F9 controls retain their existing owners. Rock remains single-texture. See [variant authoring and validation](GS5_PNG_DIRT.md#texture-variants).
+
+
 Current GS5 tuning: Dirt and Rock share Dirt01_gs.png at a finer 128-unit repeat; Oak supplies warm brown / dull grey tints. Dirt retains the Dust mask family; grayscale Rock retains mineral patch placement. Narrow edges are slightly softer. [Authoring and validation](GS5_PNG_DIRT.md).
 
 

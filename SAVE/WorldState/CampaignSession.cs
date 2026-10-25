@@ -39,10 +39,11 @@ public static class CampaignSession
     internal static string LegacyGS1ContentFingerprint() => BuildContentFingerprint(null,true);
     // Compare the full dependency set with only explicitly requested frozen substitutions.
     // =========================================================
-    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false, bool previousDirtEdges = false, IReadOnlyDictionary<string, string> seasonalReferences = null, bool previousIdentity = false, bool previousFineGround = false)
+    private static string BuildContentFingerprint(string previousWorldScene, bool previousGround = false, bool previousPatches = false, bool previousOakExtras = false, bool previousRecipes = false, bool previousPng = false, bool previousDirtEdges = false, IReadOnlyDictionary<string, string> seasonalReferences = null, bool previousIdentity = false, bool previousFineGround = false, bool previousVariants = false)
     {
         if (previousWorldScene != null && !Godot.FileAccess.FileExists(previousWorldScene))
             throw new InvalidDataException("Missing explicit SO1 layout migration reference.");
+        bool variants=(previousFineGround || previousIdentity || previousDirtEdges || previousPng || previousRecipes || previousOakExtras || previousPatches || previousGround || previousVariants) && CanMigrateDirtVariants();
         bool fineGround=(previousFineGround || previousIdentity || previousDirtEdges || previousPng || previousRecipes || previousOakExtras || previousPatches || previousGround) && CanMigrateFineGround();
         bool identity=(previousIdentity || previousDirtEdges || previousPng || previousRecipes || previousOakExtras || previousPatches || previousGround) && CanMigrateIdentity();
         var files = new SortedDictionary<string,string>(StringComparer.Ordinal);
@@ -51,6 +52,8 @@ public static class CampaignSession
             if (files.ContainsKey(path)) return;
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
+            if(variants && path=="res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres")
+                source=Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/DirtVariantsBefore.txt").Replace("\r\n","\n");
             if(fineGround)
             {
                 string reference=path switch {
@@ -189,8 +192,32 @@ public static class CampaignSession
     // Exact appearance tuning only; preserve all unrelated campaign dependencies.
     // =========================================================
     internal static string LegacyFineGroundFingerprint() => BuildContentFingerprint(null,previousFineGround:true);
-    internal static bool CanMigrateFineGround() => CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "7CCF1D5DC9F6C6AD1C3676ABED637ADB8ADA9FA50FAF04F054CA6C2A41160BF4" &&
+    internal static bool CanMigrateFineGround() => CanMigrateDirtVariants() || CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "7CCF1D5DC9F6C6AD1C3676ABED637ADB8ADA9FA50FAF04F054CA6C2A41160BF4" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n"))) == "E8427A7BB1C375788721C0F4045C79F75219598CACFF1AE11BB0FC716955A5E6" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "31DE6B2CD89001DAB8358592A25E4ECC3372D30EFDA5DE3D098ADE1693B08CF4" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "2514FAF9C8428FD29DC24A73D0BFA24B797D45EF2E4566230EEDA2B49FEFD838";
+
+    // Exact shipped artwork-list addition only; unrelated dependencies still reject.
+    // =========================================================
+    internal static string LegacyDirtVariantsFingerprint() => BuildContentFingerprint(null,previousVariants:true);
+    internal static bool CanMigrateDirtVariants() =>
+        Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Replace("\r\n","\n") == @"[gd_resource type=""Resource"" script_class=""GroundSurfaceProfile"" format=3]
+[ext_resource type=""Script"" path=""res://WORLD/Terrain/Ground/Surfaces/Profiles/GroundSurfaceProfile.cs"" id=""script""]
+[ext_resource type=""Material"" path=""res://WORLD/Terrain/Ground/Surfaces/GrassMaterial.tres"" id=""material""]
+[ext_resource type=""Texture2D"" path=""res://WORLD/Terrain/Ground/Surfaces/Textures/Dirt01_gs.png"" id=""art""]
+[ext_resource type=""Texture2D"" path=""res://WORLD/Terrain/Ground/Surfaces/Textures/Dirt02_gs.png"" id=""art2""]
+[resource]
+script = ExtResource(""script"")
+Material = ExtResource(""material"")
+Texture = ExtResource(""art"")
+TextureVariants = Array[Texture2D]([ExtResource(""art""), ExtResource(""art2"")])
+VariantPatchSize = 512.0
+BaseColour = Color(1, 1, 1, 1)
+Recipe = 3
+MaterialFeatureSize = 128.0
+ArtworkInfluence = 1.0
+" &&
+        CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/OakForest/Biome.tres").Replace("\r\n","\n"))) == "7CCF1D5DC9F6C6AD1C3676ABED637ADB8ADA9FA50FAF04F054CA6C2A41160BF4" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Terrain/Ground/Surfaces/Profiles/Rock.tres").Replace("\r\n","\n"))) == "31DE6B2CD89001DAB8358592A25E4ECC3372D30EFDA5DE3D098ADE1693B08CF4" &&
         CheckpointFiles.Digest(Encoding.UTF8.GetBytes(Godot.FileAccess.GetFileAsString("res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres").Replace("\r\n","\n"))) == "2514FAF9C8428FD29DC24A73D0BFA24B797D45EF2E4566230EEDA2B49FEFD838";
 
@@ -203,6 +230,7 @@ public static class CampaignSession
         foreach (var references in SeasonalSaveCompatibility.ReferenceSets())
         {
             yield return BuildContentFingerprint(null, seasonalReferences: references);
+            if (CanMigrateDirtVariants()) yield return BuildContentFingerprint(null, seasonalReferences: references, previousVariants:true);
             if (CanMigrateFineGround()) yield return BuildContentFingerprint(null, seasonalReferences: references, previousFineGround:true);
             if (CanMigrateIdentity()) yield return BuildContentFingerprint(null, seasonalReferences: references, previousIdentity:true);
             if (CanMigrateDirtEdges()) yield return BuildContentFingerprint(null, previousDirtEdges: true, seasonalReferences: references);
@@ -222,6 +250,7 @@ public static class CampaignSession
     public static void RequireContent(CampaignSnapshot snapshot)
     {
         if (snapshot.ContentFingerprint == ContentFingerprint()) return;
+        if(CanMigrateDirtVariants() && snapshot.ContentFingerprint==LegacyDirtVariantsFingerprint()) return;
         if(CanMigrateFineGround() && snapshot.ContentFingerprint==LegacyFineGroundFingerprint()) return;
         if(CanMigrateIdentity() && snapshot.ContentFingerprint==LegacyIdentityFingerprint()) return;
         if(CanMigrateDirtEdges() && snapshot.ContentFingerprint==LegacyDirtEdgesFingerprint()) return;

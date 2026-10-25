@@ -2,10 +2,13 @@
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/GroundSurfaceProfile.cs" id="script"]
 [ext_resource type="Material" path="res://WORLD/Terrain/Ground/Surfaces/GrassMaterial.tres" id="material"]
 [ext_resource type="Texture2D" path="res://WORLD/Terrain/Ground/Surfaces/Textures/Dirt01_gs.png" id="art"]
+[ext_resource type="Texture2D" path="res://WORLD/Terrain/Ground/Surfaces/Textures/Dirt02_gs.png" id="art2"]
 [resource]
 script = ExtResource("script")
 Material = ExtResource("material")
 Texture = ExtResource("art")
+TextureVariants = Array[Texture2D]([ExtResource("art"), ExtResource("art2")])
+VariantPatchSize = 512.0
 BaseColour = Color(1, 1, 1, 1)
 Recipe = 3
 MaterialFeatureSize = 128.0

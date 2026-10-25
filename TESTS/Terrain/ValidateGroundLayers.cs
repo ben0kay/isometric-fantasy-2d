@@ -30,11 +30,18 @@ public partial class ValidateGroundLayers : Node
             using(var original=GD.Load<GroundSurfaceProfile>("res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres").Texture.GetImage())
             {
                 original.Convert(Image.Format.Rgba8);
-                Check(uploaded.GetWidth()==256 && uploaded.GetHeight()==256 && uploaded.GetData().SequenceEqual(original.GetData()),"Native dirt artwork must preserve every pixel");
+                using var first=uploaded.GetRegion(new Rect2I(0,0,256,256));
+                Check(uploaded.GetWidth()==512 && uploaded.GetHeight()==512 && first.GetData().SequenceEqual(original.GetData()),"Native dirt artwork must preserve every pixel");
+                using var second=uploaded.GetRegion(new Rect2I(256,0,256,256));
+                using var variant=GD.Load<Texture2D>("res://WORLD/Terrain/Ground/Surfaces/Textures/Dirt02_gs.png").GetImage();
+                variant.Convert(Image.Format.Rgba8);
+                Check(second.GetData().SequenceEqual(variant.GetData()),"Second artwork preserves native pixels");
             }
             using(var lookup=Texture(current,"overlay_table").GetImage())
             {
                 int oakIndex=Enumerable.Range(0,map.Biomes.Count).First(i=>map.Biomes[i].Id=="biome.oak_forest");
+                Check(lookup.GetPixel(10,oakIndex*2).R==2 && lookup.GetPixel(10,oakIndex*2+1).R==1,"Dirt variants do not change Rock");
+                Check(lookup.GetPixel(9,oakIndex*2).R!=lookup.GetPixel(9,oakIndex*2).G,"Distinct variant atlas entries");
                 Check(lookup.GetPixel(8,oakIndex*2).R==lookup.GetPixel(8,oakIndex*2+1).R,"Dirt/rock reuse one uploaded artwork tile");
             }
             var oakPreview=new GroundSurfacePreview(current,true);
@@ -80,6 +87,19 @@ public partial class ValidateGroundLayers : Node
         var stoneTint=oak.GroundStack.OverlayLayers[1].Tint;
         Check(Mathf.Abs(stoneTint.R-stoneTint.B)<0.03f && stoneTint.R>0.3f,"Rock tint must remain dull grey");
         dirt.Validate(); rock.Validate();
+        Check(dirt.TextureVariants.Count==2 && rock.TextureVariants.Count==0,"Only Dirt opts into variants");
+        var invalid=(GroundSurfaceProfile)dirt.Duplicate(true);
+        invalid.TextureVariants.Add(null);
+        bool invalidVariant=false;
+        try { invalid.Validate(); } catch(ArgumentException) { invalidVariant=true; }
+        Check(invalidVariant,"Null artwork variant rejected");
+        invalid.TextureVariants.RemoveAt(invalid.TextureVariants.Count-1);
+        invalid.TextureVariants.Add(invalid.Texture); invalid.TextureVariants.Add(invalid.Texture); invalid.TextureVariants.Add(invalid.Texture);
+        invalidVariant=false;
+        try { invalid.Validate(); } catch(ArgumentException) { invalidVariant=true; }
+        Check(invalidVariant,"Unbounded artwork variants rejected"); invalid.Dispose();
+        Check(CampaignSession.CanMigrateDirtVariants(),"Exact variant migration gate");
+        CampaignSession.RequireContent(new CampaignSnapshot(2,"","","",CampaignSession.LegacyDirtVariantsFingerprint(),"",null,null,null,null,null));
         var fixture=GroundLayerFixture.Definitions(); var f=GroundLayerFixture.Map();
         using var both=StreamedGroundPalette.Build(f,fixture);
         using var repeat=StreamedGroundPalette.Build(f,fixture.Reverse());
@@ -88,7 +108,7 @@ public partial class ValidateGroundLayers : Node
         Check(both.GetShaderParameter("has_surface_styles").AsBool(),"Non-grass family supported");
         SameTexture(both,repeat,"overlay_table"); SameTexture(both,repeat,"ground_art");
         using var table=Texture(both,"overlay_table").GetImage();
-        Check(table.GetWidth()==9 && table.GetHeight()==4,"Bounded table dimensions");
+        Check(table.GetWidth()==11 && table.GetHeight()==4,"Bounded table dimensions");
         Check(table.GetPixel(8,0).G==1 && table.GetPixel(8,1).G==1,"A and B active in authored order");
         Check(table.GetPixel(8,2).G==0 && table.GetPixel(8,3).G==0,"Unconfigured biome stays clear");
         Check(table.GetPixel(7,0)!=table.GetPixel(7,1),"Independent mask salts");

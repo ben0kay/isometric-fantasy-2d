@@ -2,7 +2,7 @@
 using Godot;
 public static class GroundOverlayPalette
 {
-    public const int Columns=9;
+    public const int Columns=11;
     // Zero/disabled slots cost no mask or artwork work in the shader.
     // =========================================================
     public static bool IsVisible(BiomeGroundLayer layer) => layer.Enabled && layer.Coverage>0 && layer.Opacity>0;
@@ -13,7 +13,7 @@ public static class GroundOverlayPalette
 
     // Row = biome*2 + slot. Artwork indices select the legacy 32px atlas or the native 256px grayscale atlas by recipe.
     // =========================================================
-    public static void Bind(ShaderMaterial material,CompiledGroundBiome[] biomes,int[,] artwork)
+    public static void Bind(ShaderMaterial material,CompiledGroundBiome[] biomes,int[,] artwork,int[,,] variants=null)
     {
         using var table=Image.CreateEmpty(Columns,biomes.Length*2,false,Image.Format.Rgbaf);
         for(int i=0;i<biomes.Length;i++) for(int slot=0;slot<biomes[i].Overlays.Length;slot++)
@@ -29,6 +29,12 @@ public static class GroundOverlayPalette
             float offsetX=(salt&65535)/65536f; salt=unchecked(salt*747796405u+2891336453u);
             table.SetPixel(7,row,new Color(layer.WarpStrength,offsetX,(salt&65535)/65536f,(float)p.DetailStyle));
             table.SetPixel(8,row,new Color(artwork[i,slot],layer.Enabled ? 1f : 2f,(float)p.Recipe,p.MaterialFeatureSize));
+            if(p.UsesGrayscaleArtwork)
+            {
+                table.SetPixel(9,row,variants==null ? new Color(artwork[i,slot],0,0,0) :
+                    new Color(variants[i,slot,0],variants[i,slot,1],variants[i,slot,2],variants[i,slot,3]));
+                table.SetPixel(10,row,new Color(variants==null ? 1 : p.ResolveTextureVariants().Count,p.VariantPatchSize,0,0));
+            }
         }
         material.SetShaderParameter("overlay_table",ImageTexture.CreateFromImage(table));
         material.SetShaderParameter("overlay_rows",(float)(biomes.Length*2));
