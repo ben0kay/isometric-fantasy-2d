@@ -8,6 +8,7 @@ public sealed class AttackExecution : IDisposable
     private readonly MeleeHitQuery _query;
     private readonly AttackContact[] _contacts = new AttackContact[MeleeHitQuery.MaxTargetCount];
     private AttackValues _values;
+    private ToolWork _toolWork;
     private EffectiveStats _stats;
     private float _elapsed;
     private bool _contacted, _disposed, _interrupted;
@@ -30,9 +31,10 @@ public sealed class AttackExecution : IDisposable
     }
     // Alive, idle requests capture aim, timing and attacker stats exactly once.
     // =========================================================
-    public bool TryStart(AttackProfile profile, Vector2 aim, int targetBonus = 0)
+    public bool TryStart(AttackProfile profile, Vector2 aim, int targetBonus = 0, ToolWork toolWork = default)
     {
         if (_disposed || Busy || profile==null || !CombatTargeting.Active(_source) || !aim.IsFinite() || aim.LengthSquared()<0.0001f) return false;
+        toolWork.Validate(); _toolWork=toolWork;
         _stats=_source.Stats.Values; _values=profile.Snapshot(_stats.AttackSpeedMultiplier,targetBonus);
         Aim=aim.Normalized(); _elapsed=0; _contacted=false; _interrupted=false; Busy=true; return true;
     }
@@ -47,7 +49,7 @@ public sealed class AttackExecution : IDisposable
         _elapsed=(float)Math.Min(_values.Duration+_values.Cooldown,_elapsed+delta);
         if (!_contacted && before<=_values.ContactEnd*_values.Duration && _elapsed>=_values.ContactStart*_values.Duration)
         {
-            int hits=_query.StrikeMany(_source,_values,Aim,_stats,_contacts);
+            int hits=_query.StrikeMany(_source,_values,Aim,_stats,_contacts,_toolWork);
             if (hits>0)
             {
                 _contacted=true;

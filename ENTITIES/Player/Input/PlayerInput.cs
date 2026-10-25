@@ -7,6 +7,8 @@ public partial class PlayerInput : Node
     [Signal] public delegate void AlternateUseRequestedEventHandler(Vector2 worldAim);
     [Signal] public delegate void UtilityRequestedEventHandler(bool held, Vector2 worldAim);
     [Signal] public delegate void StarterSelectionRequestedEventHandler(int selection);
+    [Signal] public delegate void PickupRequestedEventHandler();
+    public bool PickupInteractionEnabled { get; set; }
     [Signal] public delegate void HotbarSelectionRequestedEventHandler(int slot);
     public bool HotbarSelectionEnabled { get; set; }
     [Signal] public delegate void DodgeRequestedEventHandler(Vector2 worldDirection);
@@ -52,6 +54,8 @@ public partial class PlayerInput : Node
     public override void _UnhandledInput(InputEvent input)
     {
         if (InventoryOpen) return;
+        if (PickupInteractionEnabled && input.IsActionPressed("player_interact") && input is InputEventKey pickup && !pickup.Echo)
+        { EmitSignal(SignalName.PickupRequested); GetViewport().SetInputAsHandled(); return; }
         if (input is InputEventMouseButton mouse && mouse.Pressed)
         {
             var player=GetParent<Node2D>(); Vector2 aim=player.GetGlobalMousePosition()-player.GlobalPosition;

@@ -1,0 +1,13 @@
+# Shared rewards and physical pickups
+
+Implemented H1–H3 for isolated fixtures; production/chunk/save integration is H4. All systems are explicitly supplied a canonical ItemCatalog and disposable scope; no global manager or production auto-activation.
+
+- DropEntry/DropTable: canonical item, minimum/maximum, independent chance; Compile produces a snapshot and stable per-source/reward-index rolls. Blank/invalid/cyclic item registration is handled by the existing catalog; invalid reward values fail setup.
+- DropScatterProfile / DefaultDropScatter.tres: shared spread 58 units, hop 24, flight 0.55s, landing rotation ±25°, tumble up to ±120°, collection radius 60, caps 128 live / 512 retained records / 16 per burst. Tune one Resource, not a file per item/tree. Values snapshot at coordinator setup.
+- WorldDropSpawner: TryReserve event ID + rewards atomically, then Release once. Reserve validates all quantities/landing positions and caps before changing logical state. Failed/repeated source events cannot partially grant or reroll rewards. Small bursts split into one-unit pickups; larger rewards coalesce to actual stack limits. Capture returns detached logical records for H4's future adapter; it is not persistence.
+- DroppedItem.tscn/cs: grounded/Y-sorted root and static shadow; optional item WorldSprite with Icon fallback, WorldSize and AllowWorldRotation. Only artwork rises/spins; root moves along the ground. Once settled, both processing callbacks are off. No rigid body, per-pickup Area2D, global scan, expiry timer or ambient animation.
+- Collection: explicit request from PlayerPickupInteraction. Searches nearby spatial buckets and line of sight, then performs canonical InventoryStorage.TryAdd. Airborne, obstructed, out-of-range, dead-player, mismatched-catalog and full-inventory requests fail without consuming anything. Repeated/reentrant requests cannot double-grant. Partial acceptance is intentionally unsupported.
+
+IDs derive from scope/source/completion + reward/piece index. Records persist only until this disposable scene ends; source state/drop state/inventory are not saved or streamed yet. Collected records/event IDs remain in the bounded journal to prevent replay; reaching limits rejects new batches rather than silently deleting items. Scope teardown releases query objects and all Nodes/records.
+
+H4 must move logical records into existing chunk/save ownership before production use, preserve final landing ownership, write source and reward outcome atomically, handle unknown IDs/legacy versions and add durable inventory. It must not keep every drop node permanently loaded. [Audit](../Harvesting/H0_Audit.md) · [validation](../Harvesting/H0_H3_Validation.md).

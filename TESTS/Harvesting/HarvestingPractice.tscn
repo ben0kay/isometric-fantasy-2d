@@ -1,0 +1,22 @@
+[gd_scene load_steps=9 format=3]
+[ext_resource type="Script" path="res://TESTS/Harvesting/HarvestingPractice.cs" id="script"]
+[ext_resource type="Script" path="res://SYSTEMS/Harvesting/HarvestProfile.cs" id="harvest"]
+[ext_resource type="Script" path="res://SYSTEMS/Drops/DropTable.cs" id="table"]
+[ext_resource type="Script" path="res://SYSTEMS/Drops/DropEntry.cs" id="entry"]
+[ext_resource type="Resource" path="res://ITEMS/Resources/Wood/WoodenLog/WoodenLog.tres" id="log"]
+[sub_resource type="Resource" id="logs"]
+script = ExtResource("entry")
+Item = ExtResource("log")
+Minimum = 3
+Maximum = 5
+[sub_resource type="Resource" id="rewards"]
+script = ExtResource("table")
+Entries = [SubResource("logs")]
+[sub_resource type="Resource" id="work"]
+script = ExtResource("harvest")
+AcceptedTool = "axe"
+RequiredWork = 4.0
+Rewards = SubResource("rewards")
+[node name="HarvestingPractice" type="Node2D"]
+script = ExtResource("script")
+TreeHarvest = SubResource("work")

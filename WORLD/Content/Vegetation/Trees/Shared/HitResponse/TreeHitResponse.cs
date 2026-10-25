@@ -1,7 +1,7 @@
 // Optional receiver: trunk-anchored visual wobble and a bounded, tree-local leaf burst.
 using Godot;
 
-public partial class TreeHitResponse : Node2D, IToolHitTarget
+public partial class TreeHitResponse : Node2D, IToolHitTarget, IHarvestHitTarget
 {
     private bool _enabled=true;
     [Export] public bool Enabled
@@ -16,6 +16,7 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
     public bool HealthyLeaves { get; private set; } = true;
     public event System.Action VisualTransformChanged;
     public int ReceivedHits { get; private set; }
+    public Harvestable Harvesting { get; set; }
     public Vector2 HitAnchor => ((Node2D)GetParent()).GlobalPosition;
     private Sprite2D _sprite;
     private CollisionPolygon2D _footprint;
@@ -66,6 +67,15 @@ public partial class TreeHitResponse : Node2D, IToolHitTarget
             if (distance < best) { best = distance; closest = p; }
         }
         return closest;
+    }
+
+    // Enriched confirmed contacts carry snapshotted tool work; legacy visual hits never count as chopping.
+    // =========================================================
+    public void ReceiveHarvestHit(HarvestHit hit)
+    {
+        if (!Enabled) return;
+        if (Harvesting!=null && Harvesting.Apply(hit)==HarvestWorkResult.Completed) return;
+        ReceiveHit(hit.Direction);
     }
 
     // Repeated hits restart a bounded wobble and reuse 24 leaf slots; no new particle nodes.

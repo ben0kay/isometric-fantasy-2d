@@ -6,6 +6,9 @@ using FantasyGame.WorldInteractions.Fire;
 [GlobalClass]
 public partial class TreeDefinition : SceneryDefinition
 {
+    [ExportGroup("Optional harvesting; H1-H3 disposable scope only")]
+    [Export] public HarvestProfile Harvesting { get; set; }
+    [Export] public float FallSeconds { get; set; } = 0.65f;
     [ExportGroup("Tree artwork variants")]
     [Export] public Godot.Collections.Array<TreeVisualVariant> VisualVariants { get; set; } = new();
     [ExportGroup("Foliage shared by ambient and hit leaves")]

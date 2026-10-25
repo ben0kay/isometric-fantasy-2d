@@ -1,6 +1,6 @@
 # Harvesting, World Drops & Tree Felling — Implementation Plan
 
-> **Status: PLANNED — 24 October 2026. Documentation only.** This file is an implementation handoff for a future approved Codex job, **not authorization to implement all phases**. Start with the root `README.md`, `CodePreferences.md`, `SYSTEMS/Harvesting/README.md`, `SYSTEMS/Inventory/README.md`, `SYSTEMS/Interaction/README.md`, `WORLD/Content/Vegetation/Trees/README.md`, `WORLD/Runtime/Streaming/README.md`, `SAVE/README.md`, and the **current source** for the touched scene/scripts. Preserve the author's simple, modular, data-driven and performance-first approach; one commit per authorized job.
+> **Status: H0 audit complete; H1–H3 implemented in disposable practice, awaiting Windows visual/performance acceptance; H4/H5 planned — 24 October 2026.** This file tracks approved implementation and remaining separately scoped work. See [H0 audit](H0_Audit.md) and [H0–H3 validation](H0_H3_Validation.md). Start with the root `README.md`, `CodePreferences.md`, `SYSTEMS/Harvesting/README.md`, `SYSTEMS/Inventory/README.md`, `SYSTEMS/Interaction/README.md`, `WORLD/Content/Vegetation/Trees/README.md`, `WORLD/Runtime/Streaming/README.md`, `SAVE/README.md`, and the **current source** for the touched scene/scripts. Preserve the author's simple, modular, data-driven and performance-first approach; one commit per authorized job.
 
 ## Goal
 
@@ -12,16 +12,16 @@ Keep **harvesting**, **reward selection**, **physical pickups** and **tree-only 
 
 | Phase | Goal | Recommended assistant | Status |
 | --- | --- | --- | --- |
-| **H0** | Audit confirmed hit path, tree lifecycle, streaming/save ownership; design shared drop contracts and a safe standalone test | Regular Chat for design; Codex if deep code audit needed | Planned |
-| **H1** | Implement reusable physical dropped items, scatter/hop presentation and player collection in an isolated fixture | Codex | Planned |
-| **H2** | Implement reusable harvest-work/progress and Resource-driven reward definitions; test with a generic harvestable | Codex | Planned |
-| **H3** | Attach shared harvesting to Oak/Blossom-capable `Tree.tscn`, animate fall and spawn Wooden Logs in an isolated/disposable world test | Codex | Planned |
+| **H0** | Audit confirmed hit path, tree lifecycle, streaming/save ownership; design shared drop contracts and a safe standalone test | Regular Chat for design; Codex if deep code audit needed | Complete: source audit |
+| **H1** | Implement reusable physical dropped items, scatter/hop presentation and player collection in an isolated fixture | Codex | Implemented; visual/performance acceptance pending |
+| **H2** | Implement reusable harvest-work/progress and Resource-driven reward definitions; test with a generic harvestable | Codex | Implemented; visual/performance acceptance pending |
+| **H3** | Attach shared harvesting to Oak/Blossom-capable `Tree.tscn`, animate fall and spawn Wooden Logs in an isolated/disposable world test | Codex | Implemented; visual/performance acceptance pending |
 | **H4** | Integrate tree state and live/uncollected pickups with P3 chunk lifecycle + P4 campaign saves; enable production loop safely | Codex | Planned |
 | **H5** | Optional expansion to rocks, plants, enemy loot, containers and other harvestables | Regular Chat to plan; Codex to integrate | Planned |
 
 **Critical release gate:** H1–H3 may be validated in disposable practice/F6 fixtures, but **do not enable destructible trees that spawn drops in saved campaigns until H4 persistence is complete**. Design stable identities and unload behavior in H0/H1 so H4 is an extension, not a rewrite.
 
-## Verified existing foundations (source inspected 24 October 2026)
+## Pre-H0 foundations (historical audit; source inspected 24 October 2026)
 
 - `SYSTEMS/Harvesting/` contains only `README.md`: harvesting logic is **not implemented**. `SYSTEMS/Interaction/` similarly documents future reusable interactions.
 - `SYSTEMS/Inventory/InventoryStorage.cs` implements catalog-backed bounded stack storage, `TryAdd`, `TryRemove`, `TryMove`, `Get`, `Changed` and on-demand weight. **TryAdd is all-or-nothing** for the requested quantity; a successful add must precede deleting the world pickup. `InventoryHotbar` is a separate shared model; neither UI nor physical drops should own another inventory implementation.
@@ -206,4 +206,8 @@ These are **illustrative labels**, not already-implemented exports or mandated n
 
 ## Implementation workflow
 
-Each approved phase should update this plan's state and relevant owning README after code work, record commit SHA, exact changed files, tests performed vs deferred, and the activation/sleep/scaling contract. Keep **one GitHub commit per authorized job**. **This request authorizes creating this Markdown plan only**; do not add `SYSTEMS/Drops/`, code, .tres, scenes or production harvesting until a phase is explicitly requested.
+Each approved phase should update this plan's state and relevant owning README after code work, record commit SHA, exact changed files, tests performed vs deferred, and the activation/sleep/scaling contract. Keep **one GitHub commit per authorized job**. H0–H3 were subsequently explicitly authorized and implemented as one job. H4/H5 remain separately authorized work; no production campaign enablement is included.
+
+## Current H0–H3 handoff
+
+Play `TESTS/Harvesting/HarvestingPractice.tscn` with F6. Shared drops, generic work/reward plans and Oak/mirrored Blossom felling are implemented through runtime fixture copies; production species/axe tuning remains unchanged. Four LMB axe chops reserve 3–5 logs, which hop/settle and collect via E into real storage. H0–H3 native checks and existing combat/inventory/UI/tree/fire regressions pass; Windows visuals/profiling remain pending. See [validation](H0_H3_Validation.md) for commands, limits, identity/persistence handoff and exact phase distinction.

@@ -7,6 +7,10 @@ public partial class EquippedItemDefinition : Resource
     [Export] public string DisplayName { get; set; } = "";
     [Export] public AttackProfile PrimaryAttack { get; set; }
     [Export] public AttackProfile SecondaryAttack { get; set; }
+    [ExportGroup("Optional harvesting capability")]
+    [Export] public string HarvestTool { get; set; } = "";
+    [Export] public float PrimaryHarvestWork { get; set; }
+    [Export] public float SecondaryHarvestWork { get; set; }
     [ExportGroup("Held artwork")]
     [Export] public Texture2D Texture { get; set; }
     [Export] public bool Centered { get; set; }

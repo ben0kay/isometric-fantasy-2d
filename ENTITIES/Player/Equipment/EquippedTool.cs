@@ -34,17 +34,17 @@ public partial class EquippedTool : Node2D
     }
     // The original primary request remains compatible with C2 callers.
     // =========================================================
-    private void Primary(Vector2 aim) { if (EquippedItem!=null) BeginSwing(EquippedItem.PrimaryAttack,aim); }
+    private void Primary(Vector2 aim) { if (EquippedItem!=null) BeginSwing(EquippedItem.PrimaryAttack,aim,EquippedItem.PrimaryHarvestWork); }
     // Alternate intent uses an independent resource through the exact same executor/cooldown.
     // =========================================================
-    private void Secondary(Vector2 aim) { if (EquippedItem!=null) BeginSwing(EquippedItem.SecondaryAttack,aim); }
+    private void Secondary(Vector2 aim) { if (EquippedItem!=null) BeginSwing(EquippedItem.SecondaryAttack,aim,EquippedItem.SecondaryHarvestWork); }
     // No queued input: block/hop/dodge exclude new attacks, and the committed swing must finish first.
     // =========================================================
-    private void BeginSwing(AttackProfile profile, Vector2 aim)
+    private void BeginSwing(AttackProfile profile, Vector2 aim,float harvestWork=0)
     {
         if (!Config.Enabled || _owner.Reaction.Active || Attack.Busy || !_owner.HealthState.IsAlive || !_owner.Actions.Begin(PlayerAction.Attack)) return;
         if (aim.LengthSquared()<0.01f) aim=Vector2.FromAngle(_angle);
-        if (!Attack.TryStart(profile,aim)) { _owner.Actions.End(PlayerAction.Attack); return; }
+        if (!Attack.TryStart(profile,aim,toolWork:harvestWork==0 ? default : new ToolWork(EquippedItem.HarvestTool,harvestWork))) { _owner.Actions.End(PlayerAction.Attack); return; }
         _thrustPixels=profile.ThrustPixels;
         _presentation=profile.Presentation; _contactProgress=profile.ContactProgress; _sweepDegrees=profile.SweepDegrees;
         _sweepWindupFraction=profile.SweepWindupFraction;

@@ -52,7 +52,7 @@ public sealed class MeleeHitQuery : IDisposable
 
     // One broad-phase query selects up to the attack's target cap; each actor can be hit only once.
     // =========================================================
-    public int StrikeMany(ICombatTarget source, AttackValues attack, Vector2 aim, EffectiveStats stats, AttackContact[] contacts)
+    public int StrikeMany(ICombatTarget source, AttackValues attack, Vector2 aim, EffectiveStats stats, AttackContact[] contacts, ToolWork toolWork=default)
     {
         if (contacts==null || contacts.Length==0 || !CombatTargeting.Active(source)) return 0;
         int limit=Math.Min(Math.Clamp(attack.MaxTargets,1,MaxTargetCount),contacts.Length);
@@ -134,7 +134,9 @@ public sealed class MeleeHitQuery : IDisposable
             || (toolDistance==_selected[0].Distance && nearestTool.Id<_selected[0].Id)))
         {
             if (nearestTool.Receiver.IsQueuedForDeletion() || !nearestTool.Receiver.IsInsideTree()) return 0;
-            nearestTool.Tool.ReceiveHit(aim);
+            if (nearestTool.Tool is IHarvestHitTarget harvestTarget)
+                harvestTarget.ReceiveHarvestHit(new(source.CombatNode,toolWork,aim,nearestTool.Point));
+            else nearestTool.Tool.ReceiveHit(aim);
             contacts[0]=new(nearestTool.Receiver,null,source.CombatNode,nearestTool.Point,aim);
             return 1;
         }

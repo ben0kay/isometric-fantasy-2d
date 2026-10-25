@@ -28,6 +28,11 @@ project/assembly_name="isometric-fantasy-2d"
 
 [input]
 
+player_interact={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":69)]
+}
+
 player_inventory={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":73)]

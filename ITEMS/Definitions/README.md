@@ -16,3 +16,5 @@ Never rename IDs just because paths/display labels move. Future saves must resol
 ## Future Avalonia authoring
 
 The `.tres` definitions/catalog remain authoritative. An external editor should author these shared fields/artwork references, update explicit registration, validate with Godot and preserve unrelated fields/IDs. No second editor-only item database, per-item C# generation, runtime discovery, external loader or content-pack support is implemented yet. Start with a flat catalog; split into category catalogs only when actual content warrants it.
+
+H1–H3: optional WorldSprite (Icon fallback), WorldSize and AllowWorldRotation configure pickup appearance. Equipment profiles optionally author HarvestTool and separate primary/secondary work; valid work is snapshotted with an accepted attack. Ordinary items need no harvesting or per-item script. Only the harvesting fixture opts axe copies into work; production content remains unchanged until H4.
