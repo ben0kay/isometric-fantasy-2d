@@ -44,3 +44,7 @@ Screen-dust follow-up: ValidatePollenBatch now covers 26 checks. PollenDust is a
 `ValidateGeographyFirst.tscn` checks six full seeded pipelines, biome-independent water, resource ordering, required reservations, complete connected eligible coverage, soft/hard profiles, narrow/mixed coarse cells, one-biome fallback, region-budget failures, schema/hash gates and disk round-trips for schema 4–8.
 
 Open `GeographyFirstPractice.tscn` with F6 to inspect water-first generation with only one cloned biome allowed around water. R cycles river stations; F7 shows regions and water. No canonical biome/config is edited. See [validation/target commands](../../WORLD/Generation/World/Geography/P5AB_Validation.md).
+
+## P5c ocean and larger-world checks
+
+`ValidateOceanGeneration.tscn` uses the normal production preset, checks four seeded 10×-area worlds, ocean/non-land coverage and empty ocean scenery, bounded macro/streaming resources, F7 panel/image fit, incompatible version rejection, deep-ocean disk Continue and genuine small pre-ocean schema-8 Continue. Run with `godot --headless --path . TESTS/Generation/ValidateOceanGeneration.tscn --fixed-fps 60`. Normal user testing is **World.tscn → F6 → F7**, not a separate practice scene. [P5c results/limits](../../WORLD/Generation/Liquids/Oceans/P5C_Validation.md).

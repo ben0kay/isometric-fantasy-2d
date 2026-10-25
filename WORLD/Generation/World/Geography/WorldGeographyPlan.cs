@@ -1,23 +1,26 @@
 // Immutable major geography independent of biome IDs. Existing water supplies the first provider; no runtime callbacks.
 using Godot;
 using System;
+using System.Linq;
 
 [Flags]
-public enum GeographyWaterKind : byte { None=0, Lake=1, River=2 }
+public enum GeographyWaterKind : byte { None=0, Lake=1, River=2, Ocean=4 }
 public sealed class WorldGeographyPlan
 {
-    public const int Version=1;
+    public const int Version=2;
+    public int PlanVersion { get; }
     public int Seed { get; }
     public Rect2 Bounds { get; }
     public WaterBodyPlan Water { get; }
     // Reuse frozen canonical water geometry, rather than retaining authoring Resources or duplicating polygons.
     // =========================================================
-    public WorldGeographyPlan(int seed,Rect2 bounds,WaterBodyPlan water)
+    public WorldGeographyPlan(int seed,Rect2 bounds,WaterBodyPlan water,int version=Version)
     {
         if (!bounds.Position.IsFinite() || !bounds.Size.IsFinite() || !bounds.End.IsFinite() || bounds.Size.X<=0 || bounds.Size.Y<=0
             || water==null || water.Seed!=seed || water.Bounds!=bounds) throw new ArgumentException("Geography requires finite bounds and matching water ownership.");
         foreach (var body in water.Bodies) if (!bounds.Encloses(body.Bounds)) throw new ArgumentException("Geography escaped its world bounds.");
-        Seed=seed; Bounds=bounds; Water=water;
+        if (version<1 || version>Version || (version<2 && water.Bodies.Any(b=>b.IsOcean))) throw new ArgumentException("Unsupported geography contract.");
+        PlanVersion=version; Seed=seed; Bounds=bounds; Water=water;
     }
     // Conservative cell footprint queries protect even narrow banks crossing a coarse biome cell.
     // =========================================================
@@ -25,7 +28,7 @@ public sealed class WorldGeographyPlan
     {
         GeographyWaterKind result=GeographyWaterKind.None;
         foreach (var body in Water.Bodies)
-            if (body.Intersects(area)) result|=body.River==null ? GeographyWaterKind.Lake : GeographyWaterKind.River;
+            if (body.Intersects(area)) result|=body.IsOcean ? GeographyWaterKind.Ocean : body.River==null ? GeographyWaterKind.Lake : GeographyWaterKind.River;
         return result;
     }
     // One byte per macro cell, built once for biome assignment and released when that planner returns.
@@ -45,7 +48,7 @@ public sealed class WorldGeographyPlan
             for (int y=top;y<=bottom;y++) for (int x=left;x<=right;x++)
             {
                 var cell=new Rect2(Bounds.Position+new Vector2(x,y)*cellSize,Vector2.One*cellSize).Intersection(Bounds);
-                if (body.Intersects(cell)) mask[y*columns+x]|=body.River==null ? GeographyWaterKind.Lake : GeographyWaterKind.River;
+                if (body.IsOcean ? body.Bounds.HasPoint(cell.GetCenter()) && body.SignedDistance(cell.GetCenter())>=0 : body.Intersects(cell)) mask[y*columns+x]|=body.IsOcean ? GeographyWaterKind.Ocean : body.River==null ? GeographyWaterKind.Lake : GeographyWaterKind.River;
             }
         }
         return mask;

@@ -39,7 +39,7 @@ public partial class WorldChunkStream : Node
     public int PublishedChunks { get; private set; }
     public int ReleasedChunks { get; private set; }
     public MacroRegion PlayerRegion => _world.MacroMap.RegionAt(_player.GlobalPosition);
-    public string PlayerBiome => _world.MacroMap.BiomeAt(_player.GlobalPosition)?.Id ?? "outside";
+    public string PlayerBiome => _world.MacroMap.BiomeAt(_player.GlobalPosition)?.Id ?? (_world.MacroMap.Bounds.HasPoint(_player.GlobalPosition) ? "ocean (non-land)" : "outside");
     public int PendingCount => Desired(_settings.PreloadRadius).Count(c => !_chunks.ContainsKey(c)) + ApplyingCount;
     public int ApplyingCount => _applying == null ? 0 : 1;
     public ChunkCoord PlayerChunk => ChunkCoord.At(_player.GlobalPosition,_settings.ChunkSize);

@@ -11,6 +11,8 @@ public sealed class MacroWorldMap
     private readonly int[] _cells;
     public const int GeneratorVersion = 1;
     public const int GeographyGeneratorVersion = 2;
+    public const int OceanGeneratorVersion = 3;
+    public int NonLandCells { get; }
     public int GenerationVersion { get; }
     public int Seed { get; }
     public Rect2 Bounds { get; }
@@ -25,7 +27,7 @@ public sealed class MacroWorldMap
     internal MacroWorldMap(int seed, Rect2 bounds, float cellSize, int columns, int rows, int[] cells, MacroBiomeInfo[] biomes, MacroRegion[] regions,int generationVersion=GeneratorVersion)
     {
         GenerationVersion=generationVersion; Seed = seed; Bounds = bounds; CellSize = cellSize; Columns = columns; Rows = rows;
-        _cells = (int[])cells.Clone(); Biomes = Array.AsReadOnly(biomes); Regions = Array.AsReadOnly(regions); Hash = ComputeHash();
+        _cells = (int[])cells.Clone(); foreach (int cell in _cells) if (cell<0) NonLandCells++; Biomes = Array.AsReadOnly(biomes); Regions = Array.AsReadOnly(regions); Hash = ComputeHash();
     }
     // Finite-map edges are exclusive at right/bottom; outside positions have no biome.
     // =========================================================
@@ -33,7 +35,7 @@ public sealed class MacroWorldMap
     {
         if (!point.IsFinite() || !Bounds.HasPoint(point)) return null;
         int x = Mathf.FloorToInt((point.X - Bounds.Position.X) / CellSize), y = Mathf.FloorToInt((point.Y - Bounds.Position.Y) / CellSize);
-        return Regions[_cells[y * Columns + x]];
+        int region=_cells[y*Columns+x]; return region<0 ? null : Regions[region];
     }
     public MacroBiomeInfo BiomeAt(Vector2 point) => RegionAt(point) is { } region ? Biomes[region.BiomeIndex] : null;
     public int RegionIdAtCell(int x, int y) => x >= 0 && y >= 0 && x < Columns && y < Rows ? _cells[y * Columns + x] : -1;

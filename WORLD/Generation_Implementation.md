@@ -11,9 +11,11 @@
 
 **Use this document as the main world-generation plan.** The agreed target order is **world constraints → major geography → major POIs and access reservations → biome assignment → local detail/population**. This supersedes older lists that put random biome layout before geography or place important POIs only after biome assignment. Generation order describes planning data, not when scene artwork is instantiated.
 
-**Current P5a/P5b implementation:** new worlds now run P2 reservations → biome-independent major lake/river geography → geography-constrained P1 biome growth through `WorldGenerationPipeline`. `WorldGeographyPlan` and temporary `GeographyBiomeRules` reuse canonical water geometry and existing biome Hydrology data. New blueprints are schema 8 / geography version 1 / macro generator version 2; schema 4–7 worlds restore their exact frozen geography without rerouting. Oceans, volcanic geography, real major POIs and access planning remain P5c/P5d. P3 streaming and shared liquid presentation remain unchanged. See [contracts and validation](Generation/World/Geography/README.md); target-PC visual/performance acceptance remains pending.
+**Current implementation:** P5a/P5b geography-first generation plus the **ocean portion of P5c** are implemented. Required reservations → major oceans/lakes/rivers → compatible land biomes run through WorldGenerationPipeline. Ocean cells are non-land, not a fabricated biome. New worlds use blueprint schema 9 / geography version 2 / macro generator version 3, with water version 4 when oceans exist. Schemas 4–8 retain frozen maps, dimensions and water. Volcanic geography and major POI/access providers remain separate P5c/P5d follow-ups. See [ocean/size validation](Generation/Liquids/Oceans/P5C_Validation.md); Windows visual/performance acceptance remains pending.
 
-**Normal World defaults:** three lakes and one river are now enabled in `DefaultWorldGeneration.tres`, so F6 World and New Campaign use this pipeline without a practice scene. Existing campaigns retain their frozen layouts; see [production-default compatibility/checks](Generation/Liquids/WORLD_WATER_DEFAULTS.md).
+**Normal World defaults:** one required major ocean, three lakes and one river are enabled in `DefaultWorldGeneration.tres`, so F6 World and New Campaign use this pipeline without a practice scene. Existing campaigns retain their frozen layouts; see [production-default compatibility/checks](Generation/Liquids/WORLD_WATER_DEFAULTS.md).
+
+**World size:** the production preset is now about 10× the original area: 142304×106728 units, with 512-unit macro cells (278×209). Active chunk/ring sizes stay unchanged. F7 fits the complete map to the viewport. This is about 3.16× per axis, not 10× per axis; existing campaigns are not resized.
 
 ### Target creation order
 
@@ -37,7 +39,7 @@ P0–P4 remain implemented foundations; do not renumber them or treat the origin
 | --- | --- | --- | --- |
 | P5a | Biome-independent geography contract and save/version policy | Codex | Implemented; target-PC acceptance pending |
 | P5b | Plan existing major lakes/rivers before biomes; make biome assignment consume geography constraints | Codex | Implemented; target-PC acceptance pending |
-| P5c | Add data-driven major ocean/volcanic-region providers as definitions and presentation become available | Codex | Planned; depends on P5a/P5b |
+| P5c | Major geography providers: oceans/non-land first, volcanic regions separately | Codex | Ocean portion implemented; volcanic provider planned; target-PC acceptance pending |
 | P5d | Plan important POIs/access before biome assignment; connect local scenes, paths/crossings and cave approaches | Codex | Planned; depends on geography contract and selected POI definitions |
 | P5e | Validate combined pipeline, persistence, streaming and target-PC performance | Codex + Copilot/user | Planned; validates each implemented provider incrementally |
 
@@ -63,7 +65,7 @@ Read this handoff before the original design brief below. Historical snapshots a
 | P2 | Resource-driven feature reservations, priority/permissions, required/preferred outcomes and starting anchor implemented. Reservations do not create geological terrain or POI scenes. | Generation/World/Features/README.md |
 | P3 | Finite local streaming, density-based scenery, local navigation, environment lifecycle and session deltas implemented. Rendering fixes pushed; target-machine visual/performance acceptance is open. | Runtime/Streaming/README.md |
 | P4 | **Implementation complete; local automated validation PASSED** (build/import, separate-process P4 save/reload and four regression suites). Earlier P4 functional save/profile flows user-accepted; newer SO2/C1 visual/UI regression and performance profiling still open; unsupported migrations remain future work. | SAVE/README.md and SAVE/P4_Copilot_Handoff.md |
-| P5 | P5a/P5b implemented: major water precedes constrained biome growth. P5c/P5d/P5e remain planned; target-PC acceptance pending. | Generation/World/Geography/README.md and P5a–P5e continuation above |
+| P5 | P5a/P5b implemented: major water precedes constrained biome growth. P5c ocean/non-land implemented; volcanic provider, P5d/P5e remain planned; target-PC acceptance pending. | Generation/World/Geography/README.md and P5a–P5e continuation above |
 | P6 | Planned: abstract off-screen A-Life. | Original scope below |
 
 ### Historical M0 menu handoff — superseded by completed P4 implementation
@@ -83,7 +85,7 @@ Read this handoff before the original design brief below. Historical snapshots a
 
 ### What currently runs
 
-F6 production World uses a 45000×33750 finite macro world with the two configured biome Resources. Every new scene session currently chooses a fresh random seed unless fixed-seed replay is configured. F7 shows overview/reservations/chunk stats; F9 holds environment controls. Set Streaming.Enabled=false (or Streaming=null) for the original small preview. Adding eligible biome Resources should fill land from that collection without species/biome-name branches; keep this data-driven for eventual Avalonia authoring.
+F6 production World uses a 142304×106728 finite macro world with the two configured biome Resources. Every new scene session currently chooses a fresh random seed unless fixed-seed replay is configured. F7 shows overview/reservations/chunk stats; F9 holds environment controls. Set Streaming.Enabled=false (or Streaming=null) for the original small preview. Adding eligible biome Resources should fill land from that collection without species/biome-name branches; keep this data-driven for eventual Avalonia authoring.
 
 Default chunks are 512 units: active radius 2 (25 chunks at startup), prefetch radius 3 (49 at rest), unload radius 4 (retention bounded by an 81-chunk square). Only local detailed scene nodes/collision and navigation are created; the full coarse map is inexpensive data. Session-only removals and burn progress survive unload/reload, but disappear when restarting. No distant detailed AI, saved worlds or A-Life are implemented.
 

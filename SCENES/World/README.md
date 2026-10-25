@@ -4,7 +4,7 @@ Open `World.tscn` in Godot .NET and press **F6** for a **disposable** streamed p
 
 ## Current default
 
-`WORLD/DefaultWorldConfig.tres` enables P0/P1 finite macro biomes, P2 reservations and P3 streaming. The current world is **45,000×33,750** with **512-unit chunks**, active radius 2, prefetch 3 and unload 4. Oak Forest and Pink Meadow share canonical Resource-driven content. Fresh disposable F6 sessions use a new seed unless fixed replay is configured. Set `WorldMasterConfig.Streaming.Enabled=false` for the old **3840×1728** adjacent-biome compatibility preview. See [generation](../../WORLD/Generation/World/README.md) and [streaming](../../WORLD/Runtime/Streaming/README.md).
+`WORLD/DefaultWorldConfig.tres` enables P0/P1 finite macro biomes, P2 reservations and P3 streaming. The current world is **142,304×106,728** with **512-unit chunks**, active radius 2, prefetch 3 and unload 4. Oak Forest and Pink Meadow share canonical Resource-driven content. Fresh disposable F6 sessions use a new seed unless fixed replay is configured. Set `WorldMasterConfig.Streaming.Enabled=false` for the old **3840×1728** adjacent-biome compatibility preview. See [generation](../../WORLD/Generation/World/README.md) and [streaming](../../WORLD/Runtime/Streaming/README.md).
 
 World composes player, authored Skeleton Basic combat practice (shared chase/melee), pond/wading, torches, FIRE1/FIRE2, clock/wind, sun/local shadows, rain/wetness, snow, occlusion and atmosphere. [Shared Entity](../../ENTITIES/Shared/README.md) and [C0/C1 combat](../../COMBAT/COMBAT_IMPLEMENTATION.md) are implemented foundations.
 
@@ -26,4 +26,6 @@ F6 now places **eight test skeletons total** around the player start: five Basic
 
 ## Generated water in the normal world
 
-Open this `World.tscn` and press F6: `DefaultWorldGeneration.tres` now requests three lakes and one winding river, using the existing geography-first pipeline and shared liquid streaming. F7 shows their locations; the protected starting position stays unchanged. F5 → New Campaign uses the same defaults. Continue restores saved geography instead of adding water to existing campaigns. Counts are bounded requests; infeasible optional water placements warn/skip. Practice scenes are optional developer shortcuts, not a remaining production integration step.
+Open this `World.tscn` and press F6: `DefaultWorldGeneration.tres` now requests one required major ocean, three lakes and one winding river, using the existing geography-first pipeline and shared liquid streaming. F7 shows their locations; the protected starting position stays unchanged. F5 → New Campaign uses the same defaults. Continue restores saved geography instead of adding water to existing campaigns. Counts are bounded requests; infeasible optional water placements warn/skip. Practice scenes are optional developer shortcuts, not a remaining production integration step.
+
+P5c enlarges **new** worlds to about 10× the original area (3.16× per axis). F7 now fits the complete map within the viewport, with oceans dark blue and all land biomes visible. Existing campaigns keep their saved dimensions. Macro cells are 512 units; streaming chunks/radii remain unchanged. Oceans are currently wadeable through the shared liquid system; dedicated swimming, currents and elaborate shore materials remain later WG phases.

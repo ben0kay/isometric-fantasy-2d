@@ -6,6 +6,12 @@ public partial class WaterGenerationMasterConfig : Resource
     [Export] public bool Enabled { get; set; }
     [Export] public int LakeCount { get; set; } = 1;
     [Export] public string LiquidId { get; set; } = "water";
+    [ExportGroup("Major oceans - world units")]
+    [Export] public int OceanCount { get; set; }
+    [Export] public bool OceansRequired { get; set; } = true;
+    [Export] public float MinimumOceanDiameter { get; set; } = 32000f;
+    [Export] public float MaximumOceanDiameter { get; set; } = 48000f;
+    [Export] public int AttemptsPerOcean { get; set; } = 64;
     [ExportGroup("World-unit geometry")]
     [Export] public float MinimumDiameter { get; set; } = 600f;
     [Export] public float MaximumDiameter { get; set; } = 1200f;

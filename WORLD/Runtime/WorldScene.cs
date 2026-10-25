@@ -121,16 +121,16 @@ public partial class WorldScene : Node2D
                 {
                     features=WorldBlueprintRestore.Features(restore.Blueprint); map=WorldBlueprintRestore.Map(restore.Blueprint);
                     WaterPlan=WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
-                    if (restore.Blueprint.SchemaVersion==8) GeographyPlan=new WorldGeographyPlan(ActiveSeed,map.Bounds,WaterPlan);
+                    if (restore.Blueprint.SchemaVersion>=8) GeographyPlan=new WorldGeographyPlan(ActiveSeed,map.Bounds,WaterPlan,restore.Blueprint.GeographyVersion);
                 }
                 FeaturePlan = features; MacroMap = map;
                 Blueprint = restore?.Blueprint ?? (launch == null ? WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan)
                     : WorldBlueprintManifest.Create(launch.ProfileId,launch.RunId,MacroMap,FeaturePlan) with { WorldId = launch.WorldId });
-                if (restore==null) Blueprint=Blueprint with { SchemaVersion=8,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot() };
+                if (restore==null) Blueprint=Blueprint with { SchemaVersion=9,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot() };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);
                 GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
-                GD.Print($"Macro map | {MacroMap.Columns}x{MacroMap.Rows} | {MacroMap.Regions.Count} regions | 100% land | {timer.ElapsedMilliseconds}ms | hash {MacroMap.Hash}");
+                GD.Print($"Macro map | {MacroMap.Columns}x{MacroMap.Rows} | {MacroMap.Regions.Count} regions | {MacroMap.NonLandCells} ocean cells / remaining land assigned | {timer.ElapsedMilliseconds}ms | hash {MacroMap.Hash}");
             }
             catch (System.ArgumentException error) { throw new InvalidOperationException("Macro generation failed: " + error.Message,error); }
         }
@@ -142,7 +142,7 @@ public partial class WorldScene : Node2D
             Config = (WorldMasterConfig)Config.Duplicate();
             Config.Bounds = MacroMap.Bounds; Config.PlayerSpawn = FeaturePlan.StartingArea?.Anchor ?? Config.Bounds.GetCenter();
             Config.Biomes = Config.Biomes == null ? new AdjacentBiomeLayout() : (AdjacentBiomeLayout)Config.Biomes.Duplicate();
-            string biomeId = MacroMap.BiomeAt(restore == null ? Config.PlayerSpawn : new Vector2(restore.Player.X,restore.Player.Y)).Id;
+            string biomeId = MacroMap.BiomeAt(restore == null ? Config.PlayerSpawn : new Vector2(restore.Player.X,restore.Player.Y))?.Id ?? Config.Biome?.Id;
             foreach (var biome in Config.Generation.Biomes) if (biome.Id == biomeId) Config.Biomes.Primary = biome;
             GetNode<GroundSurface>("TerrainRoot/Ground").Visible = false;
         }

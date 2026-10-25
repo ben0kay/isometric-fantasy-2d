@@ -11,7 +11,7 @@ public static class WorldBlueprintRestore
     // =========================================================
     public static MacroWorldMap Map(WorldBlueprintManifest b)
     {
-        if (b == null || (b.GeneratorVersion!=MacroWorldMap.GeneratorVersion && b.GeneratorVersion!=MacroWorldMap.GeographyGeneratorVersion) || b.MacroBiomes == null || b.MacroRegions == null || b.RegionCells == null || b.BiomeIds == null || b.RegionBiomes == null
+        if (b == null || (b.GeneratorVersion!=MacroWorldMap.GeneratorVersion && b.GeneratorVersion!=MacroWorldMap.GeographyGeneratorVersion && b.GeneratorVersion!=MacroWorldMap.OceanGeneratorVersion) || b.MacroBiomes == null || b.MacroRegions == null || b.RegionCells == null || b.BiomeIds == null || b.RegionBiomes == null
             || b.Columns < 1 || b.Rows < 1 || (long)b.Columns*b.Rows > 262144 || b.RegionCells.Length != (long)b.Columns*b.Rows
             || b.MacroBiomes.Length < 1 || b.MacroBiomes.Length > 4096 || b.MacroRegions.Length < 1 || b.MacroRegions.Length > 4096
             || b.BiomeIds.Length != b.MacroBiomes.Length || b.RegionBiomes.Length != b.MacroRegions.Length
@@ -29,7 +29,7 @@ public static class WorldBlueprintRestore
         if (biomes.Select(v => v.Id).Distinct(StringComparer.Ordinal).Count() != biomes.Length) throw new InvalidDataException("Duplicate biome IDs.");
         var counts = new int[b.MacroRegions.Length];
         foreach (int id in b.RegionCells)
-        { if (id < 0 || id >= counts.Length) throw new InvalidDataException("Invalid region cell."); counts[id]++; }
+        { if (id==-1 && b.GeneratorVersion==MacroWorldMap.OceanGeneratorVersion) continue; if (id < 0 || id >= counts.Length) throw new InvalidDataException("Invalid region cell."); counts[id]++; }
         var regions = b.MacroRegions.Select((v,i) =>
         {
             if (v == null || v.Id != i || v.BiomeIndex < 0 || v.BiomeIndex >= biomes.Length || b.RegionBiomes[i] != v.BiomeIndex

@@ -18,6 +18,7 @@ public partial class ValidateRiverPlanning : Node
     private void Run()
     {
         var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+        config.Bounds=new Rect2(-22500,-16875,45000,33750);config.CellSize=256;
         config.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1,RequireMultipleRiverBiomes=true };
         var timer=System.Diagnostics.Stopwatch.StartNew(); string previous=null;
         for (int seed=0;seed<12;seed++)

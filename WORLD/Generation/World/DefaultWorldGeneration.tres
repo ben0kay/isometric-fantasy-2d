@@ -10,10 +10,11 @@ script = ExtResource("water_script")
 Enabled = true
 LakeCount = 3
 RiverCount = 1
+OceanCount = 1
 [resource]
 script = ExtResource("script")
-Bounds = Rect2(-22500, -16875, 45000, 33750)
-CellSize = 256.0
+Bounds = Rect2(-71152, -53364, 142304, 106728)
+CellSize = 512.0
 Layout = ExtResource("layout")
 Water = SubResource("WaterGeneration")
 Biomes = Array[ExtResource("biome")]([ExtResource("oak"), ExtResource("pink")])

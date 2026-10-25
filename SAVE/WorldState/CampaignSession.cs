@@ -37,7 +37,8 @@ public static class CampaignSession
     internal static string NormalizeDefaultWaterGenerationSource(string path,string source)
     {
         if (path=="res://WORLD/Generation/World/DefaultWorldGeneration.tres"
-            && CheckpointFiles.Digest(Encoding.UTF8.GetBytes(source))=="3C740DB6959FC17E53AA55525CCD1FCDEC25DBE9FEBB9D075176CCC1AEB5E112")
+            && (CheckpointFiles.Digest(Encoding.UTF8.GetBytes(source))=="3C740DB6959FC17E53AA55525CCD1FCDEC25DBE9FEBB9D075176CCC1AEB5E112"
+                || CheckpointFiles.Digest(Encoding.UTF8.GetBytes(source))=="CB572E5CF540CFAFCE03ACBA574F37FBA16610B67D765E63E378792D27356FFB"))
             return Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/WaterDefaultsBefore.txt").Replace("\r\n","\n");
         return source;
     }

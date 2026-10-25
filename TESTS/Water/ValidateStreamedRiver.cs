@@ -21,7 +21,7 @@ public partial class ValidateStreamedRiver : Node
         Check(world.Config.Generation.Water?.Enabled==true,"Production World config has generated water disabled");
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world); Check(world.StartupError==null,"World failed to initialize: "+world.StartupError);
-        Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==2 && world.Blueprint.SchemaVersion==8 && world.WaterPlan.PlanVersion==3,"River world did not use the river-capable save contract");
+        Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==3 && world.Blueprint.SchemaVersion==9 && world.WaterPlan.PlanVersion==4,"River world did not use the river-capable save contract");
         var body=world.WaterPlan.Bodies.Single(b => b.River!=null); var path=body.River;
         int middle=path.Points.Count/2;
         foreach (int index in new[] { 0,middle,path.Points.Count-1,middle })
@@ -51,7 +51,7 @@ public partial class ValidateStreamedRiver : Node
         var root=Path.Combine(Path.GetTempPath(),"wg3-"+Guid.NewGuid().ToString("N"));
         var blueprint=world.Blueprint;
         var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,blueprint.ProfileId,blueprint.RunId,blueprint.WorldId,CampaignSession.ContentFingerprint(),DateTime.UtcNow.ToString("O"),blueprint,
-            new SavedPlayer(world.Player.GlobalPosition.X,world.Player.GlobalPosition.Y,Health:100),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+            new SavedPlayer(world.Player.GlobalPosition.X,world.Player.GlobalPosition.Y,Health:100,Inventory:world.Harvesting.Inventory.Capture()),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
         try
         {
             var store=new CampaignStore(root); store.Save(snapshot,true); var loaded=store.Load(snapshot.ProfileId).Snapshot;
@@ -61,13 +61,14 @@ public partial class ValidateStreamedRiver : Node
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=5 } }),"River data accepted by lake-only schema");
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=4 } }),"River data accepted by metadata-only schema");
             var legacyMap=MacroWorldBuilder.Build(world.Config.Generation,blueprint.Seed);
-            var legacy=loaded with { Blueprint=blueprint with { SchemaVersion=7,GeneratorVersion=1,GeographyVersion=0,MapHash=legacyMap.Hash,
+            var legacyWater=new WaterBodyPlan(blueprint.Seed,legacyMap.Bounds,world.WaterPlan.Bodies.Where(b=>!b.IsOcean),Array.Empty<string>());
+            var legacy=loaded with { Blueprint=blueprint with { SchemaVersion=7,GeneratorVersion=1,GeographyVersion=0,Water=legacyWater.Snapshot(),MapHash=legacyMap.Hash,
                 RegionCells=legacyMap.CopyRegionCells(),RegionBiomes=legacyMap.Regions.Select(r=>r.BiomeIndex).ToArray(),
                 MacroRegions=legacyMap.Regions.Select(r=>new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray() } };
             world.Free(); await Frames(3);
             CampaignSession.TestStorageRoot=root;
             await ContinueFrozen(loaded,restored.Hash);
-            await ContinueFrozen(legacy,restored.Hash);
+            await ContinueFrozen(legacy,legacyWater.Hash);
         }
         finally
         {
@@ -90,7 +91,7 @@ public partial class ValidateStreamedRiver : Node
         await Frames(10);
         Check(continued.Blueprint.SchemaVersion==snapshot.Blueprint.SchemaVersion && continued.Blueprint.WorldId==snapshot.WorldId,"Continue changed river world identity");
         Check(continued.MacroMap.Hash==snapshot.Blueprint.MapHash && continued.WaterPlan.Hash==waterHash && continued.GeneratedWater.RegionAt(continued.Player.GlobalPosition)!=null,"Continue rerolled/failed to bind saved geography");
-        Check((continued.GeographyPlan!=null)==(snapshot.Blueprint.SchemaVersion==8),"Legacy river promoted to geography-first generation");
+        Check((continued.GeographyPlan!=null)==(snapshot.Blueprint.SchemaVersion>=8),"Legacy river promoted to geography-first generation");
         Check(continued.Saves.LastError=="","Saved river arrival blocked: "+continued.Saves.LastError);
         continued.Free(); await Frames(3);
     }

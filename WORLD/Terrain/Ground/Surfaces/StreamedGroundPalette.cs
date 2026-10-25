@@ -72,7 +72,13 @@ public static class StreamedGroundPalette
             using var image = Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf);
             for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
             {
-                int biomeIndex=map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex;
+                int region=map.RegionIdAtCell(x,y);
+                if (region<0)
+                {
+                    image.SetPixel(x,y,channel==4 ? new Color(0,320,0,0) : channel==5 ? Colors.White : new Color(0.12f,0.17f,0.18f,1));
+                    continue;
+                }
+                int biomeIndex=map.Regions[region].BiomeIndex;
                 var p=compiled[biomeIndex].Base;
                 if (p == null) throw new System.ArgumentException("Every streamed biome requires a surface profile.");
                 var patches=compiled[biomeIndex].Patches;
@@ -92,7 +98,8 @@ public static class StreamedGroundPalette
             using var styles=Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf);
             for(int y=0;y<map.Rows;y++) for(int x=0;x<map.Columns;x++)
             {
-                var p=compiled[map.Regions[map.RegionIdAtCell(x,y)].BiomeIndex].Base;
+                int region=map.RegionIdAtCell(x,y); if (region<0) { styles.SetPixel(x,y,new Color(0,0,0,1)); continue; }
+                var p=compiled[map.Regions[region].BiomeIndex].Base;
                 styles.SetPixel(x,y,new Color(p.ArtworkInfluence,p.DetailStyle==GroundDetailStyle.Granular ? 1f : 0f,p.DetailStyle==GroundDetailStyle.Mineral ? 1f : 0f,1));
             }
             material.SetShaderParameter("map_styles",ImageTexture.CreateFromImage(styles));

@@ -18,7 +18,8 @@ public partial class ValidateMacroGeneration : Node
     // =========================================================
     private void Run()
     {
-        var config = GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres");
+        var config = (WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+        config.Bounds=new Rect2(-22500,-16875,45000,33750); config.CellSize=256;
         var watch = System.Diagnostics.Stopwatch.StartNew();
         string previous = null;
         for (int seed = 0; seed < 16; seed++)

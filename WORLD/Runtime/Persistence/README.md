@@ -1,6 +1,6 @@
 # World persistence
 
-`WorldBlueprintManifest` retains the P1/P2 creation API used by existing fixtures. New streamed worlds use schema 8 (P5a/P5b geography-first); schema 4–7 manifests remain supported legacy outcomes. All retain exact macro regions/biomes, P2 features and P3 local metadata. Older WG sections below describe their original creation policies, not the current new-world default. `WorldBlueprintRestore` validates and reconstructs the exact maps/reservations from these values and verifies hashes; Continue never reruns the macro or feature planners.
+`WorldBlueprintManifest` retains the P1/P2 creation API used by existing fixtures. New streamed worlds use schema 9 (P5c ocean/non-land); schema 4–8 manifests remain supported legacy outcomes. All retain exact macro regions/biomes, P2 features and P3 local metadata. Older WG sections below describe their original creation policies, not the current new-world default. `WorldBlueprintRestore` validates and reconstructs the exact maps/reservations from these values and verifies hashes; Continue never reruns the macro or feature planners.
 
 `WorldChunkStream` imports changed-object records before the first chunk is created. Removed props never materialize; burn progress restores through the existing shared fire lifecycle. `CaptureChanges` captures current loaded props and retained unloaded deltas into detached per-chunk records. Only changed states persist, scoped by WorldId/surface/chunk and stable candidate ID. Healthy visited trees do not accumulate save records. The coordinator in SAVE owns profile selection, disk IO and whole-checkpoint consistency.
 
@@ -23,3 +23,7 @@ Smooth river geometry uses blueprint schema 7 / water version 3, with up to 1000
 ## P5a/P5b geography-first worlds
 
 New worlds use schema 8 / geography version 1 / macro generator version 2, including empty-water worlds. Frozen Water remains lake version 1 or smooth-river version 3. Restore hashes the map using its saved generator version; legacy versions are not relabeled. Continue restores water and map without reapplying current biome eligibility, even if new-world water is disabled. The geography wrapper is rebuilt from frozen water only; no duplicate raster mask is saved. Schema 4–7 retain exact prior outcomes. See [contract and validation](../../Generation/World/Geography/README.md).
+
+## P5c oceans and expanded bounds
+
+Schema 9 requires geography version 2 / macro generator version 3. Ocean-bearing WaterPlan v4 hashes explicit ocean flags; v1/v3 remain valid for ocean-free new worlds. Only macro v3 accepts region cell -1 for non-land; region counts exclude those cells. Restore preserves exact bounds/cell size/map/water, including old schema-8 / macro-v2 worlds. The exact new preset is normalized by the existing narrowly gated creation-default fingerprint rule; old campaigns are not enlarged or given oceans. [Validation](../../Generation/Liquids/Oceans/P5C_Validation.md).

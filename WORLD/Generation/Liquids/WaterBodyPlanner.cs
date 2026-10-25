@@ -12,6 +12,7 @@ public static class WaterBodyPlanner
     {
         if (config == null || map == null || features == null || map.Seed != features.Seed || map.Bounds != features.Reservations.Bounds)
             throw new ArgumentException("Water requires matching macro/feature ownership.");
+        if (map.NonLandCells>0) throw new ArgumentException("Biome-first water planning cannot consume ocean cells; use BuildGeography before biome assignment.");
         return BuildCore(config,map.Seed,map.Bounds,features,authoredPond,map);
     }
     // P5 major geography needs only seed, bounds and required reservations; no biome map or biome Resources are read.
@@ -41,6 +42,7 @@ public static class WaterBodyPlanner
                 throw new ArgumentException("Hydrology suitability must be finite within 0–1.");
         }
         if (map!=null) foreach (var biome in map.Biomes) if (!profiles.ContainsKey(biome.Id)) throw new ArgumentException("Missing macro biome hydrology.");
+        if (map==null) OceanPlanner.Append(settings,seed,bounds,features,bodies,warnings,authoredPond);
         for (int slot = 0; slot < settings.LakeCount; slot++)
         {
             using var rng = new RandomNumberGenerator { Seed = SlotSeed(seed,slot) };

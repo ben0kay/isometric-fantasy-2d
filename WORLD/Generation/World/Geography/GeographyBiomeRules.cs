@@ -8,8 +8,12 @@ internal sealed class GeographyBiomeRules
     private readonly float[][] _preferences=new float[4][];
     // Cache the four lake/river combinations once instead of inspecting Resources in every growth edge.
     // =========================================================
+    internal int GenerationVersion { get; private set; }
+    internal int LandCells { get; private set; }
+    internal bool IsLand(int cell) => (_mask[cell]&GeographyWaterKind.Ocean)==0;
     internal GeographyBiomeRules(WorldGeographyPlan geography,float cellSize,int columns,int rows,WorldBiomeDefinition[] definitions)
     {
+        GenerationVersion=geography.PlanVersion==1 ? MacroWorldMap.GeographyGeneratorVersion : MacroWorldMap.OceanGeneratorVersion;
         _mask=geography.BuildWaterMask(cellSize,columns,rows);
         for (int kind=0;kind<4;kind++)
         {
@@ -31,14 +35,17 @@ internal sealed class GeographyBiomeRules
         }
         for (int cell=0;cell<_mask.Length;cell++)
         {
+            if (!IsLand(cell)) continue;
+            LandCells++;
             bool eligible=false;
             for (int b=0;b<definitions.Length;b++)
                 if (definitions[b].GenerationWeight>0 && Preference(cell,b)>0) { eligible=true; break; }
             if (!eligible) throw new ArgumentException($"No positive-weight biome is compatible with geography at macro cell ({cell%columns},{cell/columns}), water={_mask[cell]}. Major water was not removed.");
         }
+        if (LandCells==0) throw new ArgumentException("Geography leaves no land for biome regions/start.");
     }
-    internal bool NeedsSelection(int cell) => _biased[(int)_mask[cell]];
-    internal float Preference(int cell,int biome) => _preferences[(int)_mask[cell]][biome];
+    internal bool NeedsSelection(int cell) => _biased[(int)_mask[cell]&3];
+    internal float Preference(int cell,int biome) => IsLand(cell) ? _preferences[(int)_mask[cell]&3][biome] : 0f;
     // Stable weighted fallback for constrained cells/components; never silently claim them with a forbidden biome.
     // =========================================================
     internal int Select(int cell,WorldBiomeDefinition[] definitions,double unit)

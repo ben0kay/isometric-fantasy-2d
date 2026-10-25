@@ -14,15 +14,16 @@ public partial class MacroMapDebugPanel : CanvasLayer
     {
         if (GetNodeOrNull<WorldScene>("../..") is not WorldScene world || world.MacroMap is not { } map) return;
         Layer = 30;
-        _panel = new PanelContainer { Visible = false, OffsetLeft = 24, OffsetTop = 80, OffsetRight = 760, OffsetBottom = 580 };
+        _panel = new PanelContainer { Visible = false, AnchorRight=1,AnchorBottom=1, OffsetLeft=24,OffsetTop=64,OffsetRight=-24,OffsetBottom=-24 };
         AddChild(_panel);
         var box = new VBoxContainer(); _panel.AddChild(box);
-        box.AddChild(new Label { Text = "F7 — FINITE WORLD BLUEPRINT (finite world / reservations)" });
-        box.AddChild(new Label { Text = $"Lakes: {world.WaterPlan?.Bodies.Count(b => b.River==null) ?? 0} / Rivers: {world.WaterPlan?.Bodies.Count(b => b.River!=null) ?? 0} (blue/cyan; {(world.Blueprint.SchemaVersion >= 5 ? "playable" : "metadata only")})" });
+        box.AddChild(new Label { Text = "F7 — WHOLE WORLD (geography / biomes / reservations)",AutowrapMode=TextServer.AutowrapMode.WordSmart });
+        box.AddChild(new Label { Text = $"Lakes: {world.WaterPlan?.Bodies.Count(b => b.River==null && !b.IsOcean) ?? 0} / Oceans: {world.WaterPlan?.Bodies.Count(b=>b.IsOcean) ?? 0} / Rivers: {world.WaterPlan?.Bodies.Count(b => b.River!=null) ?? 0} (blue/cyan; {(world.Blueprint.SchemaVersion >= 5 ? "playable" : "metadata only")})",AutowrapMode=TextServer.AutowrapMode.WordSmart });
+        box.AddChild(new Label { Text=$"{map.Bounds.Size.X:N0} × {map.Bounds.Size.Y:N0} units | {map.Columns} × {map.Rows} macro cells | whole map fitted",AutowrapMode=TextServer.AutowrapMode.WordSmart });
         var image = Image.CreateEmpty(map.Columns, map.Rows, false, Image.Format.Rgba8);
         for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
         {
-            int region = map.RegionIdAtCell(x, y); Color colour = map.Biomes[map.Regions[region].BiomeIndex].Colour;
+            int region = map.RegionIdAtCell(x, y); Color colour = region<0 ? new Color(0.045f,0.2f,0.36f) : map.Biomes[map.Regions[region].BiomeIndex].Colour;
             if ((x > 0 && map.RegionIdAtCell(x - 1, y) != region) || (y > 0 && map.RegionIdAtCell(x, y - 1) != region)) colour = colour.Darkened(0.4f);
             if (world.FeaturePlan is { } plan)
             {
@@ -38,13 +39,13 @@ public partial class MacroMapDebugPanel : CanvasLayer
             Vector2 sample = map.Bounds.Position + new Vector2((x+0.5f)*map.CellSize,(y+0.5f)*map.CellSize);
             if (world.WaterPlan != null)
                 foreach (var body in world.WaterPlan.Bodies)
-                    if (body.Bounds.HasPoint(sample) && body.SignedDistance(sample) >= 0) colour = new Color(0.15f,0.55f,0.95f);
+                    if (body.Bounds.HasPoint(sample) && body.SignedDistance(sample) >= 0) colour = body.IsOcean ? new Color(0.045f,0.2f,0.36f) : new Color(0.15f,0.55f,0.95f);
             image.SetPixel(x, y, colour);
         }
         if (world.WaterPlan!=null)
             foreach (var body in world.WaterPlan.Bodies)
                 if (body.River!=null) DrawRiver(image,map,body.River);
-        box.AddChild(new TextureRect { Texture = ImageTexture.CreateFromImage(image), CustomMinimumSize = new Vector2(700, 460),
+        box.AddChild(new TextureRect { Texture = ImageTexture.CreateFromImage(image), SizeFlagsVertical=Control.SizeFlags.ExpandFill, SizeFlagsHorizontal=Control.SizeFlags.ExpandFill,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered });
         image.Dispose();
     }

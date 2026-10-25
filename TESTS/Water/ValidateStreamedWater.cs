@@ -73,7 +73,7 @@ public partial class ValidateStreamedWater : Node
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world);
         Check(world.StartupError==null,"World startup: "+world.StartupError);
-        Check(world.Blueprint.SchemaVersion==8 && world.GeneratedWater!=null,"New world lacks playable-water version/runtime");
+        Check(world.Blueprint.SchemaVersion==9 && world.GeneratedWater!=null,"New world lacks playable-water version/runtime");
         var body=world.WaterPlan.Bodies[0]; var centre=body.Bounds.GetCenter();
         world.Player.GlobalPosition=centre; world.Player.Velocity=Vector2.Zero;
         await WaitLoaded(world,centre);
@@ -103,11 +103,11 @@ public partial class ValidateStreamedWater : Node
         try
         {
             var b=world.Blueprint; var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,CampaignSession.ContentFingerprint(),DateTime.UtcNow.ToString("O"),b,
-                new SavedPlayer(centre.X,centre.Y,Health:100),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+                new SavedPlayer(centre.X,centre.Y,Health:100,Inventory:world.Harvesting.Inventory.Capture()),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
             var store=new CampaignStore(root); store.Save(snapshot,true);
             frozen=store.Load(b.ProfileId).Snapshot;
             var loaded=frozen.Blueprint;
-            Check(loaded.SchemaVersion==8 && WaterBodyPlan.Restore(loaded.Water,loaded.Seed,world.MacroMap.Bounds).Hash==world.WaterPlan.Hash,"Playable water lost disk identity");
+            Check(loaded.SchemaVersion==9 && WaterBodyPlan.Restore(loaded.Water,loaded.Seed,world.MacroMap.Bounds).Hash==world.WaterPlan.Hash,"Playable water lost disk identity");
             store.Validate(Legacy(snapshot,4)); // WG1 metadata stays legacy, never promoted on restore.
             Reject(() => store.Validate(snapshot with { Blueprint=b with { Water=null } }),"Playable save accepted missing water");
         }
@@ -123,8 +123,8 @@ public partial class ValidateStreamedWater : Node
         {
             await RestoreWorld(frozen,true);
             await RestoreWorld(Legacy(frozen,5),true);
-            await RestoreWorld(Legacy(frozen,4) with { Player=new SavedPlayer(0,0,Health:100) },false);
-            await RestoreWorld(Legacy(frozen,4) with { Blueprint=Legacy(frozen,4).Blueprint with { Water=null },Player=new SavedPlayer(0,0,Health:100) },false);
+            await RestoreWorld(Legacy(frozen,4) with { Player=frozen.Player with { X=0,Y=0 } },false);
+            await RestoreWorld(Legacy(frozen,4) with { Blueprint=Legacy(frozen,4).Blueprint with { Water=null },Player=frozen.Player with { X=0,Y=0 } },false);
         }
         finally
         {

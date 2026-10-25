@@ -20,17 +20,18 @@ public partial class ValidateGeographyFirst : Node
         string authored=Godot.FileAccess.GetFileAsString(sourcePath).Replace("\r\n","\n");
         string previous=Godot.FileAccess.GetFileAsString("res://SAVE/Migrations/References/WaterDefaultsBefore.txt").Replace("\r\n","\n");
         Check(CampaignSession.NormalizeDefaultWaterGenerationSource(sourcePath,authored)==previous,"Shipped water defaults lost legacy content compatibility");
-        string changed=authored.Replace("CellSize = 256.0","CellSize = 128.0");
+        string changed=authored.Replace("CellSize = 512.0","CellSize = 128.0");
         Check(CampaignSession.NormalizeDefaultWaterGenerationSource(sourcePath,changed)==changed,"Unrelated config edit bypassed compatibility");
         Check(CampaignSession.NormalizeDefaultWaterGenerationSource("res://other.tres",authored)==authored,"Water compatibility leaked to another dependency");
         var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+        config.Bounds=new Rect2(-22500,-16875,45000,33750); config.CellSize=256;
         config.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1 };
         var pond=new Rect2(650,500,860,600);
         for (int seed=0;seed<6;seed++)
         {
             var world=WorldGenerationPipeline.Build(config,seed,pond); var water=world.Geography.Water;
             Check(water.Bodies.Count(b=>b.River!=null)==1 && water.Bodies.Count(b=>b.River==null)==2,"Expected feasible major water");
-            Check(world.Map.GenerationVersion==2,"New pipeline did not version biome generation");
+            Check(world.Map.GenerationVersion==3,"New pipeline did not version biome generation");
             var repeat=WorldGenerationPipeline.Build(config,seed,pond);
             Check(world.Map.Hash==repeat.Map.Hash && water.Hash==repeat.Geography.Water.Hash,"Pipeline rerolled same seed");
             var features=WorldFeaturePlanner.Build(config,seed);
@@ -60,7 +61,7 @@ public partial class ValidateGeographyFirst : Node
         SyntheticConstraints();
         config.Water=null;
         var empty=WorldGenerationPipeline.Build(config,42);
-        Check(empty.Geography.Water.Bodies.Count==0 && empty.Map.GenerationVersion==2,"Disabled geography did not produce empty versioned world");
+        Check(empty.Geography.Water.Bodies.Count==0 && empty.Map.GenerationVersion==3,"Disabled geography did not produce empty versioned world");
         Check(empty.Map.CopyRegionCells().SequenceEqual(MacroWorldBuilder.Build(config,42).CopyRegionCells()),"Unconstrained world needlessly changed biome layout");
         SnapshotChecks(empty,config);
     }
@@ -142,18 +143,18 @@ public partial class ValidateGeographyFirst : Node
     private void SnapshotChecks(WorldGenerationResult world,WorldGenerationMasterConfig config)
     {
         var map=world.Map; var features=world.Features; var water=world.Geography.Water;
-        var b=Blueprint(map,features,water,8) with { GeographyVersion=WorldGeographyPlan.Version };
+        var b=Blueprint(map,features,water,9) with { GeographyVersion=WorldGeographyPlan.Version };
         Check(WorldBlueprintRestore.Map(b).Hash==map.Hash,"New map failed frozen restore");
         Check(WaterBodyPlan.Restore(b.Water,b.Seed,map.Bounds).Hash==water.Hash,"Geography failed frozen restore");
         SaveCompatibility.RequireSupported(CampaignSnapshot.CurrentSchema,b);
         Reject(()=>SaveCompatibility.RequireSupported(CampaignSnapshot.CurrentSchema,b with { GeographyVersion=99 }),"Unknown geography version accepted");
-        Reject(()=>SaveCompatibility.RequireSupported(CampaignSnapshot.CurrentSchema,b with { SchemaVersion=7 }),"New generator accepted under older blueprint schema");
+        Reject(()=>SaveCompatibility.RequireSupported(CampaignSnapshot.CurrentSchema,b with { SchemaVersion=8 }),"New generator accepted under older blueprint schema");
         Reject(()=>SaveCompatibility.RequireSupported(CampaignSnapshot.CurrentSchema,b with { GeneratorVersion=1 }),"New schema accepted older generator identity");
         var root=Path.Combine(Path.GetTempPath(),"p5ab-"+Guid.NewGuid().ToString("N"));
         try
         {
             var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,new string('A',64),DateTime.UtcNow.ToString("O"),b,
-                new SavedPlayer(0,0,Health:100),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+                new SavedPlayer(0,0,Health:100,Inventory:new SavedInventory(GD.Load<PlayerInventoryProfile>("res://ENTITIES/Player/Inventory/DefaultPlayerInventory.tres").Storage.StorageSlots,Array.Empty<SavedItemStack>(),new long[9],-1,false)),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
             var store=new CampaignStore(root); store.Save(snapshot,true); var loaded=store.Load(b.ProfileId).Snapshot;
             Check(loaded.Blueprint.MapHash==b.MapHash && loaded.Blueprint.Water.Hash==water.Hash,"Disk changed geography/map identity");
             var legacyMap=MacroWorldBuilder.Build(config,map.Seed);

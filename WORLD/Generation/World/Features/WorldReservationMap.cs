@@ -113,6 +113,7 @@ internal static class FeatureGeometry
             for (int j = i + 2; j < polygon.Length; j++)
             {
                 if ((j + 1) % polygon.Length == i) continue;
+                if (!new Rect2(a,b-a).Abs().Grow(0.000001f).Intersects(new Rect2(polygon[j],polygon[(j+1)%polygon.Length]-polygon[j]).Abs(),true)) continue;
                 if (SegmentDistanceSquared(a, b, polygon[j], polygon[(j + 1) % polygon.Length]) <= 1e-12)
                     throw new ArgumentException($"Feature {id}: polygon crosses or touches itself.");
             }

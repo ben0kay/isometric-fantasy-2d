@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 
-public sealed record WaterBodySnapshot(string Id, string LiquidId, float[] PolygonXY, RiverPathSnapshot River = null);
+public sealed record WaterBodySnapshot(string Id, string LiquidId, float[] PolygonXY, RiverPathSnapshot River = null,bool IsOcean = false);
 public sealed record WaterPlanSnapshot(int Version, int Seed, string Hash, WaterBodySnapshot[] Bodies);
 public sealed class PlannedWaterBody
 {
@@ -16,21 +16,23 @@ public sealed class PlannedWaterBody
     private readonly float[] _inverseLength;
     internal int VertexCount => _polygon.Length;
     public PlannedRiverPath River { get; }
+    public bool IsOcean { get; }
     public string Id { get; }
     public string LiquidId { get; }
     public Rect2 Bounds { get; }
     // Validate simple polygons before accepting generated or disk-supplied geometry.
     // =========================================================
-    internal PlannedWaterBody(string id, string liquidId, Vector2[] polygon,PlannedRiverPath river = null)
+    internal PlannedWaterBody(string id, string liquidId, Vector2[] polygon,PlannedRiverPath river = null,bool isOcean=false)
     {
         if (string.IsNullOrWhiteSpace(id) || id.Length > 128 || string.IsNullOrWhiteSpace(liquidId) || liquidId.Length > 128
-            || polygon == null || polygon.Length < 3 || polygon.Length > (river==null ? 64 : 2048) || polygon.Any(p => !p.IsFinite()))
+            || polygon == null || polygon.Length < 3 || polygon.Length > (river==null && !isOcean ? 64 : 2048) || polygon.Any(p => !p.IsFinite()))
             throw new ArgumentException("Invalid water body identity/geometry.");
         Bounds = FeatureGeometry.Bounds(polygon);
         float extent = Mathf.Max(Bounds.Size.X, Bounds.Size.Y);
         if (!float.IsFinite(extent) || extent < 1f) throw new ArgumentException("Degenerate water geometry.");
-        FeatureGeometry.Validate(polygon.Select(p => (p - Bounds.GetCenter()) / (extent * 1.001f)).ToArray(), id,river==null ? 64 : 2048);
-        Id = id; LiquidId = liquidId; _polygon = (Vector2[])polygon.Clone(); River=river;
+        FeatureGeometry.Validate(polygon.Select(p => (p - Bounds.GetCenter()) / (extent * 1.001f)).ToArray(), id,river==null && !isOcean ? 64 : 2048);
+        if (isOcean && river!=null) throw new ArgumentException("Ocean cannot also be a river.");
+        IsOcean=isOcean; Id = id; LiquidId = liquidId; _polygon = (Vector2[])polygon.Clone(); River=river;
         _edgeBounds=new Rect2[_polygon.Length]; _edgeDelta=new Vector2[_polygon.Length]; _inverseLength=new float[_polygon.Length];
         for (int i=0;i<_polygon.Length;i++)
         {
@@ -80,11 +82,11 @@ public sealed class PlannedWaterBody
     }
     // Serialize detached values; snapshot mutation cannot change the active plan.
     // =========================================================
-    internal WaterBodySnapshot Snapshot() => new(Id, LiquidId, _polygon.SelectMany(p => new[] { p.X,p.Y }).ToArray(),River?.Snapshot());
+    internal WaterBodySnapshot Snapshot() => new(Id, LiquidId, _polygon.SelectMany(p => new[] { p.X,p.Y }).ToArray(),River?.Snapshot(),IsOcean);
 }
 public sealed class WaterBodyPlan
 {
-    public const int Version = 3;
+    public const int Version = 4;
     public int PlanVersion { get; }
     public Rect2 Bounds { get; }
     public int Seed { get; }
@@ -96,8 +98,9 @@ public sealed class WaterBodyPlan
     internal WaterBodyPlan(int seed, Rect2 bounds, IEnumerable<PlannedWaterBody> bodies, IEnumerable<string> warnings,int version = 0)
     {
         Bounds=bounds; Seed = seed; Bodies = Array.AsReadOnly(bodies.ToArray()); Warnings = Array.AsReadOnly(warnings.ToArray());
-        PlanVersion=version==0 ? (Bodies.Any(b => b.River!=null) ? 3 : 1) : version;
-        if ((PlanVersion<1 || PlanVersion>Version) || (PlanVersion==1 && Bodies.Any(b => b.River!=null)) || (PlanVersion>=2 && !Bodies.Any(b => b.River!=null))
+        PlanVersion=version==0 ? (Bodies.Any(b => b.IsOcean) ? 4 : Bodies.Any(b => b.River!=null) ? 3 : 1) : version;
+        if ((PlanVersion<1 || PlanVersion>Version) || (PlanVersion==1 && Bodies.Any(b => b.River!=null)) || (PlanVersion>=2 && PlanVersion<=3 && !Bodies.Any(b => b.River!=null))
+            || (PlanVersion<4 && Bodies.Any(b=>b.IsOcean)) || (PlanVersion==4 && !Bodies.Any(b=>b.IsOcean))
             || (PlanVersion<3 && Bodies.Any(b => b.VertexCount>64 || b.River?.Points.Count>24))) throw new ArgumentException("Invalid water plan version.");
         if (Bodies.Count > 32 || Bodies.Select(b => b.Id).Distinct(StringComparer.Ordinal).Count() != Bodies.Count
             || Bodies.Any(b => !bounds.Encloses(b.Bounds))) throw new ArgumentException("Invalid frozen water plan.");
@@ -108,6 +111,7 @@ public sealed class WaterBodyPlan
         {
             var snapshot = body.Snapshot(); writer.Write(snapshot.Id); writer.Write(snapshot.LiquidId); writer.Write(snapshot.PolygonXY.Length);
             foreach (float value in snapshot.PolygonXY) writer.Write(value);
+            if (PlanVersion>=4) writer.Write(snapshot.IsOcean);
             if (PlanVersion>=2)
             {
                 writer.Write(snapshot.River!=null);
@@ -139,11 +143,11 @@ public sealed class WaterBodyPlan
         {
             var bodies = snapshot.Bodies.Select(b =>
             {
-                if (b == null || b.PolygonXY == null || b.PolygonXY.Length < 6 || b.PolygonXY.Length > (snapshot.Version>=3 && b.River!=null ? 4096 : 128) || b.PolygonXY.Length%2 != 0)
+                if (b == null || b.PolygonXY == null || b.PolygonXY.Length < 6 || b.PolygonXY.Length > (snapshot.Version>=3 && (b.River!=null || (snapshot.Version>=4 && b.IsOcean)) ? 4096 : 128) || b.PolygonXY.Length%2 != 0)
                     throw new ArgumentException("Invalid water snapshot.");
                 var polygon = new Vector2[b.PolygonXY.Length/2];
                 for (int i = 0; i < polygon.Length; i++) polygon[i] = new(b.PolygonXY[i*2],b.PolygonXY[i*2+1]);
-                return new PlannedWaterBody(b.Id,b.LiquidId,polygon,PlannedRiverPath.Restore(b.River));
+                return new PlannedWaterBody(b.Id,b.LiquidId,polygon,PlannedRiverPath.Restore(b.River),b.IsOcean);
             });
             var plan = new WaterBodyPlan(seed,bounds,bodies,Array.Empty<string>(),snapshot.Version);
             if (plan.Hash != snapshot.Hash) throw new InvalidDataException("Frozen water hash mismatch.");
