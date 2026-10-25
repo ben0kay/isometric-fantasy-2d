@@ -86,6 +86,7 @@ public sealed class WaterBodyPlan
 {
     public const int Version = 3;
     public int PlanVersion { get; }
+    public Rect2 Bounds { get; }
     public int Seed { get; }
     public string Hash { get; }
     public IReadOnlyList<PlannedWaterBody> Bodies { get; }
@@ -94,7 +95,7 @@ public sealed class WaterBodyPlan
     // =========================================================
     internal WaterBodyPlan(int seed, Rect2 bounds, IEnumerable<PlannedWaterBody> bodies, IEnumerable<string> warnings,int version = 0)
     {
-        Seed = seed; Bodies = Array.AsReadOnly(bodies.ToArray()); Warnings = Array.AsReadOnly(warnings.ToArray());
+        Bounds=bounds; Seed = seed; Bodies = Array.AsReadOnly(bodies.ToArray()); Warnings = Array.AsReadOnly(warnings.ToArray());
         PlanVersion=version==0 ? (Bodies.Any(b => b.River!=null) ? 3 : 1) : version;
         if ((PlanVersion<1 || PlanVersion>Version) || (PlanVersion==1 && Bodies.Any(b => b.River!=null)) || (PlanVersion>=2 && !Bodies.Any(b => b.River!=null))
             || (PlanVersion<3 && Bodies.Any(b => b.VertexCount>64 || b.River?.Points.Count>24))) throw new ArgumentException("Invalid water plan version.");

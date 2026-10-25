@@ -8,6 +8,7 @@ public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId,
     int FeaturePlanVersion = 0, string FeatureHash = "", WorldFeatureSnapshot[] Features = null)
 {
     public WaterPlanSnapshot Water { get; init; }
+    public int GeographyVersion { get; init; }
     public SavedMacroRegion[] MacroRegions { get; init; }
     public SavedMacroBiome[] MacroBiomes { get; init; }
     public int LocalGeneratorVersion { get; init; }
@@ -24,7 +25,7 @@ public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId,
         var biomes = new string[map.Biomes.Count]; var regions = new int[map.Regions.Count];
         for (int i = 0; i < biomes.Length; i++) biomes[i] = map.Biomes[i].Id;
         for (int i = 0; i < regions.Length; i++) regions[i] = map.Regions[i].BiomeIndex;
-        return new(2, Guid.Parse(profileId).ToString("N"), Guid.Parse(runId).ToString("N"), Guid.NewGuid().ToString("N"), MacroWorldMap.GeneratorVersion, map.Seed,
+        return new(2, Guid.Parse(profileId).ToString("N"), Guid.Parse(runId).ToString("N"), Guid.NewGuid().ToString("N"), map.GenerationVersion, map.Seed,
             map.Hash, map.Bounds.Position.X, map.Bounds.Position.Y, map.Bounds.Size.X, map.Bounds.Size.Y,
             map.CellSize, map.Columns, map.Rows, biomes, regions, map.CopyRegionCells(),
             features == null ? 0 : WorldFeaturePlan.Version, features?.Hash ?? "",

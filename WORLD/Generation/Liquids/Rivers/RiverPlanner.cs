@@ -19,15 +19,15 @@ public static class RiverPlanner
     #region Macro planning
     // Rivers get independent slot RNG streams after lakes; disabling them preserves lake hashes and old outcomes.
     // =========================================================
-    internal static void Append(WaterGenerationMasterConfig settings,MacroWorldMap map,WorldFeaturePlan features,
+    internal static void Append(WaterGenerationMasterConfig settings,int seed,Rect2 bounds,MacroWorldMap map,WorldFeaturePlan features,
         Dictionary<string,BiomeHydrologyProfile> profiles,List<PlannedWaterBody> bodies,List<string> warnings,Rect2? authoredPond)
     {
         if (settings.RiverCount==0) return;
         Validate(settings);
         for (int slot=0;slot<settings.RiverCount;slot++)
         {
-            var grid=BuildGrid(settings,map,features,profiles,bodies,authoredPond);
-            using var rng=new RandomNumberGenerator { Seed=Seed(map.Seed,slot) };
+            var grid=BuildGrid(settings,bounds,map,features,profiles,bodies,authoredPond);
+            using var rng=new RandomNumberGenerator { Seed=Seed(seed,slot) };
             bool placed=false;
             for (int attempt=0;attempt<settings.AttemptsPerRiver && grid.Eligible.Count>1;attempt++)
             {
@@ -38,7 +38,7 @@ public static class RiverPlanner
                     int id=grid.Eligible[(int)(rng.Randi()%(uint)grid.Eligible.Count)];
                     float span=grid.Point(start).DistanceTo(grid.Point(id));
                     if (span<settings.MinimumRiverSpan || span>settings.MaximumRiverSpan || grid.Suitability[id]<=0 || rng.Randf()>=grid.Suitability[id]) continue;
-                    if (settings.RequireMultipleRiverBiomes && map.Biomes.Count>1 && map.BiomeAt(grid.Point(start)).Id==map.BiomeAt(grid.Point(id)).Id) continue;
+                    if (map!=null && settings.RequireMultipleRiverBiomes && map.Biomes.Count>1 && map.BiomeAt(grid.Point(start)).Id==map.BiomeAt(grid.Point(id)).Id) continue;
                     end=id; break;
                 }
                 if (end<0) continue;
@@ -49,7 +49,7 @@ public static class RiverPlanner
                 PlannedWaterBody body;
                 try { body=new PlannedWaterBody($"river.{slot:D3}",settings.LiquidId,Outline(path,settings.RiverBankIrregularity),path); }
                 catch (ArgumentException) { continue; } // Invalid bends are rejected as a whole, never drawn as disconnected pieces.
-                if (!ValidFootprint(body,settings,map,features,profiles,bodies,authoredPond)) continue;
+                if (!ValidFootprint(body,settings,bounds,map,features,profiles,bodies,authoredPond)) continue;
                 bodies.Add(body); placed=true; break;
             }
             if (!placed) warnings.Add($"Water river.{slot:D3}: no valid source-to-basin corridor after bounded attempts/search; skipped (biomes, reservations, width or route limits).");
@@ -57,11 +57,11 @@ public static class RiverPlanner
     }
     // Cache a modest cost field once per river slot. Conservative clearance protects transitions between grid centers.
     // =========================================================
-    private static RouteGrid BuildGrid(WaterGenerationMasterConfig settings,MacroWorldMap map,WorldFeaturePlan features,
+    private static RouteGrid BuildGrid(WaterGenerationMasterConfig settings,Rect2 bounds,MacroWorldMap map,WorldFeaturePlan features,
         Dictionary<string,BiomeHydrologyProfile> profiles,List<PlannedWaterBody> bodies,Rect2? pond)
     {
-        var grid=new RouteGrid { Bounds=map.Bounds,Step=settings.RiverRouteCellSize };
-        grid.Columns=Mathf.CeilToInt(map.Bounds.Size.X/grid.Step); grid.Rows=Mathf.CeilToInt(map.Bounds.Size.Y/grid.Step);
+        var grid=new RouteGrid { Bounds=bounds,Step=settings.RiverRouteCellSize };
+        grid.Columns=Mathf.CeilToInt(bounds.Size.X/grid.Step); grid.Rows=Mathf.CeilToInt(bounds.Size.Y/grid.Step);
         if ((long)grid.Columns*grid.Rows>65536) throw new ArgumentException("River route grid exceeds 65536 cells; increase RiverRouteCellSize.");
         grid.Costs=new float[grid.Columns*grid.Rows]; grid.Suitability=new float[grid.Costs.Length];
         float radius=settings.MaximumRiverWidth*1.4f+settings.RiverBendStrength+settings.Separation+grid.Step*0.75f;
@@ -72,9 +72,9 @@ public static class RiverPlanner
             bool blocked=false;
             foreach (var body in bodies) if (body.Bounds.Grow(radius).HasPoint(point)) { blocked=true; break; }
             if (blocked) continue;
-            float suitability=DiskSuitability(point,radius,map,profiles);
+            float suitability=map==null ? 1f : DiskSuitability(point,radius,map,profiles);
             if (suitability<0) continue;
-            var endpointProfile=profiles[map.BiomeAt(point).Id];
+            var endpointProfile=map==null ? null : profiles[map.BiomeAt(point).Id];
             grid.Suitability[id]=endpointProfile?.RiverSuitability ?? 1f;
             grid.Costs[id]=1f+(1f-suitability)*4f; grid.Eligible.Add(id);
         }
@@ -219,10 +219,10 @@ public static class RiverPlanner
     #region Final contract validation
     // Validate the entire final noisy corridor, not only the coarse route or its endpoints.
     // =========================================================
-    private static bool ValidFootprint(PlannedWaterBody body,WaterGenerationMasterConfig settings,MacroWorldMap map,WorldFeaturePlan features,
+    private static bool ValidFootprint(PlannedWaterBody body,WaterGenerationMasterConfig settings,Rect2 bounds,MacroWorldMap map,WorldFeaturePlan features,
         Dictionary<string,BiomeHydrologyProfile> profiles,List<PlannedWaterBody> placed,Rect2? pond)
     {
-        if (!map.Bounds.Encloses(body.Bounds)) return false;
+        if (!bounds.Encloses(body.Bounds)) return false;
         var polygon=body.CopyPolygon(); float margin=settings.Separation;
         foreach (var feature in features.Reservations.Features)
             if ((feature.AllowedPlacements&WorldPlacementKind.Water)==0 && FeatureGeometry.Overlaps(polygon,body.Bounds,margin,feature.CopyPolygon(),feature.Bounds,feature.Clearance)) return false;
@@ -233,6 +233,7 @@ public static class RiverPlanner
             var corners=new[] { rect.Position,new Vector2(rect.End.X,rect.Position.Y),rect.End,new Vector2(rect.Position.X,rect.End.Y) };
             if (FeatureGeometry.Overlaps(polygon,body.Bounds,margin,corners,rect,0)) return false;
         }
+        if (map==null) return true;
         if ((long)Mathf.CeilToInt(body.Bounds.Size.X/map.CellSize+2)*Mathf.CeilToInt(body.Bounds.Size.Y/map.CellSize+2)>4096) return false;
         return WaterBodyPlanner.Suitability(polygon,body.Bounds,map,profiles,true)>=0;
     }

@@ -3,7 +3,7 @@
 > **Status:** Future-geography design / provisional preferences. **P0–P4 foundational generation, streaming and saves are already implemented**; remaining proposals are not automatically approved work.
 > **Last updated:** 2026-10-24
 > **Scope:** The new **fully top-down Godot 2D** fantasy survival sandbox, despite the repository's "isometric" name.
-> **Current implementation:** P0/P1 seeded finite macro biome regions, P2 feature reservations, P3 local chunk streaming and P4 private disk saves/Continue exist. WG lake/river geometry and streaming also exist, currently after biome assignment. Oceans/continents/relief, real settlements/caves, expandable finite boundaries and offline ecology remain future. Use [phase guide](../WORLD/Generation_Implementation.md) for authoritative status.
+> **Current implementation:** P0/P1 seeded finite macro biome regions, P2 feature reservations, P3 local chunk streaming and P4 private disk saves/Continue exist. WG lake/river geometry and streaming also exist; P5a/P5b now plans major water before constrained biome assignment. Oceans/continents/relief, real settlements/caves, expandable finite boundaries and offline ecology remain future. Use [phase guide](../WORLD/Generation_Implementation.md) for authoritative status.
 
 ## Core decision under consideration
 
@@ -71,7 +71,7 @@ The agreed direction is **constraints → major geography → major POIs/access 
 5. Finalize detailed connections/local terrain and stream POI scenes, ground, shores, scenery/resources and entities near the player.
 6. On Continue, restore the frozen blueprint first and apply saved local edits through existing persistence/streaming; do not rerun the new-world pipeline over a saved campaign.
 
-Planning a temple early does not instantiate its entire scene globally. Oceans and volcanic geology are features that may span many biome regions. Smaller biome-dependent water details can be added later without moving established major geography. This ordering is agreed design; the dependency inversion is not implemented yet.
+Planning a temple early does not instantiate its entire scene globally. Oceans and volcanic geology are features that may span many biome regions. Smaller biome-dependent water details can be added later without moving established major geography. P5a/P5b implements the major-water/biome dependency inversion. Ocean/volcano/POI providers remain planned; full ordering awaits those separately authorized phases.
 
 ### Two scales of generation
 

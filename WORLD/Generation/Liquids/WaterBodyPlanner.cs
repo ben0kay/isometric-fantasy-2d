@@ -1,4 +1,4 @@
-// One bounded startup pass plans organic freshwater footprints after P2/P1, before local streaming.
+// Shared bounded freshwater geometry: new worlds plan before biomes; the explicit legacy path retains old eligibility.
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -6,17 +6,32 @@ using System.Linq;
 
 public static class WaterBodyPlanner
 {
-    // Null/disabled settings preserve the exact existing world; RNG is local to each stable body slot.
+    // Legacy biome-first entry point retained for frozen baseline tests; production creation uses BuildGeography.
     // =========================================================
     public static WaterBodyPlan Build(WorldGenerationMasterConfig config, MacroWorldMap map, WorldFeaturePlan features, Rect2? authoredPond = null)
     {
         if (config == null || map == null || features == null || map.Seed != features.Seed || map.Bounds != features.Reservations.Bounds)
             throw new ArgumentException("Water requires matching macro/feature ownership.");
-        var settings = config.Water; var bodies = new List<PlannedWaterBody>(); var warnings = new List<string>();
-        if (settings == null || !settings.Enabled) return new(map.Seed,map.Bounds,bodies,warnings);
+        return BuildCore(config,map.Seed,map.Bounds,features,authoredPond,map);
+    }
+    // P5 major geography needs only seed, bounds and required reservations; no biome map or biome Resources are read.
+    // =========================================================
+    public static WaterBodyPlan BuildGeography(WorldGenerationMasterConfig config,int seed,WorldFeaturePlan features,Rect2? authoredPond=null)
+    {
+        if (config==null || features==null || features.Seed!=seed || features.Reservations.Bounds!=config.Bounds)
+            throw new ArgumentException("Water geography requires matching world/feature ownership.");
+        return BuildCore(config,seed,config.Bounds,features,authoredPond,null);
+    }
+    // Share shape/placement code with the legacy biome-first validation path; only eligibility inputs differ.
+    // =========================================================
+    private static WaterBodyPlan BuildCore(WorldGenerationMasterConfig config,int seed,Rect2 bounds,WorldFeaturePlan features,Rect2? authoredPond,MacroWorldMap map)
+    {
+        var settings=config.Water; var bodies=new List<PlannedWaterBody>(); var warnings=new List<string>();
+        if (settings==null || !settings.Enabled) return new(seed,bounds,bodies,warnings);
         Validate(settings);
-        var profiles = new Dictionary<string,BiomeHydrologyProfile>(StringComparer.Ordinal);
-        foreach (var biome in config.Biomes)
+        var profiles=new Dictionary<string,BiomeHydrologyProfile>(StringComparer.Ordinal);
+
+        if (map!=null) foreach (var biome in config.Biomes)
         {
             if (biome == null || string.IsNullOrWhiteSpace(biome.Id) || !profiles.TryAdd(biome.Id,biome.Hydrology))
                 throw new ArgumentException("Water requires unique biome IDs.");
@@ -25,16 +40,16 @@ public static class WaterBodyPlanner
                 || !float.IsFinite(h.RiverSuitability) || h.RiverSuitability < 0 || h.RiverSuitability > 1))
                 throw new ArgumentException("Hydrology suitability must be finite within 0–1.");
         }
-        foreach (var biome in map.Biomes) if (!profiles.ContainsKey(biome.Id)) throw new ArgumentException("Missing macro biome hydrology.");
+        if (map!=null) foreach (var biome in map.Biomes) if (!profiles.ContainsKey(biome.Id)) throw new ArgumentException("Missing macro biome hydrology.");
         for (int slot = 0; slot < settings.LakeCount; slot++)
         {
-            using var rng = new RandomNumberGenerator { Seed = SlotSeed(map.Seed,slot) };
+            using var rng = new RandomNumberGenerator { Seed = SlotSeed(seed,slot) };
             bool placed = false;
             for (int attempt = 0; attempt < settings.AttemptsPerLake; attempt++)
             {
                 float radius = rng.RandfRange(settings.MinimumDiameter,settings.MaximumDiameter)*0.5f;
                 float outer = radius*(1f+settings.Irregularity);
-                var centre = map.Bounds.Position + new Vector2(rng.Randf(),rng.Randf())*map.Bounds.Size;
+                var centre = bounds.Position + new Vector2(rng.Randf(),rng.Randf())*bounds.Size;
                 // Conservative envelope protects required features, shore clearance and the fixed pond, including its bank.
                 if (!features.Reservations.AllowsDisk(centre,outer+settings.Separation,WorldPlacementKind.Water)) continue;
                 var envelope = new Rect2(centre-Vector2.One*outer,Vector2.One*outer*2);
@@ -48,14 +63,14 @@ public static class WaterBodyPlanner
                 }
                 var body = new PlannedWaterBody($"lake.{slot:D3}",settings.LiquidId,polygon);
                 if (bodies.Any(b => FeatureGeometry.Overlaps(polygon,body.Bounds,settings.Separation,b.CopyPolygon(),b.Bounds,0))) continue;
-                float suitability = Suitability(polygon,body.Bounds,map,profiles);
+                float suitability = map==null ? 1f : Suitability(polygon,body.Bounds,map,profiles);
                 if (suitability <= 0 || rng.Randf() >= suitability) continue;
                 bodies.Add(body); placed = true; break;
             }
             if (!placed) warnings.Add($"Water lake.{slot:D3}: no eligible placement after {settings.AttemptsPerLake} attempts; skipped.");
         }
-        RiverPlanner.Append(settings,map,features,profiles,bodies,warnings,authoredPond);
-        return new(map.Seed,map.Bounds,bodies,warnings);
+        RiverPlanner.Append(settings,seed,bounds,map,features,profiles,bodies,warnings,authoredPond);
+        return new(seed,bounds,bodies,warnings);
     }
     // Every coarse biome cell touched by the polygon must allow water, including interior islands.
     // =========================================================

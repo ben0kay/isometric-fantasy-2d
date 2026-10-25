@@ -46,7 +46,7 @@ public partial class WorldDiagnosticsPanel : PanelContainer
         box.AddChild(_trace);
         var world = World;
         if (world.MacroMap is not { } map) return;
-        var text = new StringBuilder($"Seed {map.Seed} | v{MacroWorldMap.GeneratorVersion} | {map.Columns}×{map.Rows} cells | {map.Regions.Count} regions\nBounds {map.Bounds} | cell {map.CellSize} | 100% land assigned\nHash {map.Hash[..16]} | World {world.Blueprint.WorldId[..12]}\n");
+        var text = new StringBuilder($"Seed {map.Seed} | v{map.GenerationVersion} | {map.Columns}×{map.Rows} cells | {map.Regions.Count} regions\nBounds {map.Bounds} | cell {map.CellSize} | 100% land assigned\nHash {map.Hash[..16]} | World {world.Blueprint.WorldId[..12]}\n");
         for (int b = 0; b < map.Biomes.Count; b++)
         {
             var regions = map.Regions.Where(r => r.BiomeIndex == b).ToArray();

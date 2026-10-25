@@ -17,6 +17,7 @@ Prefer **shared controllers, reusable materials, pooled effects, cached/spatial 
 | Track | Implemented now | Still pending |
 | --- | --- | --- |
 | **P0–P2 world generation** | Finite seeded macro biomes, protected spawn and feature reservations | P5 real terrain/locations/paths/caves/major geography |
+| **P5a/P5b geography-first** | Required reservations → major lake/river geography → constrained connected biomes; versioned frozen saves | Target-PC visuals/performance; P5c oceans/volcanoes and P5d major POIs |
 | **P3 streaming** | Default 45,000×33,750 world, 512-unit nearby chunks, local scenery/navigation, lifecycle-registered effects | Windows graphical stability, frame pacing, memory and hitches |
 | **P4 private campaigns** | Boot profiles, disk saves, New Campaign/Continue, F8, Esc, autosave; **earlier user functional checks accepted** | Large-save profiling and newer SO2/C1 graphical regression |
 | **SO0–SO2 scene layout** | Explicit persistent entity/prop, chunk and preview roots, shared Y sorting; automated checks passed | Windows rendered overlap/seams; SO3/SO4 still proposed |
@@ -96,7 +97,7 @@ This is the preferred **collaboration workflow**, not a restriction against assi
 
 **Protect existing contracts:** generation/world IDs, feature reservation ownership, stable candidate/object IDs, cross-chunk seams, biome Resource references, world-specific cache cleanup, shared weather/clock, and reproducible generation under a fixed generation/content version. P3 maintains session deltas; P4 now persists supported edits, player state, clock and world identity through private profiles and Continue. Automatic content migrations and permanent old-world migration do not exist. The startup/preload system and some data/nav/shader work are synchronous; the per-frame application budget is **not** a hard frame-time cap. The latest P3 fixes still require in-game Windows performance verification.
 
-**Agreed generation direction (planned P5):** required constraints → major geography (oceans, volcanic regions, lakes/rivers) → major POIs/access reservations (including endgame temples) → biome assignment → streamed local detail/populations. Current water still runs after biomes; [the authoritative P5a–P5e plan](WORLD/Generation_Implementation.md) owns that future dependency change. WG4 shore appearance remains separate.
+**Generation direction (P5a/P5b implemented; remainder planned):** required constraints → major geography (oceans, volcanic regions, lakes/rivers) → major POIs/access reservations (including endgame temples) → biome assignment → streamed local detail/populations. Major water now runs before biome assignment through P5a/P5b. Major ocean/volcano/POI providers remain planned; [the authoritative P5a–P5e plan](WORLD/Generation_Implementation.md) owns their continuation. WG4 shore appearance remains separate.
 
 **Authoritative detail:** [generation phases / regressions / P4 policy](WORLD/Generation_Implementation.md), [macro generator](WORLD/Generation/World/README.md), [feature reservations](WORLD/Generation/World/Features/README.md), [streaming lifecycle](WORLD/Runtime/Streaming/README.md), [placement priority](WORLD/placement_priority.md), and [SAVE implementation](SAVE/README.md).
 

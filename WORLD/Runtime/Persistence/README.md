@@ -1,6 +1,6 @@
-# World persistence — P4 awaiting local validation
+# World persistence
 
-`WorldBlueprintManifest` retains the P1/P2 creation API used by existing fixtures. Streamed runtime manifests use schema 4 (legacy/no generated water), schema 5 (WG2 lakes) or schema 6 (WG3 rivers), including exact macro region/biome values plus P2 feature snapshots and P3 local-generation metadata. `WorldBlueprintRestore` validates and reconstructs the exact maps/reservations from these values and verifies hashes; Continue never reruns the macro or feature planners.
+`WorldBlueprintManifest` retains the P1/P2 creation API used by existing fixtures. New streamed worlds use schema 8 (P5a/P5b geography-first); schema 4–7 manifests remain supported legacy outcomes. All retain exact macro regions/biomes, P2 features and P3 local metadata. Older WG sections below describe their original creation policies, not the current new-world default. `WorldBlueprintRestore` validates and reconstructs the exact maps/reservations from these values and verifies hashes; Continue never reruns the macro or feature planners.
 
 `WorldChunkStream` imports changed-object records before the first chunk is created. Removed props never materialize; burn progress restores through the existing shared fire lifecycle. `CaptureChanges` captures current loaded props and retained unloaded deltas into detached per-chunk records. Only changed states persist, scoped by WorldId/surface/chunk and stable candidate ID. Healthy visited trees do not accumulate save records. The coordinator in SAVE owns profile selection, disk IO and whole-checkpoint consistency.
 
@@ -19,3 +19,7 @@ Blueprint schema 5 marks new generated-water gameplay and requires a nonempty va
 Blueprint schema 6 carries water-plan version 2: frozen polygon plus explicit source-to-terminal centerline, widths and endpoint kinds. Version-1 lake plans/hash layout and schema-4/5 worlds remain unchanged. Version-2 metadata is rejected under older schema headers, and Continue never invokes the river planner. See [WG3](../../Generation/Liquids/Rivers/WG3_Validation.md).
 
 Smooth river geometry uses blueprint schema 7 / water version 3, with up to 1000 centerline samples and 2048 shoreline vertices per river (lakes remain at 64). Schema 6/version 2 retains the original 24/64 bounds and exact hash layout; supported older saves restore without smoothing/rerouting. New dense data rejects older schema/version headers.
+
+## P5a/P5b geography-first worlds
+
+New worlds use schema 8 / geography version 1 / macro generator version 2, including empty-water worlds. Frozen Water remains lake version 1 or smooth-river version 3. Restore hashes the map using its saved generator version; legacy versions are not relabeled. Continue restores water and map without reapplying current biome eligibility, even if new-world water is disabled. The geography wrapper is rebuilt from frozen water only; no duplicate raster mask is saved. Schema 4–7 retain exact prior outcomes. See [contract and validation](../../Generation/World/Geography/README.md).

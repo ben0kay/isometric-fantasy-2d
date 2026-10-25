@@ -38,3 +38,9 @@ Incremental source cache coverage in ValidateSceneryVisibility: stationary scene
 Screen-dust follow-up: ValidatePollenBatch now covers 26 checks. PollenDust is a separate CanvasLayer; camera, wind and daylight must not alter it. Dust alone sleeps the owner too; viewport resize/profile events are the only CPU updates. The old camera-local/wind/daylight expectations are superseded.
 
 `ValidateSpatialScheduling.tscn` verifies P2-A/B static skips, conservative camera envelope/exact mode, retention, re-entry, refreshed art, spatial edge cases, nearby-only occlusion, active fades/profile edits and cleanup (32 checks). `BenchmarkSpatialScheduling.tscn` samples stationary and simulated moving callback CPU times on a fixed-seed 49-chunk scene; no GPU/FPS conclusion is inferred.
+
+## P5a/P5b
+
+`ValidateGeographyFirst.tscn` checks six full seeded pipelines, biome-independent water, resource ordering, required reservations, complete connected eligible coverage, soft/hard profiles, narrow/mixed coarse cells, one-biome fallback, region-budget failures, schema/hash gates and disk round-trips for schema 4–8.
+
+Open `GeographyFirstPractice.tscn` with F6 to inspect water-first generation with only one cloned biome allowed around water. R cycles river stations; F7 shows regions and water. No canonical biome/config is edited. See [validation/target commands](../../WORLD/Generation/World/Geography/P5AB_Validation.md).

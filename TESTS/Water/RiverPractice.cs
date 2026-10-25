@@ -4,12 +4,12 @@ using System.Linq;
 public partial class RiverPractice : WorldScene
 {
     private int _station=2;
-    // Keep production defaults off; this fixture explicitly requests two lakes and one cross-biome river.
+    // Keep production defaults off; this fixture explicitly requests two lakes and one geography-first river.
     // =========================================================
     public override void _EnterTree()
     {
         Config=(WorldMasterConfig)Config.Duplicate(); Config.Generation=(WorldGenerationMasterConfig)Config.Generation.Duplicate();
-        Config.Generation.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1,RequireMultipleRiverBiomes=true };
+        Config.Generation.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1 };
         Config.RandomSeedOnLoad=false; Config.FixedSeed=42;
         base._EnterTree();
     }

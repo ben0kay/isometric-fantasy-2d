@@ -11,7 +11,7 @@ public static class WorldBlueprintRestore
     // =========================================================
     public static MacroWorldMap Map(WorldBlueprintManifest b)
     {
-        if (b == null || b.MacroBiomes == null || b.MacroRegions == null || b.RegionCells == null || b.BiomeIds == null || b.RegionBiomes == null
+        if (b == null || (b.GeneratorVersion!=MacroWorldMap.GeneratorVersion && b.GeneratorVersion!=MacroWorldMap.GeographyGeneratorVersion) || b.MacroBiomes == null || b.MacroRegions == null || b.RegionCells == null || b.BiomeIds == null || b.RegionBiomes == null
             || b.Columns < 1 || b.Rows < 1 || (long)b.Columns*b.Rows > 262144 || b.RegionCells.Length != (long)b.Columns*b.Rows
             || b.MacroBiomes.Length < 1 || b.MacroBiomes.Length > 4096 || b.MacroRegions.Length < 1 || b.MacroRegions.Length > 4096
             || b.BiomeIds.Length != b.MacroBiomes.Length || b.RegionBiomes.Length != b.MacroRegions.Length
@@ -37,7 +37,7 @@ public static class WorldBlueprintRestore
                 throw new InvalidDataException("Invalid region snapshot.");
             return new MacroRegion(v.Id,v.BiomeIndex,new Vector2(v.X,v.Y),v.Diameter,v.Cells);
         }).ToArray();
-        var map = new MacroWorldMap(b.Seed,new Rect2(b.OriginX,b.OriginY,b.Width,b.Height),b.CellSize,b.Columns,b.Rows,b.RegionCells,biomes,regions);
+        var map = new MacroWorldMap(b.Seed,new Rect2(b.OriginX,b.OriginY,b.Width,b.Height),b.CellSize,b.Columns,b.Rows,b.RegionCells,biomes,regions,b.GeneratorVersion);
         if (map.Hash != b.MapHash) throw new InvalidDataException("Frozen macro map hash mismatch.");
         return map;
     }

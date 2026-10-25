@@ -9,6 +9,7 @@ public partial class WorldScene : Node2D
     [Export] public WorldMasterConfig Config { get; set; }
     public GeneratedWaterRuntime GeneratedWater { get; private set; }
     public WaterBodyPlan WaterPlan { get; private set; }
+    public WorldGeographyPlan GeographyPlan { get; private set; }
     public WorldFeaturePlan FeaturePlan { get; private set; }
     public MacroWorldMap MacroMap { get; private set; }
     public WorldBlueprintManifest Blueprint { get; private set; }
@@ -108,15 +109,23 @@ public partial class WorldScene : Node2D
             var timer = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                var features = restore == null ? WorldFeaturePlanner.Build(Config.Generation, ActiveSeed) : WorldBlueprintRestore.Features(restore.Blueprint);
-                var map = restore == null ? MacroWorldBuilder.Build(Config.Generation, ActiveSeed) : WorldBlueprintRestore.Map(restore.Blueprint);
+                var fixedPond = GetNodeOrNull<WorldLiquidRegion>("TerrainRoot/Liquids/Pond");
+                WorldFeaturePlan features; MacroWorldMap map;
+                if (restore==null)
+                {
+                    var generated=WorldGenerationPipeline.Build(Config.Generation,ActiveSeed,fixedPond?.SurfaceBounds);
+                    features=generated.Features; map=generated.Map; GeographyPlan=generated.Geography; WaterPlan=GeographyPlan.Water;
+                }
+                else
+                {
+                    features=WorldBlueprintRestore.Features(restore.Blueprint); map=WorldBlueprintRestore.Map(restore.Blueprint);
+                    WaterPlan=WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
+                    if (restore.Blueprint.SchemaVersion==8) GeographyPlan=new WorldGeographyPlan(ActiveSeed,map.Bounds,WaterPlan);
+                }
                 FeaturePlan = features; MacroMap = map;
                 Blueprint = restore?.Blueprint ?? (launch == null ? WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan)
                     : WorldBlueprintManifest.Create(launch.ProfileId,launch.RunId,MacroMap,FeaturePlan) with { WorldId = launch.WorldId });
-                var fixedPond = GetNodeOrNull<WorldLiquidRegion>("TerrainRoot/Liquids/Pond");
-                WaterPlan = restore == null ? WaterBodyPlanner.Build(Config.Generation,map,features,fixedPond?.SurfaceBounds)
-                    : WaterBodyPlan.Restore(restore.Blueprint.Water,ActiveSeed,map.Bounds);
-                if (restore == null && Config.Generation.Water?.Enabled == true) Blueprint = Blueprint with { Water = WaterPlan.Snapshot(), SchemaVersion = WaterPlan.PlanVersion==3 ? 7 : WaterPlan.PlanVersion==2 ? 6 : WaterPlan.Bodies.Count > 0 ? 5 : 4 };
+                if (restore==null) Blueprint=Blueprint with { SchemaVersion=8,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot() };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);
                 GD.Print($"World features | {features.Reservations.Features.Count} placed | hash {features.Hash}");
@@ -148,7 +157,7 @@ public partial class WorldScene : Node2D
         var pond = GetNodeOrNull<WorldPond>("TerrainRoot/Liquids");
         var placement = SceneryPlacement;
         placement.ExcludedLiquid = pond?.GetNodeOrNull<WorldLiquidRegion>("Pond");
-        if (streaming && Blueprint.SchemaVersion >= 5)
+        if (streaming && Blueprint.SchemaVersion >= 5 && WaterPlan.Bodies.Count>0)
         {
             GeneratedWater=new GeneratedWaterRuntime { Name="GeneratedLiquids" };
             GetNode("TerrainRoot").AddChild(GeneratedWater);

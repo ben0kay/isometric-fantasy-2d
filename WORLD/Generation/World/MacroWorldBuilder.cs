@@ -9,7 +9,7 @@ public static class MacroWorldBuilder
     #region Generation
     // Validate before allocating; sort stable IDs so inspector list order does not change geography.
     // =========================================================
-    public static MacroWorldMap Build(WorldGenerationMasterConfig config, int seed)
+    public static MacroWorldMap Build(WorldGenerationMasterConfig config, int seed,WorldGeographyPlan geography=null)
     {
         if (config == null || !config.Bounds.Position.IsFinite() || !config.Bounds.Size.IsFinite() || !config.Bounds.End.IsFinite()
             || config.Bounds.Size.X <= 0 || config.Bounds.Size.Y <= 0 || !float.IsFinite(config.CellSize) || config.CellSize <= 0
@@ -29,6 +29,9 @@ public static class MacroWorldBuilder
             if (!float.IsFinite(b.GenerationWeight) || b.GenerationWeight < 0 || !float.IsFinite(b.MinimumRegionDiameter)
                 || !float.IsFinite(b.MaximumRegionDiameter) || b.MinimumRegionDiameter <= 0 || b.MaximumRegionDiameter < b.MinimumRegionDiameter)
                 throw new ArgumentException($"Invalid weight/target diameters for {b.Id}.");
+        if (geography!=null && (geography.Seed!=seed || geography.Bounds!=config.Bounds))
+            throw new ArgumentException("Biome map and geography must have matching ownership.");
+        var rules=geography==null ? null : new GeographyBiomeRules(geography,config.CellSize,columns,rows,definitions);
         double total = definitions.Sum(b => (double)b.GenerationWeight);
         if (total <= 0) throw new ArgumentException("At least one enabled biome needs positive generation weight.");
         double meanArea = definitions.Sum(b => b.GenerationWeight / total * Math.PI * Math.Pow(((double)b.MinimumRegionDiameter + b.MaximumRegionDiameter) / 4, 2));
@@ -56,22 +59,40 @@ public static class MacroWorldBuilder
                 if (nearest > bestScore) { bestScore = nearest; best = candidate; }
             }
             if (best < 0) { best = (int)(random.Unit() * count); while (used.Contains(best)) best = (best + 1) % count; }
+            if (rules?.NeedsSelection(best)==true)
+            {
+                biome=rules.Select(best,definitions,random.Unit()); definition=definitions[biome];
+                diameter=definition.MinimumRegionDiameter+(float)random.Unit()*(definition.MaximumRegionDiameter-definition.MinimumRegionDiameter);
+            }
             used.Add(best); sites.Add(new Site(best, biome, diameter));
         }
-        return Grow(config, seed, columns, rows, definitions, sites);
+        return Grow(config, seed, columns, rows, definitions, sites,rules);
     }
     // Positive-cost growth guarantees complete, four-connected, uniquely owned regions.
     // =========================================================
-    private static MacroWorldMap Grow(WorldGenerationMasterConfig config, int seed, int columns, int rows, WorldBiomeDefinition[] definitions, List<Site> sites)
+    private static MacroWorldMap Grow(WorldGenerationMasterConfig config, int seed, int columns, int rows, WorldBiomeDefinition[] definitions, List<Site> sites,GeographyBiomeRules rules)
     {
-        int[] cells = new int[columns * rows]; Array.Fill(cells, -1); int[] sizes = new int[sites.Count];
+        int[] cells = new int[columns * rows]; Array.Fill(cells, -1); var sizes = new List<int>(new int[sites.Count]);
         var queue = new PriorityQueue<(int Cell, int Region), (double Cost, long Order)>(); long order = 0;
         for (int i = 0; i < sites.Count; i++) { cells[sites[i].Cell] = i; sizes[i] = 1; }
         for (int i = 0; i < sites.Count; i++) Expand(sites[i].Cell, i, 0);
-        while (queue.TryDequeue(out var item, out var priority))
+        int unassigned=0;
+        while (true)
         {
-            if (cells[item.Cell] >= 0) continue;
-            cells[item.Cell] = item.Region; sizes[item.Region]++; Expand(item.Cell, item.Region, priority.Cost);
+            while (queue.TryDequeue(out var item, out var priority))
+            {
+                if (cells[item.Cell] >= 0) continue;
+                cells[item.Cell] = item.Region; sizes[item.Region]++; Expand(item.Cell, item.Region, priority.Cost);
+            }
+            while (unassigned<cells.Length && cells[unassigned]>=0) unassigned++;
+            if (unassigned==cells.Length) break;
+            if (rules==null || sites.Count>=config.MaximumRegions)
+                throw new ArgumentException("Compatible geography components exceed MaximumRegions; adjust biome eligibility or region limits.");
+            // A hard constraint can isolate a component from existing seeds. Seed it explicitly, preserving connected regions.
+            int biome=rules.Select(unassigned,definitions,Mix((uint)seed^(uint)unassigned^0x503542u)/4294967296.0);
+            var definition=definitions[biome]; float diameter=(definition.MinimumRegionDiameter+definition.MaximumRegionDiameter)*0.5f;
+            int region=sites.Count; sites.Add(new Site(unassigned,biome,diameter)); sizes.Add(1); cells[unassigned]=region;
+            Expand(unassigned,region,0);
         }
         var regions = sites.Select((s, i) =>
         {
@@ -81,17 +102,18 @@ public static class MacroWorldBuilder
             return new MacroRegion(i, s.Biome, centre, s.Diameter, sizes[i]);
         }).ToArray();
         return new MacroWorldMap(seed, config.Bounds, config.CellSize, columns, rows, cells,
-            definitions.Select(b => new MacroBiomeInfo(b.Id, b.DisplayName, b.Colour)).ToArray(), regions);
+            definitions.Select(b => new MacroBiomeInfo(b.Id, b.DisplayName, b.Colour)).ToArray(), regions,
+            rules==null ? MacroWorldMap.GeneratorVersion : MacroWorldMap.GeographyGeneratorVersion);
         void Expand(int cell, int region, double cost)
         {
             int x = cell % columns, y = cell / columns;
             if (x > 0) Add(cell - 1); if (x + 1 < columns) Add(cell + 1); if (y > 0) Add(cell - columns); if (y + 1 < rows) Add(cell + columns);
             void Add(int next)
             {
-                if (cells[next] >= 0) return;
+                if (cells[next] >= 0 || (rules!=null && rules.Preference(next,sites[region].Biome)<=0)) return;
                 uint key = Mix((uint)seed ^ (uint)Math.Min(cell, next) * 0x9e3779b9u ^ (uint)Math.Max(cell, next));
                 double roughness = 1 + config.BoundaryIrregularity * (key / (double)uint.MaxValue * 2 - 1) * 0.9;
-                queue.Enqueue((next, region), (cost + roughness * config.CellSize / sites[region].Diameter, order++));
+                queue.Enqueue((next, region), (cost + roughness * config.CellSize / sites[region].Diameter / (rules?.Preference(next,sites[region].Biome) ?? 1f), order++));
             }
         }
     }

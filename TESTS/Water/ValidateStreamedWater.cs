@@ -73,7 +73,7 @@ public partial class ValidateStreamedWater : Node
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world);
         Check(world.StartupError==null,"World startup: "+world.StartupError);
-        Check(world.Blueprint.SchemaVersion==5 && world.GeneratedWater!=null,"New world lacks playable-water version/runtime");
+        Check(world.Blueprint.SchemaVersion==8 && world.GeneratedWater!=null,"New world lacks playable-water version/runtime");
         var body=world.WaterPlan.Bodies[0]; var centre=body.Bounds.GetCenter();
         world.Player.GlobalPosition=centre; world.Player.Velocity=Vector2.Zero;
         await WaitLoaded(world,centre);
@@ -107,8 +107,8 @@ public partial class ValidateStreamedWater : Node
             var store=new CampaignStore(root); store.Save(snapshot,true);
             frozen=store.Load(b.ProfileId).Snapshot;
             var loaded=frozen.Blueprint;
-            Check(loaded.SchemaVersion==5 && WaterBodyPlan.Restore(loaded.Water,loaded.Seed,world.MacroMap.Bounds).Hash==world.WaterPlan.Hash,"Playable water lost disk identity");
-            store.Validate(snapshot with { Blueprint=b with { SchemaVersion=4 } }); // WG1 metadata stays legacy, never promoted on restore.
+            Check(loaded.SchemaVersion==8 && WaterBodyPlan.Restore(loaded.Water,loaded.Seed,world.MacroMap.Bounds).Hash==world.WaterPlan.Hash,"Playable water lost disk identity");
+            store.Validate(Legacy(snapshot,4)); // WG1 metadata stays legacy, never promoted on restore.
             Reject(() => store.Validate(snapshot with { Blueprint=b with { Water=null } }),"Playable save accepted missing water");
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root,true); }
@@ -122,14 +122,25 @@ public partial class ValidateStreamedWater : Node
         try
         {
             await RestoreWorld(frozen,true);
-            await RestoreWorld(frozen with { Blueprint=frozen.Blueprint with { SchemaVersion=4 },Player=new SavedPlayer(0,0,Health:100) },false);
-            await RestoreWorld(frozen with { Blueprint=frozen.Blueprint with { SchemaVersion=4,Water=null },Player=new SavedPlayer(0,0,Health:100) },false);
+            await RestoreWorld(Legacy(frozen,5),true);
+            await RestoreWorld(Legacy(frozen,4) with { Player=new SavedPlayer(0,0,Health:100) },false);
+            await RestoreWorld(Legacy(frozen,4) with { Blueprint=Legacy(frozen,4).Blueprint with { Water=null },Player=new SavedPlayer(0,0,Health:100) },false);
         }
         finally
         {
             CampaignSession.TestStorageRoot=null; CampaignSession.Clear();
             if (Directory.Exists(root)) Directory.Delete(root,true);
         }
+    }
+    // Build a genuine version-1 macro snapshot for legacy Continue checks, rather than relabeling a version-2 hash.
+    // =========================================================
+    private static CampaignSnapshot Legacy(CampaignSnapshot source,int schema)
+    {
+        var config=GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres");
+        var map=MacroWorldBuilder.Build(config,source.Blueprint.Seed); var b=source.Blueprint;
+        return source with { Blueprint=b with { SchemaVersion=schema,GeneratorVersion=1,GeographyVersion=0,MapHash=map.Hash,
+            RegionCells=map.CopyRegionCells(),RegionBiomes=map.Regions.Select(r=>r.BiomeIndex).ToArray(),
+            MacroRegions=map.Regions.Select(r=>new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray() } };
     }
     // Real Continue uses only saved outcomes even when the current new-world planner is disabled.
     // =========================================================
@@ -140,7 +151,10 @@ public partial class ValidateStreamedWater : Node
         restored.Config=(WorldMasterConfig)restored.Config.Duplicate();
         restored.Config.Generation=(WorldGenerationMasterConfig)restored.Config.Generation.Duplicate();
         restored.Config.Generation.Water=null;
-        AddChild(restored); await Frames(8);
+        AddChild(restored);
+        for (int i=0;i<240 && restored.StartupError==null && restored.Saves?.ReadyToSave!=true && string.IsNullOrEmpty(restored.Saves?.LastError);i++) await Frames(1);
+        Check(restored.Saves?.ReadyToSave==true,"Continue did not finish save/input initialization: "+restored.Saves?.LastError);
+        await Frames(8);
         Check(restored.StartupError==null,"Continue failed: "+restored.StartupError);
         Check((restored.GeneratedWater!=null)==playable,"Continue promoted legacy water or lost playable water");
         Check(restored.Blueprint.WorldId==snapshot.WorldId && restored.MacroMap.Hash==snapshot.Blueprint.MapHash,"Continue changed world identity/map");

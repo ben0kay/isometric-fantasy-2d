@@ -21,7 +21,7 @@ public partial class ValidateStreamedRiver : Node
         world.Config.Generation.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1,RequireMultipleRiverBiomes=true };
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world); Check(world.StartupError==null,"World failed to initialize: "+world.StartupError);
-        Check(world.Blueprint.SchemaVersion==7 && world.WaterPlan.PlanVersion==3,"River world did not use the river-capable save contract");
+        Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==2 && world.Blueprint.SchemaVersion==8 && world.WaterPlan.PlanVersion==3,"River world did not use the river-capable save contract");
         var body=world.WaterPlan.Bodies.Single(b => b.River!=null); var path=body.River;
         int middle=path.Points.Count/2;
         foreach (int index in new[] { 0,middle,path.Points.Count-1,middle })
@@ -60,22 +60,39 @@ public partial class ValidateStreamedRiver : Node
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=6 } }),"Dense river accepted by older river schema");
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=5 } }),"River data accepted by lake-only schema");
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=4 } }),"River data accepted by metadata-only schema");
+            var legacyMap=MacroWorldBuilder.Build(world.Config.Generation,blueprint.Seed);
+            var legacy=loaded with { Blueprint=blueprint with { SchemaVersion=7,GeneratorVersion=1,GeographyVersion=0,MapHash=legacyMap.Hash,
+                RegionCells=legacyMap.CopyRegionCells(),RegionBiomes=legacyMap.Regions.Select(r=>r.BiomeIndex).ToArray(),
+                MacroRegions=legacyMap.Regions.Select(r=>new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray() } };
             world.Free(); await Frames(3);
-            CampaignSession.TestStorageRoot=root; CampaignSession.Continue(loaded);
-            var continued=GD.Load<PackedScene>("res://SCENES/World/World.tscn").Instantiate<WorldScene>();
-            continued.Config=(WorldMasterConfig)continued.Config.Duplicate(); continued.Config.Generation=(WorldGenerationMasterConfig)continued.Config.Generation.Duplicate();
-            continued.Config.Generation.Water=null; AddChild(continued); await Frames(10);
-            Check(continued.StartupError==null,"Continue failed: "+continued.StartupError);
-            Check(continued.Blueprint.SchemaVersion==7 && continued.Blueprint.WorldId==snapshot.WorldId,"Continue changed river world identity");
-            Check(continued.WaterPlan.Hash==restored.Hash && continued.GeneratedWater.RegionAt(continued.Player.GlobalPosition)!=null,"Continue rerolled/failed to bind saved river");
-            Check(continued.Saves.LastError=="","Saved river arrival blocked: "+continued.Saves.LastError);
-            continued.Free(); await Frames(3);
+            CampaignSession.TestStorageRoot=root;
+            await ContinueFrozen(loaded,restored.Hash);
+            await ContinueFrozen(legacy,restored.Hash);
         }
         finally
         {
             CampaignSession.TestStorageRoot=null; CampaignSession.Clear();
             if (Directory.Exists(root)) Directory.Delete(root,true);
         }
+    }
+    // Neither new nor legacy Continue may consult newly forbidden biome hydrology or run the current water planner.
+    // =========================================================
+    private async Task ContinueFrozen(CampaignSnapshot snapshot,string waterHash)
+    {
+        CampaignSession.Continue(snapshot);
+        var continued=GD.Load<PackedScene>("res://SCENES/World/World.tscn").Instantiate<WorldScene>();
+        continued.Config=(WorldMasterConfig)continued.Config.Duplicate(); continued.Config.Generation=(WorldGenerationMasterConfig)continued.Config.Generation.Duplicate(true);
+        continued.Config.Generation.Water=null;
+        foreach (var biome in continued.Config.Generation.Biomes) biome.Hydrology=new BiomeHydrologyProfile { AllowFreshwaterLakes=false,AllowFreshwaterRivers=false };
+        AddChild(continued);
+        for (int i=0;i<240 && continued.StartupError==null && continued.Saves?.ReadyToSave!=true && string.IsNullOrEmpty(continued.Saves?.LastError);i++) await Frames(1);
+        Check(continued.StartupError==null && continued.Saves?.ReadyToSave==true,"Continue failed: "+continued.StartupError+continued.Saves?.LastError);
+        await Frames(10);
+        Check(continued.Blueprint.SchemaVersion==snapshot.Blueprint.SchemaVersion && continued.Blueprint.WorldId==snapshot.WorldId,"Continue changed river world identity");
+        Check(continued.MacroMap.Hash==snapshot.Blueprint.MapHash && continued.WaterPlan.Hash==waterHash && continued.GeneratedWater.RegionAt(continued.Player.GlobalPosition)!=null,"Continue rerolled/failed to bind saved geography");
+        Check((continued.GeographyPlan!=null)==(snapshot.Blueprint.SchemaVersion==8),"Legacy river promoted to geography-first generation");
+        Check(continued.Saves.LastError=="","Saved river arrival blocked: "+continued.Saves.LastError);
+        continued.Free(); await Frames(3);
     }
     // Wait for the actual existing stream scheduler; a teleport does not itself create loaded geometry.
     // =========================================================

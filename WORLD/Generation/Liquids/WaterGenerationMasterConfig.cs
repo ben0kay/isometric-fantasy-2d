@@ -20,6 +20,7 @@ public partial class WaterGenerationMasterConfig : Resource
     [Export] public float RiverBendStrength { get; set; } = 280f;
     [Export] public float RiverMeanderLength { get; set; } = 2400f;
     [Export(PropertyHint.Range, "0,0.3,0.01")] public float RiverBankIrregularity { get; set; } = 0.15f;
+    [ExportGroup("Legacy biome-first validation only")]
     [Export] public bool RequireMultipleRiverBiomes { get; set; }
     [ExportGroup("River route limits")]
     [Export] public int RiverRouteCellSize { get; set; } = 512;
