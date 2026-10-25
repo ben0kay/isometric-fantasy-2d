@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SceneryDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://WORLD/Content/Shared/SceneryDefinition.cs" id="definition"]
+[ext_resource type="Texture2D" path="res://WORLD/Content/Vegetation/Plants/Sprites/plant_oak_008.png" id="art"]
+
+[resource]
+script = ExtResource("definition")
+Id = "plant.oak.008"
+DisplayName = "Oak plant 008"
+SnowResponse = 1
+GrassLike = true
+CastSunShadow = false
+AvoidBiomeTransition = true
+metadata/visual_variants = Array[Texture2D]([ExtResource("art")])
+metadata/pending_vegetation_definition = true
