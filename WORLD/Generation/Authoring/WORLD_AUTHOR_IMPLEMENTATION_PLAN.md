@@ -1,5 +1,8 @@
 # World Author — geographical presets, climate gradient, large finite world and F7 profiler
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 implemented, awaiting native/local validation; standalone `DEBUG/PreviewMap/PreviewMap.tscn` and shared F7 viewer delivered. Climate affinity now controls biome regions at the existing bounds. BC3–BC7 remain planned; preview does not claim BC4 scaling or full BC6 tooling. [Current handoff](BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC0 audit/design complete. BC1 implemented, awaiting native/local validation: WorldAuthorPreset, continuous frozen climate, middle ocean preference, protected middle land search and on-demand F7 climate layer. BC2–BC7 remain planned. The detailed proposal below remains the roadmap; current owners, budgets and limitations are recorded in the audit. [Audit / local handoff](BC0_BC1_Validation.md).
 
 
@@ -112,7 +115,7 @@ Preserve the existing **BC0–BC3 identifiers**; this plan extends the track to 
 | --- | --- | --- |
 | **BC0 — World Author contract** | Review current owners, choose region/direction Resource format, north/south climate gradient, central-ocean constraint, hierarchical-seed plan, **50× area target**, campaign spawn semantics, frozen save/version/migration, budget and stage interfaces. Document author preset + basic F7 acceptance. | Implemented — audit complete |
 | **BC1 — Author directives + climate provinces** | Typed Inspector-first World Author preset (central ocean / cold north / temperate centre / hot south / optional magic area); major ocean planner honours a normalized centre zone; seed creates connected climate provinces. **Basic F7 climate layer**, lightweight map, no full landscape spawn. | Implemented — default new-world preset switched; awaiting local validation |
-| **BC2 — Climate-aware biome regions** | Shared biome placement affinity, optional hard requirements and rare magic exceptions; weights/diameters within compatible climate areas; placeholder Oak-like/frost/fungi/desert Resources show **coherent clusters** in F7. | Does not implement ore/entity spawns; enforce land coverage |
+| **BC2 — Climate-aware biome regions** | Shared biome placement affinity, optional hard requirements and rare magic exceptions; weights/diameters within compatible climate areas; placeholder Oak-like/frost/fungi/desert Resources show **coherent clusters** in F7. | Implemented — awaiting local validation; no ore/entity spawns |
 | **BC3 — Regional weather/snow response** | One position-aware climate/weather resolver drives existing snow/rain/snowpack/foliage; temperate Oak is winter-seasonal, far north has enduring pack, south usually snow-free, fantasy tint preserved. Handles a camera straddling zones. | Deferred until map layout is accepted; SE4 real calendar separate |
 | **BC4 — 50× finite world and hierarchical/lazy macro data** | Scalable world-size preset, safe macro-cell/region budgeting and **global low-res skeleton with bounded deterministic refinement** (or measured equivalent); 50×-area map generates/reloads without entire detailed World, restores same boundaries from any starting region. | This is a *real generator/save scalability phase*, not just multiplying `Bounds` or `MaximumCells` |
 | **BC5 — Spawn-region selection** | New Campaign choice **North / Temperate Middle / South**; deterministic safe land anchors, start reservation and SAVE/Continue ownership. Spawns directly into chosen local chunks. | Existing F6 default unchanged unless deliberately configured; no cross-world travel preloading |

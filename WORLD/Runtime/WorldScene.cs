@@ -128,7 +128,7 @@ public partial class WorldScene : Node2D
                 FeaturePlan = features; MacroMap = map;
                 Blueprint = restore?.Blueprint ?? (launch == null ? WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan)
                     : WorldBlueprintManifest.Create(launch.ProfileId,launch.RunId,MacroMap,FeaturePlan) with { WorldId = launch.WorldId });
-                if (restore==null) Blueprint=Blueprint with { SchemaVersion=ClimatePlan==null ? 9 : 10,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot(),
+                if (restore==null) Blueprint=Blueprint with { SchemaVersion=ClimatePlan==null ? 9 : 11,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot(),
                     Climate=ClimatePlan?.Snapshot(), AuthorPolicy=ClimatePlan==null ? null : new WorldAuthorPolicySnapshot(1,"Middle",Config.Generation.Authoring.MajorPoiClearance,Config.Generation.Authoring.ShoreClearance) };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);

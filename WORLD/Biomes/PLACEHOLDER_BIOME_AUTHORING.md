@@ -1,5 +1,8 @@
 # Placeholder biome authoring — finite-world macro/F7 experiments
 
+BC2 is now implemented: the default Tundra/Desert/Oak/Pink definitions have PlacementClimate Resources and group using the frozen macro climate. This guide’s globally weighted observations describe the pre-BC2 baseline. Open DEBUG/PreviewMap/PreviewMap.tscn for the current metadata-only preview; BC3 regional weather remains pending.
+
+
 **26 October update:** Snowy Tundra and Desert ground-only placeholders now join Oak/Pink in the normal finite World biome collection (F6/F7 or new campaign). No populations or new weather logic; climate placement remains BC1/BC2. Existing campaigns are not migrated by this addition. World Author ocean placement is broadly middle-biased with seeded offsets, not fixed-centred. Planned North/Mid/South starts must satisfy configurable clearance from major POI footprints as well as water/obstacle/access safety; see the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md).
 
 

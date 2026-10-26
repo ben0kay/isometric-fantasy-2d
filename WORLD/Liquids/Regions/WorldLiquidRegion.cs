@@ -31,23 +31,14 @@ public partial class WorldLiquidRegion : Node2D
     {
         Config ??= new WorldLiquidMasterConfig(); Definition ??= new WorldLiquidDefinition();
         Position = PlannedBody == null ? Config.Centre : Vector2.Zero;
-        Boundary = PlannedBody?.CopyPolygon() ?? new Vector2[96]; _edgeDelta = new Vector2[Boundary.Length]; _inverseLength = new float[Boundary.Length];
-        float phase = (Config.ShapeSeed % 997) * 0.01f;
-        Vector2 radius = Config.Radius.Abs().Max(Vector2.One * 40f);
-        for (int i = 0; PlannedBody == null && i < Boundary.Length; i++)
-        {
-            float angle = Mathf.Tau * i / Boundary.Length;
-            float scale = 1f + 0.12f * Mathf.Sin(angle * 3f + phase) + 0.065f * Mathf.Cos(angle * 5f - phase) + 0.035f * Mathf.Sin(angle * 7f);
-            Boundary[i] = Vector2.FromAngle(angle) * radius * scale;
-        }
-        Rect2 bounds = new(Boundary[0], Vector2.Zero);
+        Boundary = PlannedBody?.CopyPolygon() ?? WorldLiquidFootprint.Boundary(Config);
+        _edgeDelta = new Vector2[Boundary.Length]; _inverseLength = new float[Boundary.Length];
         for (int i = 0; i < Boundary.Length; i++)
         {
             _edgeDelta[i] = Boundary[(i + 1) % Boundary.Length] - Boundary[i];
             _inverseLength[i] = 1f / Mathf.Max(0.001f, _edgeDelta[i].LengthSquared());
-            bounds = bounds.Expand(Boundary[i]);
         }
-        bounds = bounds.Grow(40f);
+        Rect2 bounds = WorldLiquidFootprint.LocalBounds(Boundary);
         // Rain-impact candidates can be sampled in this small region instead of the full world.
         SurfaceBounds = new Rect2(ToGlobal(bounds.Position), ToGlobal(bounds.End) - ToGlobal(bounds.Position)).Abs();
         if (PlannedBody != null) { SetProcess(false); return; }

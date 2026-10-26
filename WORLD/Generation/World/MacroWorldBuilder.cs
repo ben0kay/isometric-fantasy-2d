@@ -9,7 +9,7 @@ public static class MacroWorldBuilder
     #region Generation
     // Validate before allocating; sort stable IDs so inspector list order does not change geography.
     // =========================================================
-    public static MacroWorldMap Build(WorldGenerationMasterConfig config, int seed,WorldGeographyPlan geography=null)
+    public static MacroWorldMap Build(WorldGenerationMasterConfig config, int seed,WorldGeographyPlan geography=null,WorldClimatePlan climate=null)
     {
         if (config == null || !config.Bounds.Position.IsFinite() || !config.Bounds.Size.IsFinite() || !config.Bounds.End.IsFinite()
             || config.Bounds.Size.X <= 0 || config.Bounds.Size.Y <= 0 || !float.IsFinite(config.CellSize) || config.CellSize <= 0
@@ -31,7 +31,9 @@ public static class MacroWorldBuilder
                 throw new ArgumentException($"Invalid weight/target diameters for {b.Id}.");
         if (geography!=null && (geography.Seed!=seed || geography.Bounds!=config.Bounds))
             throw new ArgumentException("Biome map and geography must have matching ownership.");
-        var rules=geography==null ? null : new GeographyBiomeRules(geography,config.CellSize,columns,rows,definitions);
+        if(climate!=null && (climate.Bounds!=config.Bounds || climate.Snapshot().Seed!=seed))
+            throw new ArgumentException("Biome map and climate must have matching ownership.");
+        var rules=geography==null && climate==null ? null : new GeographyBiomeRules(geography,config.CellSize,columns,rows,definitions,climate);
         double total = definitions.Sum(b => (double)b.GenerationWeight);
         if (total <= 0) throw new ArgumentException("At least one enabled biome needs positive generation weight.");
         double meanArea = definitions.Sum(b => b.GenerationWeight / total * Math.PI * Math.Pow(((double)b.MinimumRegionDiameter + b.MaximumRegionDiameter) / 4, 2));

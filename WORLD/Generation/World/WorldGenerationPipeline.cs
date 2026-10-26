@@ -14,7 +14,7 @@ public static class WorldGenerationPipeline
         var water=WaterBodyPlanner.BuildGeography(config,seed,features,authoredPond);
         var geography=new WorldGeographyPlan(seed,config.Bounds,water);
         var climate=config.Authoring==null ? null : WorldClimatePlan.FromPreset(config.Authoring,seed,config.Bounds);
-        var map=MacroWorldBuilder.Build(config,seed,geography);
+        var map=MacroWorldBuilder.Build(config,seed,geography,climate);
         if(config.Authoring!=null) features=WorldAuthorStartPlanner.Complete(config,seed,features,water,map,authoredPond);
         return new(features,geography,map,climate);
     }

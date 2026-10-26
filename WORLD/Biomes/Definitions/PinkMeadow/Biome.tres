@@ -11,6 +11,8 @@
 
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/GroundPatchLayer.cs" id="accompanying_script"]
 
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/PinkMeadow/PlacementClimate.tres" id="placement_climate"]
+
 [sub_resource type="Resource" id="base_ground"]
 script = ExtResource("ground_layer")
 Id = "base"
@@ -49,6 +51,7 @@ MaximumScale = 1.15
 
 [resource]
 script = ExtResource("biome")
+PlacementClimate = ExtResource("placement_climate")
 Id = "biome.pink_meadow"
 DisplayName = "Pink Meadow"
 Colour = Color(0.43, 0.265, 0.35, 1)

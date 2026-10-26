@@ -1,0 +1,13 @@
+# Whole-world blueprint preview
+
+Open **`DEBUG/PreviewMap/PreviewMap.tscn` and press F6**. Choose a seed, Regenerate or Random seed, then select **Biomes / Climate / Water**. This displays the entire current finite world fitted to the window; it does not enlarge it. The 50× area expansion is BC4; zoom/pan is BC6.
+
+This scene creates only Controls and the shared `DEBUG/UI/Generation/MacroMapView`. It does not instantiate World.tscn, a player, gameplay chunks, trees, entities, navigation, weather, water surfaces or campaign/save controllers. Biome Resources can reference canonical artwork, but no scenery scenes are instantiated. All generated data is disposable session data; no file or Resource is edited.
+
+`PreviewMapMasterConfig.tres` references the normal `DefaultWorldGeneration.tres` and authored `PondConfig.tres`. Generation calls the same `WorldGenerationPipeline.Build` as World. `WorldLiquidFootprint` computes the existing pond's exact exclusion rectangle without creating its scene. The stock production roots have identity transforms; custom scene transforms/exclusions must be reflected in preview inputs. For comparison, use the same seed, generation settings and pond inputs in World. Previewing a campaign's seed with edited Resources does not inspect that campaign's frozen save.
+
+Generation remains **synchronous on request** at the current world size; planning time displayed is actual Stopwatch elapsed time, separate from later raster progress. Raster work is bounded to at most eight rows / a soft 2ms check between rows. Three coarse layer textures are cached; inactive/hidden/settled viewers stop callbacks. Regenerate releases obsolete map textures; leaving releases unfinished images. This is not proof of native frame-time performance; BC4 must address full macro-generation scalability before increasing bounds.
+
+**BC2 is wired into the production pipeline too.** Tundra has a hard upper baseline temperature of 6°C; Desert needs ≥22°C and ≤55% RH. Oak/Pink have soft preferences and can fill otherwise unsupported land. Editing `PlacementClimate.tres` controls these rules, independently of inert biome Climate baselines and future live weather.
+
+Implementation awaits native/local validation. Resource/reference and whitespace checks passed here; Godot/.NET unavailable. Local checks: `dotnet build`, F6 this scene, regenerate the same seed, switch all layers, then compare F7 on World using that seed. Confirm no Node2D/gameplay nodes appear beneath PreviewMap and rendering stops once complete. Optional focused regression: `godot --headless --path . res://TESTS/Generation/ValidateClimateBiomes.tscn` (expected `BC2 CLIMATE BIOMES PASS`). See [BC2 handoff](../../WORLD/Generation/Authoring/BC2_Validation.md).

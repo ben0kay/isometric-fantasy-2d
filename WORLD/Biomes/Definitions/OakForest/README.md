@@ -12,3 +12,5 @@ Plant population Resources:
 **PL3 is still needed to render plants in production World.** Existing generator paths have not yet been extended to instantiate the PL1 `VegetationDefinition.Template`; legacy compatibility preview may warn until then. PL2 content change also alters P4 content fingerprints: preserve existing campaigns, do not silently migrate incompatible checkpoints.
 
 Environment.tres contains optional component overrides. Atmosphere.tres starts with the forest haze/particle settings; other components inherit the world fallback profile. Refer to ENVIRONMENT/Profiles/README.md for the data contract.
+
+BC2: `PlacementClimate.tres` now supplies optional macro-generation affinity independently of Climate baselines. It is consumed only when a world climate plan is present; null world climate uses the legacy placement path. New generation fingerprints/schema require F6/new campaign. See `WORLD/Generation/Authoring/BC2_Validation.md`.

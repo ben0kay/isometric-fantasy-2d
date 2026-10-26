@@ -1,5 +1,8 @@
 # Finite macro generation — P0–P3
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 implemented: optional climate argument composes with existing hydrology rules; seeded regions now use per-biome PlacementClimate. Macro version 4 / blueprint 11. Null climate retains the old path. Normal World and standalone DEBUG/PreviewMap share pipeline and F7 viewer; no world-size change. [Current handoff](../Authoring/BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC0 audit complete; BC1 implemented, awaiting local validation. DefaultWorldGeneration now references DefaultWorldAuthor: middle ocean preference, latitude climate and safe middle start after geography. Climate does not yet affect biome choice or weather. Null Authoring preserves the old pipeline. Schema 10 stores climate; current dimensions and detailed streaming remain unchanged. [Audit / local handoff](../Authoring/BC0_BC1_Validation.md).
 
 

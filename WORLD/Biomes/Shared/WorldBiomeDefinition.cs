@@ -19,6 +19,8 @@ public partial class WorldBiomeDefinition : Resource
     [Export] public float GenerationWeight { get; set; } = 1f;
     [Export] public float MinimumRegionDiameter { get; set; } = 4000f;
     [Export] public float MaximumRegionDiameter { get; set; } = 8000f;
+    [ExportGroup("Optional macro climate placement - BC2")]
+    [Export] public BiomePlacementClimate PlacementClimate { get; set; }
     [ExportGroup("Hydrology")]
     [Export] public BiomeHydrologyProfile Hydrology { get; set; }
     [ExportGroup("Local content")]

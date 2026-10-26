@@ -1,5 +1,8 @@
 # Overworld biomes
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 implemented, awaiting local validation. `PlacementClimate` now influences site selection, growth and gap filling through the shared generator. Oak/Pink soft preferences preserve sparse-content coverage; Tundra/Desert hard limits enforce cold/hot placement. `Climate` baselines and weather remain separate. Use `DEBUG/PreviewMap/PreviewMap.tscn` for a no-chunk whole-world view. [Current handoff](../Generation/Authoring/BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC0/BC1 now implement a separate frozen macro climate field and F7 climate view. Biome selection remains globally weighted until BC2; Snowy Tundra and Desert remain ground-only placeholders. Regional weather remains BC3. [Audit / local handoff](../Generation/Authoring/BC0_BC1_Validation.md).
 
 

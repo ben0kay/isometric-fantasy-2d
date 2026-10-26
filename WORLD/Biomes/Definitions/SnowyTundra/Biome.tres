@@ -4,6 +4,8 @@
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundLayer.cs" id="layer"]
 [ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundStack.cs" id="stack"]
 [ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/SnowyTundraPlaceholder.tres" id="surface"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/SnowyTundra/PlacementClimate.tres" id="placement_climate"]
+
 [sub_resource type="Resource" id="climate_baseline"]
 script = ExtResource("climate")
 BaselineTemperatureCelsius = -15.0
@@ -18,6 +20,7 @@ script = ExtResource("stack")
 DefiningBaseGround = SubResource("base")
 [resource]
 script = ExtResource("biome")
+PlacementClimate = ExtResource("placement_climate")
 Id = "biome.snowy_tundra"
 DisplayName = "Snowy Tundra"
 Colour = Color(0.78, 0.84, 0.87, 1)

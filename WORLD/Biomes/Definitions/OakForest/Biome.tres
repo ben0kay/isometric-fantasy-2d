@@ -28,6 +28,8 @@
 [ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Spawning/Entities.tres" id="entity_spawns"]
 [ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Spawning/Resources.tres" id="resource_spawns"]
 
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/PlacementClimate.tres" id="placement_climate"]
+
 [sub_resource type="Resource" id="base_ground"]
 script = ExtResource("ground_layer")
 Id = "base"
@@ -167,6 +169,7 @@ MaximumScale = 0.80
 
 [resource]
 script = ExtResource("biome")
+PlacementClimate = ExtResource("placement_climate")
 Id = "biome.oak_forest"
 DisplayName = "Oak Forest"
 Colour = Color(0.2196, 0.2745, 0.2078, 1)

@@ -24,7 +24,7 @@ public partial class ValidateOceanGeneration : Node
         {
             var world=WorldGenerationPipeline.Build(config,seed,new Rect2(650,500,860,600)); var map=world.Map; var water=world.Geography.Water;
             var ocean=water.Bodies.Single(b=>b.IsOcean);
-            Check(water.PlanVersion==4 && map.GenerationVersion==3 && map.NonLandCells>0,"Ocean did not use non-land/versioned contracts");
+            Check(water.PlanVersion==4 && map.GenerationVersion==MacroWorldMap.ClimateGeneratorVersion && map.NonLandCells>0,"Ocean did not use non-land/versioned contracts");
             Check(map.Columns*map.Rows<=config.MaximumCells && map.Regions.Count<config.MaximumRegions,"Large world exceeded macro bounds");
             Check(map.BiomeAt(world.Features.StartingArea.Anchor)!=null,"Ocean swallowed protected start");
             Check(world.Geography.PlanVersion==2,"Missing geography contract version");
@@ -60,7 +60,7 @@ public partial class ValidateOceanGeneration : Node
         var scene=GD.Load<PackedScene>("res://SCENES/World/World.tscn"); var world=scene.Instantiate<WorldScene>();
         world.Config=(WorldMasterConfig)world.Config.Duplicate();world.Config.RandomSeedOnLoad=false;world.Config.FixedSeed=42;
         AddChild(world);Check(world.StartupError==null,"Production ocean startup: "+world.StartupError);
-        Check((world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10) && world.Blueprint.GeographyVersion==2,"Wrong ocean blueprint contract");
+        Check((world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10 || world.Blueprint.SchemaVersion==11) && world.Blueprint.GeographyVersion==2,"Wrong ocean blueprint contract");
         var ocean=world.WaterPlan.Bodies.Single(b=>b.IsOcean);var centre=ocean.Bounds.GetCenter();var shore=ocean.CopyPolygon()[0];
         await Frames(4);
         var panel=world.GetNode<MacroMapDebugPanel>("DebugUIRoot/MacroMapDebugPanel");

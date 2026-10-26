@@ -1,5 +1,8 @@
 # World Author — BC0 / BC1
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 delivered, awaiting local validation: optional biome affinity controls placement; normal worlds use schema 11 / generator 4. `DEBUG/PreviewMap/PreviewMap.tscn` offers metadata-only seed/regenerate and three map layers. BC0/BC1 details below describe the prior implementation; current behavior is in this handoff. [Current handoff](BC2_Validation.md).
+
+
 BC0 audit/contracts are complete; BC1 implementation awaits native/local validation. Normal World F6 and New Campaign reference `DefaultWorldAuthor.tres` through `DefaultWorldGeneration.tres → Authoring`. Null Authoring preserves the previous planning path. Current bounds and P3 chunk sizes/radii are unchanged.
 
 ## Inspector authoring

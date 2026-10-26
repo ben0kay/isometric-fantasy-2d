@@ -1,5 +1,8 @@
 # P0–P3 checks
 
+Focused BC2 check: godot --headless --path . res://TESTS/Generation/ValidateClimateBiomes.tscn (after dotnet build). Covers hard affinity, Tundra/Desert presence, coverage, deterministic Resource ordering, schema-11 frozen restoration, one-biome soft fallback and impossible hard requirements. Added but not run here: Godot/.NET unavailable. The standalone visual scene is DEBUG/PreviewMap/PreviewMap.tscn.
+
+
 Build the C# project in the Godot .NET editor first. From the repository root:
 
 ```sh

@@ -1,5 +1,8 @@
 # Macro generation overview
 
+> **PreviewMap / BC2 — 26 October 2026:** F7 and standalone DEBUG/PreviewMap now reuse `MacroMapView` for Biomes/Climate/Water. F7 host binds World outcomes; PreviewMap calls the canonical planner directly without instantiating World or chunks. Cached layers stop processing when hidden/settled. Zoom/pan remains BC6. [Current handoff](../../../WORLD/Generation/Authoring/BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC1 implemented, awaiting local validation. F7 now builds controls only at startup; first open renders bounded row batches and caches biome/climate textures. Hidden/settled callbacks stop. Climate reads the frozen WorldScene.ClimatePlan; legacy worlds display no climate. Zoom/pan/tiles/full profiler remain BC6. The eager-raster source audit below describes the pre-BC1 baseline. [Audit / local handoff](../../../WORLD/Generation/Authoring/BC0_BC1_Validation.md).
 
 

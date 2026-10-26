@@ -1,5 +1,8 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 climate-aware biome placement and `DEBUG/PreviewMap/PreviewMap.tscn` are implemented, awaiting local validation. F6 PreviewMap shows the whole current macro world with seed/regenerate and Biomes/Climate/Water, with zero gameplay chunks. Normal World uses the same climate placement and shared F7 viewer. New authored worlds use blueprint 11 / macro generator 4; use F6/new campaign. BC3 weather, BC4 50× area and BC5 region choice remain planned. [Current handoff](WORLD/Generation/Authoring/BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC0 audit complete; BC1 World Author implemented, awaiting local validation. Normal new worlds use broad middle-biased ocean placement, continuous cold-north/hot-south climate and a safe protected middle start. F7 offers cached, on-demand biome/climate layers. Schema-10 blueprints freeze climate and start policy. BC2 biome affinity, BC3 regional weather, BC4 50× size and BC5 region selector remain planned. Use F6/new campaign; no blanket old-content migration. [Audit / local handoff](WORLD/Generation/Authoring/BC0_BC1_Validation.md).
 
 

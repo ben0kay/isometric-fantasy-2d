@@ -7,3 +7,5 @@ Edit `Biome.tres` for identity colour, generation weight/size and baseline clima
 Climate is inert authoring data until BC1/BC2; this biome currently participates in globally weighted placement. Pale tundra ground is placeholder artwork, not permanent snowpack or live snow simulation (BC3). No new callbacks or per-object simulation; existing chunk streaming owns loading/unloading.
 
 Use disposable F6 World or a fresh campaign. Adding definitions changes content fingerprints; existing saves are not migrated or rerolled. Static references checked; Godot rendering/import and Windows acceptance remain with the user.
+
+BC2: `PlacementClimate.tres` now supplies optional macro-generation affinity independently of Climate baselines. It is consumed only when a world climate plan is present; null world climate uses the legacy placement path. New generation fingerprints/schema require F6/new campaign. See `WORLD/Generation/Authoring/BC2_Validation.md`.

@@ -1,5 +1,8 @@
 # Major geography — P5a/P5b
 
+BC2 composes optional ClimateBiomeRules with these water rules for initial sites, every growth edge and gap filling. Null world climate retains this original geography-only path. Climate preferences are generation-only cached data; macro generator 4 / blueprint 11 identifies changed placement. See ../../Authoring/BC2_Validation.md.
+
+
 `WorldGeographyPlan` is immutable planning data independent of biome IDs/Resources. It owns the world seed/bounds and references the canonical frozen `WaterBodyPlan`; no copied river renderer, per-biome manager or new config Resource. `WorldGenerationPipeline` runs required P2 reservations → major water → compatible macro biomes. Existing `WorldGenerationMasterConfig.Water` remains the geometry authoring entry point. P5c major oceans/non-land are now implemented; volcanic geography and major POI/access providers remain planned.
 
 `WaterAt(Rect2)` supplies conservative lake/river footprint flags. `GeographyBiomeRules` builds one temporary byte per macro cell, including partial edge cells and narrow river intersections. Ocean flags classify clipped cell centers as non-land; partially intersecting coast cells may retain an underlying land biome. Exact water polygons still exclude scenery throughout the entire ocean footprint. Every touched cell must permit the relevant water kinds; this is conservative coarse eligibility, not a new terrain landmask. Lake/river cells retain underlying land biomes. Ocean-center cells have no biome/region, and land growth never enters them. The fixed authored pond stays a separate compatibility landmark and generator exclusion; its biome footprint is not inserted into this major generated-water mask.

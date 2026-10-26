@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BiomePlacementClimate" format=3]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomePlacementClimate.cs" id="script"]
+[resource]
+script = ExtResource("script")
+TemperatureRange = Vector2(-2, 24)
+HumidityRange = Vector2(35, 85)
+TemperatureFalloff = 4.0
+HumidityFalloff = 15.0
+RequireTemperatureRange = false
+RequireHumidityRange = false

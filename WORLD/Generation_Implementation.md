@@ -1,5 +1,8 @@
 # Large Finite World Generation — Codex Implementation Planning
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 climate affinity implemented, awaiting local validation, with a standalone no-chunk whole-world PreviewMap and shared F7 layers. Existing finite bounds preserved; generator 4 / blueprint 11 freezes changed biome regions. BC3–BC7 remain planned. [Current handoff](Generation/Authoring/BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC0 audit/design complete; BC1 implemented, awaiting local validation. New authored worlds plan non-start reservations, water, frozen climate and ordinary biome map before choosing a safe middle protected start. F7 can inspect the climate. BC2 affinity and later phases remain planned. [Audit / local handoff](Generation/Authoring/BC0_BC1_Validation.md).
 
 

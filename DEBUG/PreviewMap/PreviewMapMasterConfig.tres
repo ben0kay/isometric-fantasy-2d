@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="PreviewMapMasterConfig" format=3]
+[ext_resource type="Script" path="res://DEBUG/PreviewMap/PreviewMapMasterConfig.cs" id="script"]
+[ext_resource type="Resource" path="res://WORLD/Generation/World/DefaultWorldGeneration.tres" id="generation"]
+[ext_resource type="Resource" path="res://WORLD/Liquids/Definitions/Water/PondConfig.tres" id="pond"]
+[resource]
+script = ExtResource("script")
+Generation = ExtResource("generation")
+AuthoredPond = ExtResource("pond")
+Seed = 213876

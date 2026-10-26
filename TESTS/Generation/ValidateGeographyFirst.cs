@@ -24,6 +24,7 @@ public partial class ValidateGeographyFirst : Node
         Check(CampaignSession.NormalizeDefaultWaterGenerationSource(sourcePath,changed)==changed,"Unrelated config edit bypassed compatibility");
         Check(CampaignSession.NormalizeDefaultWaterGenerationSource("res://other.tres",authored)==authored,"Water compatibility leaked to another dependency");
         var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+        config.Authoring=null; // This suite exercises the pre-climate geography generator.
         config.Bounds=new Rect2(-22500,-16875,45000,33750); config.CellSize=256;
         config.Water=new WaterGenerationMasterConfig { Enabled=true,LakeCount=2,RiverCount=1 };
         var pond=new Rect2(650,500,860,600);

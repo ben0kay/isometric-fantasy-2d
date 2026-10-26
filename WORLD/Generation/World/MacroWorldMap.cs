@@ -12,6 +12,7 @@ public sealed class MacroWorldMap
     public const int GeneratorVersion = 1;
     public const int GeographyGeneratorVersion = 2;
     public const int OceanGeneratorVersion = 3;
+    public const int ClimateGeneratorVersion = 4;
     public int NonLandCells { get; }
     public int GenerationVersion { get; }
     public int Seed { get; }

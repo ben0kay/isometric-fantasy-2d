@@ -1,5 +1,8 @@
 # WORLD/Generation
 
+> **PreviewMap / BC2 — 26 October 2026:** BC2 implemented, awaiting local validation. Frozen macro climate now guides biome choice and growth; DEBUG/PreviewMap and F7 share the metadata-only viewer. Detailed chunks remain nearby-only. Larger bounds and regional weather remain later work. [Current handoff](Authoring/BC2_Validation.md).
+
+
 > **BC0/BC1 delivery — 26 October 2026:** BC0 audit complete; BC1 implemented, awaiting local validation: optional WorldAuthorPreset, frozen analytical climate, middle-biased ocean guidance, deferred safe start and on-demand F7 climate layer. Existing local P3 streaming and world size remain unchanged. Biome affinity/weather/50×/campaign selector remain later phases. [Audit / local handoff](Authoring/BC0_BC1_Validation.md).
 
 
