@@ -46,6 +46,8 @@ public partial class ValidateHarvesting : Node2D
         var invalid=new DropTable { Entries=new() { new DropEntry { Item=new ItemDefinition { Id=log.Id } } } };
         Rejects(()=>invalid.Compile(catalog),"Noncanonical item rejected");
         Rejects(()=>new DropScatterProfile { HopHeight=float.NaN }.Snapshot(),"Invalid scatter rejected");
+        Rejects(()=>new DropScatterProfile { LandingBounceSeconds=float.NaN }.Snapshot(),"Invalid landing bounce rejected");
+        Rejects(()=>new DropScatterProfile { LandingBounceCount=4 }.Snapshot(),"Excessive landing bounces rejected");
         entry.Minimum=3; entry.Maximum=5;
         var profile=new HarvestProfile { RequiredWork=4,Rewards=table };
         var harvest=new Harvestable(); harvest.Initialize(profile,catalog,"test/generic/0"); AddChild(harvest);
@@ -76,7 +78,11 @@ public partial class ValidateHarvesting : Node2D
         node._Process(0.275); var art=node.GetNode<Sprite2D>("Artwork");
         Check(art.Position.Y<-20 && node.GlobalPosition.DistanceTo(origin)<origin.DistanceTo(record.Landing),"Artwork hops above moving ground root");
         player.GlobalPosition=record.Landing; Check(!drops.TryCollectNearest(player,_room.Storage),"Airborne item not collected");
-        node._Process(2); Check(node.Settled && !node.IsProcessing() && !node.IsPhysicsProcessing(),"Settled pickup is dormant");
+        node._Process(0.275); Check(!node.Settled && node.IsProcessing(),"Touchdown begins a short rebound instead of settling immediately");
+        node._Process(0.07); Check(art.Position.Y<-8 && node.GlobalPosition.IsEqualApprox(record.Landing),"Artwork rebounds while grounded root stays at its landing");
+        Check(!drops.TryCollectNearest(player,_room.Storage),"Bouncing item cannot be collected prematurely");
+        node._Process(2); Check(node.Settled && !node.IsProcessing() && !node.IsPhysicsProcessing(),"Rebounds finish and pickup is dormant");
+        Check(Mathf.IsEqualApprox(art.Position.Y,-7),"Bounce returns artwork to its original grounded offset");
         player.GlobalPosition=record.Landing+Vector2.Right*40;
         var wall=Block(record.Landing+Vector2.Right*20,new Vector2(8,40)); await Frames(3);
         Check(!drops.TryCollectNearest(player,_room.Storage),"Cannot collect through solid obstruction");
@@ -138,13 +144,14 @@ public partial class ValidateHarvesting : Node2D
         Check(state.Completed && !GodotObject.IsInstanceValid(oak),"Fourth chop fells and releases standing tree/collider");
         var records=_room.Drops.Capture().Where(x=>x.EventId.EndsWith("oak/0/fell/0",StringComparison.Ordinal)).ToArray();
         Check(records.Length>=3 && records.Length<=5 && records.Sum(x=>x.Quantity)>=3 && records.Sum(x=>x.Quantity)<=5,"Felling reserves three to five real log units");
-        Check(records.All(x=>!x.Released),"Rewards logically reserved before visual fall completes");
+        Check(records.All(x=>x.Released),"Logs are released at the start of the tree fall");
+        Check(records.All(x=>_room.Drops.FindNode(x.Id)?.Settled==false),"Newly released logs are animated, not already settled");
         var fall=_room.GetChildren().OfType<TreeFall>().Single(); fall._Process(0.15);
         Check(fall.GetChild<Node2D>(0).Rotation>0,"Rightward impact falls right");
         var fallArt=fall.GetChild<Node2D>(0).GetChild<Sprite2D>(0);
         Check(fallArt.Material==null && fallArt.Texture!=null,"Falling art has no standing wind clipping shader");
         fall.QueueFree(); await Frames(3);
-        Check(_room.Drops.Capture().Where(x=>x.EventId==records[0].EventId).All(x=>x.Released),"Interrupted proxy releases reserved batch once");
+        Check(_room.Drops.Capture().Where(x=>x.EventId==records[0].EventId).All(x=>x.Released),"Interrupted proxy leaves the already-released batch intact");
         _room.Drops.Release(records[0].EventId); Check(_room.Drops.RecordCount==before+records.Length,"Repeated fall release cannot duplicate rewards");
         var blossom=_room.Blossom; var burn=blossom.GetNode<Burnable>("Burnable");
         Check(burn.TryIgnite(blossom.GlobalPosition,"H3 test"),"Fire precedence fixture ignites");

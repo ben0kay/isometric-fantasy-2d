@@ -58,7 +58,7 @@ public partial class ValidateWorldHarvesting : Node
         Check(felled!=null,"Border tree reserves a valid cross-chunk fall batch");
         var mid=world.Saves.Capture(); var drops=mid.Chunks.SelectMany(c=>c.Drops ?? Array.Empty<SavedDrop>()).ToArray();
         int units=drops.Sum(d=>d.Quantity); Check(units>=3 && units<=5,"Real World felling awards configured log total");
-        Check(world.Harvesting.Drops.Capture().All(d=>!d.Released),"Checkpoint captured mid-fall before visual release");
+        Check(world.Harvesting.Drops.Capture().All(d=>d.Released),"Logs start immediately; mid-fall checkpoint preserves the released committed batch");
         Check(mid.Chunks.Any(c=>c.Edits.Any(e=>e.Id==felledId && e.Felled && e.Removed)),"Felled source present in same checkpoint as rewards");
         Check(mid.Chunks.Any(c=>c.Edits.Any(e=>e.Id==partialId && e.HarvestWork==2)),"Partial work recorded through existing chunk owner");
         Check(drops.All(d=>IdOwner(mid,felledId)!=ChunkCoord.At(new Vector2(d.X,d.Y),world.Config.Streaming.ChunkSize)),"Drops owned by landing chunks across source boundary");

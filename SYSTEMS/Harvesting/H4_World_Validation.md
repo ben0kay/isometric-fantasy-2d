@@ -4,7 +4,13 @@ Implemented 25 October 2026. H5 remains planned. Windows visual/performance acce
 
 ## Play in the real world
 
-Run normal F5 → New Campaign/Continue, or F6 `SCENES/World/World.tscn` for a disposable World. Select starter axe with 1; land four LMB chops on Oak or Pink Blossom. The rooted artwork falls, then 3–5 Wooden Logs scatter/hop and settle at varied angles. E collects a nearby settled log into actual Player storage; I shows counts. 2 selects sword; 1–9 selects shortcuts. G toggles the temporary shield (no shield item yet). F8 saves a campaign; Esc supports save-and-leave. F6 sessions do not save.
+Run normal F5 → New Campaign/Continue, or F6 `SCENES/World/World.tscn` for a disposable World. Select starter axe with 1; land four LMB chops on Oak or Pink Blossom. The rooted artwork starts falling **at the same time as 3–5 Wooden Logs scatter/hop**, then bounce briefly on ground contact and settle at varied angles. E collects a nearby settled log into actual Player storage; I shows counts. 2 selects sword; 1–9 selects shortcuts. G toggles the temporary shield (no shield item yet). F8 saves a campaign; Esc supports save-and-leave. F6 sessions do not save.
+
+## Fall-start drop timing and landing bounce — follow-up, native/Windows acceptance pending
+
+TreeHarvest still reserves deterministic rewards and final landing points before the felling proxy begins. The falling scene now calls the **idempotent release immediately in Begin**, rather than waiting for 90-degree contact. An interrupted proxy cannot double-release rewards. Each existing DroppedItem animates its original 0.55-second outgoing hop, then makes **two decreasing rebounds lasting 0.28 seconds total**, varying slightly by stable drop ID. Pickup is allowed only after the second bounce. A save/Continue during the fall, flight or rebound retains the exact source/drop/inventory outcomes and restores the cosmetic items settled, not re-flown. The existing scattered positions, chunk ownership, IDs and schema 3 are unchanged.
+
+Tune the new exported `LandingBounceHeight`, `LandingBounceSeconds` and `LandingBounceCount` on the **existing** DropScatterProfile / DefaultDropScatter Inspector (defaults 8, 0.28, 2; Count 0 disables). No new profile files or scripts, physics bodies, extra processing while settled, or modifications to the fingerprinted DefaultDropScatter.tres. The H1–H4 fixture assertions have been revised for immediate release and a still-uncollectable bouncing item. **No Godot/.NET or graphical tests were performed during this GitHub-only change.** Manual F6: chop Oak; logs should appear while it first tips, touch down and bounce twice before E works. Check chunk-edge landings, saved midflight drops and F5 Continue.
 
 ## Ownership and authoring
 

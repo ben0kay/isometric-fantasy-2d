@@ -24,15 +24,16 @@ public partial class TreeFall : Node2D
         { material=(ShaderMaterial)original.Duplicate(); material.SetShaderParameter("wind_multiplier",0f); material.SetShaderParameter("strength_world_pixels",0f); }
         fall._pivot.AddChild(new Sprite2D { Texture=art.Texture,Material=material,Centered=art.Centered,Offset=art.Offset,Scale=art.Scale,
             FlipH=art.FlipH,FlipV=art.FlipV,Position=art.Position-anchor,Rotation=art.Rotation,Modulate=art.Modulate,TextureFilter=art.TextureFilter });
-        fall.SetPhysicsProcess(false); fall.SetProcess(true); return fall;
+        fall.SetPhysicsProcess(false); fall.SetProcess(true);
+        // Harvest completion already committed rewards; launch their visible flight with the falling tree.
+        fall.Release(); return fall;
     }
-    // Fall accelerates away from the impact, releases rewards at ground contact, then fades the transient canopy.
+    // The already-released logs scatter during the fall; only the transient canopy fades after impact.
     // =========================================================
     public override void _Process(double delta)
     {
         _age+=(float)delta; float t=Mathf.Clamp(_age/_seconds,0,1);
         _pivot.Rotation=_direction*Mathf.Pi*0.5f*t*t;
-        if (t>=1) Release();
         if (_age>_seconds+0.15f) Modulate=new Color(Modulate,Mathf.Clamp(1-(_age-_seconds-0.15f)/0.3f,0,1));
         if (_age>=_seconds+0.45f) { SetProcess(false); QueueFree(); }
     }

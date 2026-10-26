@@ -1,7 +1,13 @@
 // Shared arcade drop presentation and bounded population budgets; no per-item configuration file is required.
 using Godot;
 using System;
-public readonly record struct DropScatterValues(float Radius,float HopHeight,float FlightSeconds,float Rotation,float Spin,int MaxNodes,int MaxRecords,int MaxBurst,float CollectionRadius);
+public readonly record struct DropScatterValues(float Radius,float HopHeight,float FlightSeconds,float Rotation,float Spin,int MaxNodes,int MaxRecords,int MaxBurst,float CollectionRadius)
+{
+    // Cosmetic values extend the existing profile snapshot without changing the reserve/landing API.
+    public float LandingBounceHeight { get; init; }
+    public float LandingBounceSeconds { get; init; }
+    public int LandingBounceCount { get; init; }
+}
 [GlobalClass]
 public partial class DropScatterProfile : Resource
 {
@@ -11,6 +17,10 @@ public partial class DropScatterProfile : Resource
     [Export] public float RotationDegrees { get; set; } = 25;
     [Export] public float SpinDegrees { get; set; } = 120;
     [Export] public float CollectionRadius { get; set; } = 60;
+    [ExportGroup("Landing bounce")]
+    [Export(PropertyHint.Range,"0,24,0.5")] public float LandingBounceHeight { get; set; } = 8;
+    [Export(PropertyHint.Range,"0.05,1,0.01")] public float LandingBounceSeconds { get; set; } = 0.28f;
+    [Export(PropertyHint.Range,"0,3,1")] public int LandingBounceCount { get; set; } = 2;
     [Export] public int MaximumLivePickups { get; set; } = 128;
     [Export] public int MaximumSessionRecords { get; set; } = 512;
     [Export] public int MaximumBurstPickups { get; set; } = 16;
@@ -22,8 +32,12 @@ public partial class DropScatterProfile : Resource
             || !float.IsFinite(FlightSeconds) || FlightSeconds<0.1f || FlightSeconds>2 || !float.IsFinite(RotationDegrees) || RotationDegrees<0 || RotationDegrees>180
             || !float.IsFinite(SpinDegrees) || SpinDegrees<0 || SpinDegrees>720 || MaximumLivePickups<1 || MaximumLivePickups>512
             || !float.IsFinite(CollectionRadius) || CollectionRadius<8 || CollectionRadius>128
-            || MaximumSessionRecords<MaximumLivePickups || MaximumSessionRecords>65536 || MaximumBurstPickups<1 || MaximumBurstPickups>32)
+            || MaximumSessionRecords<MaximumLivePickups || MaximumSessionRecords>65536 || MaximumBurstPickups<1 || MaximumBurstPickups>32
+            || !float.IsFinite(LandingBounceHeight) || LandingBounceHeight<0 || LandingBounceHeight>24
+            || !float.IsFinite(LandingBounceSeconds) || LandingBounceSeconds<0.05f || LandingBounceSeconds>1
+            || LandingBounceCount<0 || LandingBounceCount>3)
             throw new InvalidOperationException("Invalid shared drop tuning.");
-        return new(ScatterRadius,HopHeight,FlightSeconds,Mathf.DegToRad(RotationDegrees),Mathf.DegToRad(SpinDegrees),MaximumLivePickups,MaximumSessionRecords,MaximumBurstPickups,CollectionRadius);
+        return new(ScatterRadius,HopHeight,FlightSeconds,Mathf.DegToRad(RotationDegrees),Mathf.DegToRad(SpinDegrees),MaximumLivePickups,MaximumSessionRecords,MaximumBurstPickups,CollectionRadius)
+        { LandingBounceHeight=LandingBounceHeight,LandingBounceSeconds=LandingBounceSeconds,LandingBounceCount=LandingBounceCount };
     }
 }
