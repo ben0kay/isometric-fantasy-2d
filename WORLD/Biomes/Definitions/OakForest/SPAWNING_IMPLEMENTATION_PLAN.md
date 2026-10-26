@@ -1,5 +1,8 @@
 # Biome configuration — climate-region placement and future spawn systems
 
+> **BC4 — 26 October 2026:** BC4 implemented, awaiting native/local validation. New default is ~50× previous area with coarse global planning and coordinate-keyed local refinement. Chunk detail remains nearby only; BC5–BC7 remain planned. Separate BP spawn phases are unchanged. [Current handoff](../../../Generation/Authoring/BC4_Validation.md).
+
+
 > **SE4 / BC3 — 26 October 2026:** BC3 foundation implemented, awaiting local validation: shared regional resolver, optional biome WeatherResponse and automatic SE4 calendar. No entity/deposit spawning, size change or region selector is included. BC4–BC7 remain pending. [Current handoff](../../../../ENVIRONMENT/Climate/SE4_BC3_Validation.md).
 
 
@@ -46,7 +49,7 @@ Three distinct ownership layers must not be merged:
 | **BC1** | Add one Resource-driven authoring preset and coherent north/south climate + central ocean constraints to **new world planning**, plus basic F7 climate overview | Implemented — awaiting local validation |
 | **BC2** | Make existing macro biome builder use climate-zone affinity before weight/size. Verify with colour-only/fake-art **biome Resources**, not fake enemy/ore spawns | Implemented — awaiting local validation |
 | **BC3** | Shared position-aware snow/rain/pack and per-biome winter appearance; far north permanent ground ice possible, temperate Oak seasonal, south mostly non-snowy; SE4 calendar separate | Implemented foundation — awaiting local validation |
-| **BC4** | **50× area** finite bounds through coarse-global/hierarchical deterministic plan and **local-only P3 chunk detail**; bound macro memory, region growth, save size and generator time | Planned — scaling |
+| **BC4** | **50× area** finite bounds through coarse-global/hierarchical deterministic plan and **local-only P3 chunk detail**; bound macro memory, region growth, save size and generator time | Implemented — awaiting native/local validation |
 | **BC5** | Select **North / Middle / South** for New Campaign; deterministic safe land spawn honoring central ocean and existing protected-start contract, persist exact position | Planned — spawn choice |
 | **BC6** | **F7 world overview + wheel zoom/drag/pan**, climate/biome/water/spawn layers; opt-in **progressive whole-world LOW-DETAIL preview with progress/cancel** and read-only World Profiler; no playable chunks generated | Planned — debug tooling |
 | **BC7** | Optional polished World Author editor/workflow if Inspector Resources aren't sufficient; reuse BC1 preset and BC6 map, no separate planner | Planned — optional |

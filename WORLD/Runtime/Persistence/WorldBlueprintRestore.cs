@@ -11,7 +11,11 @@ public static class WorldBlueprintRestore
     // =========================================================
     public static MacroWorldMap Map(WorldBlueprintManifest b)
     {
-        if (b == null || (b.GeneratorVersion!=MacroWorldMap.GeneratorVersion && b.GeneratorVersion!=MacroWorldMap.GeographyGeneratorVersion && b.GeneratorVersion!=MacroWorldMap.OceanGeneratorVersion && b.GeneratorVersion!=MacroWorldMap.ClimateGeneratorVersion) || b.MacroBiomes == null || b.MacroRegions == null || b.RegionCells == null || b.BiomeIds == null || b.RegionBiomes == null
+        if (b == null || (b.GeneratorVersion!=MacroWorldMap.GeneratorVersion && b.GeneratorVersion!=MacroWorldMap.GeographyGeneratorVersion && b.GeneratorVersion!=MacroWorldMap.OceanGeneratorVersion && b.GeneratorVersion!=MacroWorldMap.ClimateGeneratorVersion && b.GeneratorVersion!=MacroWorldMap.ScalableGeneratorVersion) || b.MacroBiomes == null || b.MacroRegions == null || b.RegionCells == null || b.BiomeIds == null || b.RegionBiomes == null
+            || !float.IsFinite(b.RefinementStrength) || b.RefinementStrength<0 || b.RefinementStrength>0.25f
+            || (b.GeneratorVersion!=MacroWorldMap.ScalableGeneratorVersion && b.RefinementStrength!=0)
+            || (b.GeneratorVersion==MacroWorldMap.ScalableGeneratorVersion && (b.CellSize<512 || b.CellSize>8192
+                || Math.Max(Math.Max(Math.Abs((double)b.OriginX),Math.Abs((double)b.OriginX+b.Width)),Math.Max(Math.Abs((double)b.OriginY),Math.Abs((double)b.OriginY+b.Height)))>524288))
             || b.Columns < 1 || b.Rows < 1 || (long)b.Columns*b.Rows > 262144 || b.RegionCells.Length != (long)b.Columns*b.Rows
             || b.MacroBiomes.Length < 1 || b.MacroBiomes.Length > 4096 || b.MacroRegions.Length < 1 || b.MacroRegions.Length > 4096
             || b.BiomeIds.Length != b.MacroBiomes.Length || b.RegionBiomes.Length != b.MacroRegions.Length
@@ -29,7 +33,7 @@ public static class WorldBlueprintRestore
         if (biomes.Select(v => v.Id).Distinct(StringComparer.Ordinal).Count() != biomes.Length) throw new InvalidDataException("Duplicate biome IDs.");
         var counts = new int[b.MacroRegions.Length];
         foreach (int id in b.RegionCells)
-        { if (id==-1 && (b.GeneratorVersion==MacroWorldMap.OceanGeneratorVersion || b.GeneratorVersion==MacroWorldMap.ClimateGeneratorVersion)) continue; if (id < 0 || id >= counts.Length) throw new InvalidDataException("Invalid region cell."); counts[id]++; }
+        { if (id==-1 && (b.GeneratorVersion==MacroWorldMap.OceanGeneratorVersion || b.GeneratorVersion==MacroWorldMap.ClimateGeneratorVersion || b.GeneratorVersion==MacroWorldMap.ScalableGeneratorVersion)) continue; if (id < 0 || id >= counts.Length) throw new InvalidDataException("Invalid region cell."); counts[id]++; }
         var regions = b.MacroRegions.Select((v,i) =>
         {
             if (v == null || v.Id != i || v.BiomeIndex < 0 || v.BiomeIndex >= biomes.Length || b.RegionBiomes[i] != v.BiomeIndex
@@ -37,7 +41,7 @@ public static class WorldBlueprintRestore
                 throw new InvalidDataException("Invalid region snapshot.");
             return new MacroRegion(v.Id,v.BiomeIndex,new Vector2(v.X,v.Y),v.Diameter,v.Cells);
         }).ToArray();
-        var map = new MacroWorldMap(b.Seed,new Rect2(b.OriginX,b.OriginY,b.Width,b.Height),b.CellSize,b.Columns,b.Rows,b.RegionCells,biomes,regions,b.GeneratorVersion);
+        var map = new MacroWorldMap(b.Seed,new Rect2(b.OriginX,b.OriginY,b.Width,b.Height),b.CellSize,b.Columns,b.Rows,b.RegionCells,biomes,regions,b.GeneratorVersion,b.RefinementStrength);
         if (map.Hash != b.MapHash) throw new InvalidDataException("Frozen macro map hash mismatch.");
         return map;
     }

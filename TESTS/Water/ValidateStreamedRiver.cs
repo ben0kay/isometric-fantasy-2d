@@ -21,7 +21,7 @@ public partial class ValidateStreamedRiver : Node
         Check(world.Config.Generation.Water?.Enabled==true,"Production World config has generated water disabled");
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world); Check(world.StartupError==null,"World failed to initialize: "+world.StartupError);
-        Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==MacroWorldMap.ClimateGeneratorVersion && (world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10 || world.Blueprint.SchemaVersion==11) && world.WaterPlan.PlanVersion==4,"River world did not use the river-capable save contract");
+        Check(world.GeographyPlan!=null && (world.MacroMap.GenerationVersion==MacroWorldMap.ClimateGeneratorVersion || world.MacroMap.GenerationVersion==MacroWorldMap.ScalableGeneratorVersion) && (world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10 || world.Blueprint.SchemaVersion==11 || world.Blueprint.SchemaVersion==12) && world.WaterPlan.PlanVersion==4,"River world did not use the river-capable save contract");
         var body=world.WaterPlan.Bodies.Single(b => b.River!=null); var path=body.River;
         int middle=path.Points.Count/2;
         foreach (int index in new[] { 0,middle,path.Points.Count-1,middle })
@@ -60,9 +60,12 @@ public partial class ValidateStreamedRiver : Node
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=6 } }),"Dense river accepted by older river schema");
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=5 } }),"River data accepted by lake-only schema");
             Reject(() => store.Validate(snapshot with { Blueprint=blueprint with { SchemaVersion=4 } }),"River data accepted by metadata-only schema");
-            var legacyMap=MacroWorldBuilder.Build(world.Config.Generation,blueprint.Seed);
+            var legacyConfig=(WorldGenerationMasterConfig)world.Config.Generation.Duplicate(true);
+            if(legacyConfig.ScalableMacro) foreach(var biome in legacyConfig.Biomes) { biome.MinimumRegionDiameter*=legacyConfig.RegionDiameterScale; biome.MaximumRegionDiameter*=legacyConfig.RegionDiameterScale; }
+            legacyConfig.ScalableMacro=false;
+            var legacyMap=MacroWorldBuilder.Build(legacyConfig,blueprint.Seed);
             var legacyWater=new WaterBodyPlan(blueprint.Seed,legacyMap.Bounds,world.WaterPlan.Bodies.Where(b=>!b.IsOcean),Array.Empty<string>());
-            var legacy=loaded with { Blueprint=blueprint with { SchemaVersion=7,Climate=null,AuthorPolicy=null,GeneratorVersion=1,GeographyVersion=0,Water=legacyWater.Snapshot(),MapHash=legacyMap.Hash,
+            var legacy=loaded with { Blueprint=blueprint with { SchemaVersion=7,RefinementStrength=0,Climate=null,AuthorPolicy=null,GeneratorVersion=1,GeographyVersion=0,Water=legacyWater.Snapshot(),MapHash=legacyMap.Hash,
                 RegionCells=legacyMap.CopyRegionCells(),RegionBiomes=legacyMap.Regions.Select(r=>r.BiomeIndex).ToArray(),
                 MacroRegions=legacyMap.Regions.Select(r=>new SavedMacroRegion(r.Id,r.BiomeIndex,r.Centre.X,r.Centre.Y,r.TargetDiameter,r.CellCount)).ToArray() } };
             world.Free(); await Frames(3);

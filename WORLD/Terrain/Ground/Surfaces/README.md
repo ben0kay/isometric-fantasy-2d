@@ -1,5 +1,8 @@
 # Shared ground surfaces
 
+> **BC4 — 26 October 2026:** BC4 generator-5 ground uses packed RGBA32F palette uploads and matching CPU/GPU coordinate-keyed biome boundary refinement. Palettes are coarse/global/shared; artwork/noise remains world anchored and chunk size unchanged. Older map versions retain zero refinement and their prior upload path. [Current handoff](../../../Generation/Authoring/BC4_Validation.md).
+
+
 Current dirt artwork: Dirt.tres uses **TextureVariants** = Dirt01_gs.png + Dirt02_gs.png. Stable world-space noise blends them inside the existing dirt layer. Colour, texture repeat scale, patch masks and F9 controls retain their existing owners. Rock remains single-texture. See [variant authoring and validation](GS5_PNG_DIRT.md#texture-variants).
 
 

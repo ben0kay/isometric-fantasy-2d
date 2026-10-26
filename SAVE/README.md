@@ -1,5 +1,8 @@
 # SAVE — P4 implemented; original user functional acceptance recorded
 
+> **BC4 — 26 October 2026:** BC4 new worlds use blueprint 12 / macro generator 5 and save refinement strength with the complete bounded coarse map. Campaign schema 4 is unchanged. Restore keeps frozen original bounds and old versions do not acquire refinement. Cell/file-size caps and strict content fingerprint checks remain. [Current handoff](../WORLD/Generation/Authoring/BC4_Validation.md).
+
+
 > **SE4 / BC3 — 26 October 2026:** Campaign schema 4 stores validated calendar and regional visited-cell snow data under SavedClock. Schema 1–3 formats remain recognized with explicit missing-calendar defaults; strict content fingerprints are unchanged. Session date/weather overrides are not persisted; no geography reroll or blanket old-content migration. [Current handoff](../ENVIRONMENT/Climate/SE4_BC3_Validation.md).
 
 

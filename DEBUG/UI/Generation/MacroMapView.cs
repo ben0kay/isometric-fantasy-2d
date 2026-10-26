@@ -110,7 +110,7 @@ public partial class MacroMapView : VBoxContainer
     private Color CellColour(int x,int y)
     {
         var map=_map;
-        Vector2 sample=(map.Bounds.Position+new Vector2(x+0.5f,y+0.5f)*map.CellSize).Clamp(map.Bounds.Position,map.Bounds.End-Vector2.One*0.01f);
+        Vector2 sample=(map.Bounds.Position+new Vector2(x+0.5f,y+0.5f)*map.CellSize).Clamp(map.Bounds.Position,map.Bounds.End-Vector2.One*0.25f);
         int region=map.RegionIdAtCell(x,y);
         Color colour=region<0 ? new Color(0.045f,0.2f,0.36f) : map.Biomes[map.Regions[region].BiomeIndex].Colour;
         if(_layer==2 && region>=0) colour=new Color(0.22f,0.28f,0.22f);

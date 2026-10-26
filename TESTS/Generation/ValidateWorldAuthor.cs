@@ -12,7 +12,7 @@ public partial class ValidateWorldAuthor : Node
     {
         try
         {
-            var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+            var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/StandardWorldGeneration.tres").Duplicate(true);
             var pond=new Rect2(650,500,860,600);
             var world=WorldGenerationPipeline.Build(config,41,pond);
             var again=WorldGenerationPipeline.Build(config,41,pond);

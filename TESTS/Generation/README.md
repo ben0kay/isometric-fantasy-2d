@@ -1,5 +1,8 @@
 # P0–P3 checks
 
+> **BC4 — 26 October 2026:** BC4 focused fixture: godot --headless --path . res://TESTS/Generation/ValidateLargeWorld.tscn after dotnet build. Checks default size/caps, arbitrary far-query order, schema-12 restore/size and indexed shoreline parity. Added but not run here; native tools unavailable. Earlier phase generation fixtures use retained StandardWorldGeneration.tres when they intentionally require the old size. [Current handoff](../../WORLD/Generation/Authoring/BC4_Validation.md).
+
+
 Focused BC2 check: godot --headless --path . res://TESTS/Generation/ValidateClimateBiomes.tscn (after dotnet build). Covers hard affinity, Tundra/Desert presence, coverage, deterministic Resource ordering, schema-11 frozen restoration, one-biome soft fallback and impossible hard requirements. Added but not run here: Godot/.NET unavailable. The standalone visual scene is DEBUG/PreviewMap/PreviewMap.tscn.
 
 

@@ -1,5 +1,8 @@
 # WORLD/Generation/Liquids
 
+> **BC4 — 26 October 2026:** BC4 adds immutable edge BVH/Y-bin water queries and bounded seeded river route windows for large worlds. Exact water vertices/hash contracts remain; ocean diameter settings now support the large preset. Optional river-window failures are warnings; no detailed water tiles load beyond nearby chunks. [Current handoff](../Authoring/BC4_Validation.md).
+
+
 **WG0 audit complete; WG1 macro pond/lake planning implemented.** Generation owns deterministic liquid placement and frozen geometry; `WORLD/Liquids/` owns rendering and interactions. [WG2 presentation](../../Liquids/WG2_Validation.md) is now implemented; [WG3 rivers](Rivers/README.md) are implemented; carving remains planned.
 
 `WaterGenerationMasterConfig` is an optional Resource on `WorldGenerationMasterConfig.Water` (null/off for unconfigured custom configs; the shipped production preset enables one required major ocean, three lakes and one river). `WaterBodyPlanner.BuildGeography` consumes seed/bounds and P2 permissions before biome assignment, plus a fixed-pond exclusion. The `Build(config,map,features)` overload is the preserved legacy biome-first baseline. `WaterBodyPlan` holds immutable bounded geometry, lookup queries, exact hashes and detached save snapshots. `BiomeHydrologyProfile` now supplies permissions/preferences to biome assignment around frozen water. Missing saved data means empty water, never reroll on Continue.

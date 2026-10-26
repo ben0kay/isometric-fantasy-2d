@@ -1,5 +1,8 @@
 # Whole-world blueprint preview
 
+> **BC4 — 26 October 2026:** BC4 large preset now feeds this same no-chunk preview. Whole-world size is 1006240×754680 / 492×369 macro cells. Actual planning stage times/frontier counts and labelled memory estimates are shown. Generation remains synchronous; map rasters are staged. Zoom/pan is still BC6. [Current handoff](../../WORLD/Generation/Authoring/BC4_Validation.md).
+
+
 > **SE4 / BC3 — 26 October 2026:** Map-only Seasonal temperature and Snow eligibility layers now share the runtime climate math. A separate January–December preview slider affects only these map layers, never a gameplay calendar or saved pack. No runtime weather/controller/chunk is created. [Current handoff](../../ENVIRONMENT/Climate/SE4_BC3_Validation.md).
 
 

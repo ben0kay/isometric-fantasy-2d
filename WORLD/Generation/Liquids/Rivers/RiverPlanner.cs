@@ -26,7 +26,8 @@ public static class RiverPlanner
         Validate(settings);
         for (int slot=0;slot<settings.RiverCount;slot++)
         {
-            var grid=BuildGrid(settings,bounds,map,features,profiles,bodies,authoredPond);
+            var routeBounds=RoutingBounds(settings,bounds,seed,slot);
+            var grid=BuildGrid(settings,routeBounds,map,features,profiles,bodies,authoredPond);
             using var rng=new RandomNumberGenerator { Seed=Seed(seed,slot) };
             bool placed=false;
             for (int attempt=0;attempt<settings.AttemptsPerRiver && grid.Eligible.Count>1;attempt++)
@@ -54,6 +55,16 @@ public static class RiverPlanner
             }
             if (!placed) warnings.Add($"Water river.{slot:D3}: no valid source-to-basin corridor after bounded attempts/search; skipped (biomes, reservations, width or route limits).");
         }
+    }
+    // Global semantic geography remains authoritative; each river requests only one bounded local route window.
+    // =========================================================
+    private static Rect2 RoutingBounds(WaterGenerationMasterConfig settings,Rect2 bounds,int seed,int slot)
+    {
+        if(settings.RiverPlanningWindowSize<=0) return bounds;
+        using var rng=new RandomNumberGenerator { Seed=Seed(seed,slot)^0x42433457494E444FUL };
+        Vector2 size=bounds.Size.Min(Vector2.One*settings.RiverPlanningWindowSize);
+        Vector2 position=bounds.Position+new Vector2(rng.Randf(),rng.Randf())*(bounds.Size-size);
+        return new Rect2(position,size);
     }
     // Cache a modest cost field once per river slot. Conservative clearance protects transitions between grid centers.
     // =========================================================
@@ -254,7 +265,8 @@ public static class RiverPlanner
     {
         if (s.RiverCount<0 || s.RiverCount>4 || s.RiverCount+s.LakeCount>32 || s.AttemptsPerRiver<1 || s.AttemptsPerRiver>32
             || s.MaximumRiverSearchNodes<32 || s.MaximumRiverSearchNodes>65536 || s.RiverRouteCellSize<256 || s.RiverRouteCellSize>1024
-            || !float.IsFinite(s.MinimumRiverSpan) || s.MinimumRiverSpan<1500 || !float.IsFinite(s.MaximumRiverSpan) || s.MaximumRiverSpan<s.MinimumRiverSpan || s.MaximumRiverSpan>12000
+            || !float.IsFinite(s.RiverPlanningWindowSize) || s.RiverPlanningWindowSize<0 || s.RiverPlanningWindowSize>262144
+            || !float.IsFinite(s.MinimumRiverSpan) || s.MinimumRiverSpan<1500 || !float.IsFinite(s.MaximumRiverSpan) || s.MaximumRiverSpan<s.MinimumRiverSpan || s.MaximumRiverSpan>(s.RiverPlanningWindowSize>0 ? 120000 : 12000)
             || !float.IsFinite(s.MinimumRiverWidth) || s.MinimumRiverWidth<64 || !float.IsFinite(s.MaximumRiverWidth) || s.MaximumRiverWidth<s.MinimumRiverWidth || s.MaximumRiverWidth>384
             || !float.IsFinite(s.RiverBendStrength) || s.RiverBendStrength<0 || s.RiverBendStrength>512
             || !float.IsFinite(s.RiverMeanderLength) || s.RiverMeanderLength<1200 || s.RiverMeanderLength>6000

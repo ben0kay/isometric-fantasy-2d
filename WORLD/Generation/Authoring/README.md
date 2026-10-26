@@ -1,5 +1,8 @@
 # World Author — BC0 / BC1
 
+> **BC4 — 26 October 2026:** BC4 implemented, awaiting native/local validation. New default is ~50× area with a bounded coarse skeleton and stateless query refinement. Saved schema 12 freezes local border shaping; native timings/precision still need acceptance. This handoff supersedes earlier-size descriptions below. [Current handoff](BC4_Validation.md).
+
+
 > **PreviewMap / BC2 — 26 October 2026:** BC2 delivered, awaiting local validation: optional biome affinity controls placement; normal worlds use schema 11 / generator 4. `DEBUG/PreviewMap/PreviewMap.tscn` offers metadata-only seed/regenerate and three map layers. BC0/BC1 details below describe the prior implementation; current behavior is in this handoff. [Current handoff](BC2_Validation.md).
 
 

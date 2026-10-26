@@ -13,7 +13,7 @@ public static class OceanPlanner
             throw new ArgumentException("Ocean requests exceed bounded water slots.");
         if (config.OceanCount==0) return;
         if (!float.IsFinite(config.MinimumOceanDiameter) || config.MinimumOceanDiameter<1000 || !float.IsFinite(config.MaximumOceanDiameter)
-            || config.MaximumOceanDiameter<config.MinimumOceanDiameter || config.MaximumOceanDiameter>200000
+            || config.MaximumOceanDiameter<config.MinimumOceanDiameter || config.MaximumOceanDiameter>400000
             || config.AttemptsPerOcean<1 || config.AttemptsPerOcean>128) throw new ArgumentException("Invalid bounded ocean settings.");
         if(author!=null) seed=WorldClimatePlan.DeriveSeed(seed,"geography.ocean");
         for (int slot=0;slot<config.OceanCount;slot++)

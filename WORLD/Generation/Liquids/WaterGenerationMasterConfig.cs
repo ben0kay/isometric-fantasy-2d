@@ -29,6 +29,7 @@ public partial class WaterGenerationMasterConfig : Resource
     [ExportGroup("Legacy biome-first validation only")]
     [Export] public bool RequireMultipleRiverBiomes { get; set; }
     [ExportGroup("River route limits")]
+    [Export] public float RiverPlanningWindowSize { get; set; }
     [Export] public int RiverRouteCellSize { get; set; } = 512;
     [Export] public int AttemptsPerRiver { get; set; } = 12;
     [Export] public int MaximumRiverSearchNodes { get; set; } = 8192;

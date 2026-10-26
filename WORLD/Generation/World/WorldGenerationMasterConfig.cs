@@ -13,6 +13,10 @@ public partial class WorldGenerationMasterConfig : Resource
     [Export] public WorldAuthorPreset Authoring { get; set; }
     [ExportGroup("Optional water planning")]
     [Export] public WaterGenerationMasterConfig Water { get; set; }
+    [ExportGroup("BC4 bounded macro / local refinement")]
+    [Export] public bool ScalableMacro { get; set; }
+    [Export] public float RegionDiameterScale { get; set; } = 1;
+    [Export(PropertyHint.Range,"0,0.25,0.01")] public float RefinementStrength { get; set; } = 0.2f;
     [ExportGroup("Region shape")]
     [Export(PropertyHint.Range, "0,1,0.05")] public float BoundaryIrregularity { get; set; } = 0.45f;
     [ExportGroup("Limits")]

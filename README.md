@@ -1,5 +1,8 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+> **BC4 — 26 October 2026:** BC4 large-world implementation delivered, awaiting native/local validation. Default World and PreviewMap now use 1006240×754680 (~50× previous area), 2048 macro cells and unchanged nearby 512-unit detail chunks. Coarse skeleton + stateless border refinement, bounded site/growth work, local river routing and indexed shorelines avoid full-detail expansion. New blueprint 12 / macro generator 5. BC5 start selector and BC6 zoom/pan remain planned. [Current handoff](WORLD/Generation/Authoring/BC4_Validation.md).
+
+
 > **SE4 / BC3 — 26 October 2026:** SE4 calendar and BC3 regional-weather foundation implemented, awaiting local validation. Normal frozen-climate Worlds use an automatic 120-day year, position-aware precipitation and visited-cell snow cover. F9 provides regional precipitation/manual overrides; PreviewMap adds selected-date temperature/snow eligibility. Campaign schema 4 stores calendar/snow state; blueprint 11 and world size remain unchanged. [Current handoff](ENVIRONMENT/Climate/SE4_BC3_Validation.md).
 
 

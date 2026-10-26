@@ -11,7 +11,7 @@ public partial class ValidateClimateBiomes : Node
     {
         try
         {
-            var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+            var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/StandardWorldGeneration.tres").Duplicate(true);
             var pond=WorldLiquidFootprint.WorldBounds(GD.Load<WorldLiquidMasterConfig>("res://WORLD/Liquids/Definitions/Water/PondConfig.tres"));
             var result=WorldGenerationPipeline.Build(config,213876,pond); var map=result.Map;
             Check(map.GenerationVersion==MacroWorldMap.ClimateGeneratorVersion,"Climate generator identity missing");

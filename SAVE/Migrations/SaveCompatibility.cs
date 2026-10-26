@@ -8,8 +8,8 @@ public static class SaveCompatibility
     // =========================================================
     public static void RequireSupported(int schema, WorldBlueprintManifest b)
     {
-        if ((schema != 1 && schema != 2 && schema != 3 && schema != CampaignSnapshot.CurrentSchema) || b == null || (b.SchemaVersion != 4 && b.SchemaVersion != 5 && b.SchemaVersion != 6 && b.SchemaVersion != 7 && b.SchemaVersion != 8 && b.SchemaVersion != 9 && b.SchemaVersion != 10 && b.SchemaVersion != 11)
-            || b.GeneratorVersion != (b.SchemaVersion==11 ? MacroWorldMap.ClimateGeneratorVersion : b.SchemaVersion>=9 ? MacroWorldMap.OceanGeneratorVersion : b.SchemaVersion==8 ? MacroWorldMap.GeographyGeneratorVersion : MacroWorldMap.GeneratorVersion) || b.LocalGeneratorVersion != ChunkSceneryData.GeneratorVersion
+        if ((schema != 1 && schema != 2 && schema != 3 && schema != CampaignSnapshot.CurrentSchema) || b == null || (b.SchemaVersion != 4 && b.SchemaVersion != 5 && b.SchemaVersion != 6 && b.SchemaVersion != 7 && b.SchemaVersion != 8 && b.SchemaVersion != 9 && b.SchemaVersion != 10 && b.SchemaVersion != 11 && b.SchemaVersion != 12)
+            || b.GeneratorVersion != (b.SchemaVersion==12 ? MacroWorldMap.ScalableGeneratorVersion : b.SchemaVersion==11 ? MacroWorldMap.ClimateGeneratorVersion : b.SchemaVersion>=9 ? MacroWorldMap.OceanGeneratorVersion : b.SchemaVersion==8 ? MacroWorldMap.GeographyGeneratorVersion : MacroWorldMap.GeneratorVersion) || b.LocalGeneratorVersion != ChunkSceneryData.GeneratorVersion
             || (b.SchemaVersion >= 5 && b.SchemaVersion<8 && (b.Water?.Bodies == null || b.Water.Bodies.Length == 0))
             || (b.SchemaVersion>=9 ? (b.GeographyVersion!=WorldGeographyPlan.Version || b.Water==null || (b.Water.Version!=1 && b.Water.Version!=3 && b.Water.Version!=4)) : b.SchemaVersion==8 ? (b.GeographyVersion!=1 || b.Water==null || (b.Water.Version!=1 && b.Water.Version!=3))
                 : (b.GeographyVersion!=0 || (b.Water!=null && b.Water.Version!=(b.SchemaVersion==7 ? 3 : b.SchemaVersion==6 ? 2 : 1))))

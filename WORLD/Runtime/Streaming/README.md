@@ -1,5 +1,8 @@
 # Finite world streaming — P3
 
+> **BC4 — 26 October 2026:** BC4 changes global macro planning/default bounds only; nearby detail remains the same 512-unit chunk window. Default is 1006240×754680 with 2048-unit macro cells and on-demand coordinate border refinement. Continue restores saved bounds; no entire world scenery path is preloaded. [Current handoff](../../Generation/Authoring/BC4_Validation.md).
+
+
 The production World now streams the P1 biome map and respects P2 reservations. F6 starts at the protected macro starting anchor. F7 retains the map/reservation view and adds live chunk/count status. The default finite bounds remain 45000×33750; a new scene session still chooses one random seed. P4 private campaign disk saves/Continue are **implemented** under SAVE. F6 direct sessions remain disposable.
 
 ## Data and scheduling

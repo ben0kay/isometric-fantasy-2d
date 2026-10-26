@@ -12,6 +12,7 @@ public partial class WorldScene : Node2D
     public WorldGeographyPlan GeographyPlan { get; private set; }
     public WorldClimatePlan ClimatePlan { get; private set; }
     public WorldFeaturePlan FeaturePlan { get; private set; }
+    public WorldPlanningMetrics PlanningMetrics { get; private set; }
     public MacroWorldMap MacroMap { get; private set; }
     public WorldBlueprintManifest Blueprint { get; private set; }
     public WorldChunkStream Stream { get; private set; }
@@ -116,7 +117,7 @@ public partial class WorldScene : Node2D
                 if (restore==null)
                 {
                     var generated=WorldGenerationPipeline.Build(Config.Generation,ActiveSeed,fixedPond?.SurfaceBounds);
-                    ClimatePlan=generated.Climate; features=generated.Features; map=generated.Map; GeographyPlan=generated.Geography; WaterPlan=GeographyPlan.Water;
+                    PlanningMetrics=generated.Metrics; ClimatePlan=generated.Climate; features=generated.Features; map=generated.Map; GeographyPlan=generated.Geography; WaterPlan=GeographyPlan.Water;
                 }
                 else
                 {
@@ -128,7 +129,7 @@ public partial class WorldScene : Node2D
                 FeaturePlan = features; MacroMap = map;
                 Blueprint = restore?.Blueprint ?? (launch == null ? WorldBlueprintManifest.CreatePreview(MacroMap, FeaturePlan)
                     : WorldBlueprintManifest.Create(launch.ProfileId,launch.RunId,MacroMap,FeaturePlan) with { WorldId = launch.WorldId });
-                if (restore==null) Blueprint=Blueprint with { SchemaVersion=ClimatePlan==null ? 9 : 11,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot(),
+                if (restore==null) Blueprint=Blueprint with { SchemaVersion=MacroMap.GenerationVersion==MacroWorldMap.ScalableGeneratorVersion ? 12 : ClimatePlan==null ? 9 : 11,GeographyVersion=WorldGeographyPlan.Version,Water=WaterPlan.Snapshot(),
                     Climate=ClimatePlan?.Snapshot(), AuthorPolicy=ClimatePlan==null ? null : new WorldAuthorPolicySnapshot(1,"Middle",Config.Generation.Authoring.MajorPoiClearance,Config.Generation.Authoring.ShoreClearance) };
                 foreach (string warning in WaterPlan.Warnings) GD.PushWarning(warning);
                 foreach (string warning in features.Warnings) GD.PushWarning(warning);

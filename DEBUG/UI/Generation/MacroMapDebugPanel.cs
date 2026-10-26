@@ -15,8 +15,12 @@ public partial class MacroMapDebugPanel : CanvasLayer
         Layer=30;
         _panel=new PanelContainer { Visible=false,AnchorRight=1,AnchorBottom=1,OffsetLeft=24,OffsetTop=64,OffsetRight=-24,OffsetBottom=-24 };
         AddChild(_panel);
+        var box=new VBoxContainer(); _panel.AddChild(box);
+        var metrics=world.PlanningMetrics;
+        box.AddChild(new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart,
+            Text=metrics==null ? "Frozen world restored — generation timings unavailable (no replanning)." : $"Creation: water {metrics.WaterMilliseconds:F1} ms / biomes {metrics.BiomesMilliseconds:F1} ms / peak frontier {metrics.PeakGrowthQueue:N0} / palette estimate {metrics.EstimatedPaletteBytes/1048576d:F1} MiB" });
         var view=new MacroMapView { SizeFlagsVertical=Control.SizeFlags.ExpandFill,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill };
-        _panel.AddChild(view); view.Bind(world.MacroMap,world.WaterPlan,world.FeaturePlan,world.ClimatePlan,world.Config.Generation,world.Environment?.RegionalClimate?.Config);
+        box.AddChild(view); view.Bind(world.MacroMap,world.WaterPlan,world.FeaturePlan,world.ClimatePlan,world.Config.Generation,world.Environment?.RegionalClimate?.Config);
     }
     // The viewer handles pause/resume through visibility events and stays asleep when hidden.
     // =========================================================

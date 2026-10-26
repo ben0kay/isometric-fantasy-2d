@@ -14,6 +14,7 @@ public sealed class PlannedWaterBody
     private readonly Rect2[] _edgeBounds;
     private readonly Vector2[] _edgeDelta;
     private readonly float[] _inverseLength;
+    private readonly WaterEdgeIndex _edgeIndex;
     internal int VertexCount => _polygon.Length;
     public PlannedRiverPath River { get; }
     public bool IsOcean { get; }
@@ -40,6 +41,7 @@ public sealed class PlannedWaterBody
             _inverseLength[i]=1f/Mathf.Max(0.001f,_edgeDelta[i].LengthSquared());
             _edgeBounds[i]=new Rect2(_polygon[i],_edgeDelta[i]).Abs();
         }
+        _edgeIndex=new WaterEdgeIndex(_polygon,_edgeBounds,_edgeDelta,_inverseLength);
         if (river!=null && river.Points.Any(p => !ContainsPoint(p)))
             throw new ArgumentException("River centerline escaped its frozen footprint.");
     }
@@ -49,7 +51,7 @@ public sealed class PlannedWaterBody
     public bool Intersects(Rect2 area,float margin=0)
     {
         if (!Bounds.Grow(margin).Intersects(area,true)) return false;
-        foreach (var edge in _edgeBounds) if (edge.Grow(margin).Intersects(area,true)) return true;
+        if(_edgeIndex.Touches(area,margin)) return true;
         return ContainsPoint(area.GetCenter());
     }
     public Vector2[] CopyPolygon() => (Vector2[])_polygon.Clone();
@@ -58,27 +60,13 @@ public sealed class PlannedWaterBody
     public float SignedDistance(Vector2 point)
     {
         if (!point.IsFinite()) return float.NegativeInfinity;
-        float minimum = float.MaxValue;
-        for (int i = 0; i < _polygon.Length; i++)
-        {
-            Vector2 nearest=point.Clamp(_edgeBounds[i].Position,_edgeBounds[i].End);
-            if (point.DistanceSquaredTo(nearest)>minimum) continue;
-            float t=Mathf.Clamp((point-_polygon[i]).Dot(_edgeDelta[i])*_inverseLength[i],0,1);
-            minimum=Mathf.Min(minimum,point.DistanceSquaredTo(_polygon[i]+_edgeDelta[i]*t));
-        }
-        return Mathf.Sqrt(minimum) * (ContainsPoint(point) ? 1f : -1f);
+        return Mathf.Sqrt(_edgeIndex.NearestSquared(point))*(ContainsPoint(point) ? 1f : -1f);
     }
     // Double-precision half-open ray crossings avoid vertex-aligned ray ambiguity on dense, distant banks.
     // =========================================================
     private bool ContainsPoint(Vector2 point)
     {
-        bool inside=false;
-        for (int i=0;i<_polygon.Length;i++)
-        {
-            Vector2 a=_polygon[i],b=_polygon[(i+1)%_polygon.Length];
-            if ((a.Y>point.Y)!=(b.Y>point.Y) && point.X<(double)a.X+((double)b.X-a.X)*(point.Y-a.Y)/((double)b.Y-a.Y)) inside=!inside;
-        }
-        return inside;
+        return _edgeIndex.Contains(point);
     }
     // Serialize detached values; snapshot mutation cannot change the active plan.
     // =========================================================

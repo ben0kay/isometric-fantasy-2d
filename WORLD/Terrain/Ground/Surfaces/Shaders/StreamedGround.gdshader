@@ -31,11 +31,12 @@ uniform sampler2D overlay_table : filter_nearest, repeat_disable;
 uniform float overlay_rows = 1.0;
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/ProceduralGround.gdshaderinc"
 #include "res://WORLD/Terrain/Ground/Surfaces/Shaders/LayeredSurface.gdshaderinc"
+#include "res://WORLD/Terrain/Transitions/MacroBorderRefinement.gdshaderinc"
 varying vec2 ground_world;
 varying vec4 ground_tint;
 void vertex() { ground_world = (MODEL_MATRIX * vec4(VERTEX,0.0,1.0)).xy; ground_tint = COLOR; }
 void fragment() {
-    vec2 lookup = (ground_world - map_origin) / (map_grid_size * map_cell_size);
+    vec2 lookup = refined_macro_lookup(ground_world);
     vec3 settings = texture(map_settings,lookup).rgb;
     vec3 surface = texture(map_base,lookup).rgb;
     if (preview_accompanying_patches && settings.r > 0.0 && preview_accompanying_strength > 0.0) {

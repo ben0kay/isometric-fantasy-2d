@@ -1,5 +1,8 @@
 # Finite macro generation — P0–P3
 
+> **BC4 — 26 October 2026:** BC4 default now uses a bounded 492×369 coarse skeleton for ~50× area. Region diameters scale during creation without editing biome Resources. Generator 5 adds bounded spatial site selection/frontier and stateless land-border refinement; schema 12 freezes it. StandardWorldGeneration.tres retains the previous size. Detailed chunk size/radii are unchanged. [Current handoff](../Authoring/BC4_Validation.md).
+
+
 > **PreviewMap / BC2 — 26 October 2026:** BC2 implemented: optional climate argument composes with existing hydrology rules; seeded regions now use per-biome PlacementClimate. Macro version 4 / blueprint 11. Null climate retains the old path. Normal World and standalone DEBUG/PreviewMap share pipeline and F7 viewer; no world-size change. [Current handoff](../Authoring/BC2_Validation.md).
 
 

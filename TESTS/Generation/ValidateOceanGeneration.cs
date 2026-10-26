@@ -16,7 +16,7 @@ public partial class ValidateOceanGeneration : Node
     // =========================================================
     private void Plans()
     {
-        var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+        var config=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/StandardWorldGeneration.tres").Duplicate(true);
         double ratio=(double)config.Bounds.Size.X*config.Bounds.Size.Y/(45000d*33750);
         Check(Math.Abs(ratio-10)<0.001 && config.CellSize==512,"World is not 10x area with bounded macro resolution");
         Check(config.Water.OceanCount==1,"Production ocean is not enabled");
@@ -60,7 +60,7 @@ public partial class ValidateOceanGeneration : Node
         var scene=GD.Load<PackedScene>("res://SCENES/World/World.tscn"); var world=scene.Instantiate<WorldScene>();
         world.Config=(WorldMasterConfig)world.Config.Duplicate();world.Config.RandomSeedOnLoad=false;world.Config.FixedSeed=42;
         AddChild(world);Check(world.StartupError==null,"Production ocean startup: "+world.StartupError);
-        Check((world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10 || world.Blueprint.SchemaVersion==11) && world.Blueprint.GeographyVersion==2,"Wrong ocean blueprint contract");
+        Check((world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10 || world.Blueprint.SchemaVersion==11 || world.Blueprint.SchemaVersion==12) && world.Blueprint.GeographyVersion==2,"Wrong ocean blueprint contract");
         var ocean=world.WaterPlan.Bodies.Single(b=>b.IsOcean);var centre=ocean.Bounds.GetCenter();var shore=ocean.CopyPolygon()[0];
         await Frames(4);
         var panel=world.GetNode<MacroMapDebugPanel>("DebugUIRoot/MacroMapDebugPanel");
@@ -100,7 +100,7 @@ public partial class ValidateOceanGeneration : Node
             Check(continued.MacroMap.Hash==mapHash && continued.WaterPlan.Hash==waterHash && continued.MacroMap.BiomeAt(centre)==null,"Continue resized/rerolled ocean geography");
             await Frames(10);continued.Free();await Frames(3);
             // A real pre-ocean geography-first campaign keeps the smaller bounds and has no ocean inserted.
-            var oldConfig=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/DefaultWorldGeneration.tres").Duplicate(true);
+            var oldConfig=(WorldGenerationMasterConfig)GD.Load<WorldGenerationMasterConfig>("res://WORLD/Generation/World/StandardWorldGeneration.tres").Duplicate(true);
             oldConfig.Bounds=new Rect2(-22500,-16875,45000,33750);oldConfig.CellSize=256;oldConfig.Water=null;
             var oldFeatures=WorldFeaturePlanner.Build(oldConfig,42);var oldWater=new WaterBodyPlan(42,oldConfig.Bounds,Array.Empty<PlannedWaterBody>(),Array.Empty<string>());
             var oldGeo=new WorldGeographyPlan(42,oldConfig.Bounds,oldWater,1);var oldMap=MacroWorldBuilder.Build(oldConfig,42,oldGeo);

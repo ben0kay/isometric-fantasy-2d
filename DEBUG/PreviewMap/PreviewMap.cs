@@ -60,7 +60,8 @@ public partial class PreviewMap : Control
             timer.Stop();
             _view.Bind(result.Map,result.Geography.Water,result.Features,result.Climate,config);
             string warnings=string.Join(" | ",result.Features.Warnings)+" "+string.Join(" | ",result.Geography.Water.Warnings);
-            _status.Text=$"Seed {seed} | planning {timer.Elapsed.TotalMilliseconds:F1} ms | {result.Map.NonLandCells:N0} ocean cells | chunks: 0. {warnings}";
+            var metrics=result.Metrics;
+            _status.Text=$"Seed {seed} | total {timer.Elapsed.TotalMilliseconds:F1} ms | water {metrics.WaterMilliseconds:F1} / biomes {metrics.BiomesMilliseconds:F1} ms | peak frontier {metrics.PeakGrowthQueue:N0} | cell IDs {metrics.EstimatedFrozenBytes/1048576d:F2} MiB / palette estimate {metrics.EstimatedPaletteBytes/1048576d:F1} MiB | chunks: 0. {warnings}";
         }
         catch(Exception error)
         {

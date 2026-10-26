@@ -1,5 +1,8 @@
 # WORLD/Generation
 
+> **BC4 — 26 October 2026:** BC4 implements bounded coarse-global planning plus stateless local border refinement for the 50×-area preset. Site/frontier work, water queries, river windows and palette uploads now have large-world paths. Full macro creation is still synchronous; detailed scenery remains nearby-only. [Current handoff](Authoring/BC4_Validation.md).
+
+
 > **PreviewMap / BC2 — 26 October 2026:** BC2 implemented, awaiting local validation. Frozen macro climate now guides biome choice and growth; DEBUG/PreviewMap and F7 share the metadata-only viewer. Detailed chunks remain nearby-only. Larger bounds and regional weather remain later work. [Current handoff](Authoring/BC2_Validation.md).
 
 

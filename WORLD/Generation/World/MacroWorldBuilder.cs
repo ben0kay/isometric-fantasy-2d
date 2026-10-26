@@ -11,6 +11,7 @@ public static class MacroWorldBuilder
     // =========================================================
     public static MacroWorldMap Build(WorldGenerationMasterConfig config, int seed,WorldGeographyPlan geography=null,WorldClimatePlan climate=null)
     {
+        if(config!=null) WorldMacroBudget.Validate(config);
         if (config == null || !config.Bounds.Position.IsFinite() || !config.Bounds.Size.IsFinite() || !config.Bounds.End.IsFinite()
             || config.Bounds.Size.X <= 0 || config.Bounds.Size.Y <= 0 || !float.IsFinite(config.CellSize) || config.CellSize <= 0
             || !float.IsFinite(config.BoundaryIrregularity) || config.BoundaryIrregularity < 0 || config.BoundaryIrregularity > 1
@@ -24,6 +25,11 @@ public static class MacroWorldBuilder
         if (definitions.Length == 0 || definitions.Any(b => string.IsNullOrWhiteSpace(b.Id))
             || definitions.Select(b => b.Id).Distinct(StringComparer.Ordinal).Count() != definitions.Length)
             throw new ArgumentException("Enabled biome IDs must be nonempty and unique; at least one is required.");
+        if(config.ScalableMacro)
+        {
+            definitions=definitions.Select(b=>(WorldBiomeDefinition)b.Duplicate()).ToArray();
+            foreach(var b in definitions) { b.MinimumRegionDiameter*=config.RegionDiameterScale; b.MaximumRegionDiameter*=config.RegionDiameterScale; }
+        }
         foreach (var b in definitions) b.ValidateColour();
         foreach (var b in definitions)
             if (!float.IsFinite(b.GenerationWeight) || b.GenerationWeight < 0 || !float.IsFinite(b.MinimumRegionDiameter)
@@ -41,6 +47,7 @@ public static class MacroWorldBuilder
         if (desired > config.MaximumRegions) throw new ArgumentException("Target diameters require more than MaximumRegions; increase sizes or limit.");
         int siteCount = Math.Clamp((int)desired, 1, Math.Min(rules?.LandCells ?? count, config.MaximumRegions));
         var random = new SeedStream(seed); var sites = new List<Site>(siteCount); var used = new HashSet<int>();
+        var index=config.ScalableMacro ? new MacroSiteIndex(columns,config.CellSize,(float)Math.Sqrt(meanArea/Math.PI)*2) : null;
         // Best of eight samples spreads seeds without potentially unbounded spacing retries.
         for (int i = 0; i < siteCount; i++)
         {
@@ -52,8 +59,8 @@ public static class MacroWorldBuilder
             for (int attempt = 0; attempt < 8; attempt++)
             {
                 int candidate = (int)(random.Unit() * count); if (used.Contains(candidate) || (rules!=null && !rules.IsLand(candidate))) continue;
-                double nearest = double.PositiveInfinity;
-                foreach (var other in sites)
+                double nearest = index?.Score(candidate,diameter) ?? double.PositiveInfinity;
+                if(index==null) foreach (var other in sites)
                 {
                     double dx = candidate % columns - other.Cell % columns, dy = candidate / columns - other.Cell / columns;
                     nearest = Math.Min(nearest, (dx * dx + dy * dy) / Math.Pow(((double)diameter + other.Diameter) / config.CellSize, 2));
@@ -66,7 +73,7 @@ public static class MacroWorldBuilder
                 biome=rules.Select(best,definitions,random.Unit()); definition=definitions[biome];
                 diameter=definition.MinimumRegionDiameter+(float)random.Unit()*(definition.MaximumRegionDiameter-definition.MinimumRegionDiameter);
             }
-            used.Add(best); sites.Add(new Site(best, biome, diameter));
+            used.Add(best); sites.Add(new Site(best, biome, diameter)); index?.Add(best,diameter);
         }
         return Grow(config, seed, columns, rows, definitions, sites,rules);
     }
@@ -76,6 +83,9 @@ public static class MacroWorldBuilder
     {
         int[] cells = new int[columns * rows]; Array.Fill(cells, -1); var sizes = new List<int>(new int[sites.Count]);
         if (rules!=null) for (int i=0;i<cells.Length;i++) if (!rules.IsLand(i)) cells[i]=-2;
+        var counters=new MacroBuildCounters();
+        double[] bestCosts=config.ScalableMacro ? new double[cells.Length] : null;
+        if(bestCosts!=null) Array.Fill(bestCosts,double.PositiveInfinity);
         var queue = new PriorityQueue<(int Cell, int Region), (double Cost, long Order)>(); long order = 0;
         for (int i = 0; i < sites.Count; i++) { cells[sites[i].Cell] = i; sizes[i] = 1; }
         for (int i = 0; i < sites.Count; i++) Expand(sites[i].Cell, i, 0);
@@ -84,7 +94,7 @@ public static class MacroWorldBuilder
         {
             while (queue.TryDequeue(out var item, out var priority))
             {
-                if (cells[item.Cell] >= 0) continue;
+                if (cells[item.Cell] >= 0 || (bestCosts!=null && priority.Cost>bestCosts[item.Cell])) continue;
                 cells[item.Cell] = item.Region; sizes[item.Region]++; Expand(item.Cell, item.Region, priority.Cost);
             }
             while (unassigned<cells.Length && cells[unassigned]!=-1) unassigned++;
@@ -105,9 +115,11 @@ public static class MacroWorldBuilder
                 top + Mathf.Min(config.CellSize, config.Bounds.Size.Y - top) * 0.5f);
             return new MacroRegion(i, s.Biome, centre, s.Diameter, sizes[i]);
         }).ToArray();
-        return new MacroWorldMap(seed, config.Bounds, config.CellSize, columns, rows, cells,
+        var result=new MacroWorldMap(seed, config.Bounds, config.CellSize, columns, rows, cells,
             definitions.Select(b => new MacroBiomeInfo(b.Id, b.DisplayName, b.Colour)).ToArray(), regions,
-            rules?.GenerationVersion ?? MacroWorldMap.GeneratorVersion);
+            config.ScalableMacro ? MacroWorldMap.ScalableGeneratorVersion : rules?.GenerationVersion ?? MacroWorldMap.GeneratorVersion,
+            config.ScalableMacro ? config.RefinementStrength : 0);
+        result.BuildCounters=counters; return result;
         void Expand(int cell, int region, double cost)
         {
             int x = cell % columns, y = cell / columns;
@@ -117,7 +129,15 @@ public static class MacroWorldBuilder
                 if (cells[next] != -1 || (rules!=null && rules.Preference(next,sites[region].Biome)<=0)) return;
                 uint key = Mix((uint)seed ^ (uint)Math.Min(cell, next) * 0x9e3779b9u ^ (uint)Math.Max(cell, next));
                 double roughness = 1 + config.BoundaryIrregularity * (key / (double)uint.MaxValue * 2 - 1) * 0.9;
-                queue.Enqueue((next, region), (cost + roughness * config.CellSize / sites[region].Diameter / (rules?.Preference(next,sites[region].Biome) ?? 1f), order++));
+                double candidateCost=cost+roughness*config.CellSize/sites[region].Diameter/(rules?.Preference(next,sites[region].Biome) ?? 1f);
+                if(bestCosts!=null)
+                {
+                    if(candidateCost>=bestCosts[next]) return;
+                    bestCosts[next]=candidateCost;
+                    if(queue.Count>=cells.Length*4) throw new ArgumentException("BC4 growth frontier exceeded its bounded cell budget.");
+                }
+                queue.Enqueue((next,region),(candidateCost,order++));
+                counters.Enqueues++; counters.PeakQueue=Math.Max(counters.PeakQueue,queue.Count);
             }
         }
     }

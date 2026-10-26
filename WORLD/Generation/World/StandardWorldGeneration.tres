@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="WorldGenerationMasterConfig" format=3]
+[ext_resource type="Script" path="res://WORLD/Generation/World/WorldGenerationMasterConfig.cs" id="script"]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/OakForest/Biome.tres" id="oak"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/PinkMeadow/Biome.tres" id="pink"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/SnowyTundra/Biome.tres" id="tundra"]
+[ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/Desert/Biome.tres" id="desert"]
+[ext_resource type="Resource" path="res://WORLD/Generation/World/Features/DefaultWorldLayout.tres" id="layout"]
+[ext_resource type="Script" path="res://WORLD/Generation/Liquids/WaterGenerationMasterConfig.cs" id="water_script"]
+[ext_resource type="Resource" path="res://WORLD/Generation/Authoring/DefaultWorldAuthor.tres" id="author"]
+[sub_resource type="Resource" id="WaterGeneration"]
+script = ExtResource("water_script")
+Enabled = true
+LakeCount = 3
+RiverCount = 1
+OceanCount = 1
+[resource]
+script = ExtResource("script")
+Bounds = Rect2(-71152, -53364, 142304, 106728)
+CellSize = 512.0
+Layout = ExtResource("layout")
+Authoring = ExtResource("author")
+Water = SubResource("WaterGeneration")
+Biomes = Array[ExtResource("biome")]([ExtResource("oak"), ExtResource("pink"), ExtResource("tundra"), ExtResource("desert")])

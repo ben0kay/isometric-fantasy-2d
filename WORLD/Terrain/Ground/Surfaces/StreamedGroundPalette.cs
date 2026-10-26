@@ -67,15 +67,17 @@ public static class StreamedGroundPalette
         string[] names = hasTint
             ? new[] { "map_base","map_shade","map_fresh","map_dry","map_settings","map_tint" }
             : new[] { "map_base","map_shade","map_fresh","map_dry","map_settings" };
+        var raster=map.GenerationVersion==MacroWorldMap.ScalableGeneratorVersion ? new GroundPaletteRaster(map.Columns,map.Rows) : null;
         for (int channel = 0; channel < names.Length; channel++)
         {
-            using var image = Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf);
+            using var image = raster==null ? Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf) : null;
+            void Put(int x,int y,Color value) { if(raster!=null) raster.Set(x,y,value); else image.SetPixel(x,y,value); }
             for (int y = 0; y < map.Rows; y++) for (int x = 0; x < map.Columns; x++)
             {
                 int region=map.RegionIdAtCell(x,y);
                 if (region<0)
                 {
-                    image.SetPixel(x,y,channel==4 ? new Color(0,320,0,0) : channel==5 ? Colors.White : new Color(0.12f,0.17f,0.18f,1));
+                    Put(x,y,channel==4 ? new Color(0,320,0,0) : channel==5 ? Colors.White : new Color(0.12f,0.17f,0.18f,map.GenerationVersion==MacroWorldMap.ScalableGeneratorVersion ? 0 : 1));
                     continue;
                 }
                 int biomeIndex=map.Regions[region].BiomeIndex;
@@ -87,29 +89,35 @@ public static class StreamedGroundPalette
                 Color value = channel switch { 0 => p.BaseColour, 1 => patches?.ShadeColour ?? p.BaseColour,
                     2 => patches?.FreshColour ?? p.BaseColour, 3 => patches?.DryColour ?? p.BaseColour,
                     5 => compiled[biomeIndex].Tint, _ => new Color(strength,patches?.PatchSize ?? 320f,p.DetailStrength,biomeIndex) };
-                image.SetPixel(x,y,value);
+                if(channel==0 && map.GenerationVersion==MacroWorldMap.ScalableGeneratorVersion) value.A=1;
+                Put(x,y,value);
             }
-            material.SetShaderParameter(names[channel],ImageTexture.CreateFromImage(image));
+            using var packed=raster?.CreateImage();
+            material.SetShaderParameter(names[channel],ImageTexture.CreateFromImage(packed ?? image));
         }
         material.SetShaderParameter("blend_ground_art",blendArt);
         material.SetShaderParameter("has_surface_styles",hasStyles);
         if(hasStyles)
         {
-            using var styles=Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf);
+            using var styles=raster==null ? Image.CreateEmpty(map.Columns,map.Rows,false,Image.Format.Rgbaf) : null;
+            void PutStyle(int x,int y,Color value) { if(raster!=null) raster.Set(x,y,value); else styles.SetPixel(x,y,value); }
             for(int y=0;y<map.Rows;y++) for(int x=0;x<map.Columns;x++)
             {
-                int region=map.RegionIdAtCell(x,y); if (region<0) { styles.SetPixel(x,y,new Color(0,0,0,1)); continue; }
+                int region=map.RegionIdAtCell(x,y); if (region<0) { PutStyle(x,y,new Color(0,0,0,1)); continue; }
                 var p=compiled[map.Regions[region].BiomeIndex].Base;
-                styles.SetPixel(x,y,new Color(p.ArtworkInfluence,p.DetailStyle==GroundDetailStyle.Granular ? 1f : 0f,p.DetailStyle==GroundDetailStyle.Mineral ? 1f : 0f,1));
+                PutStyle(x,y,new Color(p.ArtworkInfluence,p.DetailStyle==GroundDetailStyle.Granular ? 1f : 0f,p.DetailStyle==GroundDetailStyle.Mineral ? 1f : 0f,1));
             }
-            material.SetShaderParameter("map_styles",ImageTexture.CreateFromImage(styles));
+            using var packedStyles=raster?.CreateImage();
+            material.SetShaderParameter("map_styles",ImageTexture.CreateFromImage(packedStyles ?? styles));
         }
         material.SetShaderParameter("has_ground_overlays",hasOverlays);
         float DefaultSlot(int slot) => compiled.Any(b=>slot<b.Overlays.Length && GroundOverlayPalette.IsVisible(b.Overlays[slot])) ? -1f : 0f;
         material.SetShaderParameter("preview_overlay_visibility",new Vector2(DefaultSlot(0),DefaultSlot(1)));
         if(hasOverlays) GroundOverlayPalette.Bind(material,compiled,overlayArt,grayscaleVariants);
         material.SetShaderParameter("map_origin",map.Bounds.Position); material.SetShaderParameter("map_cell_size",map.CellSize);
-        material.SetShaderParameter("map_grid_size",new Vector2(map.Columns,map.Rows)); return material;
+        material.SetShaderParameter("map_grid_size",new Vector2(map.Columns,map.Rows));
+        material.SetShaderParameter("map_refinement_strength",map.RefinementStrength);
+        material.SetShaderParameter("map_refinement_seed",map.Seed&65535); return material;
     }
     // Each exact clipped chunk rectangle shares the palette and world-space texture coordinates.
     // =========================================================

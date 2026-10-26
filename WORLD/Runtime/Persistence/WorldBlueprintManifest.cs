@@ -12,6 +12,7 @@ public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId,
     public WaterPlanSnapshot Water { get; init; }
     public WorldClimateSnapshot Climate { get; init; }
     public WorldAuthorPolicySnapshot AuthorPolicy { get; init; }
+    public float RefinementStrength { get; init; }
     public int GeographyVersion { get; init; }
     public SavedMacroRegion[] MacroRegions { get; init; }
     public SavedMacroBiome[] MacroBiomes { get; init; }
@@ -33,7 +34,7 @@ public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId,
             map.Hash, map.Bounds.Position.X, map.Bounds.Position.Y, map.Bounds.Size.X, map.Bounds.Size.Y,
             map.CellSize, map.Columns, map.Rows, biomes, regions, map.CopyRegionCells(),
             features == null ? 0 : WorldFeaturePlan.Version, features?.Hash ?? "",
-            features == null ? System.Array.Empty<WorldFeatureSnapshot>() : features.Reservations.Features.Select(WorldFeatureSnapshot.From).ToArray());
+            features == null ? System.Array.Empty<WorldFeatureSnapshot>() : features.Reservations.Features.Select(WorldFeatureSnapshot.From).ToArray()) { RefinementStrength=map.RefinementStrength };
     }
     // Disposable preview ownership only; Continue/save selection is deliberately not implemented here.
     // =========================================================
