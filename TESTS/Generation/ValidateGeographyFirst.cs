@@ -155,7 +155,7 @@ public partial class ValidateGeographyFirst : Node
         try
         {
             var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,new string('A',64),DateTime.UtcNow.ToString("O"),b,
-                new SavedPlayer(0,0,Health:100,Inventory:new SavedInventory(GD.Load<PlayerInventoryProfile>("res://ENTITIES/Player/Inventory/DefaultPlayerInventory.tres").Storage.StorageSlots,Array.Empty<SavedItemStack>(),new long[9],-1,false)),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+                new SavedPlayer(0,0,Health:100,Inventory:new SavedInventory(GD.Load<PlayerInventoryProfile>("res://ENTITIES/Player/Inventory/DefaultPlayerInventory.tres").Storage.StorageSlots,Array.Empty<SavedItemStack>(),new long[9],-1,false)),new SavedClock(12,600,true,new SavedCalendar(60,120,true,false,0.5f,true,1,14)),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
             var store=new CampaignStore(root); store.Save(snapshot,true); var loaded=store.Load(b.ProfileId).Snapshot;
             Check(loaded.Blueprint.MapHash==b.MapHash && loaded.Blueprint.Water.Hash==water.Hash,"Disk changed geography/map identity");
             var legacyMap=MacroWorldBuilder.Build(config,map.Seed);

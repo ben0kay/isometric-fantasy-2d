@@ -10,9 +10,12 @@ public partial class MacroMapView : VBoxContainer
     private Label _status,_legend,_dimensions;
     private OptionButton _selector;
     private Image _image;
-    private readonly ImageTexture[] _textures=new ImageTexture[3];
+    private readonly ImageTexture[] _textures=new ImageTexture[5];
     private int _row,_layer;
     private bool _pendingLayer;
+    private float _previewYear=0.5f;
+    private RegionalClimateMasterConfig _regionalConfig;
+    private WorldGenerationMasterConfig _generation;
 
     // Hidden/settled viewers are dormant; visibility changes directly resume incomplete work.
     // =========================================================
@@ -23,12 +26,13 @@ public partial class MacroMapView : VBoxContainer
     }
     // Bind immutable results from either caller; replacing plans releases all obsolete raster caches.
     // =========================================================
-    public void Bind(MacroWorldMap map,WaterBodyPlan water,WorldFeaturePlan features,WorldClimatePlan climate)
+    public void Bind(MacroWorldMap map,WaterBodyPlan water,WorldFeaturePlan features,WorldClimatePlan climate,WorldGenerationMasterConfig generation=null,RegionalClimateMasterConfig regionalConfig=null)
     {
-        ReleaseImages(); _map=map; _water=water; _features=features; _climatePlan=climate;
+        ReleaseImages(); _map=map; _water=water; _features=features; _climatePlan=climate; _generation=generation;
+        _regionalConfig=regionalConfig ?? GD.Load<RegionalClimateMasterConfig>("res://ENVIRONMENT/Climate/DefaultRegionalClimate.tres");
         if(_view==null) BuildControls();
-        _selector.SetItemDisabled(1,climate==null);
-        if(climate==null && _layer==1) _layer=0;
+        _selector.SetItemDisabled(1,climate==null); _selector.SetItemDisabled(3,climate==null); _selector.SetItemDisabled(4,climate==null);
+        if(climate==null && (_layer==1 || _layer>=3)) _layer=0;
         _selector.Select(_layer);
         _dimensions.Text=$"{map.Bounds.Size.X:N0} × {map.Bounds.Size.Y:N0} units | {map.Columns} × {map.Rows} macro cells | {map.Regions.Count} regions | generator {map.GenerationVersion}";
         ShowLayer();
@@ -38,8 +42,11 @@ public partial class MacroMapView : VBoxContainer
     private void BuildControls()
     {
         _dimensions=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_dimensions);
-        _selector=new OptionButton(); _selector.AddItem("Biomes"); _selector.AddItem("Climate"); _selector.AddItem("Water");
+        _selector=new OptionButton(); _selector.AddItem("Biomes"); _selector.AddItem("Climate"); _selector.AddItem("Water"); _selector.AddItem("Seasonal temperature"); _selector.AddItem("Snow eligibility");
         _selector.ItemSelected+=index=> { _layer=(int)index; ShowLayer(); }; AddChild(_selector);
+        var date=new HSlider { MinValue=0,MaxValue=365,Step=1,Value=182,FocusMode=FocusModeEnum.None };
+        AddChild(new Label { Text="Map-only date preview: January → December (does not change the World calendar)" }); AddChild(date);
+        date.ValueChanged+=value=>SetPreviewDate((float)value/365f);
         _legend=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_legend);
         _status=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; AddChild(_status);
         _view=new TextureRect { SizeFlagsVertical=SizeFlags.ExpandFill,SizeFlagsHorizontal=SizeFlags.ExpandFill,
@@ -52,12 +59,20 @@ public partial class MacroMapView : VBoxContainer
     {
         _image?.Dispose(); _image=null; SetProcess(false);
         _view.Texture=_textures[_layer];
-        _legend.Text=_layer==1 ? "Cold blue → temperate green → hot orange; enchanted purple. Baseline climate, not live weather." : _layer==2 ? "Ocean navy / lakes blue / rivers cyan; white crosses = reserved anchors." : BiomeLegend();
+        _legend.Text=_layer>=3 ? (_layer==4 ? "Snow eligibility: green = rain / white = snow; not accumulated cover." : "Selected-date temperature: blue cold / green mild / orange hot.") : _layer==1 ? "Cold blue → temperate green → hot orange; enchanted purple. Baseline climate, not live weather." : _layer==2 ? "Ocean navy / lakes blue / rivers cyan; white crosses = reserved anchors." : BiomeLegend();
         if(_textures[_layer]!=null) { _status.Text=LayerStatus(); return; }
         if(!IsVisibleInTree()) { _pendingLayer=true; return; }
         _pendingLayer=false;
         _image=Image.CreateEmpty(_map.Columns,_map.Rows,false,Image.Format.Rgba8);
         _row=0; _status.Text="Preparing coarse overview…"; SetProcess(IsVisibleInTree());
+    }
+    // Only seasonal metadata layers are invalidated; this does not instantiate or alter a live calendar.
+    // =========================================================
+    private void SetPreviewDate(float position)
+    {
+        _previewYear=position;
+        for(int i=3;i<5;i++) { if(_layer==i) _view.Texture=null; _textures[i]?.Dispose(); _textures[i]=null; }
+        if(_layer>=3 && _map!=null) ShowLayer();
     }
     // Stable legend identities/colours come from the same frozen map displayed in the raster.
     // =========================================================
@@ -69,7 +84,7 @@ public partial class MacroMapView : VBoxContainer
     }
     // Hashes describe real canonical outcomes; no debug-generated world identity is introduced.
     // =========================================================
-    private string LayerStatus() => _layer==1 ? $"Frozen climate hash: {_climatePlan.Hash}" : _layer==2 ? $"Frozen water hash: {_water?.Hash ?? "none"}" : $"Frozen biome hash: {_map.Hash}";
+    private string LayerStatus() => _layer>=3 ? $"Map-only seasonal day {Mathf.RoundToInt(_previewYear*365)} / source climate {_climatePlan.Hash}" : _layer==1 ? $"Frozen climate hash: {_climatePlan.Hash}" : _layer==2 ? $"Frozen water hash: {_water?.Hash ?? "none"}" : $"Frozen biome hash: {_map.Hash}";
     // Small row batches avoid a hidden startup raster. One row may exceed the soft 2ms budget.
     // =========================================================
     public override void _Process(double delta)
@@ -99,13 +114,27 @@ public partial class MacroMapView : VBoxContainer
         int region=map.RegionIdAtCell(x,y);
         Color colour=region<0 ? new Color(0.045f,0.2f,0.36f) : map.Biomes[map.Regions[region].BiomeIndex].Colour;
         if(_layer==2 && region>=0) colour=new Color(0.22f,0.28f,0.22f);
-        if(_layer==1)
+        if(_layer==1 || _layer>=3)
         {
             var climate=_climatePlan.Sample(sample);
-            float t=Mathf.Clamp((climate.TemperatureCelsius+24)/62,0,1);
+            float temperature=climate.TemperatureCelsius;
+            float snowEligibility=0;
+            if(_layer>=3)
+            {
+                BiomeWeatherResponse response=null;
+                if(region>=0 && _generation?.Biomes!=null)
+                {
+                    string id=map.Biomes[map.Regions[region].BiomeIndex].Id;
+                    foreach(var definition in _generation.Biomes) if(definition.Id==id) { response=definition.WeatherResponse; break; }
+                }
+                var conditions=RegionalClimateMath.Resolve(climate,_previewYear,_regionalConfig,response);
+                temperature=conditions.Temperature; snowEligibility=conditions.SnowFraction;
+            }
+            float t=Mathf.Clamp((temperature+24)/62,0,1);
             colour=t<0.5f ? new Color(0.25f,0.55f,0.9f).Lerp(new Color(0.35f,0.65f,0.35f),t*2)
                 : new Color(0.35f,0.65f,0.35f).Lerp(new Color(0.95f,0.45f,0.15f),(t-0.5f)*2);
             colour=colour.Lerp(new Color(0.65f,0.25f,0.8f),climate.Enchantment);
+            if(_layer==4) colour=new Color(0.22f,0.32f,0.22f).Lerp(new Color(0.85f,0.92f,1),snowEligibility);
         }
         else if(_layer==0 && ((x>0 && map.RegionIdAtCell(x-1,y)!=region) || (y>0 && map.RegionIdAtCell(x,y-1)!=region))) colour=colour.Darkened(0.4f);
         if(_water!=null) foreach(var body in _water.Bodies)

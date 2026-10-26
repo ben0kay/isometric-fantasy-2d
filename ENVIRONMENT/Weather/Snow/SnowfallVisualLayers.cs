@@ -73,8 +73,7 @@ public partial class SnowfallVisualLayers : Node2D
             Preprocess = 0, LocalCoords = false, Emitting = false, ZIndex = z,
             Texture = ground ? _driftTexture : Flakes, ProcessMaterial = motion,
             TextureFilter = ground || speed < 0.7f ? TextureFilterEnum.Linear : TextureFilterEnum.Nearest,
-            Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded,
-                ParticlesAnimation = !ground, ParticlesAnimHFrames = ground ? 1 : 4, ParticlesAnimVFrames = 1 }
+            Material = RegionalParticleMaterial.Create(true,ground ? 1 : 4)
         };
         AddChild(emitter); _layers.Add(new Layer { Emitter = emitter, Motion = motion, Speed = speed, Alpha = alpha, Ground = ground });
     }

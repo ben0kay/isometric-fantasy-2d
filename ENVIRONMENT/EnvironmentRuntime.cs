@@ -6,6 +6,7 @@ public partial class EnvironmentRuntime : Node2D
     [Export] public EnvironmentMasterConfig Config { get; set; }
     public BiomeEnvironmentProfile Settings { get; private set; }
     public GameClock Clock { get; private set; }
+    public RegionalClimateController RegionalClimate { get; private set; }
     public SeasonController Seasons { get; private set; }
     public WindController Wind { get; private set; }
     public WorldWeather Weather { get; private set; }
@@ -42,7 +43,7 @@ public partial class EnvironmentRuntime : Node2D
     #region Composition
     // Called once by the production world after ground, spawn and scenery are configured.
     // =========================================================
-    public void Initialize(WorldMasterConfig world, Node2D actors, Node2D persistentProps, PlayerMovement player)
+    public void Initialize(WorldMasterConfig world, Node2D actors, Node2D persistentProps, PlayerMovement player, WorldClimatePlan climate=null, MacroWorldMap map=null)
     {
         if (Initialized) return;
         ProcessPriority = -20;
@@ -51,7 +52,7 @@ public partial class EnvironmentRuntime : Node2D
         Settings = (world.Biome.Environment ?? new BiomeEnvironmentProfile()).Resolve(Config.Defaults);
         Clock = new GameClock { Name = "Clock", Config = (ClockMasterConfig)Config.Clock.Duplicate(true) }; AddChild(Clock);
         Seasons = new SeasonController { Name = "Seasons" };
-        Seasons.Initialize(Config.Seasons); AddChild(Seasons);
+        Seasons.Initialize(Config.Seasons); AddChild(Seasons); Seasons.BindClock(Clock);
         Wind = new WindController { Name = "Wind", Config = Settings.Wind }; AddChild(Wind);
         var vegetation = new VegetationWind { Name = "VegetationWind", Wind = Wind }; AddChild(vegetation); vegetation.Attach(actors);
         _seasonalFoliage = new SeasonalFoliageAdapter { Name = "SeasonalFoliage", Seasons = Seasons, Wind = Wind };
@@ -82,6 +83,12 @@ public partial class EnvironmentRuntime : Node2D
         atmosphere.Config = Settings.Atmosphere; atmosphere.Day = DayNight; atmosphere.Wind = Wind;
         atmosphere.Actors = actors; atmosphere.Torch = torch; atmosphere.WorldBounds = world.Bounds; AddChild(atmosphere); _atmosphere = atmosphere;
         Snow = new WorldSnow { Name = "Snow", Config = Settings.Snow, Weather = Weather, Actors = actors, Player = player, WorldBounds = world.Bounds }; AddChild(Snow);
+        RegionalClimate=new RegionalClimateController { Name="RegionalClimate" }; AddChild(RegionalClimate);
+        RegionalClimate.Initialize(climate,map,world.Generation,Seasons,Weather,Settings.Snow,Config.RegionalClimate);
+        Weather.Regional=RegionalClimate; Snow.Regional=RegionalClimate;
+        RegionalClimate.Changed+=Weather.RefreshRegional; RegionalClimate.Changed+=Snow.RefreshRegional;
+        if(climate!=null) { Settings.Snow.Coverage=0; Settings.Snow.SnowfallRate=0; Settings.Snow.Enabled=true; }
+        RegionalClimate.Tick(0,Weather.VisibleWorldRect());
         Blizzard = new WorldBlizzard { Name = "Blizzard", Snow = Settings.Snow, SnowSystem = Snow, Weather = Weather }; AddChild(Blizzard);
         Initialized = true;
     }
@@ -146,6 +153,7 @@ public partial class EnvironmentRuntime : Node2D
     {
         using var frameTrace = RuntimeFrameTrace.Measure("EnvironmentRuntime.Process");
         if (!Initialized) return;
+        RegionalClimate?.Tick(delta,Weather.VisibleWorldRect());
         long started = System.Diagnostics.Stopwatch.GetTimestamp();
         float prepare=Mathf.Max(64,Config.SceneryPrepareMargin),retention=Mathf.Max(0,Config.SceneryRetentionMargin);
         float slack=Mathf.Max(0,Config.SceneryVisibilitySlack);

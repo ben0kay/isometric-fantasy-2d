@@ -106,10 +106,10 @@ public partial class ValidateWorldHarvesting : Node
         CampaignSession.Continue(older); var legacy=await Spawn();
         Check(legacy.Harvesting.Inventory.Storage.Capture().Length==2,"Legacy campaign receives initial loadout once");
         Check(await legacy.Saves.SaveAsync(),"Legacy checkpoint upgrades to schema 3"); await Remove(legacy);
-        var upgraded=CampaignSession.Store().Load(Profile).Snapshot; Check(upgraded.SchemaVersion==3 && upgraded.Player.Inventory.Items.Length==2,"Upgraded inventory stored explicitly");
+        var upgraded=CampaignSession.Store().Load(Profile).Snapshot; Check(upgraded.SchemaVersion==CampaignSnapshot.CurrentSchema && upgraded.Player.Inventory.Items.Length==2,"Upgraded inventory stored explicitly");
         CampaignSession.Continue(upgraded); legacy=await Spawn(); Check(legacy.Harvesting.Inventory.Storage.Capture().Length==2,"Continue cannot duplicate legacy starter items"); await Remove(legacy);
         CampaignSession.TestStorageRoot=_root; var loaded=CampaignSession.Store().Load(Profile).Snapshot;
-        Check(loaded.SchemaVersion==3,"World writes current inventory schema"); CampaignSession.Continue(loaded);
+        Check(loaded.SchemaVersion==CampaignSnapshot.CurrentSchema,"World writes current inventory schema"); CampaignSession.Continue(loaded);
         var world=await Spawn(); Check(world.Blueprint.WorldId==expected.WorldId,"Continue keeps real World identity");
         Check(!Trees(world).Any(t=>Id(t)==expected.FelledId),"Continue preserves felled source");
         Check(Trees(world).Single(t=>Id(t)==expected.PartialId).HarvestState.Progress==2,"Continue preserves partial work");
@@ -140,7 +140,7 @@ public partial class ValidateWorldHarvesting : Node
         Check(saved.Player.Inventory.Items.Length==2,"Old campaign receives one authored starter loadout");
         Check(await world.Saves.SaveAsync(),"Actual old checkpoint upgrades successfully"); await Remove(world);
         var current=CampaignSession.Store().Load(profile).Snapshot;
-        Check(current.SchemaVersion==3 && current.Player.Inventory.Items.Length==2,"Upgraded real disk checkpoint contains inventory");
+        Check(current.SchemaVersion==CampaignSnapshot.CurrentSchema && current.Player.Inventory.Items.Length==2,"Upgraded real disk checkpoint contains inventory");
         Check(oldStore.Load(profile).Snapshot.SchemaVersion==2,"Original previous-revision files left intact");
     }
     // Corrupt ownership/state must reject before a worker commit, without depending on live Resources.

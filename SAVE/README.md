@@ -1,5 +1,8 @@
 # SAVE — P4 implemented; original user functional acceptance recorded
 
+> **SE4 / BC3 — 26 October 2026:** Campaign schema 4 stores validated calendar and regional visited-cell snow data under SavedClock. Schema 1–3 formats remain recognized with explicit missing-calendar defaults; strict content fingerprints are unchanged. Session date/weather overrides are not persisted; no geography reroll or blanket old-content migration. [Current handoff](../ENVIRONMENT/Climate/SE4_BC3_Validation.md).
+
+
 Existing Boot/Main Menu profiles now select durable private campaigns. `ProfileStore` keeps its original GUID/name `user://profiles.cfg` format; it is not replaced by a second registry.
 
 - **Profiles/**: local identity, registry backup/recovery. Each profile selects one active run; starting another requires confirmation and retains the previous run's files.

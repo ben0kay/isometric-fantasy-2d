@@ -121,7 +121,7 @@ public partial class ValidateCampaignSaves : Node
     private void StorageCases(CampaignSnapshot source)
     {
         var store = new CampaignStore(Path.Combine(_root,"recovery-" + Guid.NewGuid().ToString("N")));
-        store.Save(source,true); store.Save(source with { Clock = new SavedClock(8,600,true) });
+        store.Save(source,true); store.Save(source with { Clock = source.Clock with { Hour=8,CycleSeconds=600,Paused=true } });
         var key = new ActiveCampaign(source.ProfileId,source.RunId,source.WorldId);
         string path = Path.Combine(store.RunPath(key),"checkpoint.json");
         File.WriteAllText(path + ".tmp","interrupted");

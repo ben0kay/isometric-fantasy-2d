@@ -10,5 +10,6 @@ public partial class EnvironmentMasterConfig : Resource
     [Export(PropertyHint.Range, "0,128,8")] public float SceneryVisibilitySlack { get; set; } = 32f;
     [Export] public ClockMasterConfig Clock { get; set; }
     [Export] public SeasonMasterConfig Seasons { get; set; }
+    [Export] public RegionalClimateMasterConfig RegionalClimate { get; set; }
     [Export] public BiomeEnvironmentProfile Defaults { get; set; }
 }

@@ -1,5 +1,8 @@
 # ENVIRONMENT / Seasons
 
+> **SE4 / BC3 — 26 October 2026:** SE4 implemented, awaiting local validation: SeasonController now subscribes to the shared GameClock, advances a configurable calendar and drives existing foliage. Default year 120 game days / start day 60, automatic enabled. Session date preview remains available; campaign schema 4 saves the calendar. The manual-only descriptions below document SE0–SE3 history. [Current handoff](../Climate/SE4_BC3_Validation.md).
+
+
 **SE0/SE1 and SE1b implemented. User reported SE1 working; SE1b awaits local validation.** `EnvironmentRuntime.Seasons` owns one manual, event-driven `SeasonController`. `SeasonMasterConfig` / `DefaultSeasonConfig.tres` supply Inspector defaults through `EnvironmentMasterConfig.Seasons`; initialization copies values into private world state, never edits authored Resources. A missing config safely defaults to disabled / Summer (0.25).
 
 F9 → Environment → **Seasonal foliage** (collapsed initially) exposes Enable, a month/date-labelled day slider, colour strength 0–100%, and early/late variation ±0–45 days (default ±14). YearPosition now maps January 1=0/1, early July=0.5; defaults remain disabled / Summer. Northern Hemisphere season names describe a non-leap manual preview, not an automatic calendar. Commands work with the clock paused and without F9.

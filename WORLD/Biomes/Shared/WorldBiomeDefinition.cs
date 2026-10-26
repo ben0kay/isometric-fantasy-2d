@@ -27,6 +27,8 @@ public partial class WorldBiomeDefinition : Resource
     [Export] public BiomeEnvironmentProfile Environment { get; set; }
     [ExportGroup("Climate baseline - configuration only")]
     [Export] public BiomeClimateProfile Climate { get; set; }
+    [ExportGroup("Optional regional weather response")]
+    [Export] public BiomeWeatherResponse WeatherResponse { get; set; }
     [ExportGroup("Future spawning - configuration only")]
     [Export] public BiomeEntitySpawnProfile EntitySpawns { get; set; }
     [Export] public BiomeResourceSpawnProfile ResourceSpawns { get; set; }

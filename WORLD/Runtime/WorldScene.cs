@@ -183,7 +183,7 @@ public partial class WorldScene : Node2D
         // Build entity navigation only after the seeded tree/rock colliders exist.
         EntityPlacement.Populate(TestActorsRoot,ActorsRoot,player, Stream?.LocalBounds ?? Config.Bounds,restore?.TestEntity,includePractice: launch==null,projectileFactory:GetProjectileSpawner);
         var environment = Environment;
-        environment.Initialize(Config,ActorsRoot,PropsRoot,Player);
+        environment.Initialize(Config,ActorsRoot,PropsRoot,Player,ClimatePlan,MacroMap);
         if (environment != null) Fire.Initialize(ActorsRoot,environment);
         environment.Weather.LiquidContains=p => (placement.ExcludedLiquid?.Contains(p) ?? false) || (GeneratedWater?.Contains(p) ?? false);
         GeneratedWater?.Bind(environment.Weather);
@@ -200,6 +200,9 @@ public partial class WorldScene : Node2D
                 Player.HealthState.Restore(restore.Player.Health ?? Player.HealthState.Maximum);
                 environment.Clock.Config.CycleSeconds = restore.Clock.CycleSeconds;
                 environment.Clock.Config.Paused = restore.Clock.Paused; environment.Clock.SetHour(restore.Clock.Hour);
+                environment.Seasons.Restore(restore.Clock.Calendar);
+                environment.RegionalClimate.Restore(restore.Clock.Climate);
+                environment.RegionalClimate.Tick(0,environment.Weather.VisibleWorldRect());
             }
             Saves = new CampaignSaveController { Name = "CampaignSave" }; GetNode("SystemsRoot").AddChild(Saves);
             Saves.Initialize(this,restore == null,CampaignSession.ContentFingerprint());

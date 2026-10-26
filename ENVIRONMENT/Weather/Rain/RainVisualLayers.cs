@@ -102,7 +102,7 @@ public partial class RainVisualLayers : Node2D
             Preprocess = 0.65f, LocalCoords = false, Emitting = false,
             ZIndex = z, Texture = art, ProcessMaterial = process,
             TextureFilter = TextureFilterEnum.Linear,
-            Material = new CanvasItemMaterial { LightMode = CanvasItemMaterial.LightModeEnum.Unshaded }
+            Material = RegionalParticleMaterial.Create(false)
         };
         AddChild(emitter);
         _layers.Add(new Layer { Emitter = emitter, Motion = process, Speed = speed, Foreground = foreground });

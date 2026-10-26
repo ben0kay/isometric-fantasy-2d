@@ -1,5 +1,8 @@
 # Biome configuration — climate-region placement and future spawn systems
 
+> **SE4 / BC3 — 26 October 2026:** BC3 foundation implemented, awaiting local validation: shared regional resolver, optional biome WeatherResponse and automatic SE4 calendar. No entity/deposit spawning, size change or region selector is included. BC4–BC7 remain pending. [Current handoff](../../../../ENVIRONMENT/Climate/SE4_BC3_Validation.md).
+
+
 > **PreviewMap / BC2 — 26 October 2026:** BC2 implemented, awaiting local validation. Shared opt-in climate placement now controls site selection, connected growth and fallback, with four authored biomes. Ground-only Tundra/Desert and the standalone PreviewMap make this inspectable without chunks. BC3–BC7 and BP2–BP5 remain separate pending phases. [Current handoff](../../../Generation/Authoring/BC2_Validation.md).
 
 
@@ -42,7 +45,7 @@ Three distinct ownership layers must not be merged:
 | **BC0** | Audit existing synchronous global blueprint vs streamed detail, design typed World Author regions for **OCEAN CENTRE / COLD NORTH / TEMPERATE MIDDLE / HOT SOUTH**, organic climate gradient, persistent hierarchical seeds, 50× **area** world, start selection and SAVE policy | Implemented — audit complete |
 | **BC1** | Add one Resource-driven authoring preset and coherent north/south climate + central ocean constraints to **new world planning**, plus basic F7 climate overview | Implemented — awaiting local validation |
 | **BC2** | Make existing macro biome builder use climate-zone affinity before weight/size. Verify with colour-only/fake-art **biome Resources**, not fake enemy/ore spawns | Implemented — awaiting local validation |
-| **BC3** | Shared position-aware snow/rain/pack and per-biome winter appearance; far north permanent ground ice possible, temperate Oak seasonal, south mostly non-snowy; SE4 calendar separate | Planned — environment |
+| **BC3** | Shared position-aware snow/rain/pack and per-biome winter appearance; far north permanent ground ice possible, temperate Oak seasonal, south mostly non-snowy; SE4 calendar separate | Implemented foundation — awaiting local validation |
 | **BC4** | **50× area** finite bounds through coarse-global/hierarchical deterministic plan and **local-only P3 chunk detail**; bound macro memory, region growth, save size and generator time | Planned — scaling |
 | **BC5** | Select **North / Middle / South** for New Campaign; deterministic safe land spawn honoring central ocean and existing protected-start contract, persist exact position | Planned — spawn choice |
 | **BC6** | **F7 world overview + wheel zoom/drag/pan**, climate/biome/water/spawn layers; opt-in **progressive whole-world LOW-DETAIL preview with progress/cancel** and read-only World Profiler; no playable chunks generated | Planned — debug tooling |

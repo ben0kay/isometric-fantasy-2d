@@ -53,7 +53,7 @@ public partial class CampaignSaveController : Node
         var clock = _world.Environment.Clock;
         var b = _world.Blueprint;
         return new(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,_fingerprint,DateTime.UtcNow.ToString("O"),b,
-            new SavedPlayer(player.GlobalPosition.X,player.GlobalPosition.Y,Health:player.HealthState.Current,Inventory:_world.Harvesting.Inventory.Capture()),new SavedClock(clock.Hour,clock.Config.CycleSeconds,clock.Config.Paused),
+            new SavedPlayer(player.GlobalPosition.X,player.GlobalPosition.Y,Health:player.HealthState.Current,Inventory:_world.Harvesting.Inventory.Capture()),new SavedClock(clock.Hour,clock.Config.CycleSeconds,clock.Config.Paused,_world.Environment.Seasons.Capture(),_world.ClimatePlan==null ? null : _world.Environment.RegionalClimate.Capture()),
             _world.EntityPlacement.Capture(),_world.Harvesting.MergeDrops(_world.Stream.CaptureChanges()));
     }
     // Only one write runs at a time; repeated requests coalesce, while Leave takes a fresh final snapshot.

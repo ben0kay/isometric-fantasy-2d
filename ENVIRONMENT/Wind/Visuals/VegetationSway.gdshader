@@ -19,7 +19,9 @@ varying float source_pixels_per_world;
 // Extend the quad only as far as the current wind can move foliage, on either side.
 // Remap its UVs to the original texture (0..1) plus transparent margins; FlipH is supported.
 // =========================================================
+varying vec2 regional_foliage_world;
 void vertex() {
+    regional_foliage_world=MODEL_MATRIX[3].xy;
     tree_phase = dot(MODEL_MATRIX[3].xy, vec2(0.017, 0.011));
     sprite_tint = COLOR;
     source_pixels_per_world = 1.0 / max(length(MODEL_MATRIX[0].xy), 0.001);

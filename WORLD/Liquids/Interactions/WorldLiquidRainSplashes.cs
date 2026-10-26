@@ -84,7 +84,7 @@ public partial class WorldLiquidRainSplashes : Node2D
             Vector2 world = visibleLakeBounds.Position
                 + new Vector2(_random.Randf(), _random.Randf()) * visibleLakeBounds.Size;
             // Positive signed distance is underwater. Keep expanding rings within the lake.
-            if (Region.SignedDistance(world) <= 9f * size) continue;
+            if ((Weather.RainFractionAt(world)<=0.001f || _random.Randf()>Weather.RainFractionAt(world)) || Region.SignedDistance(world) <= 9f * size) continue;
             _pool[_next] = new Impact
             {
                 Position = Region.ToLocal(world),

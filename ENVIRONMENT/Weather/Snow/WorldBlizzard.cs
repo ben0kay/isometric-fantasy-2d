@@ -10,7 +10,7 @@ public partial class WorldBlizzard : Node
     public SnowfallVisualLayers Visuals { get; private set; }
     public BlizzardProfile Config { get; set; }
     public float Intensity { get; private set; }
-    public float DesiredIntensity => Mathf.Clamp((Snow.SnowfallRate - 1f) / 2f, 0f, 1f);
+    public float DesiredIntensity => Mathf.Clamp(((SnowSystem?.EffectiveSnowfallRate ?? Snow.SnowfallRate) - 1f) / 2f, 0f, 1f);
     public float TargetIntensity { get; private set; }
     public event Action<float> IntensityChanged;
     public int Notifications { get; private set; }
@@ -22,6 +22,7 @@ public partial class WorldBlizzard : Node
         if (Snow == null) throw new InvalidOperationException("Blizzard requires the world's runtime snow profile.");
         Config = (BlizzardProfile)(Config ?? GD.Load<BlizzardProfile>("res://ENVIRONMENT/Weather/Snow/BlizzardProfile.tres")).Duplicate(true);
         Snow.Changed += Refresh; Config.Changed += Refresh;
+        if(SnowSystem?.Regional!=null) SnowSystem.Regional.Changed+=Refresh;
         SetProcess(false); Refresh();
     }
 
@@ -30,7 +31,7 @@ public partial class WorldBlizzard : Node
     // =========================================================
     private void Refresh()
     {
-        bool allowed = Snow.Enabled && Snow.Snowfall && Snow.SnowfallRate > 0f;
+        bool allowed = Snow.Enabled && Snow.Snowfall && (SnowSystem?.EffectiveSnowfallRate ?? Snow.SnowfallRate) > 0f;
         TargetIntensity = allowed ? DesiredIntensity : 0f;
         if (!allowed || Config.TransitionSeconds == 0f) SetIntensity(TargetIntensity);
         RefreshVisuals(); SetProcess(Intensity != TargetIntensity);
@@ -56,7 +57,7 @@ public partial class WorldBlizzard : Node
     // =========================================================
     private void RefreshVisuals()
     {
-        bool active = Intensity > 0f && Snow.Enabled && Snow.Snowfall && Snow.SnowfallRate > 0f
+        bool active = Intensity > 0f && Snow.Enabled && Snow.Snowfall && (SnowSystem?.EffectiveSnowfallRate ?? Snow.SnowfallRate) > 0f
             && Weather != null && SnowSystem?.FallingTexture != null
             && ((Config.LayeredSnow && Config.ExtraFlakes > 0) || (Config.Spindrift && Config.DriftParticles > 0));
         if (!active)
@@ -77,6 +78,7 @@ public partial class WorldBlizzard : Node
     public override void _ExitTree()
     {
         Snow.Changed -= Refresh; Config.Changed -= Refresh;
+        if(SnowSystem?.Regional!=null) SnowSystem.Regional.Changed-=Refresh;
         TargetIntensity = 0f; SetIntensity(0f); SetProcess(false); IntensityChanged = null;
     }
 }

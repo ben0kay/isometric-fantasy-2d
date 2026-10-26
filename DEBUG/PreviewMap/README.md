@@ -1,5 +1,8 @@
 # Whole-world blueprint preview
 
+> **SE4 / BC3 — 26 October 2026:** Map-only Seasonal temperature and Snow eligibility layers now share the runtime climate math. A separate January–December preview slider affects only these map layers, never a gameplay calendar or saved pack. No runtime weather/controller/chunk is created. [Current handoff](../../ENVIRONMENT/Climate/SE4_BC3_Validation.md).
+
+
 Open **`DEBUG/PreviewMap/PreviewMap.tscn` and press F6**. Choose a seed, Regenerate or Random seed, then select **Biomes / Climate / Water**. This displays the entire current finite world fitted to the window; it does not enlarge it. The 50× area expansion is BC4; zoom/pan is BC6.
 
 This scene creates only Controls and the shared `DEBUG/UI/Generation/MacroMapView`. It does not instantiate World.tscn, a player, gameplay chunks, trees, entities, navigation, weather, water surfaces or campaign/save controllers. Biome Resources can reference canonical artwork, but no scenery scenes are instantiated. All generated data is disposable session data; no file or Resource is edited.

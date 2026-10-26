@@ -58,7 +58,7 @@ public partial class PreviewMap : Control
             Rect2? pond=Config.AuthoredPond==null ? null : WorldLiquidFootprint.WorldBounds(Config.AuthoredPond);
             var result=WorldGenerationPipeline.Build(config,seed,pond);
             timer.Stop();
-            _view.Bind(result.Map,result.Geography.Water,result.Features,result.Climate);
+            _view.Bind(result.Map,result.Geography.Water,result.Features,result.Climate,config);
             string warnings=string.Join(" | ",result.Features.Warnings)+" "+string.Join(" | ",result.Geography.Water.Warnings);
             _status.Text=$"Seed {seed} | planning {timer.Elapsed.TotalMilliseconds:F1} ms | {result.Map.NonLandCells:N0} ocean cells | chunks: 0. {warnings}";
         }

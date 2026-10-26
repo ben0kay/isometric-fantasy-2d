@@ -116,6 +116,10 @@ public sealed class CampaignStore
         if ((s.SchemaVersion >= 2 && s.Player.Health == null) || s.Player.Health is < 0 or > 1000000)
             throw new InvalidDataException("Invalid saved player health.");
         if (s.TestEntity.Exists && (!float.IsFinite(s.TestEntity.X) || !float.IsFinite(s.TestEntity.Y) || s.TestEntity.Health < 1)) throw new InvalidDataException("Invalid test actor.");
+        if(s.SchemaVersion>=4 && s.Clock.Calendar==null) throw new InvalidDataException("Calendar missing from schema-4 checkpoint.");
+        s.Clock.Calendar?.Validate();
+        if(s.SchemaVersion>=4 && b.Climate!=null && s.Clock.Climate==null) throw new InvalidDataException("Regional climate state missing from checkpoint.");
+        s.Clock.Climate?.Validate(checked(b.Columns*b.Rows));
         var map = WorldBlueprintRestore.Map(b); WorldBlueprintRestore.Features(b); WorldBlueprintRestore.Climate(b); WaterBodyPlan.Restore(b.Water,b.Seed,map.Bounds);
         if (s.TestEntity.Exists && !map.Bounds.HasPoint(new Godot.Vector2(s.TestEntity.X,s.TestEntity.Y))) throw new InvalidDataException("Test actor outside world bounds.");
         if (!map.Bounds.HasPoint(new Godot.Vector2(s.Player.X,s.Player.Y))) throw new InvalidDataException("Player outside world bounds.");

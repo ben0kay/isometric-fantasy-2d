@@ -1,5 +1,8 @@
 # SE0–SE4: Seasonal foliage and F9 year-position preview
 
+> **SE4 / BC3 — 26 October 2026:** SE4 calendar integration implemented, awaiting local validation. Day fractions come from GameClock; automatic year, F9 overrides and schema-4 calendar saves now coexist with SE1–SE3 masks/palettes. Regional weather/snow is owned by ENVIRONMENT/Climate BC3; survival/crop consumers remain future. [Current handoff](../Climate/SE4_BC3_Validation.md).
+
+
 > **STATUS: SE0/SE1 and approved SE1b follow-up implemented. User reported SE1 working; SE1b software-GL checks passed, native Godot/local acceptance pending. SE2 code/source checks implemented; native/runtime acceptance pending. SE3 implemented; PNG/GL checks passed, native acceptance pending.**
 >
 > This is a staged Codex handoff for real-time **Spring → Summer → Autumn → Winter** foliage previews. It is **not** approval to implement every phase at once. Start with SE0, request user acceptance, then continue one small phase at a time.

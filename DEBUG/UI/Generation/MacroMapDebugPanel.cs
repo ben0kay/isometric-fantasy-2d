@@ -16,7 +16,7 @@ public partial class MacroMapDebugPanel : CanvasLayer
         _panel=new PanelContainer { Visible=false,AnchorRight=1,AnchorBottom=1,OffsetLeft=24,OffsetTop=64,OffsetRight=-24,OffsetBottom=-24 };
         AddChild(_panel);
         var view=new MacroMapView { SizeFlagsVertical=Control.SizeFlags.ExpandFill,SizeFlagsHorizontal=Control.SizeFlags.ExpandFill };
-        _panel.AddChild(view); view.Bind(world.MacroMap,world.WaterPlan,world.FeaturePlan,world.ClimatePlan);
+        _panel.AddChild(view); view.Bind(world.MacroMap,world.WaterPlan,world.FeaturePlan,world.ClimatePlan,world.Config.Generation,world.Environment?.RegionalClimate?.Config);
     }
     // The viewer handles pause/resume through visibility events and stays asleep when hidden.
     // =========================================================

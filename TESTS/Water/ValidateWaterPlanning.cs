@@ -69,7 +69,7 @@ public partial class ValidateWaterPlanning : Node
             var store=new CampaignStore(root);
             var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,manifest.ProfileId,manifest.RunId,manifest.WorldId,
                 new string('A',64),DateTime.UtcNow.ToString("O"),manifest,new SavedPlayer(0,0,Health:100),
-                new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+                new SavedClock(12,600,true,new SavedCalendar(60,120,true,false,0.5f,true,1,14)),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
             store.Save(snapshot,true);
             var loaded=store.Load(manifest.ProfileId).Snapshot;
             Check(WaterBodyPlan.Restore(loaded.Blueprint.Water,42,fixedMap.Bounds).Hash==persisted.Hash,"Disk checkpoint lost generated water");

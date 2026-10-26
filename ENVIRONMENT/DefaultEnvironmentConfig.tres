@@ -3,8 +3,10 @@
 [ext_resource type="Resource" path="res://ENVIRONMENT/Profiles/DefaultEnvironmentProfile.tres" id="defaults"]
 [ext_resource type="Script" path="res://ENVIRONMENT/EnvironmentMasterConfig.cs" id="script"]
 [ext_resource type="Resource" path="res://ENVIRONMENT/Seasons/DefaultSeasonConfig.tres" id="seasons"]
+[ext_resource type="Resource" path="res://ENVIRONMENT/Climate/DefaultRegionalClimate.tres" id="regional"]
 [resource]
 script = ExtResource("script")
 Clock = ExtResource("clock")
 Seasons = ExtResource("seasons")
+RegionalClimate = ExtResource("regional")
 Defaults = ExtResource("defaults")

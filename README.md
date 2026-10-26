@@ -1,5 +1,8 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+> **SE4 / BC3 — 26 October 2026:** SE4 calendar and BC3 regional-weather foundation implemented, awaiting local validation. Normal frozen-climate Worlds use an automatic 120-day year, position-aware precipitation and visited-cell snow cover. F9 provides regional precipitation/manual overrides; PreviewMap adds selected-date temperature/snow eligibility. Campaign schema 4 stores calendar/snow state; blueprint 11 and world size remain unchanged. [Current handoff](ENVIRONMENT/Climate/SE4_BC3_Validation.md).
+
+
 > **PreviewMap / BC2 — 26 October 2026:** BC2 climate-aware biome placement and `DEBUG/PreviewMap/PreviewMap.tscn` are implemented, awaiting local validation. F6 PreviewMap shows the whole current macro world with seed/regenerate and Biomes/Climate/Water, with zero gameplay chunks. Normal World uses the same climate placement and shared F7 viewer. New authored worlds use blueprint 11 / macro generator 4; use F6/new campaign. BC3 weather, BC4 50× area and BC5 region choice remain planned. [Current handoff](WORLD/Generation/Authoring/BC2_Validation.md).
 
 

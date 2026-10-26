@@ -83,7 +83,7 @@ public partial class ValidateOceanGeneration : Node
         Check(data.Build(ChunkCoord.At(centre,world.Config.Streaming.ChunkSize)).Count==0,"Land scenery spawned in deep ocean");
         var b=world.Blueprint;
         var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,CampaignSession.ContentFingerprint(),DateTime.UtcNow.ToString("O"),b,
-            new SavedPlayer(centre.X,centre.Y,Health:100,Inventory:world.Harvesting.Inventory.Capture()),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+            new SavedPlayer(centre.X,centre.Y,Health:100,Inventory:world.Harvesting.Inventory.Capture()),new SavedClock(12,600,true,world.Environment.Seasons.Capture(),world.Environment.RegionalClimate.Capture()),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
         var root=Path.Combine(Path.GetTempPath(),"ocean-"+Guid.NewGuid().ToString("N"));
         try
         {

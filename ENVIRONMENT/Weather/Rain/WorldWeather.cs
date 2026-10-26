@@ -10,11 +10,15 @@ public partial class WorldWeather : Node2D
     public Rect2 WorldBounds { get; set; }
     public System.Func<Vector2,bool> LiquidContains { get; set; }
     public SceneryArtworkIndex GroundQueries { get; set; } = new();
-    public bool RainActive => Config.RainIntensity > 0f;
+    public RegionalClimateController Regional { get; set; }
+    public float RainTarget => Regional?.Active==true ? Regional.RainTarget : Config.RainIntensity;
+    public bool RainActive => RainTarget > 0f;
+    public float RainFractionAt(Vector2 point) => Regional?.Active==true ? Regional.ConditionsAt(point).RainFraction : 1f;
+    public void RefreshRegional() => ApplyRainState();
     public event System.Action RainStateChanged;
     public float WindStrength => Wind.Strength;
     public float Rain { get; private set; }
-    public float CloudCover => Config.Overcast ? Rain : 0f;
+    public float CloudCover => Config.Overcast ? (Regional?.Active==true ? Mathf.Clamp(Regional.Precipitation,0,1) : Rain) : 0f;
     public WorldLightning Lightning { get; private set; }
     private RainVisualLayers _rainLayers;
     private GroundRainSplashes _splashes;
@@ -60,7 +64,7 @@ public partial class WorldWeather : Node2D
     public override void _Process(double delta)
     {
         using var frameTrace = RuntimeFrameTrace.Measure("WorldWeather.Process");
-        Rain = Mathf.MoveToward(Rain, Mathf.Clamp(Config.RainIntensity, 0f, 1f), (float)delta / Mathf.Max(0.1f, Config.TransitionSeconds));
+        Rain = Mathf.MoveToward(Rain, Mathf.Clamp(RainTarget, 0f, 1f), (float)delta / Mathf.Max(0.1f, Config.TransitionSeconds));
         _rainLayers.UpdateRain(Rain, WindStrength, VisibleWorldRect());
     }
 

@@ -11,6 +11,9 @@ public partial class WorldSnow : Node2D
     private readonly System.Collections.Generic.HashSet<Node2D> _inactiveChunks = new();
     private ShaderMaterial _ground;
     private MeshInstance2D _cover;
+    public RegionalClimateController Regional { get; set; }
+    public float EffectiveSnowfallRate => Regional?.Active==true ? Regional.SnowRate : Config.SnowfallRate;
+    public void RefreshRegional() => RefreshState();
     public WorldWeather Weather { get; set; }
     public Node2D Actors { get; set; }
     public PlayerMovement Player { get; set; }
@@ -74,6 +77,7 @@ public partial class WorldSnow : Node2D
     // =========================================================
     public void SetCoverage(float value)
     {
+        Regional?.SetManualOverride(true);
         _applying = true; Config.Coverage = Mathf.Clamp(value, 0f, 1f); _applying = false;
         _coverage = Config.Enabled ? Config.Coverage : 0f; ApplyCoverage(); RefreshState();
     }
@@ -100,7 +104,8 @@ public partial class WorldSnow : Node2D
     {
         if (_applying) return;
         if (!Config.Enabled) _coverage = 0;
-        bool falling = Config.Enabled && Config.Snowfall && Config.SnowfallRate > 0;
+        else if(Regional?.Active==true) _coverage=Regional.MaximumCover;
+        bool falling = Config.Enabled && Config.Snowfall && EffectiveSnowfallRate > 0;
         if (falling && _snowfall == null)
         { _snowfall = new WorldSnowfall { Name = "Snowfall", Snow = this, Weather = Weather }; AddChild(_snowfall); }
         else if (!falling && _snowfall != null)
@@ -108,7 +113,7 @@ public partial class WorldSnow : Node2D
         _snowfall?.ApplySettings();
         ApplyCoverage(); RefreshProcessing();
     }
-    private void RefreshProcessing() => SetProcess(Config.Enabled &&
+    private void RefreshProcessing() => SetProcess(Regional?.Active!=true && Config.Enabled &&
         (_coverage != Mathf.Clamp(Config.Coverage,0,1) || (Config.AutoAccumulate && Config.Coverage != AutoTarget)));
 
     // The world-bounded quad is clipped by the renderer; settled cover needs no camera callback.
@@ -140,10 +145,11 @@ public partial class WorldSnow : Node2D
     public float PlayerDepthAt(Vector2 world)
     {
         if (!Config.Enabled || !Config.PlayerSinks || _coverage <= 0f) return 0f;
+        float localCoverage=Regional?.Active==true ? Regional.CoverAt(world) : _coverage;
         float x = world.X / Mathf.Max(60f, Config.DriftScale), y = world.Y / Mathf.Max(60f, Config.DriftScale);
         float depth = Mathf.Clamp(0.64f + 0.20f * Mathf.Sin(x + 0.42f * Mathf.Sin(y * 0.83f))
             + 0.16f * Mathf.Sin(y * 1.31f + x * 0.37f), 0f, 1f);
-        return Mathf.Max(0f, Config.MaximumSinkPixels) * depth * Mathf.SmoothStep(0f, 1f, Mathf.Clamp((_coverage - 0.25f) / 0.75f, 0f, 1f));
+        return Mathf.Max(0f, Config.MaximumSinkPixels) * depth * Mathf.SmoothStep(0f, 1f, Mathf.Clamp((localCoverage - 0.25f) / 0.75f, 0f, 1f));
     }
 
     // Removing this snow component restores original rock and vegetation sprite materials.

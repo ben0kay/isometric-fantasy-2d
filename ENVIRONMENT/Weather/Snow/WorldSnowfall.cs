@@ -37,11 +37,7 @@ public partial class WorldSnowfall : GpuParticles2D
                 if (shapes[frame][y][x] == '#') image.SetPixel(frame * 5 + x, y, Colors.White);
         Texture = ImageTexture.CreateFromImage(image);
         ProcessMaterial = _motion;
-        Material = new CanvasItemMaterial
-        {
-            LightMode = CanvasItemMaterial.LightModeEnum.Unshaded,
-            ParticlesAnimation = true, ParticlesAnimHFrames = 4, ParticlesAnimVFrames = 1, ParticlesAnimLoop = false
-        };
+        Material = RegionalParticleMaterial.Create(true,4);
         TextureFilter = TextureFilterEnum.Nearest;
         Amount = 1300; Lifetime = 4; Preprocess = 4; LocalCoords = false; Emitting = false;
         ZIndex = 6; ApplySettings();
@@ -51,7 +47,7 @@ public partial class WorldSnowfall : GpuParticles2D
     // =========================================================
     public void ApplySettings()
     {
-        float rate = Mathf.Clamp(Snow.Config.SnowfallRate,0.001f,1f);
+        float rate = Mathf.Clamp(Snow.EffectiveSnowfallRate,0.001f,1f);
         if (AmountRatio != rate) AmountRatio = rate;
         if (!Visible) Visible = true;
         _Process(0);

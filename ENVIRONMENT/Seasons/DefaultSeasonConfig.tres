@@ -2,7 +2,10 @@
 [ext_resource type="Script" path="res://ENVIRONMENT/Seasons/SeasonMasterConfig.cs" id="script"]
 [resource]
 script = ExtResource("script")
-Enabled = false
+Enabled = true
+Automatic = true
+YearLengthDays = 120
+StartingDay = 60.0
 YearPosition = 0.5
 ColourStrength = 1.0
 TimingVariationDays = 14.0

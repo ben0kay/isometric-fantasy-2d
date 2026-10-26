@@ -46,6 +46,10 @@ public partial class EnvironmentDebugPanel : CanvasLayer
         Toggle(time, "Pause clock", () => _environment.Clock.Config.Paused, v => _environment.Clock.Config.Paused = v);
         Slider(time, "Seconds per day", 5, 3600, 1, () => _environment.Clock.Config.CycleSeconds, v => _environment.Clock.Config.CycleSeconds = (float)v);
         var seasons = Section(controls, "Seasonal foliage", false);
+        Toggle(seasons,"Advance calendar with clock",()=>_environment.Seasons.Automatic,v=>_environment.Seasons.SetAutomatic(v));
+        Slider(seasons,"Days per year",30,730,1,()=>_environment.Seasons.YearLengthDays,v=>_environment.Seasons.SetYearLength((int)v));
+        var resumeCalendar=new Button { Text="Clear manual date override" }; seasons.AddChild(resumeCalendar);
+        resumeCalendar.Pressed+=()=>_environment.Seasons.ClearOverride();
         Toggle(seasons, "Enable seasonal foliage", () => _environment.Seasons.Enabled, v => _environment.Seasons.SetEnabled(v));
         var seasonLabel = new Label { Text = _environment.Seasons.DateLabel }; seasons.AddChild(seasonLabel);
         var seasonDate = new HSlider { MinValue = 0, MaxValue = 365, Step = 1,
@@ -60,7 +64,13 @@ public partial class EnvironmentDebugPanel : CanvasLayer
             v => _environment.Seasons.SetColourStrength((float)v / 100f));
         Slider(seasons, "Early / late variation (± days)", 0, 45, 1, () => _environment.Seasons.TimingVariationDays,
             v => _environment.Seasons.SetTimingVariationDays((float)v));
-        seasons.AddChild(new Label { Text = "January–December preview. Winter foliage tint and snow are separate.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        seasons.AddChild(new Label { Text = "Date slider is a temporary seasonal override; Clear resumes the saved calendar. Winter foliage and snow remain separate.", AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        var regional=Section(controls,"Regional climate / precipitation",false);
+        Toggle(regional,"Enable regional climate",()=>_environment.RegionalClimate.Enabled,v=>_environment.RegionalClimate.SetEnabled(v));
+        Toggle(regional,"Manual weather override (existing rain/snow controls)",()=>_environment.RegionalClimate.ManualOverride,v=>_environment.RegionalClimate.SetManualOverride(v));
+        Slider(regional,"Regional precipitation / storm",0,3,0.01,()=>_environment.RegionalClimate.Precipitation,v=>_environment.RegionalClimate.SetPrecipitation((float)v));
+        var regionalInfo=new Label { AutowrapMode=TextServer.AutowrapMode.WordSmart }; regional.AddChild(regionalInfo);
+        _refresh.Add(()=>regionalInfo.Text=$"Calendar {_environment.Seasons.AbsoluteDay:F1} days | snow cells {_environment.RegionalClimate.VisitedCells} | regional controls apply only to frozen-climate worlds");
         var wind = Section(controls, "Shared wind", true);
         Slider(wind, "Left / calm / right", -3, 3, 0.05, () => s.Wind.Strength, v => s.Wind.Strength = (float)v);
         var lighting = Section(controls, "Lighting and clouds", false);

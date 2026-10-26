@@ -103,7 +103,7 @@ public partial class ValidateStreamedWater : Node
         try
         {
             var b=world.Blueprint; var snapshot=new CampaignSnapshot(CampaignSnapshot.CurrentSchema,b.ProfileId,b.RunId,b.WorldId,CampaignSession.ContentFingerprint(),DateTime.UtcNow.ToString("O"),b,
-                new SavedPlayer(centre.X,centre.Y,Health:100,Inventory:world.Harvesting.Inventory.Capture()),new SavedClock(12,600,true),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
+                new SavedPlayer(centre.X,centre.Y,Health:100,Inventory:world.Harvesting.Inventory.Capture()),new SavedClock(12,600,true,world.Environment.Seasons.Capture(),world.Environment.RegionalClimate.Capture()),new SavedTestEntity(false,0,0,0),Array.Empty<SavedChunk>());
             var store=new CampaignStore(root); store.Save(snapshot,true);
             frozen=store.Load(b.ProfileId).Snapshot;
             var loaded=frozen.Blueprint;
