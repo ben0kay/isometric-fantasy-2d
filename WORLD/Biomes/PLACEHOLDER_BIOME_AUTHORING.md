@@ -1,6 +1,6 @@
 # Placeholder biome authoring — finite-world macro/F7 experiments
 
-> **Planning/authoring guide, not an implemented climate clustering feature.** As of 26 October 2026, there are two real production biome definitions, Oak Forest and Pink Meadow. BP0/BP1 authored climate profiles exist but **do not influence where biome regions spawn**. The current P0/P5 generator selects from the world Biomes array by weight/target region diameter plus water/geography suitability. Read [BC0–BC3](Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md) before attempting cold/enchanted climate clustering.
+> **Planning/authoring guide, not an implemented climate clustering feature.** As of 26 October 2026, there are two real production biome definitions, Oak Forest and Pink Meadow. BP0/BP1 authored climate profiles exist but **do not influence where biome regions spawn**. The current P0/P5 generator selects from the world Biomes array by weight/target region diameter plus water/geography suitability. Read [BC0–BC7](Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md) and the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) before attempting cold/enchanted climate clustering, geographic presets, 50× expansion or regional starting locations.
 
 ## Fastest no-new-code preview in F6 World / F7
 
@@ -21,6 +21,12 @@
 | `preview.ashen_reach` | Deep rusty red | 32°C / 15% RH | Hot/volcanic |
 
 These are **layout mockups** and not real new biomes, permanent balance values, or new art. Their baseline temperature/RH won't affect generation before BC2, and BC1's climate-zone preview alone won't change biome site selection. Choose a handful of readable colours and test how well F7 communicates the composition of the large finite map.
+
+**New World Author scenario for later BC1/BC2:** set a directed **CENTRAL OCEAN**, **FAR NORTH COLD**, **MIDDLE TEMPERATE**, **FAR SOUTH HOT**, then place frost/tundra placeholder types preferentially in northern climate provinces, cyan/purple types in deliberately authored enchanted areas, and Oak/Pink-like types in transitional middle climates. Biome seasonal appearance should be a **result** of regional temperature and later weather, not a simplistic north-only flag. Without BC2, these illustrative temperature labels are inert.
+
+**50× area and spawn choices are later BC4/BC5:** do not multiply today's `DefaultWorldGeneration.tres.Bounds` immediately and assume it works. Current macro builder has `MaximumCells=262144` default and synchronous full-map generation; world-wide preview is one coarse image, while detailed 512-unit chunks are already streamed around player. Planned North/Middle/South startup selects **safe land** from the same seeded canonical region map and should never force-generate scenery between there and an unvisited original centre; [details](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md).
+
+**BC6 F7:** zoom/pan and optional progressive **map-only** all-world preview with progress/cancel. It is a debugger for the canonical seeded plan, **not** a toggle to instantiate the whole detailed World.
 
 ## What to expect now vs later
 

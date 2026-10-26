@@ -41,6 +41,16 @@ A useful design choice is to **separate world bounds from generation rules**, so
 
 **What exists today:** P0/P1 still choose biomes primarily by generation weight/diameter, constrained by P5 geography/hydrology; **climate-based grouping has not been added**. BP0/BP1's optional `BiomeClimateProfile` and Oak baseline 15°C/65% RH exist but have **no runtime consumers**. SE0–SE3 are manual foliage preview, B0/B1 severe-snow visuals and current rain/snow operate globally. No automatic real calendar or local snow suitability exists yet.
 
+### World Author vision: centred ocean, latitudinal climate, selectable spawn and giant finite area
+
+**Desired authorable example:** `Ocean = Middle`, `Cold climate = North`, `Hot climate = South`, naturally variable temperate middle/east/west land, and optional special magical land elsewhere. Far north could stay snow-covered through summer; lower northern Oak/Pine zones experience long winters and spring melt; temperate centre has recognisable seasons; farther south sees cooler winter but little snow. These are **climate tendencies**, not uniformly striped biome assignments or automatic snow generation; coast/relief and magical exceptions can bend temperature. Oak is the same canonical biome definition, with season/weather response decided by effective local conditions.
+
+**Scale and on-demand design:** the first larger-target preset is **50× today's total AREA** (roughly 1,006,000 × 755,000 world units, ≈ 7.07× per axis). Current `WorldGenerationPipeline` **already builds entire coarse geography/biome plan on new world creation** while `WorldChunkStream` loads detailed scenery in nearby 512-unit chunks only. The future hybrid will preserve a cheap global seeded/author-directed geographical skeleton (needed for one coherent central ocean) and compute finer region/biome/tile detail only when requested, deterministically and consistently with SAVE and a read-only F7 preview. A map-only full-world F7 preview may take time and display progress, but it must never load all playable chunks. Use independent coarse climate/biome/streaming spatial scales and proven memory/region budgets, not merely enlarged array caps.
+
+**Spawn choice:** optional North / Temperate Middle / South New Campaign choice. The canonical seed and World Author guide a **bounded safe land** anchor, respecting the central ocean and protected start reservations. Then nearby chunks spawn directly around that anchor; no need to visit or simulate the whole path from the old centre. Persist that exact location across Continue.
+
+[Full World Author plan](../WORLD/Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) · [BC phase breakdown](../WORLD/Biomes/Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md). **These features are NOT implemented.**
+
 Future World Creator controls could include region temperature/humidity trends, broad map-area guides, zone sizes/adjacency, terrain/humidity influences, magical exceptions, transition width and biome weights **within eligible zones**. Climate realism is a configurable artistic preference; **coherent geography is the goal**.
 
 ## World creation: procedural with optional broad geographic guidance

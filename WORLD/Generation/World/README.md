@@ -24,6 +24,16 @@ Each biome has inline `EnabledForGeneration`, `GenerationWeight`, `MinimumRegion
 
 Production preset bounds are 142304×106728 world units, approximately 10× the original 45000×33750 area (3.16× per axis). Macro cells are 512 units, giving 278×209 = 58102 cells, rather than increasing macro texture/storage cost tenfold. Biome target diameters/weights remain unchanged, so there are more regions across the larger land area. Streaming chunks remain 512 units with the same active/preload/unload radii. Unobstructed long-axis walking at 150 units/second is about 15.8 minutes; no final game scale is locked. F7 shows the entire map fitted to the viewport. Existing campaigns retain their original bounds/cell size.
 
+## World Author and future 50× macro planning (not yet implemented)
+
+[World Author BC0–BC7 full plan](../Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) extends existing `DefaultWorldGeneration.tres` / `WorldLayoutPreset`: **central ocean**, **colder north**, **temperate middle**, **hotter south**, rare enchanted provinces, optional North/Middle/South starting area, zoomable F7 profiler and a **50× larger finite area** target.
+
+**Do not confuse macro planning and loaded chunks:** `WorldGenerationPipeline.Build` currently synchronously generates the **entire small coarse** features/geography/biome map on new world creation; on Continue the frozen blueprint restores it. `WorldChunkStream` then loads only nearby player-centered 512-unit **detailed** chunks and generates deterministic scenery by world position and seed. A world 50× the *area* is approximately **1,006,000 × 755,000 units**; at the current macro 512-unit cell size that is ~2.9 million cells, beyond the current default cap of **262,144**. Proposed BC4 uses a lower-resolution global geography/climate skeleton plus versioned deterministic sector detail, or a comparably bounded proven scheme (e.g., initial 2048-unit macro cells ≈ 182,000 cells); it must preserve organic borders/continuous ocean, old saves, independent query order and reasonable startup time. **Do not simply multiply World bounds or raise all caps.**
+
+**Future starting area:** today a feature-defined startup anchor is fixed centrally. BC5 must allow a North/Middle/South choice resolved *after* geographic constraints to a safe land anchor. With a required central ocean, a fixed centre anchor is incompatible; choose/protect a suitable middle coastal site instead. This requires campaign save/launch changes, not merely changing `PlayerSpawn`.
+
+**Future F7:** map-only rasterization should be optional/on-demand and budgeted, with a fast overview, zoom/pan and progress/cancel for exhaustive low-fidelity preview. Showing a whole-world macro map is distinct from loading every `WorldChunkStream` chunk. See [F7 tooling](../../../DEBUG/UI/Generation/README.md).
+
 ## Algorithm and limits
 
 1. Validate before allocating. Sort by stable biome ID so rearranging Inspector entries does not reshuffle the map.
