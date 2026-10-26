@@ -16,6 +16,7 @@ public partial class WorldSnow : Node2D
     public PlayerMovement Player { get; set; }
     public Rect2 WorldBounds { get; set; }
     public float Coverage => _coverage;
+    public Texture2D FallingTexture => _snowfall?.Texture;
     private float _coverage, _lastCoverage = float.NaN;
     private Color _lastColour;
     private float _lastCap, _lastScale, _lastContrast;

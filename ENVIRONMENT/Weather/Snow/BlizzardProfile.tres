@@ -3,3 +3,9 @@
 [resource]
 script = ExtResource("profile")
 TransitionSeconds = 3.0
+LayeredSnow = true
+Spindrift = true
+ExtraFlakes = 1300
+DriftParticles = 64
+GustStrength = 0.45
+GustSeconds = 5.0

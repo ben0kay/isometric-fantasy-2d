@@ -1,8 +1,8 @@
 # Blizzard implementation plan — B0–B4
 
-**Status: B0 implemented — awaiting native/local validation; B1–B4 planned.**
+**Status: B0 implemented — awaiting native/local validation; B1 implemented — awaiting local visual validation; B2–B4 planned.**
 
-**User-approved control revision:** extend the existing Snowfall intensity slider to 0–3, preserving 0–1 ordinary snowfall. Storm target = clamp((rate−1)/2, 0, 1). Settled coverage remains independent. There is no second severity slider or separate preview ON/OFF: existing Snow/Falling snow masters gate the storm. B0 only supplies state/transitions; B1/B2 supply stronger visuals. This revision supersedes older separate-severity control suggestions below. Rain can later use the same control convention without changing current rain in B0. [B0 implementation and validation](B0_Validation.md).
+**User-approved control revision:** extend the existing Snowfall intensity slider to 0–3, preserving 0–1 ordinary snowfall. Storm target = clamp((rate−1)/2, 0, 1). Settled coverage remains independent. There is no second severity slider or separate preview ON/OFF: existing Snow/Falling snow masters gate the storm. B0 supplies state/transitions; B1 now supplies layered flakes and ground spindrift, with B2 lighting/haze still planned. This revision supersedes older separate-severity control suggestions below. Rain can later use the same control convention without changing current rain in B0. [B0 implementation and validation](B0_Validation.md).
 **Recommended first implementation pass: B0 → B1 → B2**, followed by visual feedback before B3/B4.
 **Scope:** production Godot C# top-down world, not the independent `DEBUG/TopDownTest` sandbox.
 **Intent:** intense snowstorms/near-whiteouts with heavy sideways snowfall, snow-covered ground, icy overcast daylight, broad blowing haze, reduced distant visibility and optional frost/snow on the camera. Reuse existing shared systems; leave the normal snow/rain presentation unchanged at storm intensity zero.
@@ -61,7 +61,7 @@ Keep each layer independently enableable in F9/Resources so visual problems can 
 - Do not serialize debug preview into campaign/saves. Runtime default remains inactive. Existing Snow master OFF / Snowfall OFF / zero rate should prevent storm flakes; define whether severity also fades to zero or simply waits dormant with desired target preserved.
 - Acceptance: F6 starts visually unchanged; F9 0→1→0 smooths state; disabled snowfall creates no flakes; snow coverage can remain when falling snow is off; old F9 rain/snow/wind controls still work; removing world disconnects signals and timers. No idle controller `_Process` at settled 0 or settled 1.
 
-### B1 — Very heavy, directional, layered snowfall and blowing ground snow [ ]
+### B1 — Very heavy, directional, layered snowfall and blowing ground snow [x] (implemented; visual validation pending)
 
 **Goal:** visible blizzard density and strong near-horizontal gusting with controllable performance.
 
@@ -125,3 +125,7 @@ Keep each layer independently enableable in F9/Resources so visual problems can 
 5. For each implementation pass update this document status/checkmarks, README if needed, document the actual **wake trigger, sleep condition, remaining per-frame costs, measured tests vs deferred visual checks**, and commit once per user-approved job.
 
 **Out of scope:** weather scheduling, seasons integration beyond existing systems, enemy eyesight, temperature, survival penalties, snow footprints, new ground materials, snow physics, distributed snow accumulation, or a generic storm manager built before the blizzard demo proves useful.
+
+## B1 implementation handoff
+
+Normal World now lazily creates SnowfallVisualLayers at positive resolved storm intensity. Three additional depth layers reuse the normal snowflake atlas; their combined cap is 1300 extra, for 2600 total including the unchanged normal 1300. Ground spindrift is a separate default 64 (bounded to 128) GPU budget. F9 Blizzard toggles/budgets/gust tuning are session-only. At zero/master OFF optional nodes are freed. No B2 lighting/haze or B3 screen overlay. [B1 evidence and brief local checklist](B1_Validation.md).

@@ -1,10 +1,13 @@
-// One world-owned event-driven severity transition. B1/B2 consume changes; B0 allocates no effects.
+// One world-owned severity transition; lazy B1 GPU effects share normal snow texture and global wind.
 using Godot;
 using System;
 
 public partial class WorldBlizzard : Node
 {
     public SnowProfile Snow { get; set; }
+    public WorldSnow SnowSystem { get; set; }
+    public WorldWeather Weather { get; set; }
+    public SnowfallVisualLayers Visuals { get; private set; }
     public BlizzardProfile Config { get; set; }
     public float Intensity { get; private set; }
     public float DesiredIntensity => Mathf.Clamp((Snow.SnowfallRate - 1f) / 2f, 0f, 1f);
@@ -30,7 +33,7 @@ public partial class WorldBlizzard : Node
         bool allowed = Snow.Enabled && Snow.Snowfall && Snow.SnowfallRate > 0f;
         TargetIntensity = allowed ? DesiredIntensity : 0f;
         if (!allowed || Config.TransitionSeconds == 0f) SetIntensity(TargetIntensity);
-        SetProcess(Intensity != TargetIntensity);
+        RefreshVisuals(); SetProcess(Intensity != TargetIntensity);
     }
 
     // Only this transition callback runs, then sleeps at both zero and nonzero endpoints.
@@ -46,7 +49,27 @@ public partial class WorldBlizzard : Node
     private void SetIntensity(float value)
     {
         if (Intensity == value) return;
-        Intensity = value; Notifications++; IntensityChanged?.Invoke(value);
+        Intensity = value; RefreshVisuals(); Notifications++; IntensityChanged?.Invoke(value);
+    }
+
+    // Optional effects exist only during positive storm severity; ordinary snowfall keeps its owner.
+    // =========================================================
+    private void RefreshVisuals()
+    {
+        bool active = Intensity > 0f && Snow.Enabled && Snow.Snowfall && Snow.SnowfallRate > 0f
+            && Weather != null && SnowSystem?.FallingTexture != null
+            && ((Config.LayeredSnow && Config.ExtraFlakes > 0) || (Config.Spindrift && Config.DriftParticles > 0));
+        if (!active)
+        {
+            if (Visuals != null) { Visuals.Free(); Visuals = null; }
+            return;
+        }
+        if (Visuals == null)
+        {
+            Visuals = new SnowfallVisualLayers { Name = "StormLayers", Storm = this, Weather = Weather, Flakes = SnowSystem.FallingTexture };
+            AddChild(Visuals);
+        }
+        Visuals.ApplySettings();
     }
 
     // Remove subscriptions and publish shutdown before releasing future consumer references.

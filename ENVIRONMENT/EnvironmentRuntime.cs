@@ -82,7 +82,7 @@ public partial class EnvironmentRuntime : Node2D
         atmosphere.Config = Settings.Atmosphere; atmosphere.Day = DayNight; atmosphere.Wind = Wind;
         atmosphere.Actors = actors; atmosphere.Torch = torch; atmosphere.WorldBounds = world.Bounds; AddChild(atmosphere); _atmosphere = atmosphere;
         Snow = new WorldSnow { Name = "Snow", Config = Settings.Snow, Weather = Weather, Actors = actors, Player = player, WorldBounds = world.Bounds }; AddChild(Snow);
-        Blizzard = new WorldBlizzard { Name = "Blizzard", Snow = Settings.Snow }; AddChild(Blizzard);
+        Blizzard = new WorldBlizzard { Name = "Blizzard", Snow = Settings.Snow, SnowSystem = Snow, Weather = Weather }; AddChild(Blizzard);
         Initialized = true;
     }
     // Per-chunk adapters share the one world clock/wind/weather and release their exact caches on unload.
