@@ -11,7 +11,7 @@ public static class WorldFeaturePlanner
     #region Planning
     // Plan before random scenery/terrain application; never modify source Resources or partial runtime state.
     // =========================================================
-    public static WorldFeaturePlan Build(WorldGenerationMasterConfig config, int seed)
+    public static WorldFeaturePlan Build(WorldGenerationMasterConfig config, int seed, bool deferStartingArea = false)
     {
         if (config == null || !config.Bounds.Position.IsFinite() || !config.Bounds.Size.IsFinite() || !config.Bounds.End.IsFinite()
             || config.Bounds.Size.X <= 0 || config.Bounds.Size.Y <= 0) throw new ArgumentException("Features require finite positive world bounds.");
@@ -27,6 +27,7 @@ public static class WorldFeaturePlanner
         var placed = new List<WorldFeatureReservation>(); var warnings = new List<string>();
         foreach (var request in requests)
         {
+            if (deferStartingArea && request.IsStartingArea) continue;
             var random = new FeatureRandom(seed, request.Id);
             float scale = request.MinimumScale + (float)random.Unit() * (request.MaximumScale - request.MinimumScale);
             Vector2[] offsets = request.NormalizedPolygon.Select(p => p * request.Size * scale).ToArray();

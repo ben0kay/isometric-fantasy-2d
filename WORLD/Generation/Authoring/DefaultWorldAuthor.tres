@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WorldAuthorPreset" format=3]
+[ext_resource type="Script" path="res://WORLD/Generation/Authoring/WorldAuthorPreset.cs" id="script"]
+[resource]
+script = ExtResource("script")
+OceanCentreZone = Rect2(0.25, 0.25, 0.5, 0.5)
+RequireOceanInZone = false
+NorthTemperatureCelsius = -24.0
+SouthTemperatureCelsius = 38.0
+NorthHumidityPercent = 65.0
+SouthHumidityPercent = 20.0
+BoundaryWarp = 0.09
+EnchantedEnabled = false
+StartZone = Rect2(0.05, 0.35, 0.9, 0.3)
+MajorPoiClearance = 2000.0
+ShoreClearance = 256.0
+StartAttempts = 128

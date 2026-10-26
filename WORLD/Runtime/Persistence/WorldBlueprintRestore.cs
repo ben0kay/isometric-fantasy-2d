@@ -41,6 +41,22 @@ public static class WorldBlueprintRestore
         if (map.Hash != b.MapHash) throw new InvalidDataException("Frozen macro map hash mismatch.");
         return map;
     }
+    // Old worlds retain no climate; new authored worlds restore validated frozen values only.
+    // =========================================================
+    public static WorldClimatePlan Climate(WorldBlueprintManifest b)
+    {
+        if(b.SchemaVersion<10)
+        {
+            if(b.Climate!=null || b.AuthorPolicy!=null) throw new InvalidDataException("Unexpected climate on legacy blueprint.");
+            return null;
+        }
+        var policy=b.AuthorPolicy;
+        if(b.Climate==null || policy==null || policy.Version!=1 || policy.StartRegion!="Middle"
+            || !float.IsFinite(policy.MajorPoiClearance) || policy.MajorPoiClearance<0 || policy.MajorPoiClearance>100000
+            || !float.IsFinite(policy.ShoreClearance) || policy.ShoreClearance<0 || policy.ShoreClearance>100000)
+            throw new InvalidDataException("Invalid frozen World Author policy.");
+        return WorldClimatePlan.Restore(b.Climate,b.Seed,new Rect2(b.OriginX,b.OriginY,b.Width,b.Height));
+    }
     // Feature construction copies raw values and creates no Resource/Node; usable during worker validation.
     // =========================================================
     public static WorldFeaturePlan Features(WorldBlueprintManifest b)

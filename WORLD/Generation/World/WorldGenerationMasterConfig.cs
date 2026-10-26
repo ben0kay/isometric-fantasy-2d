@@ -9,6 +9,8 @@ public partial class WorldGenerationMasterConfig : Resource
     [Export] public Godot.Collections.Array<WorldBiomeDefinition> Biomes { get; set; } = new();
     [ExportGroup("Guided layout and reservations")]
     [Export] public WorldLayoutPreset Layout { get; set; }
+    [ExportGroup("Optional World Author - new worlds only")]
+    [Export] public WorldAuthorPreset Authoring { get; set; }
     [ExportGroup("Optional water planning")]
     [Export] public WaterGenerationMasterConfig Water { get; set; }
     [ExportGroup("Region shape")]

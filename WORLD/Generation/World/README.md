@@ -1,5 +1,8 @@
 # Finite macro generation — P0–P3
 
+> **BC0/BC1 delivery — 26 October 2026:** BC0 audit complete; BC1 implemented, awaiting local validation. DefaultWorldGeneration now references DefaultWorldAuthor: middle ocean preference, latitude climate and safe middle start after geography. Climate does not yet affect biome choice or weather. Null Authoring preserves the old pipeline. Schema 10 stores climate; current dimensions and detailed streaming remain unchanged. [Audit / local handoff](../Authoring/BC0_BC1_Validation.md).
+
+
 P3 now makes this map playable through nearby streaming; see [streaming guide](../../Runtime/Streaming/README.md). The remaining P0–P2 descriptions below document the original macro foundation; preview-only statements are superseded by this update. Biome regions remain separate from chunk size. Population density now controls streamed placement; Count/clusters remain for the explicit compatibility preview.
 
 Implemented: a complete finite coarse biome map, independently queryable without scenery. `WorldMasterConfig.Generation` references `DefaultWorldGeneration.tres`. The default production world now streams this map; the original adjacent layout is retained in explicit preview mode. F7 shows the map. P2 now adds required/preferred polygon reservation directives via the referenced Layout Resource; see [features](Features/README.md). Local streamed ground/scenery is implemented in P3. P4 durable per-profile/run/world saves and Continue are implemented; real terrain/landmarks (P5) remain future. **F7** is the macro/reservation map; **F8** saves an active P4 campaign, not the map. See [SAVE](../../../SAVE/README.md) and [phase guide](../../Generation_Implementation.md).

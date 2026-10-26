@@ -1,5 +1,8 @@
 # World Generation Direction — Fantasy 2D Sandbox
 
+> **BC0/BC1 delivery — 26 October 2026:** BC0 audit/design complete; BC1 implemented, awaiting local validation. Broad middle-biased ocean guidance and a continuous north/south climate field now exist, along with F7 climate preview and safe initial middle land search. Biome climate affinity, region selector, larger bounds and regional weather remain later phases. [Audit / local handoff](../WORLD/Generation/Authoring/BC0_BC1_Validation.md).
+
+
 ## Author clarification — 26 October 2026
 
 **Ocean placement:** “middle/central ocean” below means a broad preferred middle area, not a required exact centre, symmetry, or fixed central anchor. Allow seeded offsets and irregular extent through normalized Inspector guidance. Keep ocean presence/scale separate from preferred location; centrality must not become a hard constraint merely from earlier wording.

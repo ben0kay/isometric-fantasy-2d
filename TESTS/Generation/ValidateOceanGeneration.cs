@@ -60,7 +60,7 @@ public partial class ValidateOceanGeneration : Node
         var scene=GD.Load<PackedScene>("res://SCENES/World/World.tscn"); var world=scene.Instantiate<WorldScene>();
         world.Config=(WorldMasterConfig)world.Config.Duplicate();world.Config.RandomSeedOnLoad=false;world.Config.FixedSeed=42;
         AddChild(world);Check(world.StartupError==null,"Production ocean startup: "+world.StartupError);
-        Check(world.Blueprint.SchemaVersion==9 && world.Blueprint.GeographyVersion==2,"Wrong ocean blueprint contract");
+        Check((world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10) && world.Blueprint.GeographyVersion==2,"Wrong ocean blueprint contract");
         var ocean=world.WaterPlan.Bodies.Single(b=>b.IsOcean);var centre=ocean.Bounds.GetCenter();var shore=ocean.CopyPolygon()[0];
         await Frames(4);
         var panel=world.GetNode<MacroMapDebugPanel>("DebugUIRoot/MacroMapDebugPanel");

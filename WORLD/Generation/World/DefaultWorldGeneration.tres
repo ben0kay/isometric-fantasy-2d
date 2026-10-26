@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://WORLD/Biomes/Definitions/Desert/Biome.tres" id="desert"]
 [ext_resource type="Resource" path="res://WORLD/Generation/World/Features/DefaultWorldLayout.tres" id="layout"]
 [ext_resource type="Script" path="res://WORLD/Generation/Liquids/WaterGenerationMasterConfig.cs" id="water_script"]
+[ext_resource type="Resource" path="res://WORLD/Generation/Authoring/DefaultWorldAuthor.tres" id="author"]
 [sub_resource type="Resource" id="WaterGeneration"]
 script = ExtResource("water_script")
 Enabled = true
@@ -18,5 +19,6 @@ script = ExtResource("script")
 Bounds = Rect2(-71152, -53364, 142304, 106728)
 CellSize = 512.0
 Layout = ExtResource("layout")
+Authoring = ExtResource("author")
 Water = SubResource("WaterGeneration")
 Biomes = Array[ExtResource("biome")]([ExtResource("oak"), ExtResource("pink"), ExtResource("tundra"), ExtResource("desert")])

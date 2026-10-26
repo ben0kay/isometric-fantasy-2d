@@ -2,12 +2,16 @@
 using System;
 using System.Linq;
 
+public sealed record WorldAuthorPolicySnapshot(int Version,string StartRegion,float MajorPoiClearance,float ShoreClearance);
+
 public sealed record WorldBlueprintManifest(int SchemaVersion, string ProfileId, string RunId, string WorldId,
     int GeneratorVersion, int Seed, string MapHash, float OriginX, float OriginY, float Width, float Height,
     float CellSize, int Columns, int Rows, string[] BiomeIds, int[] RegionBiomes, int[] RegionCells,
     int FeaturePlanVersion = 0, string FeatureHash = "", WorldFeatureSnapshot[] Features = null)
 {
     public WaterPlanSnapshot Water { get; init; }
+    public WorldClimateSnapshot Climate { get; init; }
+    public WorldAuthorPolicySnapshot AuthorPolicy { get; init; }
     public int GeographyVersion { get; init; }
     public SavedMacroRegion[] MacroRegions { get; init; }
     public SavedMacroBiome[] MacroBiomes { get; init; }

@@ -73,7 +73,7 @@ public partial class ValidateStreamedWater : Node
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world);
         Check(world.StartupError==null,"World startup: "+world.StartupError);
-        Check(world.Blueprint.SchemaVersion==9 && world.GeneratedWater!=null,"New world lacks playable-water version/runtime");
+        Check((world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10) && world.GeneratedWater!=null,"New world lacks playable-water version/runtime");
         var body=world.WaterPlan.Bodies[0]; var centre=body.Bounds.GetCenter();
         world.Player.GlobalPosition=centre; world.Player.Velocity=Vector2.Zero;
         await WaitLoaded(world,centre);
@@ -107,7 +107,7 @@ public partial class ValidateStreamedWater : Node
             var store=new CampaignStore(root); store.Save(snapshot,true);
             frozen=store.Load(b.ProfileId).Snapshot;
             var loaded=frozen.Blueprint;
-            Check(loaded.SchemaVersion==9 && WaterBodyPlan.Restore(loaded.Water,loaded.Seed,world.MacroMap.Bounds).Hash==world.WaterPlan.Hash,"Playable water lost disk identity");
+            Check((loaded.SchemaVersion==9 || loaded.SchemaVersion==10) && WaterBodyPlan.Restore(loaded.Water,loaded.Seed,world.MacroMap.Bounds).Hash==world.WaterPlan.Hash,"Playable water lost disk identity");
             store.Validate(Legacy(snapshot,4)); // WG1 metadata stays legacy, never promoted on restore.
             Reject(() => store.Validate(snapshot with { Blueprint=b with { Water=null } }),"Playable save accepted missing water");
         }

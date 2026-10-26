@@ -1,5 +1,8 @@
 # Large Finite World Generation — Codex Implementation Planning
 
+> **BC0/BC1 delivery — 26 October 2026:** BC0 audit/design complete; BC1 implemented, awaiting local validation. New authored worlds plan non-start reservations, water, frozen climate and ordinary biome map before choosing a safe middle protected start. F7 can inspect the climate. BC2 affinity and later phases remain planned. [Audit / local handoff](Generation/Authoring/BC0_BC1_Validation.md).
+
+
 ## Author clarification — 26 October 2026
 
 **Ocean placement:** “middle/central ocean” below means a broad preferred middle area, not a required exact centre, symmetry, or fixed central anchor. Allow seeded offsets and irregular extent through normalized Inspector guidance. Keep ocean presence/scale separate from preferred location; centrality must not become a hard constraint merely from earlier wording.

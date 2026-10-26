@@ -21,7 +21,7 @@ public partial class ValidateStreamedRiver : Node
         Check(world.Config.Generation.Water?.Enabled==true,"Production World config has generated water disabled");
         world.Config.RandomSeedOnLoad=false; world.Config.FixedSeed=42;
         AddChild(world); Check(world.StartupError==null,"World failed to initialize: "+world.StartupError);
-        Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==3 && world.Blueprint.SchemaVersion==9 && world.WaterPlan.PlanVersion==4,"River world did not use the river-capable save contract");
+        Check(world.GeographyPlan!=null && world.MacroMap.GenerationVersion==3 && (world.Blueprint.SchemaVersion==9 || world.Blueprint.SchemaVersion==10) && world.WaterPlan.PlanVersion==4,"River world did not use the river-capable save contract");
         var body=world.WaterPlan.Bodies.Single(b => b.River!=null); var path=body.River;
         int middle=path.Points.Count/2;
         foreach (int index in new[] { 0,middle,path.Points.Count-1,middle })

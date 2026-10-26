@@ -1,12 +1,15 @@
 # Biome configuration — climate-region placement and future spawn systems
 
+> **BC0/BC1 delivery — 26 October 2026:** BC0 audit/design complete; BC1 implemented, awaiting native/local validation. BC2–BC7 remain planned. BP2–BP5 remain separate creature/deposit spawning phases. Climate layer exists; biome selection still does not consume it. [Audit / local handoff](../../../Generation/Authoring/BC0_BC1_Validation.md).
+
+
 ## Author clarification — 26 October 2026
 
 **Ocean placement:** “middle/central ocean” below means a broad preferred middle area, not a required exact centre, symmetry, or fixed central anchor. Allow seeded offsets and irregular extent through normalized Inspector guidance. Keep ocean presence/scale separate from preferred location; centrality must not become a hard constraint merely from earlier wording.
 
 **North / Mid / South starts:** the player chooses a broad area preference. Resolve a deterministic accessible land anchor within that area after major geography and major POI footprints/access reservations are known, before protecting the start and placing local scenery. Add configurable minimum distance from major POI footprints (world units), optional per-POI/category overrides, water/shore setback and obstacle/access clearance. Measure clearance from the actual footprint, not just its centre. Exclude dangerous/required POIs and protected approaches as configured; preserve ordinary biome content around the spawn. Use bounded candidates and deterministic tie-breaking. If no candidate satisfies the requested area and clearances, report the failed constraint; never silently reduce clearance, change area, erase a POI or relocate an ocean. Freeze the chosen preference, exact anchor and relevant policy/version in SAVE; Continue restores saved position. BC0 settles these contracts, BC1 reconciles ocean/start ownership, BC5 implements the selector and resolver. Future POI providers must supply planned footprints without loading distant scenes.
 
-**Minimal content now:** Snowy Tundra and Desert are ground-only placeholder definitions registered in the normal finite World collection, alongside Oak and Pink. No new scenery/entity/deposit spawning or regional weather is included. They currently place by global weights; BC2 will add climate affinity. Their artwork and populations can be expanded later. BC0–BC7 remain planned.
+**Minimal content now:** Snowy Tundra and Desert are ground-only placeholder definitions registered in the normal finite World collection, alongside Oak and Pink. No new scenery/entity/deposit spawning or regional weather is included. They currently place by global weights; BC2 will add climate affinity. Their artwork and populations can be expanded later. BC0 audit complete; BC1 implemented awaiting local validation; BC2–BC7 remain planned.
 
 
 > **Current status (26 October 2026): BP0 audit complete; BP1 authored configuration implemented (local acceptance pending).** BP2–BP5 remain the distinct **resource and living-entity spawning** plan. **BC0–BC7 now include World Author directives, 50× finite-area scaling, spawn-region choice and progressive F7.** This is planning only; no extra generator/UI/world-size/weather mechanics were implemented. [World Author full Codex handoff](../../../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) · [BP0/BP1 audit](BP0_BP1_Audit.md).
@@ -27,14 +30,14 @@ Three distinct ownership layers must not be merged:
 
 **Near-term experiment without code:** create **preview-only biome Resource definitions** that reuse current trees, rocks or ground layers but have **unique biome IDs and clearly distinct map Colours**. Register them with `WORLD/Generation/World/DefaultWorldGeneration.tres → Biomes`, then run **F6 World and F7** to inspect the whole finite map. At present **these placeholders still scatter according to global region weights/diameters and hydrology**; editing their climate baseline does not make cold/enchanted clusters. This is useful to inspect density, count, map legibility and transitions, not proof of climate zoning. Authoring steps and save cautions: [placeholder guide](../../PLACEHOLDER_BIOME_AUTHORING.md). Do not create placeholder ore/deposit Resources, enemy species, artificial world managers or one scene per biome merely for a colour-map preview.
 
-### BC0–BC7 — World Author / biome-climate implementation phases (all PLANNED)
+### BC0–BC7 — World Author / biome-climate implementation phases (BC0/BC1 delivered; later phases planned)
 
 **Canonical detailed specification:** [World Author implementation plan](../../../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md). **Do not renumber BP2–BP5**: they remain the separate ore/deposit/entity-population phases. BC phases govern macro authoring/climate placement, world size and local weather presentation.
 
 | Phase | What Codex should deliver | Status |
 | --- | --- | --- |
-| **BC0** | Audit existing synchronous global blueprint vs streamed detail, design typed World Author regions for **OCEAN CENTRE / COLD NORTH / TEMPERATE MIDDLE / HOT SOUTH**, organic climate gradient, persistent hierarchical seeds, 50× **area** world, start selection and SAVE policy | Planned — design |
-| **BC1** | Add one Resource-driven authoring preset and coherent north/south climate + central ocean constraints to **new world planning**, plus basic F7 climate overview | Planned — geography |
+| **BC0** | Audit existing synchronous global blueprint vs streamed detail, design typed World Author regions for **OCEAN CENTRE / COLD NORTH / TEMPERATE MIDDLE / HOT SOUTH**, organic climate gradient, persistent hierarchical seeds, 50× **area** world, start selection and SAVE policy | Implemented — audit complete |
+| **BC1** | Add one Resource-driven authoring preset and coherent north/south climate + central ocean constraints to **new world planning**, plus basic F7 climate overview | Implemented — awaiting local validation |
 | **BC2** | Make existing macro biome builder use climate-zone affinity before weight/size. Verify with colour-only/fake-art **biome Resources**, not fake enemy/ore spawns | Planned — biomes |
 | **BC3** | Shared position-aware snow/rain/pack and per-biome winter appearance; far north permanent ground ice possible, temperate Oak seasonal, south mostly non-snowy; SE4 calendar separate | Planned — environment |
 | **BC4** | **50× area** finite bounds through coarse-global/hierarchical deterministic plan and **local-only P3 chunk detail**; bound macro memory, region growth, save size and generator time | Planned — scaling |

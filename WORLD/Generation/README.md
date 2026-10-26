@@ -1,5 +1,8 @@
 # WORLD/Generation
 
+> **BC0/BC1 delivery — 26 October 2026:** BC0 audit complete; BC1 implemented, awaiting local validation: optional WorldAuthorPreset, frozen analytical climate, middle-biased ocean guidance, deferred safe start and on-demand F7 climate layer. Existing local P3 streaming and world size remain unchanged. Biome affinity/weather/50×/campaign selector remain later phases. [Audit / local handoff](Authoring/BC0_BC1_Validation.md).
+
+
 Reusable world-generation **algorithms**, not an asset dump. Agreed **future** pipeline: constraints → major geography/terrain/water → **coherent climate/thematic region map (planned)** → major POI/access reservations → compatible biome assignment → local terrain/connections, scenery and populations. Continue restores frozen outcomes rather than rerunning this pipeline. See [the authoritative P5 plan](../Generation_Implementation.md). Use seeds and placement rules for deterministic revisit behaviour.
 
 **Implemented:** `World/` owns the P1 finite macro biome map and its configuration; `Placement/` owns the existing preview startup scatter. `Liquids/` provides opt-in frozen lake and smooth river planning, rendered through the shared liquid runtime. P5a/P5b now runs major water before constrained biomes through WorldGenerationPipeline and the immutable [geography contract](World/Geography/README.md). P5c now adds a major ocean provider and non-land biome cells; volcanic and POI providers remain planned. See [macro generation](World/README.md).

@@ -42,7 +42,7 @@ public static class WaterBodyPlanner
                 throw new ArgumentException("Hydrology suitability must be finite within 0–1.");
         }
         if (map!=null) foreach (var biome in map.Biomes) if (!profiles.ContainsKey(biome.Id)) throw new ArgumentException("Missing macro biome hydrology.");
-        if (map==null) OceanPlanner.Append(settings,seed,bounds,features,bodies,warnings,authoredPond);
+        if (map==null) OceanPlanner.Append(settings,seed,bounds,features,bodies,warnings,authoredPond,config.Authoring);
         for (int slot = 0; slot < settings.LakeCount; slot++)
         {
             using var rng = new RandomNumberGenerator { Seed = SlotSeed(seed,slot) };

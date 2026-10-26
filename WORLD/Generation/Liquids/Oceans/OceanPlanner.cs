@@ -7,7 +7,7 @@ public static class OceanPlanner
     // Ocean requests may be required; impossible size/reservation constraints fail explicitly rather than becoming land.
     // =========================================================
     internal static void Append(WaterGenerationMasterConfig config,int seed,Rect2 bounds,WorldFeaturePlan features,
-        List<PlannedWaterBody> bodies,List<string> warnings,Rect2? pond)
+        List<PlannedWaterBody> bodies,List<string> warnings,Rect2? pond,WorldAuthorPreset author=null)
     {
         if (config.OceanCount<0 || config.OceanCount>2 || config.OceanCount+config.LakeCount+config.RiverCount>32)
             throw new ArgumentException("Ocean requests exceed bounded water slots.");
@@ -15,6 +15,7 @@ public static class OceanPlanner
         if (!float.IsFinite(config.MinimumOceanDiameter) || config.MinimumOceanDiameter<1000 || !float.IsFinite(config.MaximumOceanDiameter)
             || config.MaximumOceanDiameter<config.MinimumOceanDiameter || config.MaximumOceanDiameter>200000
             || config.AttemptsPerOcean<1 || config.AttemptsPerOcean>128) throw new ArgumentException("Invalid bounded ocean settings.");
+        if(author!=null) seed=WorldClimatePlan.DeriveSeed(seed,"geography.ocean");
         for (int slot=0;slot<config.OceanCount;slot++)
         {
             using var rng=new RandomNumberGenerator { Seed=unchecked((ulong)(uint)seed*0x9E3779B97F4A7C15UL^(uint)slot^0x4F4345414EUL) };
@@ -26,6 +27,12 @@ public static class OceanPlanner
                 float clearance=outer+config.Separation;
                 if (bounds.Size.X<=clearance*2 || bounds.Size.Y<=clearance*2) continue;
                 Rect2 zone=bounds.Grow(-clearance);
+                if(author!=null && (author.RequireOceanInZone || attempt<config.AttemptsPerOcean/2))
+                {
+                    var preferred=new Rect2(bounds.Position+author.OceanCentreZone.Position*bounds.Size,author.OceanCentreZone.Size*bounds.Size);
+                    zone=zone.Intersection(preferred);
+                    if(!zone.HasArea()) continue;
+                }
                 Vector2 centre=zone.Position+new Vector2(rng.Randf(),rng.Randf())*zone.Size;
                 if (!features.Reservations.AllowsDisk(centre,outer+config.Separation,WorldPlacementKind.Water)
                     || (pond.HasValue && pond.Value.Grow(outer+config.Separation).HasPoint(centre))) continue;
@@ -43,7 +50,10 @@ public static class OceanPlanner
                 foreach (var other in bodies)
                     if (FeatureGeometry.Overlaps(polygon,body.Bounds,config.Separation,other.CopyPolygon(),other.Bounds,0)) { blocked=true; break; }
                 if (blocked) continue;
-                bodies.Add(body); placed=true; break;
+                bodies.Add(body); placed=true;
+                if(author!=null && attempt>=config.AttemptsPerOcean/2 && !author.RequireOceanInZone)
+                    warnings.Add($"Ocean {body.Id}: preferred middle centre zone exhausted; placed in wider legal bounds.");
+                break;
             }
             if (!placed)
             {

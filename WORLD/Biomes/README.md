@@ -1,5 +1,8 @@
 # Overworld biomes
 
+> **BC0/BC1 delivery — 26 October 2026:** BC0/BC1 now implement a separate frozen macro climate field and F7 climate view. Biome selection remains globally weighted until BC2; Snowy Tundra and Desert remain ground-only placeholders. Regional weather remains BC3. [Audit / local handoff](../Generation/Authoring/BC0_BC1_Validation.md).
+
+
 **26 October update:** Snowy Tundra and Desert ground-only placeholders now join Oak/Pink in the normal finite World biome collection (F6/F7 or new campaign). No populations or new weather logic; climate placement remains BC1/BC2. Existing campaigns are not migrated by this addition. World Author ocean placement is broadly middle-biased with seeded offsets, not fixed-centred. Planned North/Mid/South starts must satisfy configurable clearance from major POI footprints as well as water/obstacle/access safety; see the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md).
 
 
