@@ -64,6 +64,7 @@ public static class CampaignSession
             if (!Godot.FileAccess.FileExists(path)) throw new InvalidDataException("Missing campaign dependency: " + path);
             string source = Godot.FileAccess.GetFileAsString(path == "res://SCENES/World/World.tscn" && previousWorldScene != null ? previousWorldScene : path).Replace("\r\n","\n");
             source=NormalizeDefaultWaterGenerationSource(path,source);
+            source=BiomeProfileSaveCompatibility.Normalize(path,source);
             if(previousHarvest && HarvestSaveCompatibility.Previous(path) is string oldHarvest)
                 source=Godot.FileAccess.GetFileAsString(oldHarvest).Replace("\r\n","\n");
             if(variants && path=="res://WORLD/Terrain/Ground/Surfaces/Profiles/Dirt.tres")

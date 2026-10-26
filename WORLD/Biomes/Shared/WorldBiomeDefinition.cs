@@ -23,6 +23,11 @@ public partial class WorldBiomeDefinition : Resource
     [Export] public BiomeHydrologyProfile Hydrology { get; set; }
     [ExportGroup("Local content")]
     [Export] public BiomeEnvironmentProfile Environment { get; set; }
+    [ExportGroup("Climate baseline - configuration only")]
+    [Export] public BiomeClimateProfile Climate { get; set; }
+    [ExportGroup("Future spawning - configuration only")]
+    [Export] public BiomeEntitySpawnProfile EntitySpawns { get; set; }
+    [Export] public BiomeResourceSpawnProfile ResourceSpawns { get; set; }
     [ExportGroup("Ground stack")]
     [Export] public BiomeGroundStack GroundStack { get; set; }
     [ExportGroup("Legacy surface - fallback only when no stack")]

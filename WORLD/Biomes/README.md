@@ -22,3 +22,5 @@ GS2/GS3: streamed setup reads GroundStack directly (legacy Surface remains fallb
 Base/patch clarification: each explicit stack may author AccompanyingPatches separately from DefiningBaseGround and the two extra OverlayLayers. Oak/Pink own inline accompanying grass variation with the original colours/scale; production extra arrays remain empty. See ../Terrain/Ground/Surfaces/ACCOMPANYING_PATCH_LAYER.md.
 
 GS5 Oak has two extra inline layer entries referencing canonical Dirt/Rock profiles, both Enabled=false with AllowSessionPreview=true. F9 can inspect them without saving biome changes. Pink remains unchanged. See ../Terrain/Ground/Surfaces/GS5_Validation.md.
+
+**BP0/BP1:** optional typed Climate, EntitySpawns and ResourceSpawns links now exist. Oak has a 15°C / 65% baseline and disabled, empty spawn profiles; Pink inherits null links. Configuration only: no live climate, gameplay spawns or scenery changes. [Audit, contracts, compatibility and local validation](Definitions/OakForest/BP0_BP1_Audit.md).

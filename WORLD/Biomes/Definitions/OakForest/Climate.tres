@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="BiomeClimateProfile" format=3]
+
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomeClimateProfile.cs" id="profile"]
+
+[resource]
+script = ExtResource("profile")
+BaselineTemperatureCelsius = 15.0
+BaselineRelativeHumidityPercent = 65.0

@@ -1,6 +1,8 @@
 # Oak Forest — Biome-linked Spawn Configuration Proposal
 
-> **Status: PLANNED / DISCUSSION ONLY (24 October 2026).** This file proposes a future data layout for Codex review. **No spawn folders, spawn .tres Resources, C# code, scenes or existing biome Resources are created or modified by this documentation task.** User approval is required for each implementation phase. Read root `README.md`, `CodePreferences.md`, `WORLD/Biomes/README.md`, current `Biome.tres`, `WorldBiomeDefinition.cs`, `BiomePopulation.cs`, and P3 streaming before implementing.
+> **Current status (26 October 2026): BP0 complete; BP1 implemented, awaiting local validation.** See [audit, chosen contracts and checks](BP0_BP1_Audit.md). BP2–BP5 remain planned and require separate authorization. The proposal below is retained for design context; its original no-edit restriction applied to the planning job, now superseded by the explicit BP0/BP1 implementation request.
+
+> **Original proposal (24 October 2026):** This file proposes a future data layout for Codex review. **No spawn folders, spawn .tres Resources, C# code, scenes or existing biome Resources are created or modified by this documentation task.** User approval is required for each implementation phase. Read root `README.md`, `CodePreferences.md`, `WORLD/Biomes/README.md`, current `Biome.tres`, `WorldBiomeDefinition.cs`, `BiomePopulation.cs`, and P3 streaming before implementing.
 
 ## Confirmed current Oak files / behavior
 
@@ -96,8 +98,8 @@ Biome selects canonical harvestable/resource definitions; it must not own copied
 
 | Phase | Goal | Suggested assistant | Status |
 | --- | --- | --- | --- |
-| **BP0** | Audit current biome population, world streaming, Entity placement and SAVE contracts; settle exact field types, climate baseline/dynamic semantics and spawn semantics | Regular Chat | Planned |
-| **BP1** | Add optional biome-linked Climate, entity-spawn and resource-spawn profile Resources and Oak files, initially **configuration only**; no new gameplay spawns | Codex (or Regular Chat for isolated Resources after audit) | Planned |
+| **BP0** | Audit current biome population, world streaming, Entity placement and SAVE contracts; settle exact field types, climate baseline/dynamic semantics and spawn semantics | Regular Chat | Implemented — audit documented |
+| **BP1** | Add optional biome-linked Climate, entity-spawn and resource-spawn profile Resources and Oak files, initially **configuration only**; no new gameplay spawns | Codex (or Regular Chat for isolated Resources after audit) | Implemented — awaiting local validation |
 | **BP2** | Integrate deterministic resource/deposit placement with chunk lifecycle and depletion persistence, once canonical definitions exist | Codex | Planned |
 | **BP3** | Implement bounded biome-driven active entity population with proper spawn/despawn/death behavior | Codex | Planned |
 | **BP4** | Add optional F9 spawn diagnostics and local tests | Codex + Copilot testing | Planned |
@@ -134,7 +136,7 @@ Biome selects canonical harvestable/resource definitions; it must not own copied
 - **Habitat transitions:** edge blending or overlap rules for entities, vegetation and climate between neighboring biomes.
 - **Rare encounter events:** optional biome event profile for ambushes, migrations and traveling NPCs.
 
-## Decisions to discuss before BP1
+## Original decisions — resolved for BP1 in the linked audit
 
 1. Should `Resources.tres` initially cover only **static ore/deposits**, with herbs/plants deferred until item harvesting exists?
 2. Should wildlife/enemies use **persistent residents**, **respawning encounters**, or a configurable mix? This determines death/save behavior.
@@ -143,4 +145,4 @@ Biome selects canonical harvestable/resource definitions; it must not own copied
 5. Should spawn weights be per-biome relative weights, with explicit density/caps to prevent accidental overpopulation? **Recommended yes.**
 6. What temperature/humidity baselines and fallback should Oak/Pink start with, and which gameplay system first consumes the values?
 
-**Handoff:** This Markdown file is the only authorized change in the current job. Codex should not implement BP0–BP5 automatically just because this proposal exists. One commit per explicitly approved job; record validation and update owning notes when implementation is authorized.
+**Current handoff:** BP0/BP1 were explicitly authorized and implemented; see the linked audit. BP2–BP5 are not authorized by this proposal. One commit per explicitly approved job; record validation and update owning notes when implementation is authorized.

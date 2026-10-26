@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="BiomeResourceSpawnProfile" format=3]
+
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomeResourceSpawnProfile.cs" id="profile"]
+
+[resource]
+script = ExtResource("profile")
+Enabled = false
