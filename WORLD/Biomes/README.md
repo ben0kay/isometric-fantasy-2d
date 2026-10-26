@@ -3,6 +3,8 @@
 Current identity colour: **Id / DisplayName / Colour** now live together. Colour drives the macro-map swatch and base-ground tone through one shared resolver. Oak/Pink retain their current grass appearance; their map swatches now match their ground tones. Dirt/rock keep independent tints. [Authoring, compatibility and validation](IDENTITY_COLOUR.md).
 Implemented: `Definitions/OakForest/Biome.tres` and `Definitions/PinkMeadow/Biome.tres` are the two production biomes. All individual biome folders live under Definitions; Shared owns common Resource types. Cave biomes remain separate.
 
+**Want to preview more biomes without drawing their artwork?** Follow the [placeholder-biome F7 authoring guide](PLACEHOLDER_BIOME_AUTHORING.md). Add lightweight distinct biome `.tres` Resources to `WORLD/Generation/World/DefaultWorldGeneration.tres → Biomes`. They may reuse current canonical art; unique IDs and map colours distinguish regions. **Today this tests globally weighted placement, not climate clustering**. [BC0–BC3](Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md) plans continent-scale climate regions and eligibility without renumbering BP2 ore/BP3 entities.
+
 WorldBiomeDefinition references a ground surface profile and an ordered array of inline BiomePopulation resources. Each population references canonical content and stores count, scale, mirroring and optional cluster settings. Populate these in the Inspector; no separate spawn file per species per biome is needed.
 
 Future Avalonia tooling can edit stable IDs and these Resource references/settings. Toolbox integration is not implemented. Never duplicate content assets under a biome or hardcode a species into placement code.
