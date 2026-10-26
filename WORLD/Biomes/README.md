@@ -24,3 +24,11 @@ Base/patch clarification: each explicit stack may author AccompanyingPatches sep
 GS5 Oak has two extra inline layer entries referencing canonical Dirt/Rock profiles, both Enabled=false with AllowSessionPreview=true. F9 can inspect them without saving biome changes. Pink remains unchanged. See ../Terrain/Ground/Surfaces/GS5_Validation.md.
 
 **BP0/BP1:** optional typed Climate, EntitySpawns and ResourceSpawns links now exist. Oak has a 15°C / 65% baseline and disabled, empty spawn profiles; Pink inherits null links. Configuration only: no live climate, gameplay spawns or scenery changes. [Audit, contracts, compatibility and local validation](Definitions/OakForest/BP0_BP1_Audit.md).
+
+## Future biome snow/weather response and climate placement (DESIGN ONLY)
+
+**Prefer one shared world climate/weather runtime.** WORLD/Generation should first plan a broad macro climate-zone map across the finite world. `WorldBiomeDefinition` data can later express suitability for that zone (soft preferences, optional hard requirements, rare magical exceptions) and surface/vegetation snow/frost reactions. **Do not give every biome its own snow controller or clock.** Existing per-object `SnowResponse` and foliage material adapters remain in place.
+
+A temperate Oak biome with its BP1 **15°C baseline** can still receive snowfall during winter cold; a hot volcanic province could reject ordinary snowfall; enchanted cyan grass, purple plants and glowing fungi could retain unusual hues or use tinted frost. These are **future authorable response rules, not implemented exports or actual content**. Year/season palette changes remain separate from falling snow and snowpack.
+
+Future shared ENVIRONMENT resolves **effective local weather by world position** (macro zone + biome rule + clock/season + weather) and applies it to visible chunks/camera using regional masks and bounded updates. A camera can cross two zones at once; switching the entire current global snow quad from the player's biome alone would be wrong. Null climate links must be handled safely, with full eligible land coverage and deliberate P4/generator save compatibility. [Generation plan](../Generation_Implementation.md) · [direction](../../Notes/World_Generation_Direction.md).

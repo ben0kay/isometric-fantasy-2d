@@ -18,6 +18,14 @@ Oak Forest references `WORLD/Biomes/Definitions/OakForest/Environment.tres`, wit
 
 Selected profiles are explicitly cloned per component on startup. Developer controls edit private runtime copies; they do not save or mutate authored assets. Restart restores authored defaults. The two-biome preview resolves the primary biome profile once for the shared environment on load, matching DEBUG. Per-region environment sampling/blending, climates, calendars and seasons are future work.
 
+## Future regional climate, precipitation and fantasy winter — not implemented
+
+**One authoritative resolver is preferable to biome-owned precipitation systems.** The finite-world generator will eventually freeze broad contiguous climate/region zones; biome Resources (BP1 already defines Oak's baseline 15°C/65% RH) can later author climate affinity, snow eligibility and magical appearance overrides. At runtime, a shared world-position resolver combines macro zone + biome + live weather + future SE4 season/time to decide local snow/rain/snowpack. Baseline climate is **not** current weather; Oak may still snow during cold winter conditions. Fantasy grass, purple mushrooms and glowing flora may retain colour under frost.
+
+**Crucial rendering boundary:** the existing snowfall and world-spanning snow-cover quad respond to global settings, not regional cold zones. Future regional integration must support a camera simultaneously seeing snow-covered land **and** warm uncovered land, using region/chunk-aware masks or another shared rendering technique. Don't replace current rain/snow with independent controllers in every biome; use shared GPU budgets, event/chunk/camera-based cached queries, and turn OFF updates completely when inactive. Individual foliage/ground Materials still decide how a given species looks when covered.
+
+**Current reality:** P0/P5 geology/hydrology drives biome placement; macro climate zoning, position-based temperature, weather scheduler and snow masking by biome remain planned. BP0/BP1 climate data has **no runtime consumers**. Avoid changing existing weather appearance or save identity until separately authorized; future coarse climate fields need a versioned frozen save blueprint. [World direction](../Notes/World_Generation_Direction.md) · [main plan](../WORLD/Generation_Implementation.md).
+
 ## Defaults and limits
 Preserves the debug settings: 30 real seconds per day, 08:00 start, wind +1, rain target 0% (off), snow off, coverage target 60%. Mixed rain/snow is permitted; set rain to zero for pure snow. Existing effects are visual approximations, not snow physics or fire/heat simulation. The torch's authored collision remains while its presentation is disabled, matching the original test.
 

@@ -1,5 +1,9 @@
 # WORLD/Generation/Biomes
 
-Algorithms for selecting/blending biomes from climate/region/environment parameters; the actual biome data profiles live under `WORLD/Biomes/`.
+**Future climate/thematic-zone algorithms, NOT implemented here.** This folder currently holds documentation only. The running P0/P5 macro biome region builder lives in [Generation/World](../World/README.md) and still selects biome sites largely by weights, region size and hydrology/geography constraints.
 
-> **Scaffolding only:** This folder currently contains documentation, not implemented world content or generation logic.
+Desired finite-world layout: seed **large contiguous cold, temperate, hot and enchanted provinces** first, optionally guided toward broad map areas and influenced by oceans/future relief. Then place **compatible** biome types in each province using optional soft affinity/hard constraints and explicit magical exceptions. A province may contain many biomes; a biome may recur in compatible provinces. Never fabricate missing definitions or leave valid land empty with only Oak/Pink configured.
+
+BP0/BP1 already added authored `BiomeClimateProfile` baseline data; **no climate-zone sampling, biome suitability algorithm or snow gating currently consumes it**. Later runtime weather decisions remain with one shared ENVIRONMENT owner, not per-biome snowfall scripts. Freeze/version macro zone data on new-world generation, use cheap indexed lookups and preserve saved campaigns.
+
+[Main plan](../../Generation_Implementation.md) · [world direction](../../../Notes/World_Generation_Direction.md) · [biome authoring](../../Biomes/README.md).

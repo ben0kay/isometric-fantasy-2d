@@ -1,22 +1,22 @@
 # World Generation Direction — Fantasy 2D Sandbox
 
-> **Status:** Future-geography design / provisional preferences. **P0–P4 foundational generation, streaming and saves are already implemented**; remaining proposals are not automatically approved work.
-> **Last updated:** 2026-10-24
+> **Status:** **Agreed future world-layout direction**, not a claim of implementation. P0–P4, P5a/P5b, P5c ocean/non-land and BP0/BP1 climate baseline Resources exist; **large climate zones, biome climate affinity and region-aware snow do not**. Future phases require approval.
+> **Last updated:** 2026-10-26
 > **Scope:** The new **fully top-down Godot 2D** fantasy survival sandbox, despite the repository's "isometric" name.
 > **Current implementation:** P0/P1 seeded finite macro biome regions, P2 feature reservations, P3 local chunk streaming and P4 private disk saves/Continue exist. WG lake/river geometry and streaming also exist; P5a/P5b now plans major water before constrained biome assignment. Oceans/continents/relief, real settlements/caves, expandable finite boundaries and offline ecology remain future. Use [phase guide](../WORLD/Generation_Implementation.md) for authoritative status.
 
-## Core decision under consideration
+## Core world decision — large finite, optionally expandable later
 
-The leading preference is **an expandable finite world**, while keeping the underlying procedural generator capable of supporting large or effectively unbounded coordinates.
+The **initial world is large and finite** (current production preset 142,304 × 106,728 units). Future expansion is optional; do not build an infinite world by default.
 
 The intent is to combine:
-- **Initial geographical structure:** Create a large world with oceans, continents, mountain ranges, rivers and distinctive fantasy biomes. Optionally bias major features toward broad areas of the map.
+- **Initial geographical structure:** Create a large world with oceans, continents, rivers, distinctive fantasy biomes and **large climate/theme provinces**. Broad guidance may bias geography and entire climate clusters toward different parts of the map.
 - **Future expansion:** Allow new landmasses/regions to be appended later without rebuilding areas the player has already explored or modified.
 - **Procedural terrain:** The overall landscape is procedurally generated rather than hand-authored tile by tile.
 - **Optional authored landmarks:** Separately constructed scenes (villages, ruins, dungeons, camps, unique landmarks) can be embedded into suitable generated locations.
 - **Efficient exploration:** Generate detailed local terrain in chunks and persist meaningful player changes.
 
-**This is a preference, not a decision to rule out infinite worlds.** A strictly finite world and a fully infinite procedural world are still possible options. The goal of the first tests is to learn which plays and looks best.
+**Finite world is the current decision.** The options table above is retained as historical trade-offs, not three equally active implementation choices. Seeded generation still varies detail inside chosen broad constraints.
 
 ### Options evaluated
 
@@ -28,24 +28,20 @@ The intent is to combine:
 
 A useful design choice is to **separate world bounds from generation rules**, so the same terrain/biome pipeline can be reused for all three modes.
 
-## Fantasy-first biome placement — important preference
+## Fantasy-first placement — coherent regional climate with intentional magic
 
-**Gameplay and visual variety should take priority over strict climate realism.**
+**Core preference (26 October): cluster compatible biomes into large, connected climate/thematic provinces before selecting individual biome regions.** The finished map should not be Oak, then alpine snow, then purple fungi, then Pine, repeating from equally likely biome rolls at every regional site. A broad chilly highland might include different snowy forests, tundra and frosty meadows nearby; a remote enchanted territory might contain blue grass, giant mushrooms and purple fauna; dry/volcanic provinces may collect elsewhere. These are *illustrative*, not fixed map coordinates or authored biomes that already exist.
 
-The player does **not** want to spend long journeys passing through four neighbouring biomes that all look like minor variations of the same forest or plains. Climate regions can loosely organize the world, but must not force visually repetitive neighbouring areas.
+- **Geography first:** macro oceans, future relief/volcanoes and major water help shape broad temperature/moisture provinces. Optional normalized world-layout anchors or masks can steer a cold region toward one side of the *finite* map and an enchanted region toward another. Random seeds still create organic outlines and variation.
+- **Biomes inside provinces:** a future biome **climate affinity/compatibility profile** weights site selection among biome types suitable for that zone, with explicit optional hard constraints, min/max region sizes and rare fantasy overrides. Preserve visual differences *within* a province and permit deliberate spectacular transitions, without a random checkerboard or rigid real-world latitude bands.
+- **Full coverage with limited content:** right now only Oak Forest and Pink Meadow exist. A seed with no authored tundra or purple fungi must **not fabricate them**, turn empty land into an unnamed biome or violate P5c ocean non-land. Optional climate guidance should stay permissive until more real definitions exist. Impossible *required* constraints should fail with an explanation, not loop forever.
+- **Climate vs weather:** world-region climate is a coarse place-dependent baseline; current temperature also depends on time/season and events. **The world/shared weather system determines effective local snowfall**, while a biome Resource supplies eligibility, snow retention and appearance/colour overrides (magical cyan grass may keep colour under frost). A temperate Oak baseline of 15°C does not prohibit snow in a cold winter. Do not add per-biome rain/snow/clock managers.
+- **Spatial accuracy:** a camera can see both snowy highlands and unsnowed hot ground. Future rendering must use localized coverage/precipitation masks or chunk/region parameters and existing shared GPU emitters. It cannot merely switch the whole global snow controller based on the player's current biome.
+- **Performance and persistence:** generate/freeze small indexed zone fields once per new-world seed; query and blend at world coordinates or changed chunk/camera windows, **not per object/flake or across the whole map per frame**. Save/version the climate map with the frozen world blueprint. Continue must preserve older campaigns and reject incompatible generator/layout changes safely.
 
-The desired exploration experience is a believable *fantasy* world with noticeably different environments within reasonable travel distances.
+**What exists today:** P0/P1 still choose biomes primarily by generation weight/diameter, constrained by P5 geography/hydrology; **climate-based grouping has not been added**. BP0/BP1's optional `BiomeClimateProfile` and Oak baseline 15°C/65% RH exist but have **no runtime consumers**. SE0–SE3 are manual foliage preview, B0/B1 severe-snow visuals and current rain/snow operate globally. No automatic real calendar or local snow suitability exists yet.
 
-Ideas to test:
-- A **visual-similarity or contrast score** for biome adjacency; discourage stretches of nearly identical biomes.
-- Configurable **minimum/maximum biome footprint**, average traversal time, rarity and frequency.
-- Broad regions may have **themes/biases**, but need not contain only climatically similar biomes.
-- Allow unusual fantasy biomes to override natural climate assumptions through magic, corruption, volcanic influence, ancient events, etc.
-- Favor organic irregular shapes, patches, enclaves and smooth transitions rather than random checkerboard tiles.
-- Allow some deliberate **exceptionally large** forests, mountain chains, deserts or other memorable geographical features; do not force every biome to be tiny.
-- Avoid repetitive alternating patterns and guarantee that adjacency rules do not produce visually predictable worlds.
-
-Potential creator controls: **biome diversity**, **biome region size**, **climate realism**, **fantasy frequency**, **similar-biome adjacency penalty**, **transition width**, **major feature scale**.
+Future World Creator controls could include region temperature/humidity trends, broad map-area guides, zone sizes/adjacency, terrain/humidity influences, magical exceptions, transition width and biome weights **within eligible zones**. Climate realism is a configurable artistic preference; **coherent geography is the goal**.
 
 ## World creation: procedural with optional broad geographic guidance
 
@@ -66,10 +62,11 @@ The agreed direction is **constraints → major geography → major POIs/access 
 
 1. Fix bounds/seed and required constraints, including protected start and fixed landmark reservations.
 2. Plan major geography: giant ocean/land topology, volcanic regions, mountains, major lakes and rivers. Coarse relief/climate fields can support this without requiring realistic climate simulation.
-3. Select/reserve important destinations such as endgame temples, settlements and ruins, with critical approaches/crossings and any required biome/theme constraints.
-4. Assign biomes to eligible land around those geography/POI constraints, preserving fantasy contrast and hard exclusion rules.
-5. Finalize detailed connections/local terrain and stream POI scenes, ground, shores, scenery/resources and entities near the player.
-6. On Continue, restore the frozen blueprint first and apply saved local edits through existing persistence/streaming; do not rerun the new-world pipeline over a saved campaign.
+3. **Plan broad coherent climate/thematic provinces**, conditioned by geography and optional user-guided regions (future, not implemented).
+4. Select/reserve important destinations such as temples, settlements and ruins, preserving their climate/theme/access requirements.
+5. Assign compatible biomes **inside/near suitable climate regions**, retaining seed/size/weight variability and deliberate fantasy exceptions.
+6. Finalize local paths/terrain and stream POI scenes, ground, shores, scenery/resources and entities near the player.
+7. On Continue, restore the frozen geography/climate/biome blueprint and saved edits; never rerun new-world generation over an old campaign.
 
 Planning a temple early does not instantiate its entire scene globally. Oceans and volcanic geology are features that may span many biome regions. Smaller biome-dependent water details can be added later without moving established major geography. P5a/P5b implements the major-water/biome dependency inversion. Ocean/volcano/POI providers remain planned; full ordering awaits those separately authorized phases.
 
@@ -119,9 +116,9 @@ The placer should consider:
 
 This is different from handcrafted world terrain: author reusable *locations*, not an entire giant map.
 
-## First test: keep it fully in DEBUG
+## Historical DEBUG prototype checklist — superseded by the production WORLD generator
 
-Current disposable forest/visual tests under `DEBUG/TopDownTest/` are **not** the production world generator. Existing `WORLD/` folders are scaffolding for future promotion.
+These were early prototyping ideas, **not current instructions to implement world generation under DEBUG**. P0–P5c production ownership is WORLD/Generation + streamed World.tscn; use new tests only when needed.
 
 Before making a large production system, prototype:
 1. **Overview generator** with changeable seed: land/ocean, major mountains, biomes, optional geographic bias.
@@ -154,4 +151,4 @@ All test code and assets remain isolated in DEBUG until explicitly selected for 
 - `WORLD/Locations/` — future reusable handcrafted points of interest.
 - `WORLD/Runtime/` — future chunk streaming and persistence.
 
-**Summary:** Provisional choice is an **expandable finite, seeded procedural fantasy world** with optional guided geography, strong biome contrast, procedural chunks, reusable authored landmarks, and multi-layer caves. Preserve the option for genuinely infinite world bounds. Prioritize **interesting exploration and distinct visuals**, not realistic climate gradients.
+**Summary (26 October 2026):** Build one **large finite, seeded fantasy world** with optional guided geography and **contiguous cold/temperate/hot/magical climate provinces**; place compatible biome types within those territories, while supporting rare magical anomalies and meaningful visual variety. Weather/snow eventually resolves from the **shared world climate + biome-authored response**, not independent biome simulators. Neither climate zoning nor spatial snow behavior exists yet. Keep optional future finite expansion distinct from infinite generation.
