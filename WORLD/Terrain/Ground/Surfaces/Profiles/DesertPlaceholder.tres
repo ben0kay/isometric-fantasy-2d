@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="GroundSurfaceProfile" format=3]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/GroundSurfaceProfile.cs" id="script"]
+[ext_resource type="Texture2D" path="res://WORLD/Terrain/Ground/grass.svg" id="texture"]
+[ext_resource type="Material" path="res://WORLD/Terrain/Ground/Surfaces/GrassMaterial.tres" id="material"]
+[resource]
+script = ExtResource("script")
+Texture = ExtResource("texture")
+Material = ExtResource("material")
+BaseColour = Color(0.72, 0.59, 0.38, 1)
+ShadeColour = Color(0.72, 0.59, 0.38, 1)
+FreshColour = Color(0.72, 0.59, 0.38, 1)
+DryColour = Color(0.72, 0.59, 0.38, 1)
+DetailStyle = 1
+ArtworkInfluence = 0.0
+DetailStrength = 0.025

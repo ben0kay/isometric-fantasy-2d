@@ -1,5 +1,14 @@
 # Biome configuration — climate-region placement and future spawn systems
 
+## Author clarification — 26 October 2026
+
+**Ocean placement:** “middle/central ocean” below means a broad preferred middle area, not a required exact centre, symmetry, or fixed central anchor. Allow seeded offsets and irregular extent through normalized Inspector guidance. Keep ocean presence/scale separate from preferred location; centrality must not become a hard constraint merely from earlier wording.
+
+**North / Mid / South starts:** the player chooses a broad area preference. Resolve a deterministic accessible land anchor within that area after major geography and major POI footprints/access reservations are known, before protecting the start and placing local scenery. Add configurable minimum distance from major POI footprints (world units), optional per-POI/category overrides, water/shore setback and obstacle/access clearance. Measure clearance from the actual footprint, not just its centre. Exclude dangerous/required POIs and protected approaches as configured; preserve ordinary biome content around the spawn. Use bounded candidates and deterministic tie-breaking. If no candidate satisfies the requested area and clearances, report the failed constraint; never silently reduce clearance, change area, erase a POI or relocate an ocean. Freeze the chosen preference, exact anchor and relevant policy/version in SAVE; Continue restores saved position. BC0 settles these contracts, BC1 reconciles ocean/start ownership, BC5 implements the selector and resolver. Future POI providers must supply planned footprints without loading distant scenes.
+
+**Minimal content now:** Snowy Tundra and Desert are ground-only placeholder definitions registered in the normal finite World collection, alongside Oak and Pink. No new scenery/entity/deposit spawning or regional weather is included. They currently place by global weights; BC2 will add climate affinity. Their artwork and populations can be expanded later. BC0–BC7 remain planned.
+
+
 > **Current status (26 October 2026): BP0 audit complete; BP1 authored configuration implemented (local acceptance pending).** BP2–BP5 remain the distinct **resource and living-entity spawning** plan. **BC0–BC7 now include World Author directives, 50× finite-area scaling, spawn-region choice and progressive F7.** This is planning only; no extra generator/UI/world-size/weather mechanics were implemented. [World Author full Codex handoff](../../../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) · [BP0/BP1 audit](BP0_BP1_Audit.md).
 
 ## Read this first — biome placement is NOT creature/resource spawning

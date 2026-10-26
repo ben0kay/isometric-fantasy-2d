@@ -1,12 +1,21 @@
 # World Author — geographical presets, climate gradient, large finite world and F7 profiler
 
+## Author clarification — 26 October 2026
+
+**Ocean placement:** “middle/central ocean” below means a broad preferred middle area, not a required exact centre, symmetry, or fixed central anchor. Allow seeded offsets and irregular extent through normalized Inspector guidance. Keep ocean presence/scale separate from preferred location; centrality must not become a hard constraint merely from earlier wording.
+
+**North / Mid / South starts:** the player chooses a broad area preference. Resolve a deterministic accessible land anchor within that area after major geography and major POI footprints/access reservations are known, before protecting the start and placing local scenery. Add configurable minimum distance from major POI footprints (world units), optional per-POI/category overrides, water/shore setback and obstacle/access clearance. Measure clearance from the actual footprint, not just its centre. Exclude dangerous/required POIs and protected approaches as configured; preserve ordinary biome content around the spawn. Use bounded candidates and deterministic tie-breaking. If no candidate satisfies the requested area and clearances, report the failed constraint; never silently reduce clearance, change area, erase a POI or relocate an ocean. Freeze the chosen preference, exact anchor and relevant policy/version in SAVE; Continue restores saved position. BC0 settles these contracts, BC1 reconciles ocean/start ownership, BC5 implements the selector and resolver. Future POI providers must supply planned footprints without loading distant scenes.
+
+**Minimal content now:** Snowy Tundra and Desert are ground-only placeholder definitions registered in the normal finite World collection, alongside Oak and Pink. No new scenery/entity/deposit spawning or regional weather is included. They currently place by global weights; BC2 will add climate affinity. Their artwork and populations can be expanded later. BC0–BC7 remain planned.
+
+
 > **DESIGN / PLANNED — 26 October 2026.** This is the detailed Codex handoff extending the established [BC phases](../../Biomes/Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md). Do not infer these features already work; **no changes to generation, map size, saves, weather, or spawn-selection UI are included in this planning document**. Implement each phase only when individually requested. Read root README and CodePreferences first; prefer brief code review and an initial build/basic check where practical, leaving long runtime/profiling checks to the user.
 
 ## Desired creator experience
 
 A data-driven **World Author**, initially simple Godot Inspector Resources (eventually a dedicated optional editor), should let the developer describe **intent** in plain terms:
 
-- **One enormous ocean roughly in the MIDDLE** of the finite world (an irregular saved geography body, not a perfectly circular lake or a tinted biome).
+- **One enormous ocean broadly near the MIDDLE, with seeded offsets allowed** of the finite world (an irregular saved geography body, not a fixed-centre requirement, a perfectly circular lake or a tinted biome).
 - **Very cold climate FAR NORTH** (permanent snow/ice if even summer remains below freezing), **cold northern forest** below that, **temperate EAST/WEST middle** with distinct seasons, **warmer SOUTH**, and **hot/dry FAR SOUTH** with deserts/volcanic lands when actual biome content exists.
 - Optional strange enchanted/corrupted provinces in a preferred broad map area, ignoring ordinary climate via deliberate authorable exceptions.
 - Configurable **region anchors/extent, minimum/maximum size, intensity, transition width, irregularity, required/preferred priorities, exclusions and seed variations**. A normalized `(x,y)` placement anchor means north/centre/south scales with future world size; **+Y is south in Godot**.
@@ -74,7 +83,7 @@ Rain/snow shaders and GPU emitters are **shared**; later BC3 uses spatial masks/
 **Future New Campaign menu only**, not implemented today. The selector chooses a **region preference** rather than a hard-coded world coordinate:
 
 1. After seed + world author preset is chosen, generate or retrieve the **authoritative macro geography and climate skeleton**. If the user picked North, prefer suitable **northern accessible land** in the allowed cold/seasonal belt; Middle prefers temperate **land outside the central ocean**; South prefers warm land.
-2. Search **bounded** deterministic candidates for a valid spawn anchor; honor required world-feature constraints, ocean/lake/river geometry, shoreline/setback, blocking scenery and reasonable chunk/nav accessibility. Reserve/protect the selected spawn site **before final local population placement** and reconcile the old hard-coded `feature.start` fixed centre. The central-ocean directive and start request must not compete silently.
+2. Search **bounded** deterministic candidates for a valid spawn anchor; honor required world-feature constraints, ocean/lake/river geometry, shoreline/setback, configured minimum clearance from major POI footprints/approaches, blocking scenery and reasonable chunk/nav accessibility. Reserve/protect the selected spawn site **before final local population placement** and reconcile the old hard-coded `feature.start` fixed centre. The central-ocean directive and start request must not compete silently.
 3. If no safe site exists, explicitly report which condition failed. A documented fallback to nearest suitable land is acceptable **only if authorized**; don't silently place the player in water or overwrite the required ocean.
 4. Save the chosen **world position + selected region/preference + frozen generator/world ID** in a versioned campaign launch/blueprint. On Continue restore the exact location; no re-rolling start based on the current seed or `.tres`.
 5. Only initialize the existing nearby streamer around that position. Do **not** generate the path between the middle map and selected south/north spawn.

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WorldBiomeDefinition" format=3]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/WorldBiomeDefinition.cs" id="biome"]
+[ext_resource type="Script" path="res://WORLD/Biomes/Shared/BiomeClimateProfile.cs" id="climate"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundLayer.cs" id="layer"]
+[ext_resource type="Script" path="res://WORLD/Terrain/Ground/Surfaces/Layers/BiomeGroundStack.cs" id="stack"]
+[ext_resource type="Resource" path="res://WORLD/Terrain/Ground/Surfaces/Profiles/DesertPlaceholder.tres" id="surface"]
+[sub_resource type="Resource" id="climate_baseline"]
+script = ExtResource("climate")
+BaselineTemperatureCelsius = 32.0
+BaselineRelativeHumidityPercent = 15.0
+[sub_resource type="Resource" id="base"]
+script = ExtResource("layer")
+Id = "base"
+Label = "Desert placeholder ground"
+Surface = ExtResource("surface")
+[sub_resource type="Resource" id="ground"]
+script = ExtResource("stack")
+DefiningBaseGround = SubResource("base")
+[resource]
+script = ExtResource("biome")
+Id = "biome.desert"
+DisplayName = "Desert"
+Colour = Color(0.72, 0.59, 0.38, 1)
+GenerationWeight = 20.0
+MinimumRegionDiameter = 4000.0
+MaximumRegionDiameter = 8000.0
+Climate = SubResource("climate_baseline")
+GroundStack = SubResource("ground")

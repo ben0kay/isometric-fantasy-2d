@@ -1,6 +1,9 @@
 # Placeholder biome authoring — finite-world macro/F7 experiments
 
-> **Planning/authoring guide, not an implemented climate clustering feature.** As of 26 October 2026, there are two real production biome definitions, Oak Forest and Pink Meadow. BP0/BP1 authored climate profiles exist but **do not influence where biome regions spawn**. The current P0/P5 generator selects from the world Biomes array by weight/target region diameter plus water/geography suitability. Read [BC0–BC7](Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md) and the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) before attempting cold/enchanted climate clustering, geographic presets, 50× expansion or regional starting locations.
+**26 October update:** Snowy Tundra and Desert ground-only placeholders now join Oak/Pink in the normal finite World biome collection (F6/F7 or new campaign). No populations or new weather logic; climate placement remains BC1/BC2. Existing campaigns are not migrated by this addition. World Author ocean placement is broadly middle-biased with seeded offsets, not fixed-centred. Planned North/Mid/South starts must satisfy configurable clearance from major POI footprints as well as water/obstacle/access safety; see the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md).
+
+
+> **Planning/authoring guide, not an implemented climate clustering feature.** As of 26 October 2026, Oak Forest and Pink Meadow are the developed biomes; Snowy Tundra and Desert are registered ground-only placeholders. BP0/BP1 authored climate profiles exist but **do not influence where biome regions spawn**. The current P0/P5 generator selects from the world Biomes array by weight/target region diameter plus water/geography suitability. Read [BC0–BC7](Definitions/OakForest/SPAWNING_IMPLEMENTATION_PLAN.md) and the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md) before attempting cold/enchanted climate clustering, geographic presets, 50× expansion or regional starting locations.
 
 ## Fastest no-new-code preview in F6 World / F7
 

@@ -1,5 +1,8 @@
 # Overworld biomes
 
+**26 October update:** Snowy Tundra and Desert ground-only placeholders now join Oak/Pink in the normal finite World biome collection (F6/F7 or new campaign). No populations or new weather logic; climate placement remains BC1/BC2. Existing campaigns are not migrated by this addition. World Author ocean placement is broadly middle-biased with seeded offsets, not fixed-centred. Planned North/Mid/South starts must satisfy configurable clearance from major POI footprints as well as water/obstacle/access safety; see the [World Author plan](../Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md).
+
+
 Current identity colour: **Id / DisplayName / Colour** now live together. Colour drives the macro-map swatch and base-ground tone through one shared resolver. Oak/Pink retain their current grass appearance; their map swatches now match their ground tones. Dirt/rock keep independent tints. [Authoring, compatibility and validation](IDENTITY_COLOUR.md).
 Implemented: `Definitions/OakForest/Biome.tres` and `Definitions/PinkMeadow/Biome.tres` are the two production biomes. All individual biome folders live under Definitions; Shared owns common Resource types. Cave biomes remain separate.
 

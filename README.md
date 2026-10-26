@@ -1,5 +1,8 @@
 # Fantasy Survival Sandbox — 2D Top-Down Reboot
 
+**26 October update:** Snowy Tundra and Desert ground-only placeholders now join Oak/Pink in the normal finite World biome collection (F6/F7 or new campaign). No populations or new weather logic; climate placement remains BC1/BC2. Existing campaigns are not migrated by this addition. World Author ocean placement is broadly middle-biased with seeded offsets, not fixed-centred. Planned North/Mid/South starts must satisfy configurable clearance from major POI footprints as well as water/obstacle/access safety; see the [World Author plan](WORLD/Generation/Authoring/WORLD_AUTHOR_IMPLEMENTATION_PLAN.md).
+
+
 A Godot C# **2D top-down medieval/high-fantasy survival sandbox** built around modular, data-driven systems, deterministic streamed worlds and low idle cost. The repo name says "isometric" for historical reasons; the active game is **not** diamond-isometric or 3D.
 
 **World-layout direction — 26 October 2026 (PLANNED):** The large finite world should have **coherent, geographically clustered cold/temperate/hot and enchanted climate provinces**, not arbitrarily alternate Oak → snowy Pine → violet-mushroom forest everywhere. Geography and optional broad world-layout guidance establish those provinces **before** choosing compatible biome regions. Fantasy exceptions are welcome, but intentional. A future shared climate/weather resolver will determine where snow may fall/accumulate; a biome supplies rules for how its ground and strange-coloured foliage react. **Neither macro climate zoning nor local biome snow eligibility is implemented yet.** See [direction](Notes/World_Generation_Direction.md) and [authoritative generation continuation](WORLD/Generation_Implementation.md).
