@@ -21,6 +21,10 @@ Refer to https://github.com/ben0kay/godot-tower-defense for folder / notes struc
 Refer to https://github.com/ben0kay/isometric-new-2d for similar game mechanics
 Refer to https://github.com/ben0kay/Ben_MonsterExpansion for Grim Dawns spawn mechanics just for ideas
 
+## Default validation scope — brief and proportional
+
+By default, keep validation brief and proportional: review the changes and run initial build/basic checks where practical, then leave extended runtime testing, visual verification and performance profiling to me. Do not spend excessive time on repeated checks or large test suites unless I explicitly request them; this overrides broader validation requirements below. Clearly state any checks left for me.
+
 ## Performance-first rules for every new mechanic
 
 **Design for low idle cost from the beginning, not just functional correctness.** Before writing a feature, identify what activates it, what work happens while active, and exactly what stops that work afterward. Avoid introducing an always-running `_Process` or `_PhysicsProcess` by default.
@@ -42,7 +46,7 @@ These requirements apply alongside the existing modular, data-driven, C# and doc
 
 ## Optional local testing handoff — when I request it
 
-To conserve Codex usage, I may explicitly ask for compilation and some or all runtime/performance testing to be performed locally by GitHub Copilot in VS Code. When requested, Codex should implement and review the changes, commit/push when authorized, and hand over the deferred checks instead of running them here. This is optional per job; otherwise follow the normal validation requirements above.
+To conserve Codex usage, I may explicitly ask for compilation and some or all runtime/performance testing to be performed locally by GitHub Copilot in VS Code. When requested, Codex should implement and review the changes, commit/push when authorized, and hand over the deferred checks instead of running them here. This handoff is optional per job; otherwise follow the default brief, proportional validation scope above rather than treating extended tests and profiling as mandatory.
 
 Provide the commit SHA, changed files, prerequisites, exact build/test commands, expected results and any manual Godot visual/performance checks. Clearly state which checks were run and which are deferred, and mark the implementation as **awaiting local validation** until results are available. Pushing code does not mean it passed testing. Copilot should initially run the checks without modifying code and return commands, exit codes and relevant failures for follow-up.
 
